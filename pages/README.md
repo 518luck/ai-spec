@@ -1,3 +1,1 @@
-Keep the root `pages` directory present but empty when combining Next.js App Router
-with Feature-Sliced Design. This avoids root-level routing ambiguity and mirrors the
-recommended setup from the FSD Next.js guide.
+在结合使用 Next.js App Router 与 Feature-Sliced Design (FSD) 架构时，请保留根目录下的 pages 文件夹，但保持其为空。这样既能避免根级别的路由解析产生歧义，也完全契合 FSD 官方针对 Next.js 的推荐配置。
