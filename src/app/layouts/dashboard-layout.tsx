@@ -1,5 +1,5 @@
 import { TooltipProvider } from "@/shared/ui/tooltip";
-import { SidebarProvider } from "@/shared/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/shared/ui/sidebar";
 import { AppSidebar } from "@/widgets/app-sidebar";
 import { AppHeader } from "@/widgets/app-header";
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -7,8 +7,10 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar />
-        <AppHeader />
-        {children}
+        <SidebarInset>
+          <AppHeader />
+          {children}
+        </SidebarInset>
       </SidebarProvider>
     </TooltipProvider>
   );
