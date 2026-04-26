@@ -1,13 +1,13 @@
 import { TooltipProvider } from "@/shared/ui/tooltip";
 import { SidebarProvider } from "@/shared/ui/sidebar";
 import { AppSidebar } from "@/widgets/app-sidebar";
-
+import { AppHeader } from "@/widgets/app-header";
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <TooltipProvider>
       <SidebarProvider>
         <AppSidebar />
-        <div>顶部</div>
+        <AppHeader />
         {children}
       </SidebarProvider>
     </TooltipProvider>
