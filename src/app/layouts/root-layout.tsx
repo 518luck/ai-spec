@@ -1,5 +1,5 @@
-import { AppProviders } from "@/app/providers";
 import { Inter } from "next/font/google";
+import { RootThemeProviders } from "@/app/providers/root-theme-providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -9,9 +9,21 @@ type RootLayoutShellProps = Readonly<{
 
 export function RootLayoutShell({ children }: RootLayoutShellProps) {
   return (
-    <html lang="zh-CN" className={`${inter.variable} h-full antialiased`}>
+    <html
+      lang="zh-CN"
+      className={`${inter.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
       <body className="bg-background text-foreground min-h-full">
-        <AppProviders>{children}</AppProviders>
+        <RootThemeProviders
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          enableColorScheme
+        >
+          {children}
+        </RootThemeProviders>
       </body>
     </html>
   );
