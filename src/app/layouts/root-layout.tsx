@@ -10,7 +10,7 @@ type RootLayoutShellProps = Readonly<{
 export function RootLayoutShell({ children }: RootLayoutShellProps) {
   return (
     <html lang="zh-CN" className={`${inter.variable} h-full antialiased`}>
-      <body className="min-h-full bg-app text-ink">
+      <body className="bg-background text-foreground min-h-full">
         <AppProviders>{children}</AppProviders>
       </body>
     </html>
