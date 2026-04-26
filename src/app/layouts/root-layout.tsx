@@ -3,11 +3,7 @@ import { RootThemeProviders } from "@/app/providers/root-theme-providers";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
-type RootLayoutShellProps = Readonly<{
-  children: React.ReactNode;
-}>;
-
-export function RootLayoutShell({ children }: RootLayoutShellProps) {
+export function RootLayoutShell({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="zh-CN"
