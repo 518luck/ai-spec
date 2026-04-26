@@ -6,6 +6,7 @@ import { useTheme } from "next-themes";
 
 export default function PromptsPage() {
   const [number, setNumber] = useState(0);
+  // 这里只读取主题并用于切换，避免把不稳定的主题值直接渲染到首屏 HTML。
   const { theme, setTheme } = useTheme();
 
   return (
@@ -15,7 +16,6 @@ export default function PromptsPage() {
       <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
         toggle theme
       </Button>
-      <div> {theme}</div>
     </div>
   );
 }
