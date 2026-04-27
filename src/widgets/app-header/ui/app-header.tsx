@@ -1,6 +1,11 @@
+"use client";
+
+import { SidebarTrigger } from "@/shared/ui/sidebar";
+import { useTheme } from "next-themes";
+
 export function AppHeader() {
+  const { theme, setTheme } = useTheme();
   return (
-    // TODO 顶部布局
     //  - bg-background/60：背景色用主题里的 background，透明度 60%
     //   - sticky top-0：吸顶，滚动时会粘在顶部
     //   - z-20：层级较高，避免被普通内容盖住
@@ -16,7 +21,7 @@ export function AppHeader() {
     //   - px-4：左右内边距 1rem
     <header className="bg-background/60 flex h-14">
       <div className="flex items-center gap-2">
-        <div>布局伸缩</div>
+        <SidebarTrigger className="-ml-1" />
         <div>间隔符号 separator</div>
         <div>面包屑导航</div>
       </div>
@@ -24,9 +29,10 @@ export function AppHeader() {
       <div className="flex items-center gap-2">
         <div>github图标</div>
         <div>
+          {/* TODO 界面做出来在上,kbar已经安装好了 */}
           <div>搜索框</div>
         </div>
-        <div>黑白主题切换</div>
+        <div>主题切换</div>
         <div>
           <div>界面主题切换</div>
         </div>
