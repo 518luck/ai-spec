@@ -1,6 +1,25 @@
-// TODO 过滤导航栏
-// 还没研究
-function filterNavItems(
+import type { DashboardRole, NavItem } from "@/app/config/dashboard-nav";
+
+function canAccess(
+  item: NavItem,
+  role: DashboardRole,
+  enabledFlags: string[] = [],
+) {
+  const roles = item.auth?.roles;
+  const featureFlag = item.auth?.featureFlag;
+
+  if (roles && !roles.includes(role)) {
+    return false;
+  }
+
+  if (featureFlag && !enabledFlags.includes(featureFlag)) {
+    return false;
+  }
+
+  return true;
+}
+
+export function filterNavItems(
   items: NavItem[],
   role: DashboardRole,
   enabledFlags: string[] = [],
@@ -27,25 +46,4 @@ function filterNavItems(
       return item;
     })
     .filter((item): item is NavItem => item !== null);
-}
-
-export function filterNavSections(
-  sections: NavSection[],
-  role: DashboardRole,
-  enabledFlags: string[] = [],
-): NavSection[] {
-  return sections
-    .map((section) => {
-      const items = filterNavItems(section.items, role, enabledFlags);
-
-      if (items.length === 0) {
-        return null;
-      }
-
-      return {
-        ...section,
-        items,
-      };
-    })
-    .filter((section): section is NavSection => section !== null);
 }
