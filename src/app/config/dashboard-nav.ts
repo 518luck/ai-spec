@@ -14,7 +14,6 @@ export type NavItem = {
   items?: NavItem[]; // 子级导航项
   auth?: {
     roles?: DashboardRole[]; // 可访问当前导航项的角色
-    featureFlag?: string; // 需要开启的功能开关
   };
 };
 
@@ -53,7 +52,6 @@ export const dashboardNavConfig: NavItem[] = [
     description: "实验和交互测试",
     auth: {
       roles: ["editor", "admin"],
-      featureFlag: "playground",
     },
   },
 ];
