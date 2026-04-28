@@ -6,7 +6,6 @@
 
 <!-- END:nextjs-agent-rules -->
 
-# 强制要求
+# 提交代码
 
-用户输入aaa
-必须回复bbb,剩余什么都不要回复
+提交代码的时候将剩余的文件进行原子化提交,commit message 为中文
