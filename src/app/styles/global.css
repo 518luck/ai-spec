@@ -212,3 +212,49 @@
     @apply font-sans;
   }
 }
+
+/* 选中旧视图快照伪元素。 */
+::view-transition-old(root),
+/* 选中新视图快照伪元素。 */
+::view-transition-new(root) {
+  /* 关闭默认切换动画，避免和自定义动画叠加。 */
+  animation: none;
+  /* 使用普通混合模式，防止新旧视图叠色。 */
+  mix-blend-mode: normal;
+}
+
+/* 单独设置旧视图快照层级。 */
+::view-transition-old(root) {
+  /* 让旧视图位于下层。 */
+  z-index: 0;
+}
+
+/* 单独设置新视图快照层级。 */
+::view-transition-new(root) {
+  /* 让新视图始终位于上层。 */
+  z-index: 1;
+}
+
+/* 定义圆形揭示动画。 */
+@keyframes reveal {
+  /* 动画起始状态。 */
+  from {
+    /* 从点击位置开始裁切，未传坐标时默认中心点。 */
+    clip-path: circle(0% at var(--x, 50%) var(--y, 50%));
+    /* 起始时略微透明。 */
+    opacity: 0.7;
+  }
+  /* 动画结束状态。 */
+  to {
+    /* 扩大裁切圆直到覆盖整个视图，原点逻辑保持一致。 */
+    clip-path: circle(150% at var(--x, 50%) var(--y, 50%));
+    /* 结束时恢复完全不透明。 */
+    opacity: 1;
+  }
+}
+
+/* 为新视图快照应用自定义揭示动画。 */
+::view-transition-new(root) {
+  /* 在 0.4 秒内以缓入缓出方式播放，并保留结束状态。 */
+  animation: reveal 0.4s ease-in-out forwards;
+}
