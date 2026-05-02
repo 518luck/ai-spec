@@ -6,7 +6,7 @@ import { cn } from "@/shared/lib/utils";
 
 function Separator({
   className,
-  orientation = "horizontal",
+  orientation = "vertical",
   ...props
 }: SeparatorPrimitive.Props) {
   return (

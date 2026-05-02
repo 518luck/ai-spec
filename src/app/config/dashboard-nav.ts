@@ -19,12 +19,12 @@ export type NavItem = {
 
 export const dashboardNavConfig: NavItem[] = [
   {
-    title: "Learn",
-    url: "/learn",
-    icon: BookOpen,
-    description: "学习与参考内容",
+    title: "Prompts",
+    url: "/prompts",
+    icon: Command,
+    description: "提示词管理",
     auth: {
-      roles: ["guest", "member", "editor", "admin"],
+      roles: ["member", "editor", "admin"],
     },
   },
   {
@@ -36,15 +36,7 @@ export const dashboardNavConfig: NavItem[] = [
       roles: ["member", "editor", "admin"],
     },
   },
-  {
-    title: "Prompts",
-    url: "/prompts",
-    icon: Command,
-    description: "提示词管理",
-    auth: {
-      roles: ["member", "editor", "admin"],
-    },
-  },
+
   {
     title: "Playground",
     url: "/playground",
@@ -52,6 +44,15 @@ export const dashboardNavConfig: NavItem[] = [
     description: "实验和交互测试",
     auth: {
       roles: ["editor", "admin"],
+    },
+  },
+  {
+    title: "Learn",
+    url: "/learn",
+    icon: BookOpen,
+    description: "学习与参考内容",
+    auth: {
+      roles: ["guest", "member", "editor", "admin"],
     },
   },
 ];
