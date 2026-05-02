@@ -1,7 +1,10 @@
 "use client";
 
+import { Button } from "@/shared/ui/button";
+import { Separator } from "@/shared/ui/separator";
 import { SidebarTrigger } from "@/shared/ui/sidebar";
 import { useTheme } from "next-themes";
+import { ThemeModeToggle } from "./theme-mode-toggle";
 
 export function AppHeader() {
   const { theme, setTheme } = useTheme();
@@ -19,10 +22,10 @@ export function AppHeader() {
     //   - border-b：底部加一条边框
     //   - backdrop-blur-md：给背景后面的内容加中等模糊，常见于毛玻璃效果
     //   - px-4：左右内边距 1rem
-    <header className="bg-background/60 flex h-14">
+    <header className="bg-background/60 m-2 flex h-14 justify-between gap-2">
       <div className="flex items-center gap-2">
         <SidebarTrigger className="-ml-1" />
-        <div>间隔符号 separator</div>
+        <Separator className="h-6 data-vertical:self-center" />
         <div>面包屑导航</div>
       </div>
 
@@ -32,7 +35,10 @@ export function AppHeader() {
           {/* TODO 界面做出来在上,kbar已经安装好了 */}
           <div>搜索框</div>
         </div>
-        <div>主题切换</div>
+        <ThemeModeToggle />
+        <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+          toggle theme
+        </Button>
         <div>
           <div>界面主题切换</div>
         </div>
