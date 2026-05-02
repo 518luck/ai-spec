@@ -1,8 +1,8 @@
-export const DEFAULT_THEME = "vega";
+export const DEFAULT_THEME = "base-vega";
 
 export const THEMES = [
   {
-    name: "Vega",
-    value: "vega",
+    name: "Base Vega",
+    value: "base-vega",
   },
 ];
