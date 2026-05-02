@@ -9,7 +9,7 @@
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
-  },
+  }, 
   "iconLibrary": "lucide",
   "rtl": false,
   "aliases": {
