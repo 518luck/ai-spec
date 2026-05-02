@@ -1,4 +1,5 @@
 @import "./themes/base-vega.css";
+@import "./themes/domm64.css";
 
 [data-theme] body {
   --font-sans: initial;
