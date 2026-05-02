@@ -1,25 +1,28 @@
 import { Inter } from "next/font/google";
-import { RootThemeProviders } from "@/app/providers/root-theme-providers";
+import { RootThemeProvider } from "@/app/providers/root-theme-provider";
+import { ActiveThemeProvider } from "../providers/active-theme-provider";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export function RootLayoutShell({ children }: { children: React.ReactNode }) {
   return (
-    <html
-      lang="zh-CN"
-      className={`${inter.variable} h-full antialiased`}
-      suppressHydrationWarning
-    >
+    //  - cookie
+    // 服务端读取 active_theme
+    // loader
+    // SSR 首屏注入 data-theme
+    // TODO 保证主题首次不闪烁，需要优化(目前用的是ActiveThemeProvider里面useEffect)
+    <html lang="zh-CN" suppressHydrationWarning>
       <body className="bg-background text-foreground min-h-full">
-        <RootThemeProviders
+        <RootThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
           disableTransitionOnChange
           enableColorScheme
         >
-          {children}
-        </RootThemeProviders>
+          {/* TODO 这个地方应该从服务器获取主题然后传递下去暂时不写 */}
+          <ActiveThemeProvider>{children}</ActiveThemeProvider>
+        </RootThemeProvider>
       </body>
     </html>
   );
