@@ -11,17 +11,18 @@ import {
   useMatches,
 } from "kbar";
 import { cn } from "@/shared/lib/utils";
-import { actions } from "../config/kbar-actions";
+import { useKBarActions } from "../config/kbar-actions";
 
 export function KBar({ children }: { children: React.ReactNode }) {
   return (
-    <KBarProvider actions={actions}>
+    <KBarProvider>
       <KBarComponent>{children}</KBarComponent>
     </KBarProvider>
   );
 }
 
 function KBarComponent({ children }: { children: React.ReactNode }) {
+  useKBarActions();
   // /现在搜出来了哪些命令
   const { results } = useMatches();
 
