@@ -21,6 +21,7 @@ export function KBar({ children }: { children: React.ReactNode }) {
   );
 }
 
+// 快捷键弹窗主组件
 function KBarComponent({ children }: { children: React.ReactNode }) {
   useKBarActions();
   // /现在搜出来了哪些命令
@@ -58,6 +59,7 @@ function KBarComponent({ children }: { children: React.ReactNode }) {
   );
 }
 
+// 渲染结果的列表项
 function ResultItem({
   action,
   active,

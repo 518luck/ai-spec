@@ -4,6 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { Separator } from "@/shared/ui/separator";
 import { SidebarTrigger } from "@/shared/ui/sidebar";
 import { useTheme } from "next-themes";
+import { Kbd } from "@/shared/ui/kbd";
 import { ThemeModeToggle } from "./theme-mode-toggle";
 
 export function AppHeader() {
@@ -31,9 +32,8 @@ export function AppHeader() {
 
       <div className="flex items-center gap-2">
         <div>github图标</div>
-        <div>
-          {/* TODO 界面做出来在上,kbar已经安装好了 */}
-          <div>搜索框</div>
+        <div className="flex items-center gap-0.5">
+          <Kbd>⌘ K</Kbd>
         </div>
         <ThemeModeToggle />
         <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
