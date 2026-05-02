@@ -5,4 +5,8 @@ export const THEMES = [
     name: "Base Vega",
     value: "base-vega",
   },
+  {
+    name: "Doom 64",
+    value: "domm64",
+  },
 ];
