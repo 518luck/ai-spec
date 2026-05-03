@@ -37,13 +37,13 @@ export function ThemeSelector() {
             <>
               <SelectGroup>
                 <SelectLabel>主题</SelectLabel>
+                <SelectSeparator />
                 {THEMES.map((theme) => (
                   <SelectItem key={theme.value} value={theme.value}>
                     {theme.name}
                   </SelectItem>
                 ))}
               </SelectGroup>
-              <SelectSeparator />
             </>
           )}
         </SelectGroup>
