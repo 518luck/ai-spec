@@ -6,6 +6,7 @@ import { SidebarTrigger } from "@/shared/ui/sidebar";
 import { useTheme } from "next-themes";
 import { Kbd } from "@/shared/ui/kbd";
 import { ThemeModeToggle } from "./theme-mode-toggle";
+import { ThemeSelector } from "./theme-selector";
 
 export function AppHeader() {
   const { theme, setTheme } = useTheme();
@@ -36,12 +37,7 @@ export function AppHeader() {
           <Kbd>⌘ K</Kbd>
         </div>
         <ThemeModeToggle />
-        <Button onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-          toggle theme
-        </Button>
-        <div>
-          <div>界面主题切换</div>
-        </div>
+        <ThemeSelector />
         <div>信息框</div>
       </div>
     </header>
