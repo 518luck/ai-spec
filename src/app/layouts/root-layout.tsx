@@ -1,6 +1,6 @@
 import { Oxanium, Source_Code_Pro, Source_Serif_4 } from "next/font/google";
 import { RootThemeProvider } from "@/app/providers/root-theme-provider";
-import { ActiveThemeProvider } from "../providers/active-theme-provider";
+import { ActiveThemeProvider } from "@/shared/providers/active-theme-providers";
 
 const oxanium = Oxanium({
   subsets: ["latin"],

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { DEFAULT_THEME } from "../config/theme.config";
+import { DEFAULT_THEME } from "../configs/theme.config";
 
 const COOKIE_NAME = "active_theme";
 
