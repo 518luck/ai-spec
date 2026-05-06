@@ -5,7 +5,7 @@ import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
 export default defineConfig({
-  schema: "prisma/schema.prisma", // schema 文件在哪个地方看
+  schema: "prisma/schema", // schema 文件在哪个地方看
   migrations: {
     // Prisma migration 文件放哪个位置， 每次运行generate命令的时候，会在generate这个文件生成文件
     path: "prisma/migrations",
