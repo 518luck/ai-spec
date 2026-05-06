@@ -1,11 +1,11 @@
 // 资源
 export const RESOURCE_KEYS = [
-  "prompt",
-  "agent",
-  "tutorial",
-  "folder",
-  "testSession",
-  "user",
+  "prompt", // 提示词
+  "agent", // 智能体
+  "tutorial", // 教程
+  "folder", // 文件夹
+  "testSession", // 测试会话
+  "user", // 用户
 ] as const;
 
 export type ResourceKey = (typeof RESOURCE_KEYS)[number];
