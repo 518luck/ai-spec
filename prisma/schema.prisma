@@ -1,0 +1,13 @@
+// 这是你的 Prisma 模式文件（Schema file），
+// 在文档中了解更多信息：https://pris.ly/d/prisma-schema
+
+// 只需几秒即可获取一个免费的托管版 Postgres 数据库：执行 npx create-db
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
