@@ -12,8 +12,60 @@ datasource db {
   provider = "postgresql"
 }
 
+// 用户本人信息
 model User {
-  id    String  @id @default(cuid())
-  name  String?
-  email String? @unique
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime? // ? :可为空   (系统以后长期判断你这个邮箱是否已验证的标记)
+  image         String?
+
+  // 密码和安全字段
+  passwordHash         String?
+  invalidLoginAttempts Int       @default(0) // invalid 无效的  attempts 次数( 输错次数,成功后就清零)
+  lockedAt             DateTime? // locked 锁定的 ( 这个账号是在什么时候被锁定的)
+
+  accounts Account[]
+  sessions Session[]
+}
+
+// 第三方登陆账户
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String // 关联到哪个用户
+  type                     String // 账户类型，例如 OAuth 登陆的大类 oauth  email
+  provider                 String // 登录提供商，例如 Google、GitHub
+  providerAccountId        String // 该提供商中的账户 ID
+  refresh_token            String? @db.Text // 刷新 access token 用的令牌 是“专门用来续期的”
+  refresh_token_expires_in Int? // refresh token 的剩余有效期/过期时长   
+  access_token             String? @db.Text // 当前 access token   是“直接拿来用的”
+  expires_at               Int? // access token 过期时间（通常是时间戳）
+  token_type               String? // token 类型，例如 Bearer
+  scope                    String? // 授权范围
+  id_token                 String? @db.Text // OpenID Connect 返回的 ID token  用来说明“登录的这个人是谁”
+  session_state            String? // 某些提供商返回的会话状态标记
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId]) // 联合唯一索引
+}
+
+// 会话
+model Session {
+  id           String   @id @default(cuid()) // 这条 session 记录自己的主键
+  sessionToken String   @unique // 会话 token，前端通常携带它来标识当前登录会话
+  userId       String // 这条 session 属于哪个用户
+  expires      DateTime // 这条会话什么时候过期
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// 验证码
+model VerificationToken {
+  identifier String // 标识符 标识谁在验证,通常是邮箱之类的
+  token      String // 一次性验证码
+  expires    DateTime
+
+  @@id([identifier, token])
 }
