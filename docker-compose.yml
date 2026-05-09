@@ -1,0 +1,20 @@
+name: prompt-shelf
+ 
+services:
+  redis:
+    image: redis:8.6.2-alpine
+    container_name: ps-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes: 
+  redis-data:
