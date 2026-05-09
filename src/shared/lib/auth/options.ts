@@ -2,6 +2,8 @@ import type { NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/prisma/index";
 import Credentials from "next-auth/providers/credentials";
+// import { skipAuthThrottling } from "../api/environment";
+// import { ratelimit } from "../infrastructure/redis/reatlimit";
 
 export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
@@ -29,17 +31,21 @@ export const authOptions: NextAuthConfig = {
       },
       // credentials 代表上面credentials 写的配置项,用户传递的数据
       // req 代表这次调用 authorize 的请求上下文
-      async authorize(credentials, req) {
-        if (!credentials) {
-          throw new Error("no-credentials");
-        }
+      // async authorize(credentials, req) {
+      //   if (!credentials) {
+      //     throw new Error("no-credentials");
+      //   }
 
-        const { email, password } = credentials;
+      //   const { email, password } = credentials;
 
-        if (!email || !password) {
-          throw new Error("no-credentials");
-        }
-      },
+      //   if (!email || !password) {
+      //     throw new Error("no-credentials");
+      //   }
+
+      //   if (!skipAuthThrottling) {
+      //     await ratelimit(`login-attempts:${email}`);
+      //   }
+      // },
     }),
   ],
 };
