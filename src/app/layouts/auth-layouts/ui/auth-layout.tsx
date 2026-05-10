@@ -24,7 +24,7 @@ export default function AuthLayout({
           <div className="relative min-h-screen">
             <div className="relative z-10 flex justify-center">
               <ParticleNameBackground
-                className="h-28 w-full max-w-md"
+                className="h-18 w-full max-w-md"
                 text="AI Spec"
                 particleCount={1500}
                 glowColor={TITLE_NAME_COLOR.glowColor}
@@ -32,17 +32,15 @@ export default function AuthLayout({
                 hueRange={TITLE_NAME_COLOR.hueRange}
                 fontFamily={source_Serif_4.style.fontFamily}
                 fontWeight={400}
-                textVerticalAlign={0.4}
+                textVerticalAlign={0.5}
               />
             </div>
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="pointer-events-auto w-full max-w-xs">
-                {children}
-              </div>
-            </div>
+
+            <div className="flex flex-1">{children}</div>
           </div>
         </InteractiveGridPattern>
       </div>
+
       <SidePanel />
     </div>
   );

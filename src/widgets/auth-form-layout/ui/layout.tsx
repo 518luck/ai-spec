@@ -1,7 +1,41 @@
+import { PropsWithChildren } from "react";
+
 export default function AuthFormLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <div>{children}</div>;
+  showTerms = "app",
+}: PropsWithChildren<{ showTerms?: "app" | "partner" }>) {
+  return (
+    <div className="flex h-full w-full min-w-0 flex-col">
+      <div className="grow basis-0">
+        <div className="h-24" />
+      </div>
+
+      <div className="relative flex w-full grow flex-col items-center justify-center">
+        {children}
+      </div>
+
+      <div className="flex grow basis-0 flex-col justify-end">
+        {showTerms && (
+          <p className="px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
+            By continuing, you agree to Dub&rsquo;s
+            <a
+              href={`https://dub.co/legal/${showTerms === "app" ? "terms" : "partners"}`}
+              target="_blank"
+              className="font-semibold text-neutral-600 hover:text-neutral-800"
+            >
+              {showTerms === "app" ? "Terms of Service" : "Partner Terms"}
+            </a>
+            and
+            <a
+              href="https://dub.co/legal/privacy"
+              target="_blank"
+              className="font-semibold text-neutral-600 hover:text-neutral-800"
+            >
+              Privacy Policy
+            </a>
+          </p>
+        )}
+      </div>
+    </div>
+  );
 }
