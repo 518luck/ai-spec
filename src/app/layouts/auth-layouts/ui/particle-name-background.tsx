@@ -203,8 +203,8 @@ export function ParticleNameBackground({
         particle.y += particle.vy;
 
         ctx.beginPath();
-        ctx.fillStyle = `hsla(${particle.hue}, 100%, ${70 - revealProgress * 8}%, ${particle.alpha * revealProgress})`; // 提高亮度，让字心更实一些
-        ctx.shadowBlur = 10 - revealProgress * 3; // 降低模糊半径，避免字形边界过糊
+        ctx.fillStyle = `hsla(${particle.hue}, 100%, ${58 - revealProgress * 6}%, ${particle.alpha * revealProgress})`; // 提高亮度，让字心更实一些
+        ctx.shadowBlur = 6 - revealProgress * 2; // 降低模糊半径，避免字形边界过糊
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
       }
