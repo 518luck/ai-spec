@@ -1,10 +1,11 @@
 import { GalleryVerticalEnd } from "lucide-react";
 
-import { LoginForm } from "./login-form";
+import LoginForm from "./register/page";
+import { SidePanel } from "./side-panel";
 
 export default function Layout() {
   return (
-    <div className="grid min-h-svh lg:grid-cols-2">
+    <div className="relative grid min-h-screen grid-cols-1 min-[900px]:grid-cols-[minmax(0,1fr)_440px] lg:grid-cols-[minmax(0,1fr)_595px]">
       <div className="flex flex-col gap-4 p-6 md:p-10">
         <div className="flex justify-center gap-2 md:justify-start">
           <a href="#" className="flex items-center gap-2 font-medium">
@@ -20,13 +21,7 @@ export default function Layout() {
           </div>
         </div>
       </div>
-      <div className="bg-muted relative hidden lg:block">
-        <img
-          src="/placeholder.svg"
-          alt="Image"
-          className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
-        />
-      </div>
+      <SidePanel />
     </div>
   );
 }
