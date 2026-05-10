@@ -22,7 +22,7 @@ export default function AuthLayout({
           borderColor="rgba(196, 197, 186, 0.1)"
         >
           <div className="relative min-h-screen">
-            <div className="flex justify-center">
+            <div className="relative z-10 flex justify-center">
               <ParticleNameBackground
                 className="h-28 w-full max-w-md"
                 text="AI Spec"
@@ -35,8 +35,10 @@ export default function AuthLayout({
                 textVerticalAlign={0.4}
               />
             </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-full max-w-xs">{children}</div>
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div className="pointer-events-auto w-full max-w-xs">
+                {children}
+              </div>
             </div>
           </div>
         </InteractiveGridPattern>
