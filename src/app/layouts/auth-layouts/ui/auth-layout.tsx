@@ -1,5 +1,4 @@
 import { SidePanel } from "@/widgets/auth-side-panel";
-import { GalleryVerticalEnd } from "lucide-react";
 import { TITLE_NAME_COLOR } from "../config/title-name-color";
 import { InteractiveGridPattern } from "./Interactive-grid-pattern";
 import { ParticleNameBackground } from "./particle-name-background";
