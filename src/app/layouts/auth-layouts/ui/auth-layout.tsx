@@ -21,8 +21,8 @@ export default function AuthLayout({
           glowColor="rgba(122, 148, 178, 0.30)"
           borderColor="rgba(196, 197, 186, 0.1)"
         >
-          <div className="relative z-10 flex min-h-screen flex-col">
-            <div className="flex justify-center">
+          <div className="relative min-h-screen">
+            <div className="absolute inset-x-0 top-0 z-10 flex justify-center">
               <ParticleNameBackground
                 className="h-18 w-full max-w-md"
                 text="AI Spec"
@@ -35,7 +35,7 @@ export default function AuthLayout({
                 textVerticalAlign={0.5}
               />
             </div>
-            {children}
+            <div className="flex min-h-screen flex-col">{children}</div>
           </div>
         </InteractiveGridPattern>
       </div>
