@@ -1,5 +1,6 @@
 import { SidePanel } from "@/widgets/auth-side-panel";
 import { GalleryVerticalEnd } from "lucide-react";
+import { TITLE_NAME_COLOR } from "../config/title-name-color";
 import { InteractiveGridPattern } from "./Interactive-grid-pattern";
 import { ParticleNameBackground } from "./particle-name-background";
 
@@ -28,15 +29,9 @@ export default function AuthLayout({
               <ParticleNameBackground
                 className="h-44 w-full max-w-md"
                 text="AI SPEC"
-                // glowColor="rgba(148, 153, 160, 0.8)" //冷石墨银
-                // baseHue={210}
-                // hueRange={10}
-                glowColor="rgba(132, 141, 129, 0.01)" // 石墨鼠尾草
-                baseHue={96}
-                hueRange={10}
-                // glowColor="rgba(136, 126, 146, 0.16)" //灰调梅子紫
-                // baseHue={278}
-                // hueRange={10}
+                glowColor={TITLE_NAME_COLOR.glowColor}
+                baseHue={TITLE_NAME_COLOR.baseHue}
+                hueRange={TITLE_NAME_COLOR.hueRange}
               />
 
               <div className="w-full max-w-xs">{children}</div>
