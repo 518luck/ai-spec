@@ -4,7 +4,7 @@ import "@/app/styles/global.css";
 
 export { metadata };
 
-export default function RootLayout({
+export default function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
