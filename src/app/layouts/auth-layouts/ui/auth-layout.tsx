@@ -21,7 +21,7 @@ export default function AuthLayout({
           glowColor="rgba(122, 148, 178, 0.30)"
           borderColor="rgba(196, 197, 186, 0.1)"
         >
-          <div className="flex min-h-screen flex-col">
+          <div className="relative min-h-screen">
             <div className="flex justify-center">
               <ParticleNameBackground
                 className="h-28 w-full max-w-md"
@@ -35,7 +35,7 @@ export default function AuthLayout({
                 textVerticalAlign={0.4}
               />
             </div>
-            <div className="flex flex-1 items-center justify-center">
+            <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-full max-w-xs">{children}</div>
             </div>
           </div>
