@@ -5,12 +5,14 @@ export default function AuthFormLayout({
   showTerms = "app",
 }: PropsWithChildren<{ showTerms?: "app" | "partner" }>) {
   return (
-    <div className="flex h-full w-full max-w-sm min-w-0 flex-col">
-      <div className="h-8 md:h-12" />
-      <div className="flex flex-1 items-center">
-        <div className="w-full">{children}</div>
+    <div className="flex min-h-dvh w-full flex-col items-center justify-between">
+      <div className="grow basis-0">
+        <div className="h-24" />
       </div>
-      <div className="pt-8">
+
+      <div className="w-ful flex flex-1 items-center">{children}</div>
+
+      <div className="flex grow basis-0 flex-col justify-end">
         {showTerms && (
           <p className="px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
             By continuing, you agree to Dub&rsquo;s{" "}
