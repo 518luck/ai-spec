@@ -84,7 +84,10 @@ export function InteractiveGridPattern({
   return (
     <div
       ref={containerRef}
-      className={cn("fixed inset-0 overflow-hidden bg-neutral-950", className)}
+      className={cn(
+        "absolute inset-0 overflow-hidden bg-neutral-950",
+        className,
+      )}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
