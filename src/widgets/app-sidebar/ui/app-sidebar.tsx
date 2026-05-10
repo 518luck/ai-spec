@@ -14,7 +14,7 @@ import Link from "next/link";
 import { dashboardNavConfig } from "@/app/config/dashboard-nav";
 import { filterNavItems } from "../model/primary-nav";
 
-export function AppSidebar() {
+export default function AppSidebar() {
   const role = "admin";
   const navItems = filterNavItems(dashboardNavConfig, role);
 
