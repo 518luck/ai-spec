@@ -80,14 +80,13 @@ export function ParticleNameBackground({
     };
 
     const createTargets = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, DPR_LIMIT);
       const fontSize = getFontSize();
       const sampleGap = Math.max(4, Math.round(fontSize / 16)); // 字越大，采样间距也随之放大
 
-      offscreen.width = Math.max(1, Math.floor(width * dpr));
-      offscreen.height = Math.max(1, Math.floor(height * dpr));
+      // 离屏采样直接使用逻辑尺寸，避免在窗口缩放和高分屏下出现目标点偏移
+      offscreen.width = Math.max(1, width);
+      offscreen.height = Math.max(1, height);
       offscreenCtx.setTransform(1, 0, 0, 1, 0, 0);
-      offscreenCtx.scale(dpr, dpr);
       offscreenCtx.clearRect(0, 0, width, height);
       offscreenCtx.fillStyle = "#ffffff";
       offscreenCtx.textAlign = "center";
