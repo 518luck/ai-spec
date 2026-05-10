@@ -1,6 +1,7 @@
 import { SidePanel } from "@/widgets/auth-side-panel";
 import { GalleryVerticalEnd } from "lucide-react";
 import { InteractiveGridPattern } from "./Interactive-grid-pattern";
+import { ParticleNameBackground } from "./particle-name-background";
 
 export default function AuthLayout({
   children,
@@ -24,6 +25,11 @@ export default function AuthLayout({
               </a>
             </div>
             <div className="flex flex-1 items-center justify-center">
+              <ParticleNameBackground
+                className="h-44 w-full max-w-md"
+                text="AI SPEC"
+              />
+
               <div className="w-full max-w-xs">{children}</div>
             </div>
           </div>
