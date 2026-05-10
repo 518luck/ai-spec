@@ -14,7 +14,7 @@ export default function AuthLayout({
           glowColor="rgba(89, 95, 57, 0.20)"
           borderColor="rgba(196, 197, 186, 0.1)"
         >
-          <div className="relative z-20 flex min-h-screen flex-col gap-4 p-6 md:p-10">
+          <div className="flex min-h-screen flex-col gap-4 p-6 md:p-10">
             <div className="flex justify-center gap-2 md:justify-start">
               <a href="#" className="flex items-center gap-2 font-medium">
                 <div className="bg-primary text-primary-foreground flex size-6 items-center justify-center rounded-md">
