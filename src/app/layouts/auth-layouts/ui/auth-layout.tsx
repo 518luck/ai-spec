@@ -35,7 +35,7 @@ export default function AuthLayout({
                 textVerticalAlign={0.5}
               />
             </div>
-            <div className="flex flex-1 justify-center">{children}</div>
+            {children}
           </div>
         </InteractiveGridPattern>
       </div>
