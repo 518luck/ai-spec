@@ -17,21 +17,21 @@ export default function AuthFormLayout({
       <div className="flex grow basis-0 flex-col justify-end">
         {showTerms && (
           <p className="px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
-            By continuing, you agree to Dub&rsquo;s{" "}
+            继续操作即表示您同意 AI Spec 的
             <a
               href={`https://dub.co/legal/${showTerms === "app" ? "terms" : "partners"}`}
               target="_blank"
               className="font-semibold text-neutral-600 hover:text-neutral-800"
             >
-              {showTerms === "app" ? "Terms of Service" : "Partner Terms"}
-            </a>{" "}
-            and{" "}
+              {showTerms === "app" ? "服务条款" : "合作伙伴条款"}
+            </a>
+            和
             <a
               href="https://dub.co/legal/privacy"
               target="_blank"
               className="font-semibold text-neutral-600 hover:text-neutral-800"
             >
-              Privacy Policy
+              隐私政策
             </a>
           </p>
         )}
