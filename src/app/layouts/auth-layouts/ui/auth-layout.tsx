@@ -1,7 +1,13 @@
 import { SidePanel } from "@/widgets/auth-side-panel";
 import { TITLE_NAME_COLOR } from "../config/title-name-color";
+import { Manrope } from "next/font/google";
 import { InteractiveGridPattern } from "./Interactive-grid-pattern";
 import { ParticleNameBackground } from "./particle-name-background";
+
+const source_Serif_4 = Manrope({
+  weight: "400",
+  display: "swap",
+});
 
 export default function AuthLayout({
   children,
@@ -18,11 +24,13 @@ export default function AuthLayout({
           <div className="flex min-h-screen flex-col">
             <div className="flex justify-center">
               <ParticleNameBackground
-                className="h-44 w-full max-w-md"
-                text="AI SPEC"
+                className="h-28 w-full max-w-md"
+                text="AI Spec"
                 glowColor={TITLE_NAME_COLOR.glowColor}
                 baseHue={TITLE_NAME_COLOR.baseHue}
                 hueRange={TITLE_NAME_COLOR.hueRange}
+                fontFamily={source_Serif_4.style.fontFamily}
+                fontWeight={400}
               />
             </div>
             <div className="flex flex-1 items-center justify-center">

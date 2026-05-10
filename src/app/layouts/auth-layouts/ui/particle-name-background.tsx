@@ -37,7 +37,7 @@ export function ParticleNameBackground({
   children, // 叠加在粒子背景上的前景内容
   text = "AI SPEC", // 默认要拼出的文字内容
   glowColor = "rgba(196, 181, 253, 0.38)", // 粒子发光颜色，默认使用偏紫的雾感高光
-  particleCount = 400, // 最大粒子数量
+  particleCount = 800, // 最大粒子数量
   fontFamily = "ui-sans-serif, system-ui, sans-serif", // 文字采样使用的字体
   fontWeight = 700, // 文字采样使用的字重
   scatterForce = 1.2, // 鼠标扰动时的排斥力度
