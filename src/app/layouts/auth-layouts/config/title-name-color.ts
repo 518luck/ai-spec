@@ -25,4 +25,4 @@ export const TITLE_NAME_COLOR_PRESETS = {
   },
 } satisfies Record<string, TitleNameColorPreset>;
 
-export const TITLE_NAME_COLOR = TITLE_NAME_COLOR_PRESETS.graphiteSage;
+export const TITLE_NAME_COLOR = TITLE_NAME_COLOR_PRESETS.coolGraphiteSilver;
