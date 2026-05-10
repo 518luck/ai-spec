@@ -26,6 +26,7 @@ export default function AuthLayout({
               <ParticleNameBackground
                 className="h-28 w-full max-w-md"
                 text="AI Spec"
+                particleCount={1500}
                 glowColor={TITLE_NAME_COLOR.glowColor}
                 baseHue={TITLE_NAME_COLOR.baseHue}
                 hueRange={TITLE_NAME_COLOR.hueRange}

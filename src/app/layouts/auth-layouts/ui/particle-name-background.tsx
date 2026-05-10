@@ -37,7 +37,7 @@ export function ParticleNameBackground({
   children, // 叠加在粒子背景上的前景内容
   text = "AI SPEC", // 默认要拼出的文字内容
   glowColor = "rgba(196, 181, 253, 0.38)", // 粒子发光颜色，默认使用偏紫的雾感高光
-  particleCount = 800, // 最大粒子数量
+  particleCount = 500, // 最大粒子数量
   fontFamily = "ui-sans-serif, system-ui, sans-serif", // 文字采样使用的字体
   fontWeight = 700, // 文字采样使用的字重
   scatterForce = 1.2, // 鼠标扰动时的排斥力度
@@ -81,7 +81,7 @@ export function ParticleNameBackground({
 
     const createTargets = () => {
       const fontSize = getFontSize();
-      const sampleGap = Math.max(4, Math.round(fontSize / 16)); // 字越大，采样间距也随之放大
+      const sampleGap = Math.max(2, Math.round(fontSize / 22)); // 提高采样密度，避免标题笔画缺失得太厉害
 
       // 离屏采样直接使用逻辑尺寸，避免在窗口缩放和高分屏下出现目标点偏移
       offscreen.width = Math.max(1, width);
@@ -135,8 +135,8 @@ export function ParticleNameBackground({
           vy: (Math.random() - 0.5) * 0.6,
           tx: point.x,
           ty: point.y,
-          size: 1 + Math.random() * 1.8,
-          alpha: 0.45 + Math.random() * 0.5,
+          size: 0.9 + Math.random() * 1.1,
+          alpha: 0.72 + Math.random() * 0.28,
           revealAt: Math.random() * 0.72,
           hue: baseHue + (Math.random() - 0.5) * hueRange,
         };
@@ -203,8 +203,8 @@ export function ParticleNameBackground({
         particle.y += particle.vy;
 
         ctx.beginPath();
-        ctx.fillStyle = `hsla(${particle.hue}, 100%, ${68 - revealProgress * 10}%, ${particle.alpha * revealProgress})`; // 通过 HSL 色相变化制造更柔和的多彩发光
-        ctx.shadowBlur = 20 - revealProgress * 8; // 初始更糊，后面更实，像云团收束
+        ctx.fillStyle = `hsla(${particle.hue}, 100%, ${70 - revealProgress * 8}%, ${particle.alpha * revealProgress})`; // 提高亮度，让字心更实一些
+        ctx.shadowBlur = 10 - revealProgress * 3; // 降低模糊半径，避免字形边界过糊
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
       }
