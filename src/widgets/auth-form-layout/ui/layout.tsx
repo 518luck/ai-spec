@@ -10,7 +10,9 @@ export default function AuthFormLayout({
         <div className="h-24" />
       </div>
 
-      <div className="w-ful flex flex-1 items-center">{children}</div>
+      <div className="flex w-full flex-1 items-center justify-center">
+        {children}
+      </div>
 
       <div className="flex grow basis-0 flex-col justify-end">
         {showTerms && (
