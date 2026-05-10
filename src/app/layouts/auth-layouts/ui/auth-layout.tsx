@@ -32,6 +32,7 @@ export default function AuthLayout({
                 hueRange={TITLE_NAME_COLOR.hueRange}
                 fontFamily={source_Serif_4.style.fontFamily}
                 fontWeight={400}
+                textVerticalAlign={0.4}
               />
             </div>
             <div className="flex flex-1 items-center justify-center">

@@ -28,6 +28,7 @@ export interface ParticleNameBackgroundProps {
   interactionRadius?: number;
   baseHue?: number;
   hueRange?: number;
+  textVerticalAlign?: number;
 }
 
 const DPR_LIMIT = 2;
@@ -44,6 +45,7 @@ export function ParticleNameBackground({
   interactionRadius = 90, // 鼠标影响粒子的作用半径
   baseHue = 270, // 基础色相，默认落在梦幻紫附近
   hueRange = 90, // 色相浮动范围，用来覆盖蓝紫到粉紫的综合色带
+  textVerticalAlign = 0.5, // 控制文字在容器内部的垂直位置，0.5 表示默认居中
 }: ParticleNameBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -92,7 +94,7 @@ export function ParticleNameBackground({
       offscreenCtx.textAlign = "center";
       offscreenCtx.textBaseline = "middle";
       offscreenCtx.font = `${fontWeight} ${fontSize}px ${fontFamily}`;
-      offscreenCtx.fillText(text, width / 2, height / 2);
+      offscreenCtx.fillText(text, width / 2, height * textVerticalAlign);
 
       const imageData = offscreenCtx.getImageData(0, 0, width, height).data; // 读取文字像素，提取可落点区域
       const points: Array<{ x: number; y: number }> = [];
@@ -252,6 +254,7 @@ export function ParticleNameBackground({
     particleCount,
     scatterForce,
     text,
+    textVerticalAlign,
   ]);
 
   return (
