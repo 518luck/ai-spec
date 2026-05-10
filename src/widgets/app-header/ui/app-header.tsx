@@ -1,15 +1,12 @@
 "use client";
 
-import { Button } from "@/shared/ui/button";
 import { Separator } from "@/shared/ui/separator";
 import { SidebarTrigger } from "@/shared/ui/sidebar";
-import { useTheme } from "next-themes";
 import { Kbd } from "@/shared/ui/kbd";
 import { ThemeModeToggle } from "./theme-mode-toggle";
 import { ThemeSelector } from "./theme-selector";
 
-export function AppHeader() {
-  const { theme, setTheme } = useTheme();
+export default function AppHeader() {
   return (
     //  - bg-background/60：背景色用主题里的 background，透明度 60%
     //   - sticky top-0：吸顶，滚动时会粘在顶部
