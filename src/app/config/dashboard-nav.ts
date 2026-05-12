@@ -20,7 +20,7 @@ export type NavItem = {
 export const dashboardNavConfig: NavItem[] = [
   {
     title: "Prompts",
-    url: "/prompt/prompts",
+    url: "/spec/prompts",
     icon: Command,
     description: "提示词管理",
     auth: {
@@ -29,7 +29,7 @@ export const dashboardNavConfig: NavItem[] = [
   },
   {
     title: "Workspace",
-    url: "/prompt/workspace",
+    url: "/spec/workspace",
     icon: FolderKanban,
     description: "工作区与协作内容",
     auth: {
@@ -39,7 +39,7 @@ export const dashboardNavConfig: NavItem[] = [
 
   {
     title: "Playground",
-    url: "/prompt/playground",
+    url: "/spec/playground",
     icon: SquareTerminal,
     description: "实验和交互测试",
     auth: {
@@ -48,7 +48,7 @@ export const dashboardNavConfig: NavItem[] = [
   },
   {
     title: "Learn",
-    url: "/prompt/learn",
+    url: "/spec/learn",
     icon: BookOpen,
     description: "学习与参考内容",
     auth: {
