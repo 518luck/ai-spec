@@ -1,8 +1,33 @@
+import Link from "next/link";
+
+export default function RegisterPageClient() {
+  return <RegisterFlow />;
+}
+
 function SignUp() {
-  return <div>sign up</div>;
+  return (
+    <>
+      <div className="w-full max-w-sm">
+        <h3 className="text-center text-xl font-semibold">创建您的账号</h3>
+        <div className="mt-8">
+          {/* 因为作者在ee其他平台也用了这个signupform,所以把这个方法单独拿出来了 */}
+          {/* <SignUpForm /> */}
+        </div>
+        <p className="mt-6 text-center text-sm font-medium text-neutral-500">
+          已有账号？&nbsp;
+          <Link
+            href="/login"
+            className="font-semibold text-neutral-700 transition-colors hover:text-neutral-900"
+          >
+            去登录
+          </Link>
+        </p>
+      </div>
+    </>
+  );
 }
 function Verify() {
-  return <div>verify</div>;
+  return <div>验证</div>;
 }
 
 const RegisterFlow = () => {
