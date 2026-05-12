@@ -1,5 +1,8 @@
 "use client";
 
+import { LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/shared/ui/button";
 import { Separator } from "@/shared/ui/separator";
 import { SidebarTrigger } from "@/shared/ui/sidebar";
 import { Kbd } from "@/shared/ui/kbd";
@@ -7,6 +10,8 @@ import { ThemeModeToggle } from "./theme-mode-toggle";
 import { ThemeSelector } from "./theme-selector";
 
 export default function AppHeader() {
+  const router = useRouter();
+
   return (
     //  - bg-background/60：背景色用主题里的 background，透明度 60%
     //   - sticky top-0：吸顶，滚动时会粘在顶部
@@ -35,7 +40,14 @@ export default function AppHeader() {
         </div>
         <ThemeModeToggle />
         <ThemeSelector />
-        <div>信息框</div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => router.push("/spec/auth/register")}
+        >
+          <LogOut />
+          <span>登出</span>
+        </Button>
       </div>
     </header>
   );
