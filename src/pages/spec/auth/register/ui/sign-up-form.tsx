@@ -9,7 +9,7 @@ import {
 } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 
-export default function LoginForm({
+export default function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
