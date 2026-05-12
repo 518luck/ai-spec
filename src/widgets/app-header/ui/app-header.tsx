@@ -43,7 +43,7 @@ export default function AppHeader() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => router.push("/spec/auth/register")}
+          onClick={() => router.push("/spec/register")}
         >
           <LogOut />
           <span>登出</span>
