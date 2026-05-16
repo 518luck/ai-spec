@@ -8,6 +8,7 @@ import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
 import { ratelimit } from "../infrastructure/redis/reatlimit";
 import { getIP } from "../api/utils/get-ip";
 import prisma from "@/shared/db";
+import { generateOTP } from "../auth/utils";
 
 const schema = z.object({
   email: emailSchema,
@@ -43,5 +44,5 @@ export const sendOtpAction = actionClient
     }
 
     // 6. 生成新的 OTP 验证码，后面会同时写入数据库并发送邮件。
-    // const code = generateOTP();
+    const code = generateOTP();
   });
