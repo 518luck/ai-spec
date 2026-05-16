@@ -1,6 +1,6 @@
 import type { NextAuthConfig } from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import prisma from "@/prisma/index";
+import prisma from "@/shared/db";
 import Credentials from "next-auth/providers/credentials";
 // import { skipAuthThrottling } from "../api/environment";
 // import { ratelimit } from "../infrastructure/redis/reatlimit";

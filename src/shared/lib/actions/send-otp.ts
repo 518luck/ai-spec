@@ -7,7 +7,7 @@ import { flattenValidationErrors } from "next-safe-action";
 import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
 import { ratelimit } from "../infrastructure/redis/reatlimit";
 import { getIP } from "../api/utils/get-ip";
-import prisma from "@/prisma/index";
+import prisma from "@/shared/db";
 
 const schema = z.object({
   email: emailSchema,
