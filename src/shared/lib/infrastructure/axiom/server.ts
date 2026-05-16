@@ -12,7 +12,7 @@ import {
 } from "@axiomhq/nextjs"; // 针对 Next.js 场景做的一层官方适配 负责“在 Next.js 这个框架里，什么时候记、记什么、怎么拿到请求上下文”
 
 import { axiomClient } from "./axiom";
-import { getSearchParams } from "../utils";
+import { getSearchParams } from "../../utils";
 
 const isAxiomEnabled =
   process.env.IS_AXIOM_ENABLED === "true" &&
