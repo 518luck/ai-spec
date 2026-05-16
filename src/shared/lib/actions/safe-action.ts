@@ -1,6 +1,6 @@
 import { createSafeActionClient } from "next-safe-action";
-import { logger } from "../lib/axiom/server";
 import { after } from "next/server";
+import { logger } from "../axiom/server";
 
 // 统一处理 Server Action 里的异常。
 export const actionClient = createSafeActionClient({
