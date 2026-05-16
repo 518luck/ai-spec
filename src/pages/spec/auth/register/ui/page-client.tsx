@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SignUpForm } from "./signup-form";
 
 export default function RegisterPageClient() {
   return <RegisterFlow />;
@@ -11,7 +12,7 @@ function SignUp() {
         <h3 className="text-center text-xl font-semibold">创建您的账号</h3>
         <div className="mt-8">
           {/* 因为作者在ee其他平台也用了这个signupform,所以把这个方法单独拿出来了 */}
-          {/* <SignUpForm /> */}
+          <SignUpForm />
         </div>
         <p className="mt-6 text-center text-sm font-medium text-neutral-500">
           已有账号？&nbsp;
