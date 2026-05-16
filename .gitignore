@@ -43,4 +43,4 @@ next-env.d.ts
 
 
 .codex
-/src/generated/prisma
+/src/shared/db/generator
