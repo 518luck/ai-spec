@@ -64,14 +64,9 @@ export const withAxiomBodyLog = createAxiomRouteHandler(logger, {
 export const withAxiom = createAxiomRouteHandler(logger);
 
 //根据这次响应的 HTTP 状态码，决定日志级别。
-// 1xx / 2xx / 3xx
-//     一般不算严重错误，所以记普通信息日志 info
-//   - 4xx
-//     表示客户端请求有问题，比如参数错了、未登录、没权限、找不到资源
-//     这类通常记成 warn
-//   - 5xx
-//     表示服务器内部出错
-//     这类更严重，所以记成 error
+// 1xx / 2xx / 3xx: 一般不算严重错误，所以记普通信息日志 info
+// 4xx: 表示客户端请求有问题，比如参数错了、未登录、没权限、找不到资源。这类通常记成 warn
+// 5xx: 表示服务器内部出错。这类更严重，所以记成 error
 const getLogLevelFromStatusCode = (statusCode: number) => {
   if (statusCode >= 100 && statusCode < 400) {
     return LogLevel.info;
