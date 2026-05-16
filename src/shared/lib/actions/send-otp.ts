@@ -9,6 +9,7 @@ import { ratelimit } from "../infrastructure/redis/reatlimit";
 import { getIP } from "../api/utils/get-ip";
 import prisma from "@/shared/db";
 import { generateOTP } from "../auth/utils";
+import { EMAIL_OTP_EXPIRY_IN } from "../auth/constants";
 
 const schema = z.object({
   email: emailSchema,
@@ -45,4 +46,19 @@ export const sendOtpAction = actionClient
 
     // 6. 生成新的 OTP 验证码，后面会同时写入数据库并发送邮件。
     const code = generateOTP();
+
+    // 删除邮箱里存在的验证码,删所有匹配的行，删 0 行也不报错
+    await prisma.emailVerificationToken.deleteMany({
+      where: { identifier: email },
+    });
+
+    await Promise.all([
+      prisma.emailVerificationToken.create({
+        data: {
+          identifier: email,
+          token: code,
+          expires: new Date(Date.now() + EMAIL_OTP_EXPIRY_IN * 1000),
+        },
+      }),
+    ]);
   });
