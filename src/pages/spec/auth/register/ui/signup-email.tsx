@@ -5,17 +5,37 @@ import {
   FieldLabel,
   FieldSet,
 } from "@/shared/ui/field";
+import { Input } from "@/shared/ui/input";
+import { useForm } from "react-hook-form";
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
 
 export function SignUpEmail() {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
+  const { isMobile } = useMediaQuery();
+
   return (
-    <FieldSet>
-      <FieldGroup> 
-        <Field>
-          <FieldLabel>
-            <FieldDescription>描述</FieldDescription>
-          </FieldLabel>
-        </Field>
-      </FieldGroup>
-    </FieldSet>
+    <form>
+      <FieldSet>
+        <FieldGroup>
+          <Field>
+            <FieldLabel>
+              <FieldDescription>邮箱</FieldDescription>
+              <Input
+                type="email"
+                placeholder="panic@thedis.co"
+                autoComplete="email"
+                required
+                autoFocus={!isMobile}
+              />
+            </FieldLabel>
+          </Field>
+        </FieldGroup>
+      </FieldSet>
+    </form>
   );
 }
