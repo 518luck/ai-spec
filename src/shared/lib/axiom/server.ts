@@ -61,6 +61,8 @@ export const withAxiomBodyLog = createAxiomRouteHandler(logger, {
   },
 });
 
+export const withAxiom = createAxiomRouteHandler(logger);
+
 //根据这次响应的 HTTP 状态码，决定日志级别。
 // 1xx / 2xx / 3xx
 //     一般不算严重错误，所以记普通信息日志 info
