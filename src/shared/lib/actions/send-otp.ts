@@ -7,6 +7,7 @@ import { flattenValidationErrors } from "next-safe-action";
 import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
 import { ratelimit } from "../infrastructure/redis/reatlimit";
 import { getIP } from "../api/utils/get-ip";
+import prisma from "@/prisma/index";
 
 const schema = z.object({
   email: emailSchema,
@@ -32,4 +33,15 @@ export const sendOtpAction = actionClient
     if (remainingPoints <= 0) {
       throw new Error("请求过于频繁，请稍后再试");
     }
+
+    const isExistingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (isExistingUser) {
+      throw new Error("用户已存在，请登录,或使用忘记密码功能");
+    }
+
+    // 6. 生成新的 OTP 验证码，后面会同时写入数据库并发送邮件。
+    // const code = generateOTP();
   });
