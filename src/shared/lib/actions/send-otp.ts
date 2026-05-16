@@ -24,9 +24,12 @@ export const sendOtpAction = actionClient
   .action(async ({ parsedInput }) => {
     const { email } = parsedInput;
 
-    const remainingPoints = await ratelimit(`send-otp:${email}:${getIP()}`, 2);
+    const { remainingPoints } = await ratelimit(
+      `send-otp:${email}:${getIP()}`,
+      2,
+    );
 
-    if (remainingPoints.remainingPoints <= 0) {
+    if (remainingPoints <= 0) {
       throw new Error("请求过于频繁，请稍后再试");
     }
   });
