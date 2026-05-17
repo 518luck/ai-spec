@@ -1,8 +1,13 @@
 import Link from "next/link";
+import { RegisterProvider } from "../model/register-context";
 import { SignUpForm } from "./signup-form";
 
 export default function RegisterPageClient() {
-  return <RegisterFlow />;
+  return (
+    <RegisterProvider>
+      <RegisterFlow />
+    </RegisterProvider>
+  );
 }
 
 function SignUp() {
@@ -27,6 +32,7 @@ function SignUp() {
     </>
   );
 }
+
 function Verify() {
   return <div>验证</div>;
 }
