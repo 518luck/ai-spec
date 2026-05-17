@@ -4,7 +4,6 @@ import {
   Head,
   Heading,
   Html,
-  Img,
   Preview,
   Section,
   Tailwind,
@@ -13,7 +12,7 @@ import {
 import { Footer } from "../components/footer";
 
 export default function VerifyEmail({
-  email = "panic@thedis.co",
+  email = "123@123.co",
   code = "123456",
 }: {
   email: string;
