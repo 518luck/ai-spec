@@ -1,11 +1,12 @@
 // 描述"一封邮件由哪些字段构成
-import { CreateEmailOptions } from "resend";
+import type { CreateEmailOptions } from "resend";
 
 export interface ResendEmailOptions
   //  \extends 继承 Resend 的所有字段（subject、html、cc 等）
   extends Omit<CreateEmailOptions, "to" | "from"> {
   to: string;
   from?: string;
+  variant?: "primary" | "notifications" | "marketing";
   unsubscribeUrl?: string; // 自定义退订URL列表退订头
 }
 
