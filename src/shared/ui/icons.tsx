@@ -1,4 +1,10 @@
-import { IconRobot, IconBrightness, IconPalette } from "@tabler/icons-react";
+import {
+  IconBrightness,
+  IconEye,
+  IconEyeOff,
+  IconPalette,
+  IconRobot,
+} from "@tabler/icons-react";
 
 export const Icons = {
   logo: IconRobot,
@@ -6,4 +12,7 @@ export const Icons = {
   // header
   brightness: IconBrightness,
   palette: IconPalette,
+
+  eye: IconEye,
+  eyeOff: IconEyeOff,
 };

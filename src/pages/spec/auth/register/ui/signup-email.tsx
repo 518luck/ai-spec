@@ -11,6 +11,7 @@ import {
   FieldLabel,
   FieldSet,
 } from "@/shared/ui/field";
+import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
@@ -28,6 +29,7 @@ export function SignUpEmail() {
   const { setStep, setEmail, setPassword, email } = useRegisterContext();
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordText, setShowPasswordText] = useState(false);
 
   const {
     register,
@@ -96,15 +98,32 @@ export function SignUpEmail() {
           {showPassword && (
             <Field data-invalid={!!errors?.password}>
               <FieldLabel>密码</FieldLabel>
-              <Input
-                type="password"
-                placeholder="password"
-                autoComplete="password"
-                required
-                autoFocus={!isMobile && showPassword}
-                {...register("password")}
-                aria-invalid={!!errors?.password}
-              />
+              <div className="relative">
+                <Input
+                  className="pr-10"
+                  type={showPasswordText ? "text" : "password"}
+                  placeholder="password"
+                  autoComplete="new-password"
+                  required
+                  autoFocus={!isMobile && showPassword}
+                  {...register("password")}
+                  aria-invalid={!!errors?.password}
+                />
+                <Button
+                  aria-label={showPasswordText ? "隐藏密码" : "显示密码"}
+                  className="absolute right-0 h-full px-3 hover:bg-transparent"
+                  onClick={() => setShowPasswordText((visible) => !visible)}
+                  size="icon"
+                  type="button"
+                  variant="ghost"
+                >
+                  {showPasswordText ? (
+                    <Icons.eyeOff className="text-muted-foreground h-4 w-4" />
+                  ) : (
+                    <Icons.eye className="text-muted-foreground h-4 w-4" />
+                  )}
+                </Button>
+              </div>
               <FieldError errors={[errors.password]} />
             </Field>
           )}
