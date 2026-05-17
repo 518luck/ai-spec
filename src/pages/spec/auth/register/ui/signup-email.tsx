@@ -2,6 +2,7 @@
 
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 import { sendOtpAction } from "@/shared/lib/actions/send-otp";
+import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
 import { Button } from "@/shared/ui/button";
 import {
   Field,
@@ -14,23 +15,37 @@ import { Input } from "@/shared/ui/input";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { useRegisterContext } from "../model/register-context";
+
+type SignUpProps = z.infer<typeof signUpSchema>;
 
 export function SignUpEmail() {
+  const { isMobile } = useMediaQuery();
+
+  const { setStep, setEmail, setPassword, email, lockEmail } =
+    useRegisterContext();
+
+  const [showPassword, setShowPassword] = useState(false);
+
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
-
-  const [showPassword, setShowPassword] = useState(false);
-
-  const { isMobile } = useMediaQuery();
+    getValues,
+  } = useForm<SignUpProps>(
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+    resolver: zodResolver(signUpSchema),
+  );
 
   const { executeAsync, isPending } = useAction(sendOtpAction, {
     onSuccess: () => {
-      // setEmail(getValues("email"));
-      // setPassword(getValues("password"));
-      // setStep("verify");
+      setEmail(getValues("email"));
+      setPassword(getValues("password"));
+      setStep("verify");
     },
     onError: ({ error }) => {
       // toast.error(
