@@ -1,3 +1,4 @@
+// 分隔线 ──────── or ────────
 export function AuthMethodsSeparator() {
   return (
     <div className="my-3 flex shrink items-center justify-center gap-2">
