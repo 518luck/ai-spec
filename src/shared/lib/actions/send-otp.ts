@@ -11,6 +11,7 @@ import prisma from "@/shared/db";
 import { generateOTP } from "../auth/utils";
 import { EMAIL_OTP_EXPIRY_IN } from "../auth/constants";
 import { sendEmail } from "../infrastructure/email";
+import VerifyEmail from "../infrastructure/email/templates/verify-email";
 
 const schema = z.object({
   email: emailSchema,
