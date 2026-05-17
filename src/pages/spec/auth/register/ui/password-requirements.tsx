@@ -8,27 +8,27 @@ const REQUIREMENTS: {
   check: (password: string) => boolean;
 }[] = [
   {
-    name: "Number",
+    name: "数字",
     check: (p) => /\d/.test(p),
   },
   {
-    name: "Uppercase letter",
+    name: "大写字母",
     check: (p) => /[A-Z]/.test(p),
   },
   {
-    name: "Lowercase letter",
+    name: "小写字母",
     check: (p) => /[a-z]/.test(p),
   },
   {
-    name: "8 chars",
+    name: "至少 8 位",
     check: (p) => p.length >= 8,
   },
 ];
 
 /**
- * Component to display the password requirements and whether they are each met for a password field.
+ * 显示密码要求以及密码字段是否满足各项要求的组件。
  *
- * Note: This component must be used within a FormProvider context.
+ * 注意：此组件必须在 FormProvider 上下文中使用。
  */
 export const PasswordRequirements = memo(function PasswordRequirements({
   field = "password",
@@ -43,7 +43,12 @@ export const PasswordRequirements = memo(function PasswordRequirements({
   const password = useWatch({ name: field });
 
   return (
-    <ul className={cn("mt-2 flex flex-wrap items-center gap-3", className)}>
+    <ul
+      className={cn(
+        "mt-2 flex flex-wrap items-center justify-between gap-3",
+        className,
+      )}
+    >
       {REQUIREMENTS.map(({ name, check }) => {
         const checked = password?.length && check(password);
 
