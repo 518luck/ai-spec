@@ -1,19 +1,19 @@
 "use client";
 
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
+import { sendOtpAction } from "@/shared/lib/actions/send-otp";
+import { Button } from "@/shared/ui/button";
 import {
   Field,
+  FieldError,
   FieldGroup,
   FieldLabel,
   FieldSet,
-  FieldError,
 } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import { useForm } from "react-hook-form";
-import { useMediaQuery } from "@/shared/hooks/use-media-query";
-import { useState } from "react";
-import { Button } from "@/shared/ui/button";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
-import { sendOtpAction } from "@/shared/lib/actions/send-otp";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 export function SignUpEmail() {
   const {

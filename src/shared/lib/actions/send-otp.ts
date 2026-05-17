@@ -1,17 +1,17 @@
 "use server";
 
-import { actionClient } from "./safe-action";
-import { emailSchema, passwordSchema } from "../zod/schemas/auth";
-import * as z from "zod";
-import { flattenValidationErrors } from "next-safe-action";
-import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
-import { ratelimit } from "../infrastructure/redis/reatlimit";
-import { getIP } from "../api/utils/get-ip";
 import prisma from "@/shared/db";
-import { generateOTP } from "../auth/utils";
+import { flattenValidationErrors } from "next-safe-action";
+import * as z from "zod";
+import { getIP } from "../api/utils/get-ip";
 import { EMAIL_OTP_EXPIRY_IN } from "../auth/constants";
+import { generateOTP } from "../auth/utils";
 import { sendEmail } from "../infrastructure/email";
 import VerifyEmail from "../infrastructure/email/templates/verify-email";
+import { ratelimit } from "../infrastructure/redis/reatlimit";
+import { emailSchema, passwordSchema } from "../zod/schemas/auth";
+import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
+import { actionClient } from "./safe-action";
 
 const schema = z.object({
   email: emailSchema,
