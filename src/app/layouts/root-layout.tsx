@@ -1,6 +1,7 @@
-import { Oxanium, Source_Code_Pro, Source_Serif_4 } from "next/font/google";
 import { RootThemeProvider } from "@/app/providers/root-theme-provider";
 import { ActiveThemeProvider } from "@/shared/providers/active-theme-providers";
+import { Toaster } from "@/shared/ui/sonner";
+import { Oxanium, Source_Code_Pro, Source_Serif_4 } from "next/font/google";
 
 const oxanium = Oxanium({
   subsets: ["latin"],
@@ -39,6 +40,7 @@ export function RootLayoutShell({ children }: { children: React.ReactNode }) {
         >
           {/* TODO 这个地方应该从服务器获取主题然后传递下去暂时不写 */}
           <ActiveThemeProvider>{children}</ActiveThemeProvider>
+          <Toaster />
         </RootThemeProvider>
       </body>
     </html>
