@@ -12,6 +12,8 @@ import { useForm } from "react-hook-form";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 import { useState } from "react";
 import { Button } from "@/shared/ui/button";
+import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
+import { sendOtpAction } from "@/shared/lib/actions/send-otp";
 
 export function SignUpEmail() {
   const {
@@ -23,6 +25,8 @@ export function SignUpEmail() {
   const [showPassword, setShowPassword] = useState(false);
 
   const { isMobile } = useMediaQuery();
+
+  const sendOtp = useAction(sendOtpAction);
 
   return (
     <form>
