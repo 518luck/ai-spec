@@ -26,10 +26,32 @@ export function SignUpEmail() {
 
   const { isMobile } = useMediaQuery();
 
-  const sendOtp = useAction(sendOtpAction);
+  const { executeAsync, isPending } = useAction(sendOtpAction, {
+    onSuccess: () => {
+      // setEmail(getValues("email"));
+      // setPassword(getValues("password"));
+      // setStep("verify");
+    },
+    onError: ({ error }) => {
+      // toast.error(
+      //   error.serverError ||
+      //     error.validationErrors?.email?.[0] ||
+      //     error.validationErrors?.password?.[0],
+      // );
+    },
+  });
+
+  const onSubmit = handleSubmit(async (data) => {
+    try {
+      await executeAsync(data);
+    } catch {
+      // 可留空：onError 已处理 server error
+      // 但不能不 catch
+    }
+  });
 
   return (
-    <form>
+    <form onSubmit={onSubmit}>
       <FieldSet>
         <FieldGroup>
           <Field data-invalid={!!errors?.email}>
@@ -64,12 +86,9 @@ export function SignUpEmail() {
         </FieldGroup>
       </FieldSet>
 
-      <Button
-        type="submit"
-        // text={isPending ? "Submitting..." : "Sign Up"}
-        // disabled={isPending}
-        // loading={isPending}
-      />
+      <Button type="submit" disabled={isPending}>
+        {isPending ? "发送中..." : "发送验证码"}
+      </Button>
     </form>
   );
 }
