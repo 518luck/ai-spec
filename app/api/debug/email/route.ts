@@ -46,12 +46,12 @@ export async function GET(request: NextRequest) {
   try {
     const batchResult = await sendBatchEmailViaResend([
       {
-        to: to.replace("@", "+batch1@"),
+        to,
         subject: `${subject} - 批量1`,
         text: "批量测试邮件 1",
       },
       {
-        to: to.replace("@", "+batch2@"),
+        to,
         subject: `${subject} - 批量2`,
         text: "批量测试邮件 2",
       },
