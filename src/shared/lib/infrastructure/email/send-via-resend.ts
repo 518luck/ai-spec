@@ -30,7 +30,7 @@ const resendEmailForOptions = (
     from: from ?? VARIANT_TO_FROM_MAP[variant],
     bcc,
     ...(replyTo === "noreply" ? {} : { replyTo: replyTo || "support@dub.co" }),
-    subject: `${subject}${subject ? ` [${subject}]` : ""}`,
+    subject: subject ?? "",
     scheduledAt,
     ...(variant === "marketing"
       ? {
