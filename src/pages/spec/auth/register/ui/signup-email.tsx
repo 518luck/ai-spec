@@ -83,6 +83,7 @@ export function SignUpEmail() {
           <Field data-invalid={!!errors?.email}>
             <FieldLabel>邮箱</FieldLabel>
             <Input
+              className="bg-background/5 backdrop-blur-xs"
               type="email" /* 使用邮箱输入类型，浏览器会按邮箱格式处理 */
               placeholder="your-email@example.com" /* 输入框为空时展示的提示文本 */
               autoComplete="email" /* 允许浏览器自动填充邮箱 */
@@ -103,7 +104,7 @@ export function SignUpEmail() {
               <FieldLabel>密码</FieldLabel>
               <div className="relative">
                 <Input
-                  className="pr-10"
+                  className="bg-background/5 pr-10 backdrop-blur-xs"
                   type={showPasswordText ? "text" : "password"}
                   placeholder="password"
                   autoComplete="new-password"
@@ -136,7 +137,12 @@ export function SignUpEmail() {
         </FieldGroup>
       </FieldSet>
 
-      <Button type="submit" disabled={isPending} aria-busy={isPending}>
+      <Button
+        className="mt-4 w-full"
+        type="submit"
+        disabled={isPending}
+        aria-busy={isPending}
+      >
         {isPending ? "注册中..." : "注册"}
       </Button>
     </form>
