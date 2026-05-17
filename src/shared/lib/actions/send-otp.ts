@@ -10,6 +10,7 @@ import { getIP } from "../api/utils/get-ip";
 import prisma from "@/shared/db";
 import { generateOTP } from "../auth/utils";
 import { EMAIL_OTP_EXPIRY_IN } from "../auth/constants";
+import { sendEmail } from "../infrastructure/email";
 
 const schema = z.object({
   email: emailSchema,
@@ -59,6 +60,15 @@ export const sendOtpAction = actionClient
           token: code,
           expires: new Date(Date.now() + EMAIL_OTP_EXPIRY_IN * 1000),
         },
+      }),
+
+      sendEmail({
+        subject: `${process.env.NEXT_PUBLIC_APP_NAME}: OTP to verify your account`,
+        to: email,
+        react: VerifyEmail({
+          email,
+          code,
+        }),
       }),
     ]);
   });
