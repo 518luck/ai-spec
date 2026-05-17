@@ -1,5 +1,5 @@
 import { Hr, Link, Tailwind, Text } from "react-email";
-
+// TODO 这个地方的联系邮件需要修改
 export function Footer({
   email, //收件人的邮箱地址
   marketing, //标记该邮件是否为营销邮件。
@@ -37,13 +37,6 @@ export function Footer({
           </Link>
         </Text>
       )}
-      <Text className="text-[12px] text-neutral-500">
-        Dub Technologies, Inc.
-        <br />
-        2261 Market Street STE 5906
-        <br />
-        San Francisco, CA 941114
-      </Text>
     </Tailwind>
   );
 }
