@@ -16,10 +16,11 @@ import { Input } from "@/shared/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
 import { type SubmitEvent, useState } from "react";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 import { useRegisterContext } from "../model/register-context";
+import { PasswordRequirements } from "./password-requirements";
 
 type SignUpProps = z.infer<typeof signUpSchema>;
 
@@ -31,17 +32,19 @@ export function SignUpEmail() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordText, setShowPasswordText] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    getValues,
-  } = useForm<SignUpProps>({
+  const methods = useForm<SignUpProps>({
     defaultValues: {
       email,
     },
     resolver: zodResolver(signUpSchema),
   });
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    getValues,
+  } = methods;
 
   const { executeAsync, isPending } = useAction(sendOtpAction, {
     onSuccess: () => {
@@ -58,7 +61,7 @@ export function SignUpEmail() {
     },
   });
 
-  const onSubmit = (e: SubmitEvent) => {
+  const onSubmit = (e: SubmitEvent<HTMLFormElement>) => {
     const { email, password } = getValues();
 
     if (email && !password && !showPassword) {
@@ -124,6 +127,9 @@ export function SignUpEmail() {
                   )}
                 </Button>
               </div>
+              <FormProvider {...methods}>
+                <PasswordRequirements />
+              </FormProvider>
               <FieldError errors={[errors.password]} />
             </Field>
           )}
