@@ -18,6 +18,7 @@ const schema = z.object({
   password: passwordSchema.optional(),
 });
 
+// 注册时发送邮箱验证码
 export const sendOtpAction = actionClient
   .inputSchema(schema, {
     //当输入校验失败时，你可以自己决定“返回给前端的错误长什么样”。
