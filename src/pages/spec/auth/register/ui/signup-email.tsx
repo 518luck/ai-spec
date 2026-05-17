@@ -12,9 +12,11 @@ import {
   FieldSet,
 } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
 import { useState } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import * as z from "zod";
 import { useRegisterContext } from "../model/register-context";
 
@@ -23,8 +25,7 @@ type SignUpProps = z.infer<typeof signUpSchema>;
 export function SignUpEmail() {
   const { isMobile } = useMediaQuery();
 
-  const { setStep, setEmail, setPassword, email, lockEmail } =
-    useRegisterContext();
+  const { setStep, setEmail, setPassword, email } = useRegisterContext();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -33,13 +34,12 @@ export function SignUpEmail() {
     handleSubmit,
     formState: { errors },
     getValues,
-  } = useForm<SignUpProps>(
+  } = useForm<SignUpProps>({
     defaultValues: {
-      email: "",
-      password: "",
+      email,
     },
     resolver: zodResolver(signUpSchema),
-  );
+  });
 
   const { executeAsync, isPending } = useAction(sendOtpAction, {
     onSuccess: () => {
@@ -48,22 +48,26 @@ export function SignUpEmail() {
       setStep("verify");
     },
     onError: ({ error }) => {
-      // toast.error(
-      //   error.serverError ||
-      //     error.validationErrors?.email?.[0] ||
-      //     error.validationErrors?.password?.[0],
-      // );
+      toast.error(
+        error.serverError ||
+          error.validationErrors?.email?.[0] ||
+          error.validationErrors?.password?.[0],
+      );
     },
   });
 
-  const onSubmit = handleSubmit(async (data) => {
-    try {
-      await executeAsync(data);
-    } catch {
-      // 可留空：onError 已处理 server error
-      // 但不能不 catch
+  const onSubmit = () => {
+    const { email, password } = getValues();
+
+    if (email && !password && !showPassword) {
+      setShowPassword(true);
+      return;
     }
-  });
+
+    handleSubmit(async (data) => {
+      await executeAsync(data);
+    });
+  };
 
   return (
     <form onSubmit={onSubmit}>
@@ -101,8 +105,8 @@ export function SignUpEmail() {
         </FieldGroup>
       </FieldSet>
 
-      <Button type="submit" disabled={isPending}>
-        {isPending ? "发送中..." : "发送验证码"}
+      <Button type="submit" disabled={isPending} aria-busy={isPending}>
+        {isPending ? "注册中..." : "注册"}
       </Button>
     </form>
   );
