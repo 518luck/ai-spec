@@ -14,7 +14,7 @@ import {
 import { Input } from "@/shared/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
-import { useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
@@ -56,17 +56,19 @@ export function SignUpEmail() {
     },
   });
 
-  const onSubmit = () => {
+  const onSubmit = (e: SubmitEvent) => {
     const { email, password } = getValues();
 
     if (email && !password && !showPassword) {
+      e.preventDefault(); // 阻止表单默认提交行为
+      e.stopPropagation(); // 阻止事件继续冒泡
       setShowPassword(true);
       return;
     }
 
     handleSubmit(async (data) => {
       await executeAsync(data);
-    });
+    })(e);
   };
 
   return (
@@ -76,13 +78,17 @@ export function SignUpEmail() {
           <Field data-invalid={!!errors?.email}>
             <FieldLabel>邮箱</FieldLabel>
             <Input
-              type="email"
-              placeholder="panic@thedis.co"
-              autoComplete="email"
-              required
-              autoFocus={!isMobile && showPassword}
+              type="email" /* 使用邮箱输入类型，浏览器会按邮箱格式处理 */
+              placeholder="your-email@example.com" /* 输入框为空时展示的提示文本 */
+              autoComplete="email" /* 允许浏览器自动填充邮箱 */
+              required /* HTML 原生必填校验 */
+              autoFocus={
+                !isMobile && showPassword
+              } /* 非移动端且显示密码框时自动聚焦 */
               {...register("email")}
-              aria-invalid={!!errors?.email}
+              aria-invalid={
+                !!errors?.email
+              } /* 告诉辅助技术当前邮箱字段是否校验失败 */
             />
             <FieldError errors={[errors.email]} />
           </Field>
