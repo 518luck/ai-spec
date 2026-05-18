@@ -1,4 +1,4 @@
-import { CircleCheckFill } from "@/shared/assets/icons/circle-check-fill";
+import { CircleCheckFill } from "@/shared/assets/icons";
 import { cn } from "@/shared/lib/utils";
 import { memo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
