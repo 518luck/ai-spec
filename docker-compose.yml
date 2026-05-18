@@ -1,9 +1,9 @@
-name: prompt-shelf
+name: ai-spec
  
 services:
   redis:
     image: redis:8.6.2-alpine
-    container_name: ps-redis
+    container_name: ai-spec-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
