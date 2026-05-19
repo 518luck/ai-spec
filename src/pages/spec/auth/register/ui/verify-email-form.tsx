@@ -1,3 +1,4 @@
+import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { useState } from "react";
 
@@ -9,23 +10,41 @@ export function VerifyEmailForm() {
         maxLength={6}
         value={value}
         onChange={(value) => setValue(value)}
+        onClick={(code) => {
+          console.log("6位验证码:", code);
+
+          // 这里调用接口
+          // verifyEmail(code)
+        }}
       >
-        <InputOTPGroup>
-          <InputOTPSlot index={0} />
-          <InputOTPSlot index={1} />
-          <InputOTPSlot index={2} />
-          <InputOTPSlot index={3} />
-          <InputOTPSlot index={4} />
-          <InputOTPSlot index={5} />
+        <InputOTPGroup className="gap-4 border-0 ring-0">
+          <InputOTPSlot
+            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            index={0}
+          />
+          <InputOTPSlot
+            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            index={1}
+          />
+          <InputOTPSlot
+            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            index={2}
+          />
+          <InputOTPSlot
+            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            index={3}
+          />
+          <InputOTPSlot
+            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            index={4}
+          />
+          <InputOTPSlot
+            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            index={5}
+          />
         </InputOTPGroup>
       </InputOTP>
-      <div className="text-center text-sm">
-        {value === "" ? (
-          <>Enter your one-time password.</>
-        ) : (
-          <>You entered: {value}</>
-        )}
-      </div>
+      <Button className="w-full"></Button>
     </div>
   );
 }

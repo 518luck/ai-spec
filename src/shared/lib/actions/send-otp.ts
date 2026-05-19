@@ -30,14 +30,10 @@ export const sendOtpAction = actionClient
   .action(async ({ parsedInput }) => {
     const { email } = parsedInput;
 
-    const { remainingPoints } = await ratelimit(
-      `send-otp:${email}:${getIP()}`,
-      2,
-    );
-
-    if (remainingPoints <= 0) {
-      throw new Error("请求过于频繁，请稍后再试");
-    }
+    await ratelimit({
+      key: `send-otp:${email}:${getIP()}`,
+      points: 2,
+    });
 
     const isExistingUser = await prisma.user.findUnique({
       where: { email },

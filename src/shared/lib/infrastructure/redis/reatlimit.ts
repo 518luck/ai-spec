@@ -9,9 +9,19 @@ export const ratelimiter = new RateLimiterRedis({
   blockDuration: 300, // 【阻塞时长】积分耗尽后，额外阻塞 300 秒（5分钟），期间直接拒绝
 });
 
+type RatelimitOptions = {
+  key: string;
+  points?: number;
+  duration?: number;
+};
+
 // 基于 Redis 的频率限制（限流）工具函数。
-// points 表示本次请求要消耗多少积分，默认一次请求消耗 1 点。
-export async function ratelimit(key: string, points = 1) {
+// points 表示本次请求要消耗多少积分，默认一次请求消耗 1 点；duration 表示本次 key 的时间窗口，单位是秒。
+export async function ratelimit({
+  key,
+  points = 1,
+  duration,
+}: RatelimitOptions) {
   try {
     // 返回值
     //     {
@@ -20,7 +30,11 @@ export async function ratelimit(key: string, points = 1) {
     //         consumedPoints: 1,        // 已经用了多少积分
     //         isFirstInDuration: true   // 是不是这个窗口的第一次请求
     //     }
-    return await ratelimiter.consume(key, points);
+    return await ratelimiter.consume(
+      key,
+      points,
+      duration === undefined ? undefined : { customDuration: duration },
+    );
   } catch (rejRes: unknown) {
     if (rejRes instanceof Error) {
       throw new Error("限流服务异常");

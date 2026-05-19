@@ -1,6 +1,6 @@
-import type { NextAuthConfig } from "next-auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/shared/db";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 // import { skipAuthThrottling } from "../api/environment";
 // import { ratelimit } from "../infrastructure/redis/reatlimit";
@@ -43,7 +43,7 @@ export const authOptions: NextAuthConfig = {
       //   }
 
       //   if (!skipAuthThrottling) {
-      //     await ratelimit(`login-attempts:${email}`);
+      //     await ratelimit({ key: `login-attempts:${email}` });
       //   }
       // },
     }),
