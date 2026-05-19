@@ -1,3 +1,5 @@
+import { compare, hash } from "bcryptjs";
+
 // shadcn/ui 的工具函数，用于智能合并 Tailwind CSS 类名
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -27,3 +29,19 @@ export const truncate = (
   if (!str || str.length <= length) return str ?? null;
   return `${str.slice(0, length - 3)}...`;
 };
+
+// 密码哈希
+export async function hashPassword(password: string) {
+  return await hash(password, 12);
+}
+
+// 拿用户这次输入的明文密码，和数据库里的 passwordHash 做比较
+export async function validatePassword({
+  password,
+  passwordHash,
+}: {
+  password: string;
+  passwordHash: string;
+}) {
+  return await compare(password, passwordHash);
+}
