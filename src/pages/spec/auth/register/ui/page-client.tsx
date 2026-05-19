@@ -1,6 +1,13 @@
+"use client";
+
+import { truncate } from "@/shared/lib/utils";
 import Link from "next/link";
-import { RegisterProvider } from "../model/register-context";
+import {
+  RegisterProvider,
+  useRegisterContext,
+} from "../model/register-context";
 import { SignUpForm } from "./signup-form";
+import { VerifyEmailForm } from "./verify-email-form";
 
 export default function RegisterPageClient() {
   return (
@@ -34,13 +41,35 @@ function SignUp() {
 }
 
 function Verify() {
-  return <div>验证</div>;
+  const { email } = useRegisterContext();
+
+  return (
+    <>
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center gap-1 text-center">
+          <h3 className="text-center text-xl font-semibold">
+            请验证您的电子邮箱地址。
+          </h3>
+          <p className="text-base font-medium text-neutral-500">
+            请输入发送至
+            <strong className="font-semibold text-neutral-600">
+              {truncate(email, 30)}
+            </strong>
+            的六位验证码。
+          </p>
+        </div>
+        <div className="mt-12">
+          <VerifyEmailForm />
+        </div>
+      </div>
+    </>
+  );
 }
 
 const RegisterFlow = () => {
   //   const { step } = useRegisterContext();
-  const step = "signup";
+  const step = "verify";
 
-  if (step === "signup") return <SignUp />;
+  // if (step === "signup") return <SignUp />;
   if (step === "verify") return <Verify />;
 };
