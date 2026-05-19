@@ -9,6 +9,7 @@ import { hashPassword } from "../utils";
 import { signUpSchema } from "../zod/schemas/auth";
 import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
 import { actionClient } from "./safe-action";
+
 const OTP_ATTEMPTS = 2;
 const OTP_LOCKOUT_DURATION = 24 * 60 * 60; // Block for 24 hours
 

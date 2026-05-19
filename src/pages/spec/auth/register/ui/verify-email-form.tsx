@@ -1,9 +1,15 @@
+import { createUserAccountAction } from "@/shared/lib/actions/create-user-account";
 import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
+import { useAction } from "next-safe-action/hooks";
 import { useState } from "react";
 
 export function VerifyEmailForm() {
   const [value, setValue] = useState("");
+  const { executeAsync, isPending } = useAction(createUserAccountAction, {
+    async onSuccess() {},
+  });
+
   return (
     <div className="flex flex-col items-center">
       <InputOTP
