@@ -4,6 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Spinner } from "@/shared/ui/spinner";
 import { useAction } from "next-safe-action/hooks";
+import router from "next/router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRegisterContext } from "../model/register-context";
@@ -15,10 +16,13 @@ export function VerifyEmailForm() {
   const [isInvalidCode, setIsInvalidCode] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
+  // 校验code 同时创建账户
   const { executeAsync, isPending } = useAction(createUserAccountAction, {
     async onSuccess() {
       toast.success("正在创建账户...");
       setIsRedirecting(true);
+      // 不保留url历史
+      router.replace("/");
     },
     onError({ error }) {
       toast.error(error.serverError);
