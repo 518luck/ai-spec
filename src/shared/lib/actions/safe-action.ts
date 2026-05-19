@@ -1,4 +1,3 @@
-"use client";
 import { createSafeActionClient } from "next-safe-action";
 import { after } from "next/server";
 import { logger } from "../infrastructure/axiom/server";
