@@ -67,9 +67,8 @@ function Verify() {
 }
 
 const RegisterFlow = () => {
-  //   const { step } = useRegisterContext();
-  const step = "verify";
+  const { step } = useRegisterContext();
 
-  // if (step === "signup") return <SignUp />;
+  if (step === "signup") return <SignUp />;
   if (step === "verify") return <Verify />;
 };
