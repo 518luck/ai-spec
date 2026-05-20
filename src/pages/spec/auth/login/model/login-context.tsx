@@ -36,6 +36,11 @@ export function LoginFormProvider({ children }: { children: ReactNode }) {
     AuthMethod | undefined
   >();
 
+  //  记录用户上次使用的登录方式，并持久化到浏览器 localStorage，刷新后仍可读取
+  const [lastUsedAuthMethodLive, setLastUsedAuthMethod] = useLocalStorage<
+    AuthMethod | undefined
+  >("last-used-auth-method", undefined);
+
   return (
     <LoginFormContext.Provider
       value={{
