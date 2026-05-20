@@ -4,6 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const ResendOtp = ({ email }: { email: string }) => {
   const [delaySeconds, setDelaySeconds] = useState(0);
@@ -16,8 +17,9 @@ export const ResendOtp = ({ email }: { email: string }) => {
       setState("success");
       setDelaySeconds(60);
     },
-    onError: () => {
+    onError: ({ error }) => {
       setState("error");
+      toast.error(error.serverError);
       setDelaySeconds(5);
     },
   });
