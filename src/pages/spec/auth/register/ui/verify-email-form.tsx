@@ -4,13 +4,14 @@ import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Spinner } from "@/shared/ui/spinner";
 import { useAction } from "next-safe-action/hooks";
-import router from "next/router";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRegisterContext } from "../model/register-context";
 import { ResendOtp } from "./resend-otp";
 
 export function VerifyEmailForm() {
+  const router = useRouter();
   const { email, password } = useRegisterContext();
   const { isMobile } = useMediaQuery();
   const [code, setCode] = useState("");
@@ -47,7 +48,7 @@ export function VerifyEmailForm() {
           executeAsync({ email, password, code: completedCode });
         }}
       >
-        <InputOTPGroup className="gap-4 border-0 ring-0 has-aria-invalid:ring-0 has-aria-invalid:border-0">
+        <InputOTPGroup className="gap-4 border-0 ring-0 has-aria-invalid:border-0 has-aria-invalid:ring-0">
           <InputOTPSlot
             className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
             index={0}
