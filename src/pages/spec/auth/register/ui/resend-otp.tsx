@@ -38,11 +38,11 @@ export const ResendOtp = ({ email }: { email: string }) => {
     <div className="relative mt-4 text-center text-sm font-medium text-neutral-500">
       {currentState === "default" && (
         <>
-          {/* {isPending && (
-          )} */}
-          <div className="absolute top-1/2 left-0 -translate-x-full -translate-y-1/2 pr-1.5">
-            <Spinner className="h-3 w-3" />
-          </div>
+          {isPending && (
+            <div className="absolute top-1/2 left-0 -translate-x-full -translate-y-1/2 pr-1.5">
+              <Spinner className="h-3 w-3" />
+            </div>
+          )}
 
           <p className={cn(isPending && "opacity-80")}>
             未收到验证码？
