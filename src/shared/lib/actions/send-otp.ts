@@ -61,7 +61,7 @@ export const sendOtpAction = actionClient
       }),
 
       sendEmail({
-        subject: `${process.env.NEXT_PUBLIC_APP_NAME}: OTP to verify your account`,
+        subject: `用于验证您账户的验证码 - ${process.env.NEXT_PUBLIC_APP_NAME}`,
         to: email,
         react: VerifyEmail({
           email,
