@@ -71,7 +71,7 @@ export const createUserAccountAction = actionClient
       });
 
       // 验证码过期时提示用户重新获取。
-      throw new Error("The OTP has expired. Please request a new one.");
+      throw new Error("验证码已经过期,请重新发送");
     }
 
     await prisma.emailVerificationToken.delete({
