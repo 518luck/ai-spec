@@ -8,6 +8,7 @@ import router from "next/router";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useRegisterContext } from "../model/register-context";
+import { ResendOtp } from "./resend-otp";
 
 export function VerifyEmailForm() {
   const { email, password } = useRegisterContext();
@@ -94,6 +95,8 @@ export function VerifyEmailForm() {
         {(isPending || isRedirecting) && <Spinner />}
         {isPending ? "验证中..." : "继续"}
       </Button>
+
+      <ResendOtp email={email} />
     </div>
   );
 }
