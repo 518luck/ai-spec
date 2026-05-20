@@ -29,8 +29,8 @@ function SignUp() {
         <p className="mt-6 text-center text-sm font-medium text-neutral-500">
           已有账号？&nbsp;
           <Link
-            href="/login"
-            className="font-semibold text-neutral-700 transition-colors hover:text-neutral-900"
+            href="login"
+            className="font-semibold text-neutral-400 transition-colors hover:text-neutral-300"
           >
             去登录
           </Link>
