@@ -46,7 +46,7 @@ export function VerifyEmailForm() {
           executeAsync({ email, password, code: completedCode });
         }}
       >
-        <InputOTPGroup className="gap-4 border-0 ring-0">
+        <InputOTPGroup className="gap-4 border-0 ring-0 has-aria-invalid:ring-0 has-aria-invalid:border-0">
           <InputOTPSlot
             className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
             index={0}
