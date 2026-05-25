@@ -1,11 +1,44 @@
-<!-- BEGIN:nextjs-agent-rules -->
+# AI 代理开发指南
 
-# 这不是你熟悉的 Next.js
+## 概述
 
-这个版本包含破坏性变更，API、约定和文件结构都可能与你训练数据中的内容不同。在编写任何代码之前，请先阅读 `node_modules/next/dist/docs/` 中对应的指南，并注意弃用提示。
+这个并不是你所熟悉的Next.js项目,前端的业务代码都在src下面,后端的代码都在app/api下面
 
-<!-- END:nextjs-agent-rules -->
+## 项目结构
 
-# 提交代码
+```
 
-提交代码的时候将剩余的文件进行原子化提交,commit message 为中文
+├── app/                   # Next.js App Router 路由层（薄层，仅路由定义，实现委托给 src/）
+│   ├── api/               # 后端入口（API 端点及服务端处理逻辑均在此）
+│   └── spec/
+├── src/                   # 前端代码（shared/ 同时存放后端基础设施）
+│   ├── app/               # 让应用运行起来的一切 — 路由、入口点、全局样式、提供者（providers）。
+│   ├── pages/             # 完整页面或嵌套路由中的大块页面内容。
+│   ├── widgets/           # 大型独立的功能或 UI 块，通常承载一个完整的用例。
+│   ├── shared/            # 可复用的通用功能，特别是在与项目/业务的具体内容解耦时
+│   ├── entities/          # 项目所涉及的业务实体，如 user 或 product。
+│   └── features/          # 整个产品功能的可复用实现，即能为用户带来业务价值的操作。
+├── prisma/                # ORM schema + migrations
+└── public/                # 静态资源
+```
+
+## 命令
+
+写一下数据库的命令
+
+## 上下文感知加载
+
+根据你正在工作的区域使用对应的 AGENTS.md：
+
+- **后端**（`app/api/**`）→ `app/api/AGENTS.md`（后端模式）
+- **前后端通用**（`src/shared/**`）→ 注意，此目录下的代码前后端均在使用
+- **前端**（`src/**`）→ `src/AGENTS.md`（前端模式）
+- **通用** → 本文件（`AGENTS.md`）用于 ai-spec 概览和命令
+
+### 后端
+
+后端开发模式、安全指南和架构说明，参见 `app/api/AGENTS.md`。
+
+### 前端
+
+前端开发模式、设计系统指南和 React 测试最佳实践，参见 `src/AGENTS.md`。
