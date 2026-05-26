@@ -1,11 +1,5 @@
-import {
-  createContext,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
-  useContext,
-  useState,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { Dispatch, ReactNode, SetStateAction } from "react";
 
 export const authMethods = [
   "google",
@@ -15,6 +9,12 @@ export const authMethods = [
   "password",
 ] as const;
 export type AuthMethod = (typeof authMethods)[number];
+
+const lastUsedAuthMethodStorageKey = "last-used-auth-method";
+const authMethodSet = new Set<string>(authMethods);
+
+const isAuthMethod = (value: string | null): value is AuthMethod =>
+  value !== null && authMethodSet.has(value);
 
 export type LoginContextType = {
   authMethod: AuthMethod | undefined;
@@ -34,12 +34,29 @@ export function LoginFormProvider({ children }: { children: ReactNode }) {
   const [showPasswordField, setShowPasswordField] = useState(false);
   const [lastUsedAuthMethod, setLastUsedAuthMethod] = useState<
     AuthMethod | undefined
-  >();
+  >(() => {
+    if (typeof window === "undefined") {
+      return undefined;
+    }
 
-  //  记录用户上次使用的登录方式，并持久化到浏览器 localStorage，刷新后仍可读取
-  const [lastUsedAuthMethodLive, setLastUsedAuthMethod] = useLocalStorage<
-    AuthMethod | undefined
-  >("last-used-auth-method", undefined);
+    const storedAuthMethod = window.localStorage.getItem(
+      lastUsedAuthMethodStorageKey,
+    );
+
+    return isAuthMethod(storedAuthMethod) ? storedAuthMethod : undefined;
+  });
+
+  useEffect(() => {
+    if (lastUsedAuthMethod === undefined) {
+      window.localStorage.removeItem(lastUsedAuthMethodStorageKey);
+      return;
+    }
+
+    window.localStorage.setItem(
+      lastUsedAuthMethodStorageKey,
+      lastUsedAuthMethod,
+    );
+  }, [lastUsedAuthMethod]);
 
   return (
     <LoginFormContext.Provider
