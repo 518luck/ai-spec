@@ -22,11 +22,25 @@
 └── public/                # 静态资源
 ```
 
-## 命令
+## 数据库约束
 
-写一下数据库的命令
+操作数据库时必须遵循以下流程：
 
-## 上下文感知加载
+1. 在 `prisma/schema/schema.prisma` 中定义或修改 Model
+2. 执行 `pnpm run prisma:generate` 生成 Prisma Client 代码
+3. 如需同步数据库结构，执行 `pnpm run prisma:migrate`
+
+**禁止手动修改** `src/shared/db/generator/` 下的任何文件，该目录由脚本自动生成。
+
+### 命令
+
+| 命令 | 说明 |
+|---|---|
+| `pnpm run prisma:validate` | 验证 schema 语法 |
+| `pnpm run prisma:generate` | 生成 Prisma Client 代码 |
+| `pnpm run prisma:migrate` | 创建并应用数据库迁移（开发环境） |
+
+## 上下文感知加载 
 
 根据你正在工作的区域使用对应的 AGENTS.md：
 
