@@ -1,0 +1,5 @@
+interface:
+  display_name: "shadcn/ui"
+  short_description: "管理 shadcn/ui 组件，包括添加、搜索、修复、调试、样式设置和组合 UI。"
+  icon_small: "./assets/shadcn-small.png"
+  icon_large: "./assets/shadcn.png"
