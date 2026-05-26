@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "email:dev": "email dev --dir src/shared/lib/infrastructure/email",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
