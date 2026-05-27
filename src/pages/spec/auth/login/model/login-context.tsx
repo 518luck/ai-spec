@@ -35,7 +35,9 @@ type LoginContextType = {
   setPreferredMethod: (method: LoginMethod) => void;
 };
 
+// localStorage 里的 key
 const loginPreferredMethodStorageKey = "prompt-shelf:login-preferred-method";
+// 自定义事件名。
 const loginPreferredMethodChangeEvent = "login-preferred-method-change";
 
 const LoginContext = createContext<LoginContextType | null>(null);
