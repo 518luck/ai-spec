@@ -1,6 +1,9 @@
-import { createContext, useContext, useEffect, useState } from "react";
-import type { Dispatch, ReactNode, SetStateAction } from "react";
+"use client";
 
+import type { Dispatch, ReactNode, SetStateAction } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+
+// 支持的身份验证方法列表
 export const authMethods = [
   "google",
   "github",
@@ -13,6 +16,7 @@ export type AuthMethod = (typeof authMethods)[number];
 const lastUsedAuthMethodStorageKey = "last-used-auth-method";
 const authMethodSet = new Set<string>(authMethods);
 
+// 验证给定的字符串是否为合法的身份验证方法
 const isAuthMethod = (value: string | null): value is AuthMethod =>
   value !== null && authMethodSet.has(value);
 
@@ -26,8 +30,10 @@ export type LoginContextType = {
   setLastUsedAuthMethod: Dispatch<SetStateAction<AuthMethod | undefined>>;
 };
 
+// 登录表单状态的 React 上下文
 export const LoginFormContext = createContext<LoginContextType | null>(null);
 
+// 登录表单状态提供者组件，用于管理和共享登录流程中的各种状态
 export function LoginFormProvider({ children }: { children: ReactNode }) {
   const [authMethod, setAuthMethod] = useState<AuthMethod | undefined>();
   const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>();
@@ -75,6 +81,7 @@ export function LoginFormProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// 用于在子组件中获取登录上下文状态的自定义 Hook
 export function useLoginContext() {
   const ctx = useContext(LoginFormContext);
 
