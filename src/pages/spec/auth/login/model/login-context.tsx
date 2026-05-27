@@ -1,93 +1,124 @@
 "use client";
 
-import type { Dispatch, ReactNode, SetStateAction } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  type JSX,
+  type PropsWithChildren,
+  useContext,
+  useState,
+  useSyncExternalStore,
+} from "react";
 
-// 支持的身份验证方法列表
-export const authMethods = [
-  "google",
-  "github",
-  "email",
-  "saml",
-  "password",
-] as const;
-export type AuthMethod = (typeof authMethods)[number];
+// Google 登录方式标识。
+export const google = "google" as const;
 
-const lastUsedAuthMethodStorageKey = "last-used-auth-method";
-const authMethodSet = new Set<string>(authMethods);
+// 邮箱登录方式标识。
+export const email = "email" as const;
 
-// 验证给定的字符串是否为合法的身份验证方法
-const isAuthMethod = (value: string | null): value is AuthMethod =>
-  value !== null && authMethodSet.has(value);
+// GitHub 登录方式标识。
+export const github = "github" as const;
 
-export type LoginContextType = {
-  authMethod: AuthMethod | undefined;
-  setAuthMethod: Dispatch<SetStateAction<AuthMethod | undefined>>;
-  clickedMethod: AuthMethod | undefined;
+// 密码凭据字段标识。
+export const password = "password" as const;
+
+export type LoginMethod = typeof google | typeof email | typeof github;
+export type LoginCredentialField = typeof email | typeof password;
+
+type LoginContextType = {
+  email: string;
+  password: string;
   showPasswordField: boolean;
-  setShowPasswordField: Dispatch<SetStateAction<boolean>>;
-  setClickedMethod: Dispatch<SetStateAction<AuthMethod | undefined>>;
-  setLastUsedAuthMethod: Dispatch<SetStateAction<AuthMethod | undefined>>;
+  preferredMethod: LoginMethod;
+  setEmail: (value: string) => void;
+  setPassword: (value: string) => void;
+  setShowPasswordField: (value: boolean) => void;
+  setPreferredMethod: (method: LoginMethod) => void;
 };
 
-// 登录表单状态的 React 上下文
-export const LoginFormContext = createContext<LoginContextType | null>(null);
+const loginPreferredMethodStorageKey = "prompt-shelf:login-preferred-method";
+const loginPreferredMethodChangeEvent = "login-preferred-method-change";
 
-// 登录表单状态提供者组件，用于管理和共享登录流程中的各种状态
-export function LoginFormProvider({ children }: { children: ReactNode }) {
-  const [authMethod, setAuthMethod] = useState<AuthMethod | undefined>();
-  const [clickedMethod, setClickedMethod] = useState<AuthMethod | undefined>();
+const LoginContext = createContext<LoginContextType | null>(null);
+
+// 判断本地存储中的值是否为受支持的登录方式。
+const isLoginMethod = (value: string | null): value is LoginMethod => {
+  return value === google || value === email || value === github;
+};
+
+// 从浏览器本地存储读取用户上次使用的登录方式。
+const getStoredPreferredMethod = (): LoginMethod => {
+  if (typeof window === "undefined") {
+    return email;
+  }
+
+  const storedMethod = window.localStorage.getItem(
+    loginPreferredMethodStorageKey,
+  );
+
+  return isLoginMethod(storedMethod) ? storedMethod : email;
+};
+
+// 服务端渲染时使用默认邮箱登录方式，避免读取浏览器 API。
+const getServerPreferredMethod = (): LoginMethod => email;
+
+// 订阅本地登录偏好变化，让当前页面和其它标签页保持同步。
+const subscribeToPreferredMethod = (
+  onStoreChange: () => void,
+): (() => void) => {
+  if (typeof window === "undefined") {
+    return () => {};
+  }
+
+  window.addEventListener("storage", onStoreChange);
+  window.addEventListener(loginPreferredMethodChangeEvent, onStoreChange);
+
+  return () => {
+    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener(loginPreferredMethodChangeEvent, onStoreChange);
+  };
+};
+
+// 为登录页提供账号数据与用户登录习惯。
+export function LoginProvider({ children }: PropsWithChildren): JSX.Element {
+  const [emailValue, setEmailValue] = useState("");
+  const [passwordValue, setPasswordValue] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
-  const [lastUsedAuthMethod, setLastUsedAuthMethod] = useState<
-    AuthMethod | undefined
-  >(() => {
-    if (typeof window === "undefined") {
-      return undefined;
-    }
+  const preferredMethod = useSyncExternalStore(
+    subscribeToPreferredMethod,
+    getStoredPreferredMethod,
+    getServerPreferredMethod,
+  );
 
-    const storedAuthMethod = window.localStorage.getItem(
-      lastUsedAuthMethodStorageKey,
-    );
-
-    return isAuthMethod(storedAuthMethod) ? storedAuthMethod : undefined;
-  });
-
-  useEffect(() => {
-    if (lastUsedAuthMethod === undefined) {
-      window.localStorage.removeItem(lastUsedAuthMethodStorageKey);
-      return;
-    }
-
-    window.localStorage.setItem(
-      lastUsedAuthMethodStorageKey,
-      lastUsedAuthMethod,
-    );
-  }, [lastUsedAuthMethod]);
+  const setPreferredMethod = (method: LoginMethod): void => {
+    window.localStorage.setItem(loginPreferredMethodStorageKey, method);
+    window.dispatchEvent(new Event(loginPreferredMethodChangeEvent));
+  };
 
   return (
-    <LoginFormContext.Provider
+    <LoginContext.Provider
       value={{
-        authMethod,
-        setAuthMethod,
-        clickedMethod,
+        email: emailValue,
+        password: passwordValue,
         showPasswordField,
+        preferredMethod,
+        setEmail: setEmailValue,
+        setPassword: setPasswordValue,
         setShowPasswordField,
-        setClickedMethod,
-        setLastUsedAuthMethod,
+        setPreferredMethod,
       }}
     >
       {children}
-    </LoginFormContext.Provider>
+    </LoginContext.Provider>
   );
 }
 
-// 用于在子组件中获取登录上下文状态的自定义 Hook
-export function useLoginContext() {
-  const ctx = useContext(LoginFormContext);
+// 读取登录页共享状态并保证调用位置正确。
+export const useLoginContext = (): LoginContextType => {
+  const context = useContext(LoginContext);
 
-  if (!ctx) {
-    throw new Error("useLoginContext 必须在 LoginFormProvider 内部使用");
+  if (context === null) {
+    throw new Error("useLoginContext 必须在 LoginProvider 组件内部使用。");
   }
 
-  return ctx;
-}
+  return context;
+};
