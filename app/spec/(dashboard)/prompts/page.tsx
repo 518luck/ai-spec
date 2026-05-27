@@ -1,10 +1,10 @@
 "use client";
 
 import { Button } from "@/shared/ui/button";
-import { useState } from "react";
 import { useTheme } from "next-themes";
+import { useState } from "react";
 
-export default function PromptsPage() {
+export default function Page() {
   const [number, setNumber] = useState(0);
   // 这里只读取主题并用于切换，避免把不稳定的主题值直接渲染到首屏 HTML。
   const { theme, setTheme } = useTheme();
