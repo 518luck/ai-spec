@@ -73,6 +73,63 @@ import { CreateSpecForm } from "@/features/create-spec/ui/create-spec-form";
 - 禁止把具体业务逻辑放进 shared。
 - 禁止把只用一次的页面局部 UI 过早抽到 widgets 或 features。
 
+## React 状态管理
+
+编写组件状态时，优先按作用范围判断，不要为了统一而过度抽象。页面级或功能流程级共享状态可以抽 Context，局部状态应保持在组件内或通过 props 表达。
+
+### 判断优先级
+
+- 只属于当前组件的状态，使用 `useState` 或组件内局部状态。
+- 父子组件之间少量直接传递的状态，使用 props。
+- 多个兄弟组件需要读写同一份状态，使用 Context。
+- 跨页面或全局业务状态，考虑全局状态管理或持久化方案。
+- 服务端数据不要放入 Context，优先使用数据请求。
+
+### 什么时候使用 Context
+
+- 同一份状态需要被多个兄弟组件读写。
+- 状态不只属于某一个组件，而是属于整个页面或功能流程。
+- 如果不用 Context，会出现明显的 props drilling。
+- 状态包含多个相关字段和操作方法，例如表单步骤、登录方式、当前选中项、展开状态等。
+- 状态需要被页面下多个 UI 片段协同使用。
+
+Context 应放在当前 slice 的 `model/` 目录下，例如 `src/pages/xxx/model/xxx-context.tsx` 或 `src/features/xxx/model/xxx-context.tsx`。
+
+### 什么时候不要使用 Context
+
+- 状态只被一个组件使用。
+- 只是父组件传给一两个直接子组件。
+- 状态是纯 UI 临时状态，例如一个按钮 loading、一个弹窗开关。
+- 可以简单通过 props 表达，而且不会造成层层传递。
+- 状态属于服务端数据，应优先使用请求层。
+
+### Context 编写要求
+
+- Context 文件应包含明确的 `ContextType` 类型、Provider 组件和 `useXxxContext` 自定义 Hook。
+- `useXxxContext` 内必须检查是否在 Provider 内部使用，并在缺失 Provider 时抛出明确错误。
+- 不要直接导出原始 Context，外部统一通过 `useXxxContext` 访问。
+- Provider 只包裹真正需要共享状态的页面区域，不要无意义扩大范围。
+
+```typescript
+const XxxContext = createContext<XxxContextType | null>(null);
+
+// 提供当前功能流程内共享的页面状态
+export function XxxProvider({ children }: PropsWithChildren): JSX.Element {
+  // ...
+}
+
+// 读取当前功能流程内的共享页面状态
+export const useXxxContext = (): XxxContextType => {
+  const context = useContext(XxxContext);
+
+  if (context === null) {
+    throw new Error("useXxxContext 必须在 XxxProvider 内部使用。");
+  }
+
+  return context;
+};
+```
+
 ## UI 组件
 
 优先使用 shadcn 组件进行开发。
