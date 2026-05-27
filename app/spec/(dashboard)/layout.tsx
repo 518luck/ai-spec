@@ -1,9 +1,5 @@
 import { DashboardLayout as DashboardLayoutImp } from "@/app/layouts/dashboard-layout";
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return <DashboardLayoutImp>{children}</DashboardLayoutImp>;
 }

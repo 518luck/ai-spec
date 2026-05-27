@@ -1,3 +1,3 @@
-export default function PlaygroundPage() {
+export default function Page() {
   return <div>playground page</div>;
 }
