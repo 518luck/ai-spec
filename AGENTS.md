@@ -44,10 +44,9 @@
 
 根据你正在工作的区域使用对应的 AGENTS.md：
 
-- **后端**（`app/api/**`）→ `app/api/AGENTS.md`（后端模式）
-- **前端**（`src/**`，但不包括 `src/shared/**`）→ `src/AGENTS.md`（前端模式）
-- **混合共享层**（`src/shared/**`）→ 先遵循本文件；再根据具体子目录判断适用前端还是后端规则
-- **通用** → 本文件（`AGENTS.md`）用于 ai-spec 概览和命令
+- **Next.js 路由层**（`app/**`，不含 `app/api/**`）→ `app/AGENTS.md`
+- **后端**（`app/api/**`）→ `app/api/AGENTS.md`
+- **前端业务代码**（`src/**`）→ `src/AGENTS.md`
 
 ### 后端
 
