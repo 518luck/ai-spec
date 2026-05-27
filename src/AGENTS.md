@@ -9,35 +9,69 @@
 shared/lib 下面前后端混合
 shared/db : 这个是脚本生成的代码,严禁修改
 
-## 结构
+## 前端结构规范（FSD）
 
-- src/app下面的前端代码遵循FSD结构
-- 第一层目录为 Layers目录,顺序是 "app"、"pages"、"widgets"、"features"、"entities" 和 "shared"。
-- 第二层目录为"Slices"，用领域划分，例如 "user"、"post" 和 "comment"。
-- 第三层目录为"Segments" 分别标记为 "ui"、"model" 和 "api"。
+本项目前端业务代码位于 `src/`，按 Feature-Sliced Design 组织。根目录 `app/` 是 Next.js App Router 路由层，不是 FSD 的 `src/app`。除 `app/api/**` 外，根 `app/**` 应保持薄层，只放 `page.tsx`、`layout.tsx`、`metadata`、`loading.tsx`、`error.tsx` 等框架入口，并把业务实现委托给 `src/`。
 
-> 注意
-> Layers App 和 Shared 与其他 layers 不同，它们没有 slices，直接分为 segments。
-> 然而，所有其他 layers — Entities、Features、Widgets 和 Pages，保持您必须首先创建 slices 的结构，在其中创建 segments。
-> Layers 的技巧是一个 layer 上的模块只能了解并从严格位于下方的 layers 的模块中导入。
+### 放置规则
 
-### slices
+| 场景                               | 放置位置                  |
+| ---------------------------------- | ------------------------- |
+| 应用启动、全局 providers、全局样式 | `src/app/`                |
+| 路由对应的完整页面内容             | `src/pages/<page>/`       |
+| 可复用的大型页面区块               | `src/widgets/<widget>/`   |
+| 用户可感知的业务动作               | `src/features/<feature>/` |
+| 业务实体、实体展示、实体模型       | `src/entities/<entity>/`  |
+| 与业务无关的通用能力               | `src/shared/<segment>/`   |
 
-slices，它们按业务领域分割代码。您可以自由选择它们的名称，并根据需要创建任意数量。Slices 通过将逻辑相关的模块保持在一起，使您的代码库更容易导航。
+### Slice 与 Segment
 
-Slices 不能使用同一 layer 上的其他 slices，这有助于实现高聚合性和低耦合性。
+- `pages`、`widgets`、`features`、`entities` 下必须先建 slice，再建 segment，例如 `src/features/create-spec/ui/create-spec-form.tsx`。
+- `src/app` 和 `src/shared` 不拆 slice，直接按 segment 组织。
+- 常用 segment 为 `ui`、`model`、`api`、`lib`、`config`。
+- 不要新建 `components`、`hooks`、`types` 这类只描述技术形态的顶层 segment，优先归入 `ui`、`model`、`api`、`lib`。
 
-### segments
+### 导入边界
 
-Slices 以及 layers App 和 Shared 由 segments 组成，segments 按代码的目的对代码进行分组。Segment 名称不受标准约束，但有几个最常见目的的传统名称：
+Layer 只能向下依赖：
 
-- ui — 与 UI 显示相关的一切：UI 组件、日期格式化程序、样式等。
-- api — 后端交互：请求函数、数据类型、mappers 等。
-- model — 数据模型：schemas、interfaces、stores 和业务逻辑。
-- lib — 此 slice 上其他模块需要的库代码。
-- config — 配置文件和 feature flags。
+```txt
+src/app
+→ src/pages
+→ src/widgets
+→ src/features
+→ src/entities
+→ src/shared
+```
 
-> 通常这些 segments 对于大多数 layers 来说已经足够，您只会在 Shared 或 App 中创建自己的 segments，但这不是一个规则。
+- features 可以导入 entities 和 shared，不能导入 widgets、pages、src/app。
+- entities 只能导入 shared。
+- shared 不能导入任何业务 layer。
+- 同一 layer 的不同 slice 默认不能互相导入。
+- 如果需要组合多个同层 slice，应放到更高 layer，例如在 widgets 组合多个 features。
+
+### 每个 slice 必须提供 index.ts 作为公有 API。
+
+```typescript
+// 正确
+import { CreateSpecForm } from "@/features/create-spec";
+
+// 禁止：跨 slice 深层导入
+import { CreateSpecForm } from "@/features/create-spec/ui/create-spec-form";
+```
+
+- index.ts 只导出外部真正需要使用的组件、函数和类型。
+- 禁止在 slice 公有 API 中使用 `export \*` 无差别导出。
+- slice 内部文件互相引用时使用相对路径。
+- 不要从本 slice 的 index.ts 再导入本 slice 内部成员。
+
+### 禁止事项
+
+- 禁止低层导入高层。
+- 禁止同层不同 slice 互相导入。
+- 禁止绕过公有 API 深层导入其他 slice 内部文件。
+- 禁止把具体业务逻辑放进 shared。
+- 禁止把只用一次的页面局部 UI 过早抽到 widgets 或 features。
 
 ## UI 组件
 
