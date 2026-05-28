@@ -10,7 +10,7 @@ import { github, useLoginContext } from "../model/login-context";
 
 // 渲染 GitHub 第三方登录入口并记录用户偏好。
 export function LoginGithub(): JSX.Element {
-  const { setPreferredMethod } = useLoginContext();
+  const { preferredMethod, setPreferredMethod } = useLoginContext();
   const [isPending, setIsPending] = useState(false);
 
   const handleLogin = (): void => {
@@ -20,16 +20,23 @@ export function LoginGithub(): JSX.Element {
   };
 
   return (
-    <Button
-      type="button"
-      variant="secondary"
-      disabled={isPending}
-      aria-busy={isPending}
-      onClick={handleLogin}
-    >
-      {isPending && <Spinner />}
-      <Github />
-      使用 GitHub 帐号继续
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={isPending}
+        aria-busy={isPending}
+        onClick={handleLogin}
+      >
+        {isPending && <Spinner />}
+        <Github />
+        使用 GitHub 帐号继续
+      </Button>
+      {preferredMethod === github && (
+        <p className="text-center text-xs font-medium text-muted-foreground">
+          你上次使用 GitHub 登录的
+        </p>
+      )}
+    </div>
   );
 }

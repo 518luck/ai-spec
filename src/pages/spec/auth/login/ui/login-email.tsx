@@ -18,6 +18,7 @@ export function LoginEmail(): JSX.Element {
   const {
     email,
     password,
+    preferredMethod,
     showPasswordField,
     setEmail,
     setPassword,
@@ -27,13 +28,13 @@ export function LoginEmail(): JSX.Element {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    setPreferredMethod(emailMethod);
 
     if (!password) {
       setShowPasswordField(true);
       return;
     }
 
+    setPreferredMethod(emailMethod);
     void loginWithEmail();
   };
 
@@ -77,6 +78,11 @@ export function LoginEmail(): JSX.Element {
       <Button className="mt-4 w-full" type="submit">
         登录
       </Button>
+      {preferredMethod === emailMethod && (
+        <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
+          你上次使用邮箱登录的
+        </p>
+      )}
     </form>
   );
 }
