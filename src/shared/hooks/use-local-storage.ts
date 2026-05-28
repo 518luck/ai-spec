@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 
 type UseLocalStorageReturn<TValue> = [TValue, Dispatch<SetStateAction<TValue>>];
 
@@ -49,24 +49,11 @@ export const useLocalStorage = <TValue>(
     readLocalStorageValue(key, initialValue),
   );
 
-  const setValue: Dispatch<SetStateAction<TValue>> = (value) => {
-    setStoredValue((currentValue) => {
-      const nextValue =
-        typeof value === "function"
-          ? (value as (currentValue: TValue) => TValue)(currentValue)
-          : value;
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(key, serializeLocalStorageValue(storedValue));
+    } catch {}
+  }, [key, storedValue]);
 
-      if (typeof window === "undefined") {
-        return nextValue;
-      }
-
-      try {
-        window.localStorage.setItem(key, serializeLocalStorageValue(nextValue));
-      } catch {}
-
-      return nextValue;
-    });
-  };
-
-  return [storedValue, setValue];
+  return [storedValue, setStoredValue];
 };
