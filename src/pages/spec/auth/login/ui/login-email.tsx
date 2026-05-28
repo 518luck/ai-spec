@@ -79,7 +79,7 @@ export function LoginEmail(): JSX.Element {
         登录
       </Button>
       {preferredMethod === emailMethod && (
-        <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
+        <p className="text-muted-foreground mt-2 text-center text-xs font-medium">
           你上次使用邮箱登录的
         </p>
       )}
