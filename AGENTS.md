@@ -72,6 +72,10 @@
 - 优先使用变量解构，而非属性访问。
 - 绝不使用 `@ts-ignore`、`@ts-expect-error` 抑制类型错误；修复根因。
 
+### React 事件类型
+
+- React 表单提交事件禁止使用已弃用的 `FormEvent` / `FormEventHandler`；`onSubmit` 使用从 `"react"` 导入的 `SubmitEvent<HTMLFormElement>` 或 `SubmitEventHandler<HTMLFormElement>`。
+
 ### 类型检查
 
 使用项目脚本进行检查，不直接运行底层工具，除非本文件明确说明。
