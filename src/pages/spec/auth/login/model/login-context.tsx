@@ -1,12 +1,13 @@
 "use client";
 
+import { useLocalStorage } from "@/shared/hooks/use-local-storage";
 import {
   createContext,
   type JSX,
   type PropsWithChildren,
   useContext,
+  useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 
 // Google 登录方式标识。
@@ -28,7 +29,7 @@ type LoginContextType = {
   email: string;
   password: string;
   showPasswordField: boolean;
-  preferredMethod: LoginMethod;
+  preferredMethod: LoginMethod | null;
   setEmail: (value: string) => void;
   setPassword: (value: string) => void;
   setShowPasswordField: (value: boolean) => void;
@@ -37,8 +38,6 @@ type LoginContextType = {
 
 // localStorage 里的 key
 const loginPreferredMethodStorageKey = "prompt-shelf:login-preferred-method";
-// 自定义事件名。
-const loginPreferredMethodChangeEvent = "login-preferred-method-change";
 
 const LoginContext = createContext<LoginContextType | null>(null);
 
@@ -47,53 +46,25 @@ const isLoginMethod = (value: string | null): value is LoginMethod => {
   return value === google || value === email || value === github;
 };
 
-// 从浏览器本地存储读取用户上次使用的登录方式。
-const getStoredPreferredMethod = (): LoginMethod => {
-  if (typeof window === "undefined") {
-    return email;
-  }
-
-  const storedMethod = window.localStorage.getItem(
-    loginPreferredMethodStorageKey,
-  );
-
-  return isLoginMethod(storedMethod) ? storedMethod : email;
-};
-
-// 服务端渲染时使用默认邮箱登录方式，避免读取浏览器 API。
-const getServerPreferredMethod = (): LoginMethod => email;
-
-// 订阅本地登录偏好变化，让当前页面和其它标签页保持同步。
-const subscribeToPreferredMethod = (
-  onStoreChange: () => void,
-): (() => void) => {
-  if (typeof window === "undefined") {
-    return () => {};
-  }
-
-  window.addEventListener("storage", onStoreChange);
-  window.addEventListener(loginPreferredMethodChangeEvent, onStoreChange);
-
-  return () => {
-    window.removeEventListener("storage", onStoreChange);
-    window.removeEventListener(loginPreferredMethodChangeEvent, onStoreChange);
-  };
-};
-
 // 为登录页提供账号数据与用户登录习惯。
 export function LoginProvider({ children }: PropsWithChildren): JSX.Element {
   const [emailValue, setEmailValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
-  const preferredMethod = useSyncExternalStore(
-    subscribeToPreferredMethod,
-    getStoredPreferredMethod,
-    getServerPreferredMethod,
+  const [storedPreferredMethod, setStoredPreferredMethod] =
+    useLocalStorage<LoginMethod | null>(loginPreferredMethodStorageKey, null);
+  const [preferredMethod] = useState<LoginMethod | null>(() =>
+    isLoginMethod(storedPreferredMethod) ? storedPreferredMethod : null,
   );
+  const preferredMethodRef = useRef<LoginMethod | null>(preferredMethod);
 
   const setPreferredMethod = (method: LoginMethod): void => {
-    window.localStorage.setItem(loginPreferredMethodStorageKey, method);
-    window.dispatchEvent(new Event(loginPreferredMethodChangeEvent));
+    if (preferredMethodRef.current === method) {
+      return;
+    }
+
+    preferredMethodRef.current = method;
+    setStoredPreferredMethod(method);
   };
 
   return (

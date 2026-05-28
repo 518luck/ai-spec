@@ -10,7 +10,7 @@ import { google, useLoginContext } from "../model/login-context";
 
 // 渲染 Google 第三方登录入口并记录用户偏好。
 export function LoginGoogle(): JSX.Element {
-  const { setPreferredMethod } = useLoginContext();
+  const { preferredMethod, setPreferredMethod } = useLoginContext();
   const [isPending, setIsPending] = useState(false);
 
   const handleLogin = (): void => {
@@ -20,16 +20,23 @@ export function LoginGoogle(): JSX.Element {
   };
 
   return (
-    <Button
-      type="button"
-      variant="secondary"
-      disabled={isPending}
-      aria-busy={isPending}
-      onClick={handleLogin}
-    >
-      {isPending && <Spinner />}
-      <Google />
-      使用 Google 帐号继续
-    </Button>
+    <div className="flex flex-col gap-2">
+      <Button
+        type="button"
+        variant="secondary"
+        disabled={isPending}
+        aria-busy={isPending}
+        onClick={handleLogin}
+      >
+        {isPending && <Spinner />}
+        <Google />
+        使用 Google 帐号继续
+      </Button>
+      {preferredMethod === google && (
+        <p className="text-center text-xs font-medium text-muted-foreground">
+          你上次使用 Google 登录的
+        </p>
+      )}
+    </div>
   );
 }

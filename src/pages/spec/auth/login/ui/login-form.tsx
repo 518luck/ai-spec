@@ -27,7 +27,7 @@ const oauthLoginMethods = [google, github] as const;
 // 根据用户偏好调整第三方登录按钮的显示顺序。
 const getOrderedOauthMethods = (
   methods: readonly LoginMethod[],
-  preferredMethod: LoginMethod,
+  preferredMethod: LoginMethod | null,
 ): OauthLoginMethod[] => {
   const availableMethods = oauthLoginMethods.filter((method) =>
     methods.includes(method),
@@ -72,6 +72,7 @@ function LoginFormContent({ methods }: Required<LoginFormProps>): JSX.Element {
   const supportsEmail = methods.includes(email);
   const oauthMethods = getOrderedOauthMethods(methods, preferredMethod);
   const shouldShowEmailFirst =
+    preferredMethod === null ||
     preferredMethod === email ||
     !oauthMethods.some((method) => method === preferredMethod);
 
