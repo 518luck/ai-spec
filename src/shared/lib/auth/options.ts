@@ -154,4 +154,6 @@ export const authOptions: NextAuthConfig = {
       };
     },
   },
+
+  // TODO :events 应该需要把三方图片放到自己的对象存储当中
 };
