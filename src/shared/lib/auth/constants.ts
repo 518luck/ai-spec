@@ -1,4 +1,5 @@
-const isProd = process.env.NODE_ENV === "production";
+// 判断认证配置是否运行在生产环境
+export const isProd = process.env.NODE_ENV === "production";
 
 // 生产环境 cookie 名加 __Secure- 前缀
 export const SESSION_TOKEN_NAME = `${isProd ? "__Secure-" : ""}next-auth.session-token`;

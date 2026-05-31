@@ -11,8 +11,7 @@ import { signInSchema } from "@/shared/lib/zod/schemas/auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-
-const isProd = process.env.NODE_ENV === "production";
+import { isProd } from "./constants";
 
 export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
@@ -141,12 +140,18 @@ export const authOptions: NextAuthConfig = {
     },
     // 将 JWT 中的用户信息同步到返回给客户端的 session
     session: async ({ session, token }) => {
-      session.user = {
-        id: token.sub,
-        ...(token.user || session.user),
-      };
+      // 缺少用户标识时保留 NextAuth 原始 session
+      if (!token.sub) {
+        return session;
+      }
 
-      return session;
+      return {
+        ...session,
+        user: {
+          ...(token.user || session.user),
+          id: token.sub,
+        },
+      };
     },
   },
 };
