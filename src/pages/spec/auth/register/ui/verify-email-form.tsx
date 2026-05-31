@@ -5,7 +5,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Spinner } from "@/shared/ui/spinner";
 import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRegisterContext } from "../model/register-context";
 import { ResendOtp } from "./resend-otp";
@@ -17,17 +17,25 @@ export function VerifyEmailForm() {
   const [code, setCode] = useState("");
   const [isInvalidCode, setIsInvalidCode] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  // 记录创建账户过程中的 toast，用于把 loading 更新为成功或失败状态。
+  const toastIdRef = useRef<string | number | undefined>(undefined);
 
   // 校验code 同时创建账户
   const { executeAsync, isPending } = useAction(createUserAccountAction, {
-    async onSuccess() {
-      toast.success("正在创建账户...");
+    onExecute() {
+      toastIdRef.current = toast.loading("正在创建账户...");
+    },
+    onSuccess() {
+      toast.success("账户创建成功  (^u^)", {
+        id: toastIdRef.current,
+      });
       setIsRedirecting(true);
-      // 不保留url历史
       router.replace("/");
     },
     onError({ error }) {
-      toast.error(error.serverError);
+      toast.error(error.serverError ?? "创建账户失败", {
+        id: toastIdRef.current,
+      });
       setCode("");
       setIsInvalidCode(true);
     },
