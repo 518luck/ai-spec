@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { JSX } from "react";
 import { LoginForm } from "./login-form";
 
+// TODO : 需要构建登陆的页面元信息
 // export const metadata = constructMetadata({
 //   title: `Sign in to ${process.env.NEXT_PUBLIC_APP_NAME}`,
 //   canonicalUrl: `${APP_DOMAIN}/login`,
