@@ -21,3 +21,9 @@ export const signUpSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
 });
+
+// 登录时的凭据校验 schema
+export const signInSchema = z.object({
+  email: emailSchema,
+  password: z.string().min(1, "请输入密码"),
+});

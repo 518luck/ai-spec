@@ -31,7 +31,7 @@ export const sendOtpAction = actionClient
     const { email } = parsedInput;
 
     await ratelimit({
-      key: `send-otp:${email}:${getIP()}`,
+      key: `otp:send:${email}:${getIP()}`,
       points: 2,
     });
 

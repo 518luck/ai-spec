@@ -1,4 +1,12 @@
 import prisma from "@/shared/db";
+import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import {
+  hasReachedMaxInvalidLoginAttempts,
+  recordInvalidLoginAttempt,
+} from "@/shared/lib/auth/lock-account";
+import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { validatePassword } from "@/shared/lib/utils";
+import { signInSchema } from "@/shared/lib/zod/schemas/auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -6,9 +14,9 @@ import Credentials from "next-auth/providers/credentials";
 export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "jwt", // database 会真正用到 Session 表 登录态存在数据库里, jwt 不依赖 Session 表保存会话, 登录态主要放在 cookie/JWT 里
-    maxAge: 30 * 24 * 60 * 60, // 默认 session 最大生命周期是30天, 30天不活跃自动登出
-    updateAge: 24 * 60 * 60, //  24小时刷新一次 session
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
   providers: [
     Credentials({
@@ -19,31 +27,63 @@ export const authOptions: NextAuthConfig = {
         email: {
           label: "邮箱",
           type: "email",
-          // placeholder: "请输入邮箱",
         },
         password: {
           label: "密码",
           type: "password",
-          // placeholder: "请输入密码",
         },
       },
-      // credentials 代表上面credentials 写的配置项,用户传递的数据
-      // req 代表这次调用 authorize 的请求上下文
-      // async authorize(credentials, req) {
-      //   if (!credentials) {
-      //     throw new Error("没有资格");
-      //   }
+      // 邮箱密码登录验证：限流 → 查用户 → 锁定检查 → 密码校验
+      authorize: async (credentials) => {
+        const { email, password } = signInSchema.parse(credentials);
 
-      //   const { email, password } = credentials;
+        // 如果没有启用跳过认证限流，则对登录尝试进行限流，限制每分钟最多5次尝试
+        if (!skipAuthThrottling) {
+          await ratelimit({
+            key: `login:attempts:${email}`,
+            points: 2,
+            duration: 60,
+          });
+        }
 
-      //   if (!email || !password) {
-      //     throw new Error("没有资格");
-      //   }
+        const user = await prisma.user.findUnique({
+          where: { email },
+          select: {
+            id: true,
+            passwordHash: true,
+            name: true,
+            email: true,
+            image: true,
+            invalidLoginAttempts: true,
+            emailVerified: true,
+          },
+        });
 
-      //   if (!skipAuthThrottling) {
-      //     await ratelimit({ key: `login-attempts:${email}`, points: 2 });
-      //   }
-      // },
+        if (!user) {
+          throw new Error("用户不存在");
+        }
+
+        if (hasReachedMaxInvalidLoginAttempts(user)) {
+          throw new Error("账号已被锁定，请联系管理员");
+        }
+
+        const isValid = await validatePassword({
+          password,
+          passwordHash: user.passwordHash ?? "",
+        });
+
+        if (!isValid) {
+          await recordInvalidLoginAttempt({ email });
+          throw new Error("密码错误");
+        }
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+        };
+      },
     }),
   ],
 };
