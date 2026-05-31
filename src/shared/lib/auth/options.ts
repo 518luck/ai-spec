@@ -1,5 +1,6 @@
 import prisma from "@/shared/db";
 import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import { SESSION_TOKEN_NAME } from "@/shared/lib/auth/constants";
 import {
   hasReachedMaxInvalidLoginAttempts,
   recordInvalidLoginAttempt,
@@ -10,6 +11,8 @@ import { signInSchema } from "@/shared/lib/zod/schemas/auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+
+const isProd = process.env.NODE_ENV === "production";
 
 export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
@@ -86,4 +89,64 @@ export const authOptions: NextAuthConfig = {
       },
     }),
   ],
+  // 配置 session token cookie 的名称和安全属性
+  cookies: {
+    sessionToken: {
+      name: SESSION_TOKEN_NAME,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProd,
+      },
+    },
+  },
+  // 自定义认证页面路由，覆盖 NextAuth 默认页面
+  pages: {
+    signIn: "/spec/login",
+    error: "/spec/login",
+  },
+  callbacks: {
+    // 在 JWT 中持久化登录用户信息，并支持资料更新后刷新 token
+    jwt: async ({ token, user, trigger }) => {
+      if (user) {
+        token.user = user;
+      }
+
+      if (trigger === "update") {
+        if (!token.sub) {
+          return {};
+        }
+
+        const refreshedUser = await prisma.user.findUnique({
+          where: {
+            id: token.sub,
+          },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        });
+
+        if (refreshedUser) {
+          token.user = refreshedUser;
+        } else {
+          return {};
+        }
+      }
+
+      return token;
+    },
+    // 将 JWT 中的用户信息同步到返回给客户端的 session
+    session: async ({ session, token }) => {
+      session.user = {
+        id: token.sub,
+        ...(token.user || session.user),
+      };
+
+      return session;
+    },
+  },
 };
