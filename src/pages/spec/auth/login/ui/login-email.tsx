@@ -1,20 +1,28 @@
 "use client";
 
+import { checkLoginEmailAction } from "@/shared/lib/actions/check-login-email";
 import { Button } from "@/shared/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
-import type { FormEvent, JSX } from "react";
+import { Spinner } from "@/shared/ui/spinner";
+import { useAction } from "next-safe-action/hooks";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { type JSX, type SubmitEvent, useState } from "react";
+import { toast } from "sonner";
 import {
   email as emailMethod,
   password as passwordField,
   useLoginContext,
 } from "../model/login-context";
 
-// 预留邮箱密码登录接口，后端接入前保持无副作用。
-const loginWithEmail = async (): Promise<void> => {};
+const specHomePath = "/spec/prompts";
 
 // 渲染邮箱登录表单并按需展开密码输入框。
 export function LoginEmail(): JSX.Element {
+  const router = useRouter();
+  // 标记 NextAuth 密码登录请求是否进行中，用于禁用重复提交和展示 loading。
+  const [isSigningIn, setIsSigningIn] = useState(false);
   const {
     email,
     password,
@@ -25,17 +33,73 @@ export function LoginEmail(): JSX.Element {
     setShowPasswordField,
     setPreferredMethod,
   } = useLoginContext();
+  const { executeAsync, isPending } = useAction(checkLoginEmailAction);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+  const isSubmitting = isPending || isSigningIn;
+
+  // 邮箱变更后收起密码框，确保下一次提交会重新检查账户状态。
+  const handleEmailChange = (value: string): void => {
+    setEmail(value);
+
+    if (!showPasswordField) {
+      return;
+    }
+
+    setPassword("");
+    setShowPasswordField(false);
+  };
+
+  // 登录前先检查账户状态，只有存在密码的账户才调用 NextAuth。
+  const handleSubmit = async (
+    event: SubmitEvent<HTMLFormElement>,
+  ): Promise<void> => {
     event.preventDefault();
 
-    if (!password) {
+    if (!showPasswordField) {
+      const result = await executeAsync({ email });
+      const errorMessage =
+        result.serverError || result.validationErrors?.email?.[0];
+
+      if (errorMessage) {
+        toast.error(errorMessage);
+        return;
+      }
+
+      if (!result.data?.isRegistered) {
+        toast.error("账户不存在，请先注册");
+        return;
+      }
+      // TODO:后面需要支持邮箱直接登陆的,可以给signIn传递provider判断
+      if (!result.data.hasPassword) {
+        toast.error("该邮箱未设置密码，请使用其他登录方式");
+        return;
+      }
+
       setShowPasswordField(true);
       return;
     }
 
+    if (!password) {
+      toast.error("请输入密码");
+      return;
+    }
+
+    setIsSigningIn(true);
+    const signInResult = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl: specHomePath,
+    });
+
+    if (!signInResult?.ok) {
+      setIsSigningIn(false);
+      toast.error("登录失败，请检查邮箱或密码");
+      return;
+    }
+
     setPreferredMethod(emailMethod);
-    void loginWithEmail();
+    router.replace(signInResult.url ?? specHomePath);
   };
 
   return (
@@ -52,7 +116,7 @@ export function LoginEmail(): JSX.Element {
               autoComplete="email"
               required
               value={email}
-              onChange={({ target }) => setEmail(target.value)}
+              onChange={({ target }) => handleEmailChange(target.value)}
             />
           </Field>
 
@@ -68,6 +132,7 @@ export function LoginEmail(): JSX.Element {
                 required
                 autoFocus
                 value={password}
+                disabled={isSigningIn}
                 onChange={({ target }) => setPassword(target.value)}
               />
             </Field>
@@ -75,8 +140,14 @@ export function LoginEmail(): JSX.Element {
         </FieldGroup>
       </FieldSet>
 
-      <Button className="mt-4 w-full" type="submit">
-        登录
+      <Button
+        className="mt-4 w-full"
+        type="submit"
+        disabled={isSubmitting}
+        aria-busy={isSubmitting}
+      >
+        {isSubmitting && <Spinner />}
+        {isSigningIn ? "登录中..." : "登录"}
       </Button>
       {preferredMethod === emailMethod && (
         <p className="text-muted-foreground mt-2 text-center text-xs font-medium">

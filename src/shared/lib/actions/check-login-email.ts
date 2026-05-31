@@ -1,0 +1,48 @@
+"use server";
+
+import prisma from "@/shared/db";
+import { flattenValidationErrors } from "next-safe-action";
+import * as z from "zod/v4";
+import { getIP } from "../api/utils/get-ip";
+import { skipAuthThrottling } from "../api/environment";
+import { ratelimit } from "../infrastructure/redis/reatlimit";
+import { emailSchema } from "../zod/schemas/auth";
+import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
+import { actionClient } from "./safe-action";
+
+const schema = z.object({
+  email: emailSchema,
+});
+
+// 检查邮箱是否可使用密码登录，避免不存在账户继续调用 NextAuth。
+export const checkLoginEmailAction = actionClient
+  .inputSchema(schema, {
+    // 把邮箱格式错误转换成前端可展示的字段级错误。
+    handleValidationErrorsShape: async (ve) =>
+      flattenValidationErrors(ve).fieldErrors,
+  })
+  .use(throwIfAuthenticated)
+  .action(async ({ parsedInput }) => {
+    const { email } = parsedInput;
+
+    if (!skipAuthThrottling) {
+      // 邮箱探测按请求 IP 限流，每分钟最多 5 次。
+      await ratelimit({
+        key: `login:email-check:${await getIP()}`,
+        points: 2,
+        duration: 60,
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+      select: {
+        passwordHash: true,
+      },
+    });
+
+    return {
+      isRegistered: user !== null,
+      hasPassword: Boolean(user?.passwordHash),
+    };
+  });
