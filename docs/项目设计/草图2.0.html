@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Spec 草图2.0</title>
+    <style>
+      :root {
+        --bg: #050b14;
+        --panel: #0b1524;
+        --panel-2: #0f1f33;
+        --panel-3: #12263d;
+        --card: #0d1b2d;
+        --card-2: #10243a;
+        --text: #e6f7ff;
+        --muted: #85a5b8;
+        --line: #1d3f5d;
+        --line-strong: #2dd4bf;
+        --cyan: #22d3ee;
+        --cyan-soft: rgba(34, 211, 238, 0.14);
+        --teal: #2dd4bf;
+        --teal-soft: rgba(45, 212, 191, 0.14);
+        --blue: #38bdf8;
+        --blue-soft: rgba(56, 189, 248, 0.14);
+        --purple: #a78bfa;
+        --purple-soft: rgba(167, 139, 250, 0.14);
+        --orange: #f59e0b;
+        --orange-soft: rgba(245, 158, 11, 0.14);
+        --red: #fb7185;
+        --red-soft: rgba(251, 113, 133, 0.14);
+        --shadow: 0 22px 70px rgba(0, 0, 0, 0.36);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.2), transparent 30%),
+          radial-gradient(circle at 100% 20%, rgba(45, 212, 191, 0.16), transparent 32%),
+          linear-gradient(145deg, #040814 0%, #071424 48%, #05101c 100%);
+        color: var(--text);
+        font-family:
+          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      .shell {
+        display: grid;
+        grid-template-columns: 268px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        height: 100vh;
+        padding: 22px 16px;
+        border-right: 1px solid var(--line);
+        background: rgba(7, 18, 32, 0.82);
+        backdrop-filter: blur(18px);
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+      }
+
+      .mark {
+        display: grid;
+        width: 46px;
+        height: 46px;
+        place-items: center;
+        border: 1px solid rgba(45, 212, 191, 0.7);
+        border-radius: 16px;
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(45, 212, 191, 0.08));
+        box-shadow: 0 0 32px rgba(34, 211, 238, 0.18);
+        color: var(--cyan);
+        font-weight: 900;
+        letter-spacing: -0.08em;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 20px;
+        letter-spacing: -0.04em;
+      }
+
+      .brand p {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .nav-label {
+        margin: 18px 10px 8px;
+        color: #5f8297;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .nav-button {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin: 6px 0;
+        padding: 12px;
+        border: 1px solid transparent;
+        border-radius: 16px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+      }
+
+      .nav-button:hover,
+      .nav-button.active {
+        border-color: rgba(45, 212, 191, 0.44);
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.14), rgba(45, 212, 191, 0.06));
+      }
+
+      .nav-title {
+        display: block;
+        font-weight: 850;
+      }
+
+      .nav-desc {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        min-height: 25px;
+        padding: 4px 9px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .tag.cyan {
+        border-color: rgba(34, 211, 238, 0.36);
+        background: var(--cyan-soft);
+        color: var(--cyan);
+      }
+
+      .tag.teal {
+        border-color: rgba(45, 212, 191, 0.36);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .tag.blue {
+        border-color: rgba(56, 189, 248, 0.34);
+        background: var(--blue-soft);
+        color: var(--blue);
+      }
+
+      .tag.purple {
+        border-color: rgba(167, 139, 250, 0.34);
+        background: var(--purple-soft);
+        color: var(--purple);
+      }
+
+      .tag.orange {
+        border-color: rgba(245, 158, 11, 0.34);
+        background: var(--orange-soft);
+        color: var(--orange);
+      }
+
+      .tag.red {
+        border-color: rgba(251, 113, 133, 0.34);
+        background: var(--red-soft);
+        color: var(--red);
+      }
+
+      .main {
+        min-width: 0;
+        padding: 24px;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 20px;
+        padding: 18px 20px;
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: rgba(11, 21, 36, 0.76);
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(14px);
+      }
+
+      .topbar h2 {
+        margin: 0;
+        font-size: 22px;
+        letter-spacing: -0.04em;
+      }
+
+      .topbar p {
+        max-width: 820px;
+        margin: 6px 0 0;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .context {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .page {
+        display: none;
+      }
+
+      .page.active {
+        display: block;
+      }
+
+      .page-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .page-header h1 {
+        margin: 0;
+        font-size: 34px;
+        letter-spacing: -0.06em;
+      }
+
+      .page-header p {
+        max-width: 860px;
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        padding: 8px 14px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .button.primary {
+        border-color: rgba(45, 212, 191, 0.7);
+        background: linear-gradient(135deg, rgba(34, 211, 238, 0.3), rgba(45, 212, 191, 0.18));
+        color: #f0fdff;
+        box-shadow: 0 0 28px rgba(34, 211, 238, 0.12);
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 24px;
+        background: rgba(11, 21, 36, 0.86);
+        box-shadow: var(--shadow);
+      }
+
+      .panel-inner {
+        padding: 18px;
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .input,
+      .select,
+      .textarea {
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+      }
+
+      .input,
+      .select {
+        height: 40px;
+        padding: 0 12px;
+      }
+
+      .search {
+        min-width: 320px;
+      }
+
+      .textarea {
+        width: 100%;
+        min-height: 120px;
+        padding: 12px;
+        resize: vertical;
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .card {
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background: linear-gradient(145deg, rgba(18, 38, 61, 0.84), rgba(13, 27, 45, 0.86));
+      }
+
+      .card h3,
+      .card h4 {
+        margin: 0 0 8px;
+      }
+
+      .card p {
+        margin: 0 0 12px;
+        color: var(--muted);
+        line-height: 1.7;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 14px;
+      }
+
+      .section-title h3 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .section-title p {
+        margin: 5px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .mini-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .mini-button {
+        padding: 6px 9px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+
+      .tab,
+      .subtab {
+        padding: 9px 12px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--muted);
+        cursor: pointer;
+        font-weight: 850;
+      }
+
+      .tab.active,
+      .subtab.active {
+        border-color: rgba(45, 212, 191, 0.62);
+        background: var(--teal-soft);
+        color: var(--teal);
+      }
+
+      .prompt-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .prompt-card {
+        min-height: 168px;
+        padding: 16px;
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        background:
+          linear-gradient(135deg, rgba(34, 211, 238, 0.08), transparent 42%),
+          rgba(13, 27, 45, 0.88);
+      }
+
+      .layout-2 {
+        display: grid;
+        grid-template-columns: 260px minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .layout-3 {
+        display: grid;
+        grid-template-columns: 260px minmax(360px, 1fr) 320px;
+        gap: 16px;
+      }
+
+      .side-list {
+        padding: 14px;
+      }
+
+      .list-label {
+        margin: 12px 0 8px;
+        color: #5f8297;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .list-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 7px;
+        padding: 11px 12px;
+        border: 1px solid transparent;
+        border-radius: 14px;
+        color: var(--muted);
+        font-weight: 800;
+      }
+
+      .list-item.active,
+      .list-item:hover {
+        border-color: rgba(45, 212, 191, 0.42);
+        background: rgba(45, 212, 191, 0.08);
+        color: var(--text);
+      }
+
+      .editor {
+        min-height: 540px;
+        padding: 16px;
+        border: 1px dashed rgba(45, 212, 191, 0.42);
+        border-radius: 20px;
+        background:
+          linear-gradient(90deg, rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+          linear-gradient(rgba(34, 211, 238, 0.05) 1px, transparent 1px),
+          rgba(5, 11, 20, 0.5);
+        background-size: 28px 28px;
+      }
+
+      pre {
+        margin: 0;
+        color: #d7f8ff;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 13px;
+        line-height: 1.85;
+        white-space: pre-wrap;
+      }
+
+      .ai-panel {
+        display: none;
+      }
+
+      .ai-panel.active {
+        display: block;
+      }
+
+      .tree-node {
+        margin-bottom: 7px;
+        padding: 10px 12px;
+        border: 1px solid var(--line);
+        border-radius: 13px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .tree-node strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .tree-node span {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .command-list {
+        display: grid;
+        gap: 9px;
+      }
+
+      .command-item {
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .command-item code {
+        color: var(--cyan);
+      }
+
+      .workspace-layout {
+        display: grid;
+        grid-template-columns: 310px minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      .project-card {
+        margin-bottom: 12px;
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .project-card.active {
+        border-color: rgba(45, 212, 191, 0.58);
+        background: rgba(45, 212, 191, 0.08);
+      }
+
+      table {
+        width: 100%;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-collapse: collapse;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      th,
+      td {
+        padding: 12px;
+        border-bottom: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+        text-align: left;
+      }
+
+      th {
+        color: var(--text);
+        font-weight: 900;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+
+      .notice {
+        padding: 14px;
+        border: 1px solid rgba(245, 158, 11, 0.34);
+        border-radius: 18px;
+        background: var(--orange-soft);
+        color: #fed7aa;
+        line-height: 1.7;
+      }
+
+      .settings-layout {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      @media (max-width: 1180px) {
+        .shell {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .layout-2,
+        .layout-3,
+        .workspace-layout,
+        .settings-layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .main {
+          padding: 16px;
+        }
+
+        .topbar,
+        .page-header {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .grid-2,
+        .grid-3,
+        .grid-4,
+        .prompt-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .search {
+          min-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="mark">AI</div>
+          <div>
+            <h1>AI Spec</h1>
+            <p>草图2.0 暗黑青蓝主题</p>
+          </div>
+        </div>
+
+        <div class="nav-label">一级导航</div>
+        <button class="nav-button active" data-page="prompt">
+          <span><span class="nav-title">Prompt</span><span class="nav-desc">高频快捷话术</span></span>
+          <span class="tag cyan">Quick</span>
+        </button>
+        <button class="nav-button" data-page="rules">
+          <span><span class="nav-title">规约库</span><span class="nav-desc">单条可复用规约</span></span>
+          <span class="tag teal">Rule</span>
+        </button>
+        <button class="nav-button" data-page="ai">
+          <span><span class="nav-title">AI 规约</span><span class="nav-desc">AGENTS.md / Skills / Agents</span></span>
+          <span class="tag purple">Spec</span>
+        </button>
+        <button class="nav-button" data-page="workspace">
+          <span><span class="nav-title">工作空间</span><span class="nav-desc">项目、成员、共享资产</span></span>
+          <span class="tag blue">Team</span>
+        </button>
+        <button class="nav-button" data-page="discover">
+          <span><span class="nav-title">发现</span><span class="nav-desc">搜索、收藏、发布</span></span>
+          <span class="tag orange">Hub</span>
+        </button>
+        <button class="nav-button" data-page="settings">
+          <span><span class="nav-title">设置</span><span class="nav-desc">MCP、密钥、个人信息</span></span>
+          <span class="tag">Config</span>
+        </button>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <h2 id="page-title">Prompt</h2>
+            <p id="page-desc">收集简短、高频、需要和 AI 对话时快速复制的提示词。</p>
+          </div>
+          <div class="context">
+            <span class="tag cyan">空间：前端团队</span>
+            <span class="tag teal">项目：ai-spec</span>
+          </div>
+        </header>
+
+        <section class="page active" id="prompt">
+          <div class="page-header">
+            <div>
+              <h1>Prompt 快捷话术</h1>
+              <p>这里是轻量便签墙，重点是快速搜索、复制、常用标记、使用频率排序和维护历史。Prompt 不等同于规约库，它更多是高频对话片段。</p>
+            </div>
+            <div class="actions">
+              <button class="button primary">新建 Prompt</button>
+              <button class="button">查看历史</button>
+            </div>
+          </div>
+
+          <div class="panel panel-inner">
+            <div class="toolbar">
+              <input class="input search" value="搜索 Prompt 标题、内容、标签..." />
+              <div class="actions">
+                <select class="select"><option>标签：全部</option></select>
+                <select class="select"><option>排序：新建 + 高频优先</option></select>
+                <button class="button">常用</button>
+              </div>
+            </div>
+
+            <div class="prompt-grid">
+              <article class="prompt-card">
+                <span class="tag cyan">翻译</span>
+                <h3>翻译成自然中文</h3>
+                <p>把下面内容翻译成自然、准确的简体中文。</p>
+                <div class="mini-actions"><button class="mini-button">复制 128 次</button><button class="mini-button">常用</button><button class="mini-button">历史</button></div>
+              </article>
+              <article class="prompt-card">
+                <span class="tag cyan">代码</span>
+                <h3>代码审查请求</h3>
+                <p>请优先找 bug、行为回归和缺失测试，并按严重程度排序。</p>
+                <div class="mini-actions"><button class="mini-button">复制 76 次</button><button class="mini-button">设为常用</button><button class="mini-button">编辑</button></div>
+              </article>
+              <article class="prompt-card">
+                <span class="tag cyan">写作</span>
+                <h3>优化表达</h3>
+                <p>帮我把下面内容改得更清晰、自然、专业。</p>
+                <div class="mini-actions"><button class="mini-button">复制 3 次</button><button class="mini-button">新添加</button><button class="mini-button">历史</button></div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="rules">
+          <div class="page-header">
+            <div>
+              <h1>规约库</h1>
+              <p>规约库保存单条可复用规约，可插入 AGENTS.md、Skills、Agents 和 Plugins。它不是普通 Prompt，而是配置型素材。</p>
+            </div>
+            <button class="button primary">新建规约</button>
+          </div>
+
+          <div class="layout-2">
+            <aside class="panel side-list">
+              <div class="list-label">规约类型</div>
+              <div class="list-item active"><span>规则</span><span>24</span></div>
+              <div class="list-item"><span>流程</span><span>11</span></div>
+              <div class="list-item"><span>权限</span><span>8</span></div>
+              <div class="list-item"><span>输出格式</span><span>13</span></div>
+              <div class="list-item"><span>项目约束</span><span>16</span></div>
+              <div class="list-item"><span>工具说明</span><span>7</span></div>
+            </aside>
+
+            <section class="panel panel-inner">
+              <div class="toolbar">
+                <input class="input search" value="搜索单条规约..." />
+                <div class="actions"><select class="select"><option>标签：全部</option></select><button class="button">查看引用</button></div>
+              </div>
+              <div class="grid-3">
+                <article class="card"><span class="tag teal">项目约束</span><h3>禁止修改生成目录</h3><p>严禁手动修改 src/shared/db/generator/ 下的任何文件。</p><div class="mini-actions"><button class="mini-button">插入 AGENTS.md</button><button class="mini-button">插入 Agent</button></div></article>
+                <article class="card"><span class="tag teal">流程</span><h3>代码审查流程</h3><p>先找 bug，再看行为回归，最后补充测试建议。</p><div class="mini-actions"><button class="mini-button">插入 Skill</button><button class="mini-button">历史</button></div></article>
+                <article class="card"><span class="tag teal">权限</span><h3>命令执行权限</h3><p>Agent 运行危险命令前必须确认，禁止执行 destructive 命令。</p><div class="mini-actions"><button class="mini-button">插入 Agent</button><button class="mini-button">复制模式</button></div></article>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="ai">
+          <div class="page-header">
+            <div>
+              <h1>AI 规约</h1>
+              <p>这里管理 AGENTS.md、Skills、Agents、Plugins。它们分别承担项目知识、流程技能、代理权限和可复用打包职责。</p>
+            </div>
+            <button class="button primary">新建资产</button>
+          </div>
+
+          <div class="tabs" aria-label="AI 规约二级导航">
+            <button class="subtab active" data-ai-tab="agentsmd">AGENTS.md</button>
+            <button class="subtab" data-ai-tab="skills">Skills</button>
+            <button class="subtab" data-ai-tab="agents">Agents</button>
+            <button class="subtab" data-ai-tab="plugins">Plugins</button>
+          </div>
+
+          <div class="ai-panel active" id="agentsmd">
+            <div class="layout-3">
+              <aside class="panel side-list">
+                <div class="list-label">项目架构</div>
+                <div class="tree-node"><strong>/AGENTS.md</strong><span>范围：整个项目</span></div>
+                <div class="tree-node"><strong>/src/AGENTS.md</strong><span>范围：src/** 前端业务</span></div>
+                <div class="tree-node"><strong>/app/api/AGENTS.md</strong><span>范围：后端 API</span></div>
+                <div class="tree-node"><strong>/docs/AGENTS.md</strong><span>范围：文档和规范</span></div>
+              </aside>
+
+              <section class="panel panel-inner">
+                <div class="toolbar"><input class="input search" value="搜索 AGENTS.md、路径、标签..." /><button class="button">历史记录</button></div>
+                <div class="editor"><pre># src/AGENTS.md
+
+## 约束范围
+本文件适用于 src/** 下的前端业务代码。
+
+## 前端结构
+- pages 放完整页面
+- widgets 放大型独立 UI 块
+- features 放用户可感知动作
+- entities 放业务实体
+
+## 引入内容
+- 从 Prompt 插入：代码审查请求
+- 从规约库插入：React 组件声明规则</pre></div>
+              </section>
+
+              <aside class="panel panel-inner">
+                <div class="section-title"><div><h3>编辑辅助</h3><p>支持引入 Prompt 和规约库。</p></div></div>
+                <div class="card"><h4>约束范围</h4><p>src/**，前端业务代码。</p><span class="tag teal">目录级</span></div>
+                <div class="card"><h4>引入 Prompt</h4><p>选择高频 Prompt 作为文档内容片段。</p><button class="button">选择 Prompt</button></div>
+                <div class="card"><h4>引入规约</h4><p>从规约库插入规则、流程、输出格式。</p><button class="button">选择规约</button></div>
+                <div class="mini-actions"><button class="mini-button">保存</button><button class="mini-button">下载</button><button class="mini-button">同步</button></div>
+              </aside>
+            </div>
+          </div>
+
+          <div class="ai-panel" id="skills">
+            <div class="layout-3">
+              <aside class="panel side-list">
+                <div class="list-label">Skill 列表</div>
+                <div class="list-item active"><span>代码审查</span><span class="tag teal">使用中</span></div>
+                <div class="list-item"><span>测试生成</span><span>3</span></div>
+                <div class="list-item"><span>英文翻译</span><span>1</span></div>
+              </aside>
+              <section class="panel panel-inner">
+                <div class="toolbar"><input class="input search" value="搜索 Skill、触发条件、标签..." /><button class="button">历史记录</button></div>
+                <div class="grid-2">
+                  <div class="card"><h3>基础信息</h3><p>名称：代码审查 Skill</p><p>何时使用：用户要求 review、PR 检查或分析 diff。</p></div>
+                  <div class="card"><h3>触发条件</h3><p>包含 review、审查、diff、PR、风险分析等关键词。</p></div>
+                  <div class="card"><h3>执行步骤</h3><p>1. 识别行为变化。2. 查找 bug。3. 判断回归风险。4. 给出测试建议。</p></div>
+                  <div class="card"><h3>输出要求</h3><p>按严重程度排序，必须包含文件路径和行号。</p></div>
+                </div>
+              </section>
+              <aside class="panel panel-inner">
+                <div class="card"><h4>引入 Prompt</h4><p>可插入 Prompt 作为说明或输出模板。</p><button class="button">选择 Prompt</button></div>
+                <div class="card"><h4>引入规约</h4><p>可插入流程、输出格式、项目约束。</p><button class="button">选择规约</button></div>
+                <div class="card"><h4>资源文件</h4><p>review-checklist.md、examples.md。</p><button class="button">上传资源</button></div>
+                <div class="card"><h4>引用关系</h4><p>被 2 个 Agents、1 个 Plugin 使用。</p></div>
+              </aside>
+            </div>
+          </div>
+
+          <div class="ai-panel" id="agents">
+            <div class="layout-3">
+              <aside class="panel side-list">
+                <div class="list-label">Agent 列表</div>
+                <div class="list-item active"><span>前端开发 Agent</span><span class="tag blue">Claude</span></div>
+                <div class="list-item"><span>Code Review Agent</span><span>Cursor</span></div>
+                <div class="list-item"><span>后端 API Agent</span><span>opencode</span></div>
+              </aside>
+              <section class="panel panel-inner">
+                <div class="toolbar"><input class="input search" value="搜索 Agent、命令、权限、目标工具..." /><button class="button">历史记录</button></div>
+                <div class="grid-2">
+                  <div class="card"><h3>角色说明</h3><p>面向 Next.js 项目的前端开发 Agent，负责页面、组件、交互和类型检查。</p></div>
+                  <div class="card"><h3>权限设置</h3><p>文件权限：src/** 可编辑；src/shared/db/generator/** 禁止编辑。</p></div>
+                </div>
+                <div class="section-title" style="margin-top: 14px"><div><h3>可视化命令列表</h3><p>支持 npm / go / 终端命令分组。</p></div></div>
+                <div class="command-list">
+                  <div class="command-item"><span class="tag cyan">pnpm</span> <code>pnpm run typecheck</code> <span class="tag teal">默认允许</span></div>
+                  <div class="command-item"><span class="tag cyan">pnpm</span> <code>pnpm run lint</code> <span class="tag teal">默认允许</span></div>
+                  <div class="command-item"><span class="tag blue">go</span> <code>go test ./...</code> <span class="tag orange">需确认</span></div>
+                  <div class="command-item"><span class="tag orange">terminal</span> <code>docker compose up</code> <span class="tag orange">需确认</span></div>
+                </div>
+              </section>
+              <aside class="panel panel-inner">
+                <div class="card"><h4>引入规约</h4><p>插入权限、命令、输出格式规约。</p><button class="button">选择规约</button></div>
+                <div class="card"><h4>可用 Skills</h4><p>代码审查、测试生成、翻译。</p><button class="button">绑定 Skill</button></div>
+                <div class="card"><h4>绑定 AGENTS.md</h4><p>/AGENTS.md、/src/AGENTS.md。</p><button class="button">绑定文档</button></div>
+                <div class="mini-actions"><button class="mini-button">导出</button><button class="mini-button">同步</button></div>
+              </aside>
+            </div>
+          </div>
+
+          <div class="ai-panel" id="plugins">
+            <div class="layout-2">
+              <aside class="panel side-list">
+                <div class="list-label">Plugins</div>
+                <div class="list-item active"><span>前端规范包</span><span>v1.2</span></div>
+                <div class="list-item"><span>代码审查包</span><span>v0.8</span></div>
+                <div class="list-item"><span>Prisma 规范包</span><span>v1.0</span></div>
+              </aside>
+              <section class="panel panel-inner">
+                <div class="toolbar"><input class="input search" value="搜索 Plugin、包含资产、标签..." /><button class="button primary">新建 Plugin</button></div>
+                <div class="grid-3">
+                  <div class="card"><span class="tag purple">Plugin</span><h3>前端规范包</h3><p>打包 /src/AGENTS.md、前端开发 Agent、代码审查 Skill。</p><div class="mini-actions"><button class="mini-button">编辑</button><button class="mini-button">下载</button><button class="mini-button">发布</button></div></div>
+                  <div class="card"><span class="tag purple">Plugin</span><h3>代码审查包</h3><p>包含代码审查 Skill、Review Agent、输出格式规约。</p><div class="mini-actions"><button class="mini-button">编辑</button><button class="mini-button">版本</button></div></div>
+                  <div class="card"><span class="tag purple">Plugin</span><h3>Prisma 规范包</h3><p>包含数据库 AGENTS.md、Prisma 修改流程规约。</p><div class="mini-actions"><button class="mini-button">编辑</button><button class="mini-button">同步</button></div></div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="workspace">
+          <div class="page-header">
+            <div>
+              <h1>工作空间</h1>
+              <p>工作空间下设项目、成员，以及共享资产分组。共享资产只是导航提示语言，下面分别进入 AGENTS.md、Skills、Agents、Plugins。</p>
+            </div>
+            <button class="button primary">新建项目</button>
+          </div>
+
+          <div class="workspace-layout">
+            <aside class="panel side-list">
+              <div class="section-title"><div><h3>工作空间导航</h3><p>共享资产是分组标题，不是页面。</p></div></div>
+              <div class="list-label">协作</div>
+              <div class="list-item active"><span>项目</span><span>3</span></div>
+              <div class="list-item"><span>成员</span><span>5</span></div>
+              <div class="list-label">共享资产</div>
+              <div class="list-item"><span>AGENTS.md</span><span>12</span></div>
+              <div class="list-item"><span>Skills</span><span>8</span></div>
+              <div class="list-item"><span>Agents</span><span>6</span></div>
+              <div class="list-item"><span>Plugins</span><span>3</span></div>
+            </aside>
+            <section class="panel panel-inner">
+              <div class="section-title"><div><h3>项目</h3><p>项目卡片是工作空间主入口，进入后查看该项目绑定的 AI 规约资产。</p></div><button class="button">新建项目</button></div>
+              <div class="grid-3">
+                <div class="project-card active"><h3>ai-spec</h3><p>Next.js / Prisma / AI 规约管理平台</p><span class="tag teal">4 个 AGENTS.md</span></div>
+                <div class="project-card"><h3>admin-web</h3><p>后台管理系统</p><span class="tag">2 个 Agents</span></div>
+                <div class="project-card"><h3>backend-api</h3><p>Go API 服务</p><span class="tag">3 个 Skills</span></div>
+              </div>
+              <div class="notice">引入到项目后的 AGENTS.md、Skills、Agents、Plugins 会生成项目内副本。修改项目副本不会影响源文件，源文件更新也不会自动影响项目副本。</div>
+              <div class="grid-2" style="margin-top: 14px">
+                <div class="card"><h3>项目结构和 AGENTS.md</h3><p>/AGENTS.md，/src/AGENTS.md，/app/api/AGENTS.md，/docs/AGENTS.md。</p><button class="button">打开文档树</button></div>
+                <div class="card"><h3>项目附带 Skills</h3><p>代码审查、测试生成、英文翻译。</p><button class="button">管理 Skills</button></div>
+                <div class="card"><h3>项目附带 Agents</h3><p>前端开发 Agent、Code Review Agent。</p><button class="button">管理 Agents</button></div>
+                <div class="card"><h3>项目附带 Plugins</h3><p>前端规范包、代码审查包。</p><button class="button">管理 Plugins</button></div>
+              </div>
+              <div class="section-title" style="margin-top: 16px"><div><h3>成员与编辑记录预览</h3><p>成员可以设置空间级、项目级、文件级权限，编辑记录作为日志追踪。</p></div><button class="button">查看成员</button></div>
+              <table>
+                <thead><tr><th>对象</th><th>类型</th><th>权限 / 行为</th><th>最近记录</th></tr></thead>
+                <tbody>
+                  <tr><td>小云</td><td>成员</td><td>admin，可编辑全部项目</td><td>更新 /src/AGENTS.md</td></tr>
+                  <tr><td>小李</td><td>成员</td><td>editor，只能编辑 ai-spec</td><td>新增代码审查 Skill 副本</td></tr>
+                  <tr><td>/app/api/AGENTS.md</td><td>文件权限</td><td>小周不可编辑</td><td>权限由 admin 调整</td></tr>
+                </tbody>
+              </table>
+            </section>
+          </div>
+        </section>
+
+        <section class="page" id="discover">
+          <div class="page-header">
+            <div>
+              <h1>发现</h1>
+              <p>发现支持 Agents、AGENTS.md、Skills、Plugins、规约的搜索、收藏、标签筛选和发布。Prompt 可通过筛选发现，但不是主要二级结构。</p>
+            </div>
+            <button class="button primary">发布我的资产</button>
+          </div>
+          <div class="panel panel-inner">
+            <div class="tabs"><button class="tab active">Agents</button><button class="tab">AGENTS.md</button><button class="tab">Skills</button><button class="tab">Plugins</button><button class="tab">规约</button></div>
+            <div class="toolbar"><input class="input search" value="搜索公开资产、作者、标签..." /><div class="actions"><select class="select"><option>标签：全部</option></select><select class="select"><option>排序：热门</option></select></div></div>
+            <div class="grid-3">
+              <article class="card"><span class="tag purple">Agent</span><h3>前端开发 Agent</h3><p>含命令权限、可用 Skills、绑定 AGENTS.md。</p><div class="mini-actions"><button class="mini-button">收藏</button><button class="mini-button">导入</button></div></article>
+              <article class="card"><span class="tag purple">Skill</span><h3>代码审查 Skill</h3><p>含触发条件、流程、输出格式和资源文件。</p><div class="mini-actions"><button class="mini-button">收藏</button><button class="mini-button">导入</button></div></article>
+              <article class="card"><span class="tag purple">AGENTS.md</span><h3>Next.js 项目规约</h3><p>适合 FSD、Prisma、shadcn 项目的根目录文档。</p><div class="mini-actions"><button class="mini-button">收藏</button><button class="mini-button">导入</button></div></article>
+            </div>
+          </div>
+        </section>
+
+        <section class="page" id="settings">
+          <div class="page-header">
+            <div>
+              <h1>设置</h1>
+              <p>设置包含个人信息、MCP 连接、密钥管理、默认工作空间和同步偏好。</p>
+            </div>
+            <button class="button primary">保存设置</button>
+          </div>
+
+          <div class="settings-layout">
+            <aside class="panel side-list">
+              <div class="list-item active"><span>个人信息</span><span></span></div>
+              <div class="list-item"><span>MCP 连接</span><span>3</span></div>
+              <div class="list-item"><span>密钥管理</span><span>5</span></div>
+              <div class="list-item"><span>同步偏好</span><span></span></div>
+            </aside>
+            <section class="panel panel-inner">
+              <div class="grid-2">
+                <div class="card"><h3>个人信息</h3><p>头像、昵称、邮箱、默认工作空间。</p><input class="input" style="width: 100%" value="昵称：duoyun" /></div>
+                <div class="card"><h3>MCP 连接</h3><p>opencode 已连接，Claude 需重新授权，Cursor 待确认。</p><button class="button">管理 MCP</button></div>
+                <div class="card"><h3>密钥管理</h3><p>API Key 脱敏展示，可按空间和用途管理。</p><button class="button">新增密钥</button></div>
+                <div class="card"><h3>默认导出目标</h3><p>AGENTS.md、Claude Skill、Cursor Agent、opencode 配置。</p><button class="button">设置默认值</button></div>
+              </div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      const pageMeta = {
+        prompt: ["Prompt", "收集简短、高频、需要和 AI 对话时快速复制的提示词。"],
+        rules: ["规约库", "保存单条可复用规约，可引入到 AGENTS.md、Skills、Agents、Plugins。"],
+        ai: ["AI 规约", "管理 AGENTS.md、Skills、Agents、Plugins 四类 AI 规约资产。"],
+        workspace: ["工作空间", "工作空间下设项目、成员，以及共享资产分组下的 AGENTS.md、Skills、Agents、Plugins。"],
+        discover: ["发现", "搜索、收藏、导入和发布公开 AI 规约资产。"],
+        settings: ["设置", "管理 MCP、密钥、个人信息和同步偏好。"],
+      };
+
+      const navButtons = document.querySelectorAll(".nav-button");
+      const pages = document.querySelectorAll(".page");
+      const pageTitle = document.querySelector("#page-title");
+      const pageDesc = document.querySelector("#page-desc");
+
+      const activatePage = (pageId) => {
+        navButtons.forEach((button) => button.classList.toggle("active", button.dataset.page === pageId));
+        pages.forEach((page) => page.classList.toggle("active", page.id === pageId));
+        pageTitle.textContent = pageMeta[pageId][0];
+        pageDesc.textContent = pageMeta[pageId][1];
+      };
+
+      navButtons.forEach((button) => {
+        button.addEventListener("click", () => activatePage(button.dataset.page));
+      });
+
+      const subTabs = document.querySelectorAll(".subtab");
+      const aiPanels = document.querySelectorAll(".ai-panel");
+
+      subTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          const tabId = tab.dataset.aiTab;
+          subTabs.forEach((item) => item.classList.toggle("active", item === tab));
+          aiPanels.forEach((panel) => panel.classList.toggle("active", panel.id === tabId));
+        });
+      });
+    </script>
+  </body>
+</html>
