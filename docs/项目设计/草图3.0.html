@@ -39,12 +39,24 @@
         margin: 0;
         min-height: 100vh;
         background:
-          radial-gradient(circle at 10% 0%, rgba(34, 211, 238, 0.19), transparent 28%),
-          radial-gradient(circle at 94% 12%, rgba(45, 212, 191, 0.15), transparent 30%),
+          radial-gradient(
+            circle at 10% 0%,
+            rgba(34, 211, 238, 0.19),
+            transparent 28%
+          ),
+          radial-gradient(
+            circle at 94% 12%,
+            rgba(45, 212, 191, 0.15),
+            transparent 30%
+          ),
           linear-gradient(135deg, #020915 0%, #06182a 48%, #020b15 100%);
         color: var(--text);
         font-family:
-          ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
           sans-serif;
       }
 
@@ -85,7 +97,11 @@
         place-items: center;
         border: 1px solid rgba(34, 211, 238, 0.7);
         border-radius: 16px;
-        background: linear-gradient(135deg, rgba(34, 211, 238, 0.22), rgba(45, 212, 191, 0.08));
+        background: linear-gradient(
+          135deg,
+          rgba(34, 211, 238, 0.22),
+          rgba(45, 212, 191, 0.08)
+        );
         color: var(--cyan);
         font-weight: 900;
         letter-spacing: -0.08em;
@@ -132,7 +148,11 @@
       .nav-button.active,
       .nav-button:hover {
         border-color: rgba(34, 211, 238, 0.42);
-        background: linear-gradient(135deg, rgba(34, 211, 238, 0.13), rgba(45, 212, 191, 0.06));
+        background: linear-gradient(
+          135deg,
+          rgba(34, 211, 238, 0.13),
+          rgba(45, 212, 191, 0.06)
+        );
       }
 
       .nav-main {
@@ -289,7 +309,11 @@
 
       .button.primary {
         border-color: rgba(34, 211, 238, 0.7);
-        background: linear-gradient(135deg, rgba(34, 211, 238, 0.28), rgba(45, 212, 191, 0.15));
+        background: linear-gradient(
+          135deg,
+          rgba(34, 211, 238, 0.28),
+          rgba(45, 212, 191, 0.15)
+        );
         color: #f0fdff;
         box-shadow: 0 0 26px rgba(34, 211, 238, 0.12);
       }
@@ -356,7 +380,11 @@
         padding: 16px;
         border: 1px solid var(--line);
         border-radius: 20px;
-        background: linear-gradient(145deg, rgba(15, 45, 70, 0.84), rgba(11, 31, 51, 0.88));
+        background: linear-gradient(
+          145deg,
+          rgba(15, 45, 70, 0.84),
+          rgba(11, 31, 51, 0.88)
+        );
       }
 
       .card h3,
@@ -667,27 +695,45 @@
 
         <div class="nav-title-label">一级导航</div>
         <button class="nav-button active" data-page="prompt">
-          <span><span class="nav-main">Prompt</span><span class="nav-sub">高频快捷话术</span></span>
+          <span
+            ><span class="nav-main">Prompt</span
+            ><span class="nav-sub">高频快捷话术</span></span
+          >
           <span class="badge cyan">Quick</span>
         </button>
         <button class="nav-button" data-page="rules">
-          <span><span class="nav-main">规约库</span><span class="nav-sub">单条可复用规约</span></span>
+          <span
+            ><span class="nav-main">规约库</span
+            ><span class="nav-sub">单条可复用规约</span></span
+          >
           <span class="badge teal">Rule</span>
         </button>
         <button class="nav-button" data-page="ai">
-          <span><span class="nav-main">AI 规约</span><span class="nav-sub">AGENTS.md / Skills / Agents</span></span>
+          <span
+            ><span class="nav-main">AI 规约</span
+            ><span class="nav-sub">AGENTS.md / Skills / Agents</span></span
+          >
           <span class="badge purple">Spec</span>
         </button>
         <button class="nav-button" data-page="workspace">
-          <span><span class="nav-main">工作空间</span><span class="nav-sub">项目、成员、共享资产</span></span>
+          <span
+            ><span class="nav-main">工作空间</span
+            ><span class="nav-sub">项目、成员、共享资产</span></span
+          >
           <span class="badge blue">Team</span>
         </button>
         <button class="nav-button" data-page="discover">
-          <span><span class="nav-main">发现</span><span class="nav-sub">搜索、收藏、发布</span></span>
+          <span
+            ><span class="nav-main">发现</span
+            ><span class="nav-sub">搜索、收藏、发布</span></span
+          >
           <span class="badge orange">Hub</span>
         </button>
         <button class="nav-button" data-page="settings">
-          <span><span class="nav-main">设置</span><span class="nav-sub">MCP、密钥、个人信息</span></span>
+          <span
+            ><span class="nav-main">设置</span
+            ><span class="nav-sub">MCP、密钥、个人信息</span></span
+          >
           <span class="badge">Config</span>
         </button>
       </aside>
@@ -696,7 +742,9 @@
         <header class="topbar">
           <div>
             <h2 id="page-title">Prompt</h2>
-            <p id="page-desc">高频快捷话术：搜索、标签、常用、使用频率排序、复制和历史记录。</p>
+            <p id="page-desc">
+              高频快捷话术：搜索、标签、常用、使用频率排序、复制和历史记录。
+            </p>
           </div>
           <div class="context">
             <span class="badge cyan">空间：前端团队</span>
@@ -708,7 +756,10 @@
           <div class="page-header">
             <div>
               <h1>Prompt</h1>
-              <p>Prompt 是简短、高频、常复制给 AI 的话术。新版草图体现：无分类，使用标签、常用标记、复制频率和新建时间排序。</p>
+              <p>
+                Prompt 是简短、高频、常复制给 AI
+                的话术。新版草图体现：无分类，使用标签、常用标记、复制频率和新建时间排序。
+              </p>
             </div>
             <div class="actions">
               <button class="button primary">新建 Prompt</button>
@@ -721,8 +772,12 @@
               <div class="toolbar">
                 <input class="input search" value="搜索标题、内容、标签..." />
                 <div class="filters">
-                  <select class="select"><option>标签：全部</option></select>
-                  <select class="select"><option>排序：新建 + 高频 + 常用</option></select>
+                  <select class="select">
+                    <option>标签：全部</option>
+                  </select>
+                  <select class="select">
+                    <option>排序：新建 + 高频 + 常用</option>
+                  </select>
                   <button class="button">只看常用</button>
                 </div>
               </div>
@@ -732,25 +787,41 @@
                   <span class="badge cyan">常用</span>
                   <h3>翻译成自然中文</h3>
                   <p>把下面内容翻译成自然、准确的简体中文。</p>
-                  <div class="mini-actions"><button class="mini-button">复制 128 次</button><button class="mini-button">编辑</button><button class="mini-button">单条历史</button></div>
+                  <div class="mini-actions">
+                    <button class="mini-button">复制 128 次</button
+                    ><button class="mini-button">编辑</button
+                    ><button class="mini-button">单条历史</button>
+                  </div>
                 </article>
                 <article class="prompt-card">
                   <span class="badge blue">代码</span>
                   <h3>代码审查请求</h3>
                   <p>优先找 bug、行为回归和缺失测试，按严重程度排序。</p>
-                  <div class="mini-actions"><button class="mini-button">复制 76 次</button><button class="mini-button">设为常用</button><button class="mini-button">发布</button></div>
+                  <div class="mini-actions">
+                    <button class="mini-button">复制 76 次</button
+                    ><button class="mini-button">设为常用</button
+                    ><button class="mini-button">发布</button>
+                  </div>
                 </article>
                 <article class="prompt-card">
                   <span class="badge teal">新添加</span>
                   <h3>优化表达</h3>
                   <p>帮我把下面内容改得更清晰、自然、专业。</p>
-                  <div class="mini-actions"><button class="mini-button">复制 3 次</button><button class="mini-button">编辑</button><button class="mini-button">删除</button></div>
+                  <div class="mini-actions">
+                    <button class="mini-button">复制 3 次</button
+                    ><button class="mini-button">编辑</button
+                    ><button class="mini-button">删除</button>
+                  </div>
                 </article>
                 <article class="prompt-card">
                   <span class="badge">变量模板</span>
                   <h3>生成提交信息</h3>
                   <p>根据以下 diff 生成中文约定式提交信息。</p>
-                  <div class="mini-actions"><button class="mini-button">复制 44 次</button><button class="mini-button">标签</button><button class="mini-button">历史</button></div>
+                  <div class="mini-actions">
+                    <button class="mini-button">复制 44 次</button
+                    ><button class="mini-button">标签</button
+                    ><button class="mini-button">历史</button>
+                  </div>
                 </article>
               </div>
 
@@ -758,21 +829,33 @@
                 <div class="section-title">
                   <div>
                     <h3>大弹窗编辑示意</h3>
-                    <p>编辑 Prompt 不使用右侧抽屉，采用大弹窗，适合长内容、标签和历史摘要。</p>
+                    <p>
+                      编辑 Prompt
+                      不使用右侧抽屉，采用大弹窗，适合长内容、标签和历史摘要。
+                    </p>
                   </div>
                   <span class="badge cyan">Modal</span>
                 </div>
                 <div class="grid-2">
                   <div>
-                    <input class="input" style="width: 100%; margin-bottom: 10px" value="标题：翻译成自然中文" />
-                    <textarea class="textarea">把下面内容翻译成自然、准确的简体中文。</textarea>
+                    <input
+                      class="input"
+                      style="width: 100%; margin-bottom: 10px"
+                      value="标题：翻译成自然中文"
+                    />
+                    <textarea class="textarea">
+把下面内容翻译成自然、准确的简体中文。</textarea
+                    >
                   </div>
                   <div class="card">
                     <h4>编辑信息</h4>
                     <p>标签：翻译、中文、常用</p>
                     <p>复制次数：128；最近复制：今天</p>
                     <p>修改后生成 PromptRevision。</p>
-                    <div class="mini-actions"><button class="mini-button">保存</button><button class="mini-button">查看历史</button></div>
+                    <div class="mini-actions">
+                      <button class="mini-button">保存</button
+                      ><button class="mini-button">查看历史</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -805,38 +888,92 @@
           <div class="page-header">
             <div>
               <h1>规约库</h1>
-              <p>规约库保存单条可复用规约，只能被 AGENTS.md、Skills、Agents 引用。大类型必选，标签自由添加，并支持 MCP 同步。</p>
+              <p>
+                规约库保存单条可复用规约，只能被 AGENTS.md、Skills、Agents
+                引用。大类型必选，标签自由添加，并支持 MCP 同步。
+              </p>
             </div>
-            <div class="actions"><button class="button primary">新建规约</button><button class="button">MCP 同步</button></div>
+            <div class="actions">
+              <button class="button primary">新建规约</button
+              ><button class="button">MCP 同步</button>
+            </div>
           </div>
 
           <div class="layout-2">
             <aside class="panel side-list">
               <div class="list-label">必选大类型</div>
-              <div class="list-item active"><span>通用</span><span>18</span></div>
+              <div class="active list-item">
+                <span>通用</span><span>18</span>
+              </div>
               <div class="list-item"><span>语言风格</span><span>12</span></div>
               <div class="list-item"><span>基础设施</span><span>9</span></div>
               <div class="list-item"><span>代码结构</span><span>15</span></div>
               <div class="list-label">自由标签</div>
-              <div class="mini-actions"><span class="badge">前端</span><span class="badge">后端</span><span class="badge">ts</span><span class="badge">react</span><span class="badge">prisma</span></div>
+              <div class="mini-actions">
+                <span class="badge">前端</span><span class="badge">后端</span
+                ><span class="badge">ts</span><span class="badge">react</span
+                ><span class="badge">prisma</span>
+              </div>
             </aside>
 
             <section class="panel panel-inner">
               <div class="toolbar">
-                <input class="input search" value="搜索标题、内容、大类型、标签..." />
-                <div class="filters"><select class="select"><option>大类型：通用</option></select><select class="select"><option>标签：全部</option></select></div>
+                <input
+                  class="input search"
+                  value="搜索标题、内容、大类型、标签..."
+                />
+                <div class="filters">
+                  <select class="select">
+                    <option>大类型：通用</option></select
+                  ><select class="select">
+                    <option>标签：全部</option>
+                  </select>
+                </div>
               </div>
 
               <div class="grid-3">
-                <article class="card"><span class="badge teal">通用</span><h3>禁止破坏用户变更</h3><p>不要 revert 或修改不是自己产生的变更。</p><div class="mini-actions"><button class="mini-button">引用 AGENTS.md</button><button class="mini-button">引用 Agent</button></div></article>
-                <article class="card"><span class="badge teal">语言风格</span><h3>TypeScript 类型规则</h3><p>避免 any，公共 API 显式返回类型，使用 import type。</p><div class="mini-actions"><button class="mini-button">引用 AGENTS.md</button><button class="mini-button">历史</button></div></article>
-                <article class="card"><span class="badge teal">基础设施</span><h3>Prisma 修改流程</h3><p>先改 schema，再 generate；禁止手动修改生成目录。</p><div class="mini-actions"><button class="mini-button">引用 Skill</button><button class="mini-button">来源追踪</button></div></article>
+                <article class="card">
+                  <span class="badge teal">通用</span>
+                  <h3>禁止破坏用户变更</h3>
+                  <p>不要 revert 或修改不是自己产生的变更。</p>
+                  <div class="mini-actions">
+                    <button class="mini-button">引用 AGENTS.md</button
+                    ><button class="mini-button">引用 Agent</button>
+                  </div>
+                </article>
+                <article class="card">
+                  <span class="badge teal">语言风格</span>
+                  <h3>TypeScript 类型规则</h3>
+                  <p>避免 any，公共 API 显式返回类型，使用 import type。</p>
+                  <div class="mini-actions">
+                    <button class="mini-button">引用 AGENTS.md</button
+                    ><button class="mini-button">历史</button>
+                  </div>
+                </article>
+                <article class="card">
+                  <span class="badge teal">基础设施</span>
+                  <h3>Prisma 修改流程</h3>
+                  <p>先改 schema，再 generate；禁止手动修改生成目录。</p>
+                  <div class="mini-actions">
+                    <button class="mini-button">引用 Skill</button
+                    ><button class="mini-button">来源追踪</button>
+                  </div>
+                </article>
               </div>
 
               <div class="grid-3" style="margin-top: 14px">
-                <div class="card"><h4>引用目标</h4><p>仅支持 AGENTS.md、Skills、Agents，不引用 Plugins。</p></div>
-                <div class="card"><h4>引入模式</h4><p>引用模式：源更新可提示；复制模式：生成快照。</p></div>
-                <div class="card"><h4>MCP 同步</h4><p>规约可推送到外部 MCP，也可从 MCP 拉取。</p></div>
+                <div class="card">
+                  <h4>引用目标</h4>
+                  <p>仅支持 AGENTS.md、Skills、Agents，不引用 Plugins。</p>
+                </div>
+                <div class="card">
+                  <h4>引入模式</h4>
+                  <p>引用模式：源更新可提示；复制模式：生成快照。</p>
+                </div>
+                <div class="card">
+                  <h4>MCP 同步</h4>
+                  <p>规约可推送到外部 MCP，也可从 MCP 拉取。</p>
+                </div>
               </div>
             </section>
           </div>
@@ -846,7 +983,9 @@
           <div class="page-header">
             <div>
               <h1>AI 规约</h1>
-              <p>AGENTS.md、Skills、Agents、Plugins 独立管理，不强行一次生成。</p>
+              <p>
+                AGENTS.md、Skills、Agents、Plugins 独立管理，不强行一次生成。
+              </p>
             </div>
             <button class="button primary">新建资产</button>
           </div>
@@ -862,14 +1001,30 @@
             <div class="layout-3">
               <aside class="panel side-list">
                 <div class="list-label">项目架构树</div>
-                <div class="tree-node"><strong>/AGENTS.md</strong><span>范围：整个项目</span></div>
-                <div class="tree-node"><strong>/src/AGENTS.md</strong><span>范围：src/** 前端业务</span></div>
-                <div class="tree-node"><strong>/app/api/AGENTS.md</strong><span>范围：后端 API</span></div>
-                <div class="tree-node"><strong>/docs/AGENTS.md</strong><span>范围：文档规范</span></div>
+                <div class="tree-node">
+                  <strong>/AGENTS.md</strong><span>范围：整个项目</span>
+                </div>
+                <div class="tree-node">
+                  <strong>/src/AGENTS.md</strong
+                  ><span>范围：src/** 前端业务</span>
+                </div>
+                <div class="tree-node">
+                  <strong>/app/api/AGENTS.md</strong><span>范围：后端 API</span>
+                </div>
+                <div class="tree-node">
+                  <strong>/docs/AGENTS.md</strong><span>范围：文档规范</span>
+                </div>
               </aside>
               <section class="panel panel-inner">
-                <div class="toolbar"><input class="input search" value="搜索文档标题、路径、内容、标签..." /><button class="button">历史记录</button></div>
-                <div class="editor"><pre># src/AGENTS.md
+                <div class="toolbar">
+                  <input
+                    class="input search"
+                    value="搜索文档标题、路径、内容、标签..."
+                  /><button class="button">历史记录</button>
+                </div>
+                <div class="editor">
+                  <pre>
+# src/AGENTS.md
 
 ## 约束范围
 适用于 src/** 下的前端业务代码。
@@ -881,44 +1036,227 @@
 
 ## 已引入
 - Prompt：代码审查请求
-- 规约：TypeScript 类型规则</pre></div>
+- 规约：TypeScript 类型规则</pre
+                  >
+                </div>
               </section>
               <aside class="panel panel-inner">
-                <div class="card"><h4>范围标注</h4><p>路径：/src/AGENTS.md；范围：src/**。</p><span class="badge teal">目录级</span></div>
-                <div class="card"><h4>插入内容</h4><p>支持引入 Prompt 和规约库。</p><div class="mini-actions"><button class="mini-button">选 Prompt</button><button class="mini-button">选规约</button></div></div>
-                <div class="card"><h4>操作</h4><div class="mini-actions"><button class="mini-button">保存</button><button class="mini-button">下载</button><button class="mini-button">同步</button></div></div>
+                <div class="card">
+                  <h4>范围标注</h4>
+                  <p>路径：/src/AGENTS.md；范围：src/**。</p>
+                  <span class="badge teal">目录级</span>
+                </div>
+                <div class="card">
+                  <h4>插入内容</h4>
+                  <p>支持引入 Prompt 和规约库。</p>
+                  <div class="mini-actions">
+                    <button class="mini-button">选 Prompt</button
+                    ><button class="mini-button">选规约</button>
+                  </div>
+                </div>
+                <div class="card">
+                  <h4>操作</h4>
+                  <div class="mini-actions">
+                    <button class="mini-button">保存</button
+                    ><button class="mini-button">下载</button
+                    ><button class="mini-button">同步</button>
+                  </div>
+                </div>
               </aside>
             </div>
           </div>
 
           <div class="sub-page" id="skills">
             <div class="layout-3">
-              <aside class="panel side-list"><div class="list-label">Skill 列表</div><div class="list-item active"><span>代码审查</span><span class="badge teal">使用中</span></div><div class="list-item"><span>测试生成</span><span>3</span></div><div class="list-item"><span>英文翻译</span><span>1</span></div></aside>
+              <aside class="panel side-list">
+                <div class="list-label">Skill 列表</div>
+                <div class="active list-item">
+                  <span>代码审查</span><span class="badge teal">使用中</span>
+                </div>
+                <div class="list-item"><span>测试生成</span><span>3</span></div>
+                <div class="list-item"><span>英文翻译</span><span>1</span></div>
+              </aside>
               <section class="panel panel-inner">
-                <div class="toolbar"><input class="input search" value="搜索名称、触发条件、标签..." /><button class="button">历史记录</button></div>
-                <div class="grid-2"><div class="card"><h3>基础信息</h3><p>名称：代码审查 Skill</p><p>何时使用：review、PR、diff 分析。</p></div><div class="card"><h3>触发条件</h3><p>用户要求 review、检查 PR、分析 diff。</p></div><div class="card"><h3>执行步骤</h3><p>识别变化 → 找 bug → 看回归风险 → 给测试建议。</p></div><div class="card"><h3>输出要求</h3><p>按严重程度排序，包含文件路径和行号。</p></div></div>
+                <div class="toolbar">
+                  <input
+                    class="input search"
+                    value="搜索名称、触发条件、标签..."
+                  /><button class="button">历史记录</button>
+                </div>
+                <div class="grid-2">
+                  <div class="card">
+                    <h3>基础信息</h3>
+                    <p>名称：代码审查 Skill</p>
+                    <p>何时使用：review、PR、diff 分析。</p>
+                  </div>
+                  <div class="card">
+                    <h3>触发条件</h3>
+                    <p>用户要求 review、检查 PR、分析 diff。</p>
+                  </div>
+                  <div class="card">
+                    <h3>执行步骤</h3>
+                    <p>识别变化 → 找 bug → 看回归风险 → 给测试建议。</p>
+                  </div>
+                  <div class="card">
+                    <h3>输出要求</h3>
+                    <p>按严重程度排序，包含文件路径和行号。</p>
+                  </div>
+                </div>
               </section>
-              <aside class="panel panel-inner"><div class="card"><h4>引入 Prompt / 规约</h4><p>Prompt 可做说明或输出模板，规约可做流程或约束。</p><div class="mini-actions"><button class="mini-button">选 Prompt</button><button class="mini-button">选规约</button></div></div><div class="card"><h4>资源文件</h4><p>review-checklist.md、examples.md。</p><button class="button">上传资源</button></div><div class="card"><h4>引用关系</h4><p>被 2 个 Agents、1 个 Plugin 使用。</p></div></aside>
+              <aside class="panel panel-inner">
+                <div class="card">
+                  <h4>引入 Prompt / 规约</h4>
+                  <p>Prompt 可做说明或输出模板，规约可做流程或约束。</p>
+                  <div class="mini-actions">
+                    <button class="mini-button">选 Prompt</button
+                    ><button class="mini-button">选规约</button>
+                  </div>
+                </div>
+                <div class="card">
+                  <h4>资源文件</h4>
+                  <p>review-checklist.md、examples.md。</p>
+                  <button class="button">上传资源</button>
+                </div>
+                <div class="card">
+                  <h4>引用关系</h4>
+                  <p>被 2 个 Agents、1 个 Plugin 使用。</p>
+                </div>
+              </aside>
             </div>
           </div>
 
           <div class="sub-page" id="agents">
             <div class="layout-3">
-              <aside class="panel side-list"><div class="list-label">Agent 列表</div><div class="list-item active"><span>前端开发 Agent</span><span class="badge blue">Claude</span></div><div class="list-item"><span>Code Review Agent</span><span>Cursor</span></div><div class="list-item"><span>后端 API Agent</span><span>opencode</span></div></aside>
+              <aside class="panel side-list">
+                <div class="list-label">Agent 列表</div>
+                <div class="active list-item">
+                  <span>前端开发 Agent</span
+                  ><span class="badge blue">Claude</span>
+                </div>
+                <div class="list-item">
+                  <span>Code Review Agent</span><span>Cursor</span>
+                </div>
+                <div class="list-item">
+                  <span>后端 API Agent</span><span>opencode</span>
+                </div>
+              </aside>
               <section class="panel panel-inner">
-                <div class="toolbar"><input class="input search" value="搜索 Agent、命令、权限、目标工具..." /><button class="button">历史记录</button></div>
-                <div class="grid-2"><div class="card"><h3>角色说明</h3><p>面向 Next.js 项目的前端开发 Agent。</p></div><div class="card"><h3>权限设置</h3><p>src/** 可编辑；生成目录禁止编辑。</p></div></div>
-                <div class="section-title" style="margin-top: 14px"><div><h3>可视化命令列表</h3><p>npm / go / 终端命令分组。</p></div></div>
-                <div class="command-list"><div class="command-item"><span class="badge cyan">pnpm</span> <code>pnpm run typecheck</code> <span class="badge teal">默认允许</span></div><div class="command-item"><span class="badge cyan">pnpm</span> <code>pnpm run lint</code> <span class="badge teal">默认允许</span></div><div class="command-item"><span class="badge blue">go</span> <code>go test ./...</code> <span class="badge orange">需确认</span></div><div class="command-item"><span class="badge orange">terminal</span> <code>docker compose up</code> <span class="badge orange">需确认</span></div></div>
+                <div class="toolbar">
+                  <input
+                    class="input search"
+                    value="搜索 Agent、命令、权限、目标工具..."
+                  /><button class="button">历史记录</button>
+                </div>
+                <div class="grid-2">
+                  <div class="card">
+                    <h3>角色说明</h3>
+                    <p>面向 Next.js 项目的前端开发 Agent。</p>
+                  </div>
+                  <div class="card">
+                    <h3>权限设置</h3>
+                    <p>src/** 可编辑；生成目录禁止编辑。</p>
+                  </div>
+                </div>
+                <div class="section-title" style="margin-top: 14px">
+                  <div>
+                    <h3>可视化命令列表</h3>
+                    <p>npm / go / 终端命令分组。</p>
+                  </div>
+                </div>
+                <div class="command-list">
+                  <div class="command-item">
+                    <span class="badge cyan">pnpm</span>
+                    <code>pnpm run typecheck</code>
+                    <span class="badge teal">默认允许</span>
+                  </div>
+                  <div class="command-item">
+                    <span class="badge cyan">pnpm</span>
+                    <code>pnpm run lint</code>
+                    <span class="badge teal">默认允许</span>
+                  </div>
+                  <div class="command-item">
+                    <span class="badge blue">go</span>
+                    <code>go test ./...</code>
+                    <span class="badge orange">需确认</span>
+                  </div>
+                  <div class="command-item">
+                    <span class="badge orange">terminal</span>
+                    <code>docker compose up</code>
+                    <span class="badge orange">需确认</span>
+                  </div>
+                </div>
               </section>
-              <aside class="panel panel-inner"><div class="card"><h4>引入规约</h4><p>权限、命令、输出格式。</p><button class="button">选择规约</button></div><div class="card"><h4>可用 Skills</h4><p>代码审查、测试生成。</p><button class="button">绑定 Skill</button></div><div class="card"><h4>绑定 AGENTS.md</h4><p>/AGENTS.md、/src/AGENTS.md。</p><button class="button">绑定文档</button></div></aside>
+              <aside class="panel panel-inner">
+                <div class="card">
+                  <h4>引入规约</h4>
+                  <p>权限、命令、输出格式。</p>
+                  <button class="button">选择规约</button>
+                </div>
+                <div class="card">
+                  <h4>可用 Skills</h4>
+                  <p>代码审查、测试生成。</p>
+                  <button class="button">绑定 Skill</button>
+                </div>
+                <div class="card">
+                  <h4>绑定 AGENTS.md</h4>
+                  <p>/AGENTS.md、/src/AGENTS.md。</p>
+                  <button class="button">绑定文档</button>
+                </div>
+              </aside>
             </div>
           </div>
 
           <div class="sub-page" id="plugins">
             <div class="layout-2">
-              <aside class="panel side-list"><div class="list-label">Plugins</div><div class="list-item active"><span>前端规范包</span><span>v1.2</span></div><div class="list-item"><span>代码审查包</span><span>v0.8</span></div><div class="list-item"><span>Prisma 规范包</span><span>v1.0</span></div></aside>
-              <section class="panel panel-inner"><div class="toolbar"><input class="input search" value="搜索 Plugin、包含资产、标签..." /><button class="button primary">新建 Plugin</button></div><div class="grid-3"><div class="card"><span class="badge purple">Plugin</span><h3>前端规范包</h3><p>打包 /src/AGENTS.md、前端开发 Agent、代码审查 Skill。</p><div class="mini-actions"><button class="mini-button">编辑</button><button class="mini-button">下载</button></div></div><div class="card"><span class="badge purple">Plugin</span><h3>代码审查包</h3><p>包含代码审查 Skill 和 Review Agent。</p><div class="mini-actions"><button class="mini-button">版本</button><button class="mini-button">发布</button></div></div><div class="card"><span class="badge purple">Plugin</span><h3>Prisma 规范包</h3><p>包含数据库 AGENTS.md 和相关 Skill。</p><div class="mini-actions"><button class="mini-button">同步</button><button class="mini-button">导出</button></div></div></div></section>
+              <aside class="panel side-list">
+                <div class="list-label">Plugins</div>
+                <div class="active list-item">
+                  <span>前端规范包</span><span>v1.2</span>
+                </div>
+                <div class="list-item">
+                  <span>代码审查包</span><span>v0.8</span>
+                </div>
+                <div class="list-item">
+                  <span>Prisma 规范包</span><span>v1.0</span>
+                </div>
+              </aside>
+              <section class="panel panel-inner">
+                <div class="toolbar">
+                  <input
+                    class="input search"
+                    value="搜索 Plugin、包含资产、标签..."
+                  /><button class="button primary">新建 Plugin</button>
+                </div>
+                <div class="grid-3">
+                  <div class="card">
+                    <span class="badge purple">Plugin</span>
+                    <h3>前端规范包</h3>
+                    <p>打包 /src/AGENTS.md、前端开发 Agent、代码审查 Skill。</p>
+                    <div class="mini-actions">
+                      <button class="mini-button">编辑</button
+                      ><button class="mini-button">下载</button>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <span class="badge purple">Plugin</span>
+                    <h3>代码审查包</h3>
+                    <p>包含代码审查 Skill 和 Review Agent。</p>
+                    <div class="mini-actions">
+                      <button class="mini-button">版本</button
+                      ><button class="mini-button">发布</button>
+                    </div>
+                  </div>
+                  <div class="card">
+                    <span class="badge purple">Plugin</span>
+                    <h3>Prisma 规范包</h3>
+                    <p>包含数据库 AGENTS.md 和相关 Skill。</p>
+                    <div class="mini-actions">
+                      <button class="mini-button">同步</button
+                      ><button class="mini-button">导出</button>
+                    </div>
+                  </div>
+                </div>
+              </section>
             </div>
           </div>
         </section>
@@ -927,7 +1265,10 @@
           <div class="page-header">
             <div>
               <h1>工作空间</h1>
-              <p>工作空间下设项目、成员，以及“共享资产”导航分组。共享资产不是页面，下面分别进入 AGENTS.md、Skills、Agents、Plugins。</p>
+              <p>
+                工作空间下设项目、成员，以及“共享资产”导航分组。共享资产不是页面，下面分别进入
+                AGENTS.md、Skills、Agents、Plugins。
+              </p>
             </div>
             <button class="button primary">新建项目</button>
           </div>
@@ -935,56 +1276,373 @@
           <div class="layout-2">
             <aside class="panel side-list">
               <div class="list-label">协作</div>
-              <button class="workspace-tab active" data-workspace-tab="projects">项目</button>
-              <button class="workspace-tab" data-workspace-tab="members">成员</button>
+              <button
+                class="workspace-tab active"
+                data-workspace-tab="projects"
+              >
+                项目
+              </button>
+              <button class="workspace-tab" data-workspace-tab="members">
+                成员
+              </button>
               <div class="list-label">共享资产</div>
-              <button class="workspace-tab" data-workspace-tab="w-agentsmd">AGENTS.md</button>
-              <button class="workspace-tab" data-workspace-tab="w-skills">Skills</button>
-              <button class="workspace-tab" data-workspace-tab="w-agents">Agents</button>
-              <button class="workspace-tab" data-workspace-tab="w-plugins">Plugins</button>
+              <button class="workspace-tab" data-workspace-tab="w-agentsmd">
+                AGENTS.md
+              </button>
+              <button class="workspace-tab" data-workspace-tab="w-skills">
+                Skills
+              </button>
+              <button class="workspace-tab" data-workspace-tab="w-agents">
+                Agents
+              </button>
+              <button class="workspace-tab" data-workspace-tab="w-plugins">
+                Plugins
+              </button>
             </aside>
 
             <section class="panel panel-inner">
               <div class="workspace-panel active" id="projects">
-                <div class="section-title"><div><h3>项目</h3><p>进入项目后查看项目结构、AGENTS.md 位置、附带 Skills、Agents、Plugins 和编辑记录。</p></div><button class="button">新建项目</button></div>
-                <div class="grid-3"><div class="card"><h3>ai-spec</h3><p>Next.js / Prisma / AI 规约平台</p><span class="badge teal">4 个 AGENTS.md</span></div><div class="card"><h3>admin-web</h3><p>后台管理系统</p><span class="badge">2 个 Agents</span></div><div class="card"><h3>backend-api</h3><p>Go API 服务</p><span class="badge">3 个 Skills</span></div></div>
-                <div class="notice" style="margin-top: 14px">从共享资产引入到项目后生成项目内副本。修改项目副本不影响源文件，源文件更新也不会自动影响项目副本。</div>
-                <div class="grid-2" style="margin-top: 14px"><div class="card"><h3>项目结构</h3><p>/AGENTS.md，/src/AGENTS.md，/app/api/AGENTS.md。</p></div><div class="card"><h3>项目附带</h3><p>Skills：代码审查；Agents：前端开发；Plugins：前端规范包。</p></div></div>
+                <div class="section-title">
+                  <div>
+                    <h3>项目</h3>
+                    <p>
+                      进入项目后查看项目结构、AGENTS.md 位置、附带
+                      Skills、Agents、Plugins 和编辑记录。
+                    </p>
+                  </div>
+                  <button class="button">新建项目</button>
+                </div>
+                <div class="grid-3">
+                  <div class="card">
+                    <h3>ai-spec</h3>
+                    <p>Next.js / Prisma / AI 规约平台</p>
+                    <span class="badge teal">4 个 AGENTS.md</span>
+                  </div>
+                  <div class="card">
+                    <h3>admin-web</h3>
+                    <p>后台管理系统</p>
+                    <span class="badge">2 个 Agents</span>
+                  </div>
+                  <div class="card">
+                    <h3>backend-api</h3>
+                    <p>Go API 服务</p>
+                    <span class="badge">3 个 Skills</span>
+                  </div>
+                </div>
+                <div class="notice" style="margin-top: 14px">
+                  从共享资产引入到项目后生成项目内副本。修改项目副本不影响源文件，源文件更新也不会自动影响项目副本。
+                </div>
+                <div class="grid-2" style="margin-top: 14px">
+                  <div class="card">
+                    <h3>项目结构</h3>
+                    <p>/AGENTS.md，/src/AGENTS.md，/app/api/AGENTS.md。</p>
+                  </div>
+                  <div class="card">
+                    <h3>项目附带</h3>
+                    <p>
+                      Skills：代码审查；Agents：前端开发；Plugins：前端规范包。
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div class="workspace-panel" id="members"><div class="section-title"><div><h3>成员</h3><p>支持空间级、项目级、文件级权限。</p></div><button class="button">邀请成员</button></div><table><thead><tr><th>成员</th><th>角色</th><th>权限</th><th>最近记录</th></tr></thead><tbody><tr><td>小云</td><td>admin</td><td>可编辑全部项目</td><td>更新 /src/AGENTS.md</td></tr><tr><td>小李</td><td>editor</td><td>只可编辑 ai-spec</td><td>新增代码审查 Skill 副本</td></tr><tr><td>小周</td><td>viewer</td><td>/app/api/AGENTS.md 不可编辑</td><td>查看项目结构</td></tr></tbody></table></div>
-              <div class="workspace-panel" id="w-agentsmd"><div class="section-title"><div><h3>共享资产 / AGENTS.md</h3><p>可上传、下载、从个人资产上传，并引入到项目生成副本。</p></div><button class="button">上传 AGENTS.md</button></div><div class="grid-2"><div class="card"><h3>根目录 AGENTS.md</h3><p>团队通用项目规则。</p><button class="button">引入项目</button></div><div class="card"><h3>src/AGENTS.md</h3><p>前端 FSD 和 UI 规范。</p><button class="button">下载</button></div></div></div>
-              <div class="workspace-panel" id="w-skills"><div class="section-title"><div><h3>共享资产 / Skills</h3><p>团队共享技能库。</p></div><button class="button">上传 Skill</button></div><div class="grid-2"><div class="card"><h3>代码审查 Skill</h3><p>团队统一 review 流程。</p></div><div class="card"><h3>测试生成 Skill</h3><p>测试补全流程。</p></div></div></div>
-              <div class="workspace-panel" id="w-agents"><div class="section-title"><div><h3>共享资产 / Agents</h3><p>团队共享代理配置。</p></div><button class="button">上传 Agent</button></div><div class="grid-2"><div class="card"><h3>前端开发 Agent</h3><p>前端命令和权限配置。</p></div><div class="card"><h3>Code Review Agent</h3><p>审查专用 Agent。</p></div></div></div>
-              <div class="workspace-panel" id="w-plugins"><div class="section-title"><div><h3>共享资产 / Plugins</h3><p>打包 AGENTS.md、Skills、Agents，方便项目复用。</p></div><button class="button">上传 Plugin</button></div><div class="grid-2"><div class="card"><h3>前端规范包</h3><p>包含 AGENTS.md、Skill、Agent。</p></div><div class="card"><h3>Prisma 规范包</h3><p>数据库相关规约包。</p></div></div></div>
+              <div class="workspace-panel" id="members">
+                <div class="section-title">
+                  <div>
+                    <h3>成员</h3>
+                    <p>支持空间级、项目级、文件级权限。</p>
+                  </div>
+                  <button class="button">邀请成员</button>
+                </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>成员</th>
+                      <th>角色</th>
+                      <th>权限</th>
+                      <th>最近记录</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>小云</td>
+                      <td>admin</td>
+                      <td>可编辑全部项目</td>
+                      <td>更新 /src/AGENTS.md</td>
+                    </tr>
+                    <tr>
+                      <td>小李</td>
+                      <td>editor</td>
+                      <td>只可编辑 ai-spec</td>
+                      <td>新增代码审查 Skill 副本</td>
+                    </tr>
+                    <tr>
+                      <td>小周</td>
+                      <td>viewer</td>
+                      <td>/app/api/AGENTS.md 不可编辑</td>
+                      <td>查看项目结构</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="workspace-panel" id="w-agentsmd">
+                <div class="section-title">
+                  <div>
+                    <h3>共享资产 / AGENTS.md</h3>
+                    <p>可上传、下载、从个人资产上传，并引入到项目生成副本。</p>
+                  </div>
+                  <button class="button">上传 AGENTS.md</button>
+                </div>
+                <div class="grid-2">
+                  <div class="card">
+                    <h3>根目录 AGENTS.md</h3>
+                    <p>团队通用项目规则。</p>
+                    <button class="button">引入项目</button>
+                  </div>
+                  <div class="card">
+                    <h3>src/AGENTS.md</h3>
+                    <p>前端 FSD 和 UI 规范。</p>
+                    <button class="button">下载</button>
+                  </div>
+                </div>
+              </div>
+              <div class="workspace-panel" id="w-skills">
+                <div class="section-title">
+                  <div>
+                    <h3>共享资产 / Skills</h3>
+                    <p>团队共享技能库。</p>
+                  </div>
+                  <button class="button">上传 Skill</button>
+                </div>
+                <div class="grid-2">
+                  <div class="card">
+                    <h3>代码审查 Skill</h3>
+                    <p>团队统一 review 流程。</p>
+                  </div>
+                  <div class="card">
+                    <h3>测试生成 Skill</h3>
+                    <p>测试补全流程。</p>
+                  </div>
+                </div>
+              </div>
+              <div class="workspace-panel" id="w-agents">
+                <div class="section-title">
+                  <div>
+                    <h3>共享资产 / Agents</h3>
+                    <p>团队共享代理配置。</p>
+                  </div>
+                  <button class="button">上传 Agent</button>
+                </div>
+                <div class="grid-2">
+                  <div class="card">
+                    <h3>前端开发 Agent</h3>
+                    <p>前端命令和权限配置。</p>
+                  </div>
+                  <div class="card">
+                    <h3>Code Review Agent</h3>
+                    <p>审查专用 Agent。</p>
+                  </div>
+                </div>
+              </div>
+              <div class="workspace-panel" id="w-plugins">
+                <div class="section-title">
+                  <div>
+                    <h3>共享资产 / Plugins</h3>
+                    <p>打包 AGENTS.md、Skills、Agents，方便项目复用。</p>
+                  </div>
+                  <button class="button">上传 Plugin</button>
+                </div>
+                <div class="grid-2">
+                  <div class="card">
+                    <h3>前端规范包</h3>
+                    <p>包含 AGENTS.md、Skill、Agent。</p>
+                  </div>
+                  <div class="card">
+                    <h3>Prisma 规范包</h3>
+                    <p>数据库相关规约包。</p>
+                  </div>
+                </div>
+              </div>
             </section>
           </div>
         </section>
 
         <section class="page" id="discover">
-          <div class="page-header"><div><h1>发现</h1><p>发现支持 AGENTS.md、Skills、Agents、Plugins、规约、Prompt 的搜索、标签、收藏、导入和发布。</p></div><button class="button primary">发布我的资产</button></div>
-          <div class="panel panel-inner"><div class="tabs"><button class="discover-tab active" data-discover-tab="d-agents">Agents</button><button class="discover-tab" data-discover-tab="d-agentsmd">AGENTS.md</button><button class="discover-tab" data-discover-tab="d-skills">Skills</button><button class="discover-tab" data-discover-tab="d-plugins">Plugins</button><button class="discover-tab" data-discover-tab="d-rules">规约</button><button class="discover-tab" data-discover-tab="d-prompts">Prompt</button></div><div class="toolbar"><input class="input search" value="搜索公开资产、作者、标签..." /><div class="filters"><select class="select"><option>标签：全部</option></select><select class="select"><option>排序：热门</option></select></div></div>
-            <div class="discover-panel active" id="d-agents"><div class="grid-3"><div class="card"><span class="badge purple">Agent</span><h3>前端开发 Agent</h3><p>含命令权限、可用 Skills、绑定 AGENTS.md。</p><div class="mini-actions"><button class="mini-button">收藏</button><button class="mini-button">导入</button></div></div><div class="card"><span class="badge purple">Agent</span><h3>Code Review Agent</h3><p>审查专用角色和权限。</p><div class="mini-actions"><button class="mini-button">收藏</button><button class="mini-button">导入</button></div></div></div></div>
-            <div class="discover-panel" id="d-agentsmd"><div class="grid-3"><div class="card"><span class="badge purple">AGENTS.md</span><h3>Next.js 项目规约</h3><p>适合 FSD、Prisma、shadcn 项目。</p><button class="button">导入</button></div></div></div>
-            <div class="discover-panel" id="d-skills"><div class="grid-3"><div class="card"><span class="badge purple">Skill</span><h3>代码审查 Skill</h3><p>包含触发条件、流程和资源文件。</p><button class="button">导入</button></div></div></div>
-            <div class="discover-panel" id="d-plugins"><div class="grid-3"><div class="card"><span class="badge purple">Plugin</span><h3>前端规范包</h3><p>打包 AGENTS.md、Skill、Agent。</p><button class="button">导入</button></div></div></div>
-            <div class="discover-panel" id="d-rules"><div class="grid-3"><div class="card"><span class="badge teal">规约</span><h3>禁止修改生成目录</h3><p>单条可复用规约。</p><button class="button">导入规约库</button></div></div></div>
-            <div class="discover-panel" id="d-prompts"><div class="grid-3"><div class="card"><span class="badge cyan">Prompt</span><h3>中文翻译 Prompt</h3><p>高频快捷话术。</p><button class="button">导入 Prompt</button></div></div></div>
+          <div class="page-header">
+            <div>
+              <h1>发现</h1>
+              <p>
+                发现支持 AGENTS.md、Skills、Agents、Plugins、规约、Prompt
+                的搜索、标签、收藏、导入和发布。
+              </p>
+            </div>
+            <button class="button primary">发布我的资产</button>
+          </div>
+          <div class="panel panel-inner">
+            <div class="tabs">
+              <button class="discover-tab active" data-discover-tab="d-agents">
+                Agents</button
+              ><button class="discover-tab" data-discover-tab="d-agentsmd">
+                AGENTS.md</button
+              ><button class="discover-tab" data-discover-tab="d-skills">
+                Skills</button
+              ><button class="discover-tab" data-discover-tab="d-plugins">
+                Plugins</button
+              ><button class="discover-tab" data-discover-tab="d-rules">
+                规约</button
+              ><button class="discover-tab" data-discover-tab="d-prompts">
+                Prompt
+              </button>
+            </div>
+            <div class="toolbar">
+              <input class="input search" value="搜索公开资产、作者、标签..." />
+              <div class="filters">
+                <select class="select">
+                  <option>标签：全部</option></select
+                ><select class="select">
+                  <option>排序：热门</option>
+                </select>
+              </div>
+            </div>
+            <div class="discover-panel active" id="d-agents">
+              <div class="grid-3">
+                <div class="card">
+                  <span class="badge purple">Agent</span>
+                  <h3>前端开发 Agent</h3>
+                  <p>含命令权限、可用 Skills、绑定 AGENTS.md。</p>
+                  <div class="mini-actions">
+                    <button class="mini-button">收藏</button
+                    ><button class="mini-button">导入</button>
+                  </div>
+                </div>
+                <div class="card">
+                  <span class="badge purple">Agent</span>
+                  <h3>Code Review Agent</h3>
+                  <p>审查专用角色和权限。</p>
+                  <div class="mini-actions">
+                    <button class="mini-button">收藏</button
+                    ><button class="mini-button">导入</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="discover-panel" id="d-agentsmd">
+              <div class="grid-3">
+                <div class="card">
+                  <span class="badge purple">AGENTS.md</span>
+                  <h3>Next.js 项目规约</h3>
+                  <p>适合 FSD、Prisma、shadcn 项目。</p>
+                  <button class="button">导入</button>
+                </div>
+              </div>
+            </div>
+            <div class="discover-panel" id="d-skills">
+              <div class="grid-3">
+                <div class="card">
+                  <span class="badge purple">Skill</span>
+                  <h3>代码审查 Skill</h3>
+                  <p>包含触发条件、流程和资源文件。</p>
+                  <button class="button">导入</button>
+                </div>
+              </div>
+            </div>
+            <div class="discover-panel" id="d-plugins">
+              <div class="grid-3">
+                <div class="card">
+                  <span class="badge purple">Plugin</span>
+                  <h3>前端规范包</h3>
+                  <p>打包 AGENTS.md、Skill、Agent。</p>
+                  <button class="button">导入</button>
+                </div>
+              </div>
+            </div>
+            <div class="discover-panel" id="d-rules">
+              <div class="grid-3">
+                <div class="card">
+                  <span class="badge teal">规约</span>
+                  <h3>禁止修改生成目录</h3>
+                  <p>单条可复用规约。</p>
+                  <button class="button">导入规约库</button>
+                </div>
+              </div>
+            </div>
+            <div class="discover-panel" id="d-prompts">
+              <div class="grid-3">
+                <div class="card">
+                  <span class="badge cyan">Prompt</span>
+                  <h3>中文翻译 Prompt</h3>
+                  <p>高频快捷话术。</p>
+                  <button class="button">导入 Prompt</button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
         <section class="page" id="settings">
-          <div class="page-header"><div><h1>设置</h1><p>个人信息、MCP、密钥和默认偏好。</p></div><button class="button primary">保存设置</button></div>
-          <div class="layout-2"><aside class="panel side-list"><div class="list-item active"><span>个人信息</span><span></span></div><div class="list-item"><span>MCP 连接</span><span>3</span></div><div class="list-item"><span>密钥管理</span><span>5</span></div><div class="list-item"><span>同步偏好</span><span></span></div></aside><section class="panel panel-inner"><div class="grid-2"><div class="card"><h3>个人信息</h3><p>头像、昵称、邮箱、默认工作空间。</p><input class="input" style="width: 100%" value="昵称：duoyun" /></div><div class="card"><h3>MCP 连接</h3><p>opencode 已连接，Claude 需重新授权，Cursor 待确认。</p><button class="button">管理 MCP</button></div><div class="card"><h3>密钥管理</h3><p>API Key 脱敏展示，可按空间和用途管理。</p><button class="button">新增密钥</button></div><div class="card"><h3>同步偏好</h3><p>默认同步目标、同步方向和失败重试策略。</p><button class="button">设置偏好</button></div></div></section></div>
+          <div class="page-header">
+            <div>
+              <h1>设置</h1>
+              <p>个人信息、MCP、密钥和默认偏好。</p>
+            </div>
+            <button class="button primary">保存设置</button>
+          </div>
+          <div class="layout-2">
+            <aside class="panel side-list">
+              <div class="active list-item">
+                <span>个人信息</span><span></span>
+              </div>
+              <div class="list-item"><span>MCP 连接</span><span>3</span></div>
+              <div class="list-item"><span>密钥管理</span><span>5</span></div>
+              <div class="list-item"><span>同步偏好</span><span></span></div>
+            </aside>
+            <section class="panel panel-inner">
+              <div class="grid-2">
+                <div class="card">
+                  <h3>个人信息</h3>
+                  <p>头像、昵称、邮箱、默认工作空间。</p>
+                  <input
+                    class="input"
+                    style="width: 100%"
+                    value="昵称：duoyun"
+                  />
+                </div>
+                <div class="card">
+                  <h3>MCP 连接</h3>
+                  <p>opencode 已连接，Claude 需重新授权，Cursor 待确认。</p>
+                  <button class="button">管理 MCP</button>
+                </div>
+                <div class="card">
+                  <h3>密钥管理</h3>
+                  <p>API Key 脱敏展示，可按空间和用途管理。</p>
+                  <button class="button">新增密钥</button>
+                </div>
+                <div class="card">
+                  <h3>同步偏好</h3>
+                  <p>默认同步目标、同步方向和失败重试策略。</p>
+                  <button class="button">设置偏好</button>
+                </div>
+              </div>
+            </section>
+          </div>
         </section>
       </main>
     </div>
 
     <script>
       const pageMeta = {
-        prompt: ["Prompt", "高频快捷话术：搜索、标签、常用、使用频率排序、复制和历史记录。"],
-        rules: ["规约库", "单条可复用规约：必选大类型、自由标签、引用到 AGENTS.md / Skills / Agents，并支持 MCP。"],
+        prompt: [
+          "Prompt",
+          "高频快捷话术：搜索、标签、常用、使用频率排序、复制和历史记录。",
+        ],
+        rules: [
+          "规约库",
+          "单条可复用规约：必选大类型、自由标签、引用到 AGENTS.md / Skills / Agents，并支持 MCP。",
+        ],
         ai: ["AI 规约", "独立管理 AGENTS.md、Skills、Agents、Plugins。"],
-        workspace: ["工作空间", "项目、成员，以及共享资产分组下的 AGENTS.md、Skills、Agents、Plugins。"],
+        workspace: [
+          "工作空间",
+          "项目、成员，以及共享资产分组下的 AGENTS.md、Skills、Agents、Plugins。",
+        ],
         discover: ["发现", "搜索、收藏、导入和发布公开资产。"],
         settings: ["设置", "管理 MCP、密钥、个人信息和同步偏好。"],
       };
@@ -995,13 +1653,21 @@
       const pageDesc = document.querySelector("#page-desc");
 
       const activatePage = (pageId) => {
-        navButtons.forEach((button) => button.classList.toggle("active", button.dataset.page === pageId));
-        pages.forEach((page) => page.classList.toggle("active", page.id === pageId));
+        navButtons.forEach((button) =>
+          button.classList.toggle("active", button.dataset.page === pageId),
+        );
+        pages.forEach((page) =>
+          page.classList.toggle("active", page.id === pageId),
+        );
         pageTitle.textContent = pageMeta[pageId][0];
         pageDesc.textContent = pageMeta[pageId][1];
       };
 
-      navButtons.forEach((button) => button.addEventListener("click", () => activatePage(button.dataset.page)));
+      navButtons.forEach((button) =>
+        button.addEventListener("click", () =>
+          activatePage(button.dataset.page),
+        ),
+      );
 
       const setupTabs = (buttonSelector, panelSelector, datasetKey) => {
         const buttons = document.querySelectorAll(buttonSelector);
@@ -1010,8 +1676,12 @@
         buttons.forEach((button) => {
           button.addEventListener("click", () => {
             const activeId = button.dataset[datasetKey];
-            buttons.forEach((item) => item.classList.toggle("active", item === button));
-            panels.forEach((panel) => panel.classList.toggle("active", panel.id === activeId));
+            buttons.forEach((item) =>
+              item.classList.toggle("active", item === button),
+            );
+            panels.forEach((panel) =>
+              panel.classList.toggle("active", panel.id === activeId),
+            );
           });
         });
       };

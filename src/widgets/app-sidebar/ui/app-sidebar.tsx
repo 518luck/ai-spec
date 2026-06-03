@@ -1,17 +1,17 @@
+import { dashboardNavConfig } from "@/app/config/dashboard-nav";
+import { Icons } from "@/shared/ui/icons";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarHeader,
-  SidebarRail,
   SidebarMenu,
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
 } from "@/shared/ui/sidebar";
-import { Icons } from "@/shared/ui/icons";
 import Link from "next/link";
-import { dashboardNavConfig } from "@/app/config/dashboard-nav";
 import { filterNavItems } from "../model/primary-nav";
 
 export default function AppSidebar() {
