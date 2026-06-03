@@ -1,9 +1,9 @@
 "use client";
 
 import { THEMES } from "@/shared/configs/theme.config";
+import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 import { useRegisterActions } from "kbar";
 import { useTheme } from "next-themes";
-import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 
 function useKBarActions() {
   const { resolvedTheme, setTheme } = useTheme();

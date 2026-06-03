@@ -1,3 +1,4 @@
+import { appConfig } from "@/shared/configs/app.config";
 import { SidePanel } from "@/widgets/auth-side-panel";
 import { TITLE_NAME_COLOR } from "../config/title-name-color";
 import { Manrope } from "next/font/google";
@@ -25,7 +26,7 @@ export default function AuthLayout({
             <div className="absolute inset-x-0 top-0 z-10 flex justify-center">
               <ParticleNameBackground
                 className="h-18 w-full max-w-md"
-                text="AI Spec"
+                text={appConfig.appName}
                 particleCount={1500}
                 glowColor={TITLE_NAME_COLOR.glowColor}
                 baseHue={TITLE_NAME_COLOR.baseHue}

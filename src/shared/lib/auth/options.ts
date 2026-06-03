@@ -1,3 +1,4 @@
+import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { skipAuthThrottling } from "@/shared/lib/api/environment";
 import { SESSION_TOKEN_NAME } from "@/shared/lib/auth/constants";
@@ -23,7 +24,7 @@ export const authOptions: NextAuthConfig = {
   providers: [
     Credentials({
       id: "credentials",
-      name: "prompt-shelf",
+      name: appConfig.appName,
       type: "credentials",
       credentials: {
         email: {

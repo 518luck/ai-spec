@@ -1,5 +1,6 @@
 "use server";
 
+import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod";
@@ -61,7 +62,7 @@ export const sendOtpAction = actionClient
       }),
 
       sendEmail({
-        subject: `用于验证您账户的验证码 - ${process.env.NEXT_PUBLIC_APP_NAME}`,
+        subject: `用于验证您账户的验证码 - ${appConfig.appName}`,
         to: email,
         react: VerifyEmail({
           email,

@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { appConfig } from "@/shared/configs/app.config";
 
 export const metadata: Metadata = {
-  title: "AI Spes",
+  title: appConfig.appName,
   description:
     "A Next.js App Router starter organized with Feature-Sliced Design.",
   icons: {

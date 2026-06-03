@@ -1,3 +1,4 @@
+import { appConfig } from "@/shared/configs/app.config";
 import { AuthFormLayout } from "@/widgets/auth-form-layout";
 import Link from "next/link";
 import type { JSX } from "react";
@@ -5,7 +6,7 @@ import { LoginForm } from "./login-form";
 
 // TODO : 需要构建登陆的页面元信息
 // export const metadata = constructMetadata({
-//   title: `Sign in to ${process.env.NEXT_PUBLIC_APP_NAME}`,
+//   title: `Sign in to ${appConfig.appName}`,
 //   canonicalUrl: `${APP_DOMAIN}/login`,
 // });
 
@@ -14,7 +15,9 @@ export default function LoginPage(): JSX.Element {
   return (
     <AuthFormLayout showTerms="app">
       <div className="w-full max-w-sm">
-        <h3 className="text-center text-xl font-semibold">登录您的 Dub 账号</h3>
+        <h3 className="text-center text-xl font-semibold">
+          登录您的 {appConfig.appName} 账号
+        </h3>
         <div className="mt-8">
           <LoginForm />
         </div>

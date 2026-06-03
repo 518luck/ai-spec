@@ -1,3 +1,4 @@
+import { appConfig } from "@/shared/configs/app.config";
 import {
   Body,
   Container,
@@ -21,18 +22,18 @@ export default function VerifyEmail({
   return (
     <Html>
       <Head />
-      <Preview>AI Spec 验证码</Preview>
+      <Preview>{`${appConfig.appName} 验证码`}</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
           <Container className="mx-auto my-10 max-w-[600px] rounded border border-solid border-neutral-200 px-10 py-5">
             <Heading className="mx-0 my-0 mt-8 p-0 text-3xl font-extrabold text-black">
-              AI Spec
+              {appConfig.appName}
             </Heading>
             <Heading className="mx-0 my-7 p-0 text-xl font-medium text-black">
               请确认您的邮箱地址
             </Heading>
             <Text className="mx-auto text-sm leading-6">
-              在 AI Spec 验证页面输入此验证码以完成注册：
+              在 {appConfig.appName} 验证页面输入此验证码以完成注册：
             </Text>
             <Section className="my-8 rounded-lg border border-solid border-neutral-200">
               <div className="mx-auto w-fit px-6 py-3 text-center font-mono text-2xl font-semibold tracking-[0.25em]">

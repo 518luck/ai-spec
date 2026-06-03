@@ -22,7 +22,7 @@ export const dashboardNavConfig: NavItem[] = [
     title: "Prompts",
     url: "/spec/prompts",
     icon: Command,
-    description: "提示词管理", 
+    description: "提示词管理",
     auth: {
       roles: ["member", "editor", "admin"],
     },

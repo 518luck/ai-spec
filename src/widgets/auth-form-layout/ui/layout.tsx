@@ -1,3 +1,4 @@
+import { appConfig } from "@/shared/configs/app.config";
 import { PropsWithChildren } from "react";
 
 export default function AuthFormLayout({
@@ -17,7 +18,7 @@ export default function AuthFormLayout({
       <div className="flex grow basis-0 flex-col justify-end">
         {showTerms && (
           <p className="px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
-            继续操作即表示您同意 AI Spec 的
+            继续操作即表示您同意 {appConfig.appName} 的
             <a
               href={`https://dub.co/legal/${showTerms === "app" ? "terms" : "partners"}`}
               target="_blank"
