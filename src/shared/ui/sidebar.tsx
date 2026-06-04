@@ -244,14 +244,21 @@ function Sidebar({
     );
   }
 
-  // 桌面端根节点暴露状态、方向和变体，供内部元素用 group-data-* 联动样式。
+  // 桌面端根节点不直接承载内容，而是提供状态、方向和变体的样式作用域。
+  // group 让内部元素读取父级 data-*，peer 让相邻主内容区域读取侧边栏状态。
+  // hidden md:block 表示移动端隐藏这套桌面结构，只在中等及以上屏幕启用。
   return (
     <div
       className="group peer text-sidebar-foreground hidden md:block"
+      // 标记当前展开状态，主要给同级或后代选择器判断 expanded/collapsed。
       data-state={state}
+      // 只有折叠时才暴露折叠模式，展开时清空以避免命中折叠样式。
       data-collapsible={state === "collapsed" ? collapsible : ""}
+      // 标记视觉变体，内部元素据此切换普通、浮动或 inset 样式。
       data-variant={variant}
+      // 标记停靠方向，内部元素据此选择 left/right 定位和边框方向。
       data-side={side}
+      // 标记该 DOM 是 Sidebar 组件系统的桌面端根插槽。
       data-slot="sidebar"
     >
       {/* 桌面端占位层：保留布局宽度，折叠或 offcanvas 时通过宽度动画收缩。 */}
