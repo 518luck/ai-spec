@@ -9,7 +9,7 @@ import { useDualSidebarContext } from "../model/dual-sidebar-context";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
 
-type DualSidebarNavItemProps = {
+type NavBusinessItemProps = {
   label: string;
   children: ReactNode;
   active?: boolean;
@@ -42,22 +42,22 @@ export function DualSidebar({
         className="flex w-16 shrink-0 flex-col items-center justify-between border-r py-3"
       >
         <div className="flex flex-col items-center gap-3">
-          <DualSidebarNavItem
+          <NavBusinessItem
             label="产品入口"
             active
             className="bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground size-10"
           >
             <Icons.logo className="size-5" />
-          </DualSidebarNavItem>
+          </NavBusinessItem>
 
           <div
             data-slot="dual-sidebar-business-nav-content"
             className="flex flex-col items-center gap-2"
           >
             {businessNavItems.map((item, index) => (
-              <DualSidebarNavItem key={item} label={item}>
+              <NavBusinessItem key={item} label={item}>
                 <span className="text-xs font-semibold">{index + 1}</span>
-              </DualSidebarNavItem>
+              </NavBusinessItem>
             ))}
           </div>
         </div>
@@ -104,12 +104,12 @@ export function DualSidebar({
 }
 
 // 渲染左侧图标导航项，并通过 Tooltip 补充文字说明。
-function DualSidebarNavItem({
+function NavBusinessItem({
   label,
   children,
   active = false,
   className,
-}: DualSidebarNavItemProps): JSX.Element {
+}: NavBusinessItemProps): JSX.Element {
   return (
     <Tooltip>
       <TooltipTrigger
