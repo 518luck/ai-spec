@@ -67,9 +67,10 @@ function useSidebar() {
 
 // 管理侧边栏的受控/非受控状态、移动端状态、快捷键和样式变量。
 function SidebarProvider({
-  defaultOpen = true,
-  open: openProp,
-  onOpenChange: setOpenProp,
+  defaultOpen = true, //侧边栏默认是否展开。
+  open: openProp, //外部传进来的 open。
+  onOpenChange: setOpenProp, // 外部传进来的 onOpenChange 回调。
+
   className,
   style,
   children,
@@ -131,15 +132,16 @@ function SidebarProvider({
   const state = open ? "expanded" : "collapsed";
 
   // 缓存上下文对象，减少 Provider 下游组件的无意义重新渲染。
+  // 这个是比较值得学习的,使用了useMemo 可以避免值对象不变化 要不然虽然里面的值可能没变，但对象引用变了。对于 Context 来说：会让所有使用 useSidebar() 的子组件认为 Context 更新了，可能导致不必要的重新渲染。
   const contextValue = React.useMemo<SidebarContextProps>(
     () => ({
-      state,
-      open,
-      setOpen,
-      isMobile,
-      openMobile,
-      setOpenMobile,
-      toggleSidebar,
+      state, //："expanded" / "collapsed"
+      open, //桌面端是否展开
+      setOpen, //设置桌面端展开状态
+      isMobile, //当前是不是移动端
+      openMobile, //移动端抽屉是否打开
+      setOpenMobile, //设置移动端抽屉打开状态
+      toggleSidebar, //切换侧边栏展开/收起（桌面端）或打开/关闭（移动端）
     }),
     [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
   );
@@ -147,6 +149,11 @@ function SidebarProvider({
   return (
     <SidebarContext.Provider value={contextValue}>
       {/* 外层包装负责注入 CSS 变量，并作为 inset/floating 变体的样式作用域。 */}
+      {/* 大致结构
+      <SidebarProvider>
+        <Sidebar />
+        <SidebarInset />
+      </SidebarProvider> */}
       <div
         data-slot="sidebar-wrapper"
         style={
@@ -171,12 +178,19 @@ function SidebarProvider({
 
 // 根据设备类型和折叠配置渲染真正的侧边栏容器。
 function Sidebar({
+  // 控制侧边栏停靠方向，默认渲染在左侧。
   side = "left",
+  // 控制侧边栏视觉形态：普通贴边、浮动卡片或 inset 内嵌布局。
   variant = "sidebar",
+  // 控制侧边栏折叠方式，默认 offcanvas 表示折叠时滑出屏幕。
   collapsible = "offcanvas",
+  // 允许调用方追加或覆盖侧边栏容器的样式类。
   className,
+  // 侧边栏内部内容，例如 Header、Content、Footer、Menu 等组合组件。
   children,
+  // 透传文本方向，主要给移动端 SheetContent 处理 ltr/rtl 布局。
   dir,
+  // 收集剩余 div 属性，例如 id、data-*、aria-*、onClick 等。
   ...props
 }: React.ComponentProps<"div"> & {
   side?: "left" | "right";
