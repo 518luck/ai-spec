@@ -1,10 +1,10 @@
-import type { ComponentProps, JSX, ReactNode } from "react";
+import type { ComponentProps, JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { DualSidebarProvider } from "../model/dual-sidebar-context";
+import { DualSidebar } from "./dual-sidebar";
 
 type DualSidebarLayoutProps = ComponentProps<"div"> & {
-  sidebar: ReactNode;
   sidebarClassName?: string;
   contentClassName?: string;
   defaultSidebarOpen?: boolean;
@@ -13,7 +13,6 @@ type DualSidebarLayoutProps = ComponentProps<"div"> & {
 // 承载左侧双侧边栏和右侧主内容区的应用级布局。
 export function DualSidebarLayout({
   className,
-  sidebar,
   sidebarClassName,
   contentClassName,
   defaultSidebarOpen,
@@ -30,15 +29,7 @@ export function DualSidebarLayout({
         )}
         {...props}
       >
-        <aside
-          data-slot="dual-sidebar-layout-sidebar"
-          className={cn(
-            "bg-sidebar text-sidebar-foreground flex min-h-dvh shrink-0 overflow-hidden border-r",
-            sidebarClassName,
-          )}
-        >
-          {sidebar}
-        </aside>
+        <DualSidebar className={sidebarClassName} />
         <main
           data-slot="dual-sidebar-layout-content"
           className={cn("min-w-0 flex-1 overflow-auto", contentClassName)}
