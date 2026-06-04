@@ -3,6 +3,7 @@
 import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
+import { Icons } from "@/shared/ui/icons";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children"> & {
@@ -38,11 +39,44 @@ export function DualSidebar({
         aria-label="业务导航"
         data-slot="dual-sidebar-business-nav"
         className={cn(
-          "flex w-16 shrink-0 flex-col items-center border-r",
+          "flex w-16 shrink-0 flex-col items-center justify-between border-r py-3",
           businessNavClassName,
         )}
       >
-        {businessNav}
+        <div className="flex flex-col items-center gap-3">
+          <div
+            aria-label="产品入口"
+            data-slot="dual-sidebar-product"
+            className="bg-sidebar-primary text-sidebar-primary-foreground flex size-10 items-center justify-center rounded-md"
+          >
+            <Icons.logo className="size-5" />
+          </div>
+
+          <div
+            data-slot="dual-sidebar-business-nav-content"
+            className="flex flex-col items-center gap-2"
+          >
+            {businessNav}
+          </div>
+        </div>
+
+        <div
+          data-slot="dual-sidebar-resource-nav"
+          className="text-sidebar-foreground/70 flex flex-col items-center gap-2"
+        >
+          <div
+            aria-label="活动入口占位"
+            className="flex size-9 items-center justify-center rounded-md"
+          >
+            <Icons.gift className="size-5" />
+          </div>
+          <div
+            aria-label="文档帮助入口占位"
+            className="flex size-9 items-center justify-center rounded-md"
+          >
+            <Icons.helpCircle className="size-5" />
+          </div>
+        </div>
       </nav>
 
       <nav
