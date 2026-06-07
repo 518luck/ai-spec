@@ -5,5 +5,13 @@
   },
   "prettier.documentSelectors": [
     "**/*.svg"
-  ]
+  ],
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#3A2A1A",
+    "activityBar.foreground": "#F8F3E7",
+    "statusBar.background": "#5A3E24",
+    "statusBar.foreground": "#F8F3E7",
+    "titleBar.activeBackground": "#5A3E24",
+    "titleBar.activeForeground": "#F8F3E7"
+  }
 }
