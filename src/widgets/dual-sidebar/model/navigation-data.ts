@@ -17,8 +17,8 @@ export type NavBusinessDataFn = (data: {
   pathname: string;
 }) => NavBusinessItem[];
 
-// 个人空间导航数据。
-export const getPersonalNavItems: NavBusinessDataFn = ({ pathname }) => [
+// 生成左侧业务导航栏的空间入口数据，便于统一遍历渲染。
+export const getNavBusinessItems: NavBusinessDataFn = ({ pathname }) => [
   {
     name: "个人空间",
     description: "管理个人 Prompt、规约和 AI 配置。",
@@ -26,10 +26,6 @@ export const getPersonalNavItems: NavBusinessDataFn = ({ pathname }) => [
     href: "/spec/personal",
     active: pathname === "/spec/personal",
   },
-];
-
-// 团队空间导航数据。
-export const getTeamNavItems: NavBusinessDataFn = ({ pathname }) => [
   {
     name: "团队空间",
     description: "团队协作、项目管理和共享资产。",
@@ -37,10 +33,6 @@ export const getTeamNavItems: NavBusinessDataFn = ({ pathname }) => [
     href: "/spec/team",
     active: pathname === "/spec/team",
   },
-];
-
-// 发现导航数据。
-export const getDiscoverNavItems: NavBusinessDataFn = ({ pathname }) => [
   {
     name: "发现",
     description: "探索公共资产、热门 Prompt 和社区规约。",
