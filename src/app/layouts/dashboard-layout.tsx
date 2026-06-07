@@ -14,7 +14,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         </SidebarProvider>
       </TooltipProvider> */}
       <TooltipProvider>
-        <DualSidebarLayout defaultSidebarOpen={false}>
+        <DualSidebarLayout defaultSidebarOpen={true}>
           {children}
         </DualSidebarLayout>
       </TooltipProvider>

@@ -22,6 +22,11 @@ type NavBusinessItemBaseProps = {
   className?: string;
 };
 
+type NavAreasPanelProps = {
+  open: boolean;
+  className?: string;
+};
+
 type NavBusinessItemProps = NavBusinessItemBaseProps & {
   item: NavBusinessItemData;
 };
@@ -100,24 +105,7 @@ export function DualSidebar({
         </div>
       </nav>
 
-      <nav
-        aria-label="操作导航"
-        aria-hidden={!open}
-        data-slot="dual-sidebar-operation-nav"
-        data-state={open ? "expanded" : "collapsed"}
-        className={cn(
-          "flex min-w-0 flex-col overflow-hidden transition-[width] duration-200 ease-linear",
-          open ? "w-64" : "w-0",
-        )}
-      >
-        {open ? (
-          <div className="flex flex-col gap-2 p-3">
-            <div className="text-muted-foreground px-2 text-xs font-medium">
-              操作菜单栏
-            </div>
-          </div>
-        ) : null}
-      </nav>
+      <NavAreasPanel open={open} className="px-2" />
     </aside>
   );
 }
@@ -185,6 +173,45 @@ function NavBusinessItem({
         ) : null}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+// 渲染右侧区域操作面板，随双栏状态展开或折叠。
+function NavAreasPanel({ open, className }: NavAreasPanelProps): JSX.Element {
+  return (
+    <nav
+      aria-label="操作导航"
+      aria-hidden={!open}
+      data-slot="dual-sidebar-operation-nav"
+      data-state={open ? "expanded" : "collapsed"}
+      className={cn(
+        "flex min-w-0 flex-col justify-between overflow-hidden transition-[width] duration-200 ease-linear",
+        open ? "w-64" : "w-0",
+        className,
+      )}
+    >
+      {open ? (
+        <>
+          <div
+            data-slot="dual-sidebar-operation-nav-content"
+            className="flex flex-col gap-2 py-3"
+          >
+            <div className="text-muted-foreground text-xs font-medium">
+              操作菜单栏
+            </div>
+          </div>
+
+          <div
+            data-slot="dual-sidebar-operation-nav-footer"
+            className="flex flex-col gap-2 py-3"
+          >
+            <div className="text-muted-foreground text-xs font-medium">
+              底部固定栏
+            </div>
+          </div>
+        </>
+      ) : null}
+    </nav>
   );
 }
 
