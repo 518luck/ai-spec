@@ -15,14 +15,21 @@ export type NavBusinessItem = {
   learnMoreHref?: string;
 };
 
-// 根据当前路由上下文生成左侧业务导航项列表。
-export type NavBusinessDataFn = (data: {
+// 左侧业务导航生成函数的路由上下文。
+export type NavBusinessData = {
   slug?: string;
   pathname: string;
-}) => NavBusinessItem[];
+};
+
+// 根据当前路由上下文生成左侧业务导航项列表。
+export type NavBusinessDataFn<T extends Record<PropertyKey, unknown>> = (
+  data: T,
+) => NavBusinessItem[];
 
 // 生成左侧业务导航栏的空间入口数据，便于统一遍历渲染。
-export const getNavBusinessItems: NavBusinessDataFn = ({ pathname }) => [
+export const getNavBusinessItems: NavBusinessDataFn<NavBusinessData> = ({
+  pathname,
+}) => [
   {
     name: "个人空间",
     description: "管理个人 Prompt、规约和 AI 配置。",
