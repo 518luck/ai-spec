@@ -45,7 +45,7 @@ export const getNavBusinessItems: NavBusinessDataFn = ({ pathname }) => [
     name: "发现",
     description: "探索公共资产、热门 Prompt 和社区规约。",
     icon: Icons.discover,
-    iconAnimation: "none",
+    iconAnimation: "rotate",
     href: "/spec/discover",
     active: pathname === "/spec/discover",
     learnMoreHref: "#",

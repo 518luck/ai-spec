@@ -131,10 +131,6 @@ function NavBusinessItem({
   const { name, description, learnMoreHref, href, active, iconAnimation } =
     item;
   const hasDetail = Boolean(description || learnMoreHref);
-  const triggerClassName = cn(
-    "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
-    className,
-  );
 
   return (
     <Tooltip>
@@ -144,7 +140,10 @@ function NavBusinessItem({
             href={href}
             aria-label={name}
             data-active={active}
-            className={triggerClassName}
+            className={cn(
+              "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
+              className,
+            )}
           >
             <AnimatedNavIcon animation={iconAnimation ?? "none"}>
               {children}
@@ -197,7 +196,7 @@ function AnimatedNavIcon({
   if (animation === "rotate") {
     return (
       <motion.span
-        className="inline-flex items-center justify-center"
+        className="inline-flex size-full items-center justify-center"
         whileHover={{ rotate: 360 }}
         transition={{ duration: 0.45, ease: "easeInOut" }}
       >
@@ -209,7 +208,7 @@ function AnimatedNavIcon({
   if (animation === "shake") {
     return (
       <motion.span
-        className="inline-flex items-center justify-center"
+        className="inline-flex size-full items-center justify-center"
         whileHover={{
           rotate: [0, -8, 8, -5, 5, 0],
           x: [0, -2, 2, -1, 1, 0],
