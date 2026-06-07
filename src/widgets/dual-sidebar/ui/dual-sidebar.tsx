@@ -12,8 +12,13 @@ import { useDualSidebarContext } from "../model/dual-sidebar-context";
 import type {
   NavBusinessItem as NavBusinessItemData,
   NavIconAnimation,
+  SidebarNavGroup,
 } from "../model/navigation-data";
-import { getNavBusinessItems } from "../model/navigation-data";
+import {
+  getCurrentNavArea,
+  getNavBusinessItems,
+  sidebarNavGroups,
+} from "../model/navigation-data";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
 
@@ -24,6 +29,7 @@ type NavBusinessItemBaseProps = {
 
 type NavAreasPanelProps = {
   open: boolean;
+  navGroup: SidebarNavGroup | null;
   className?: string;
 };
 
@@ -44,7 +50,11 @@ export function DualSidebar({
   // 读取右侧操作导航栏的展开状态，左侧业务导航栏始终保留。
   const { open } = useDualSidebarContext();
   const pathname = usePathname();
-  const businessNavItems = getNavBusinessItems({ pathname: pathname ?? "" });
+  const navData = { pathname: pathname ?? "" };
+  const businessNavItems = getNavBusinessItems(navData);
+  const currentArea = getCurrentNavArea(navData);
+  const navGroup =
+    currentArea === null ? null : sidebarNavGroups[currentArea](navData);
 
   return (
     <aside
@@ -108,7 +118,7 @@ export function DualSidebar({
       </nav>
 
       {/* 右侧导航栏 */}
-      <NavAreasPanel open={open} />
+      <NavAreasPanel open={open} navGroup={navGroup} />
     </aside>
   );
 }
@@ -180,7 +190,11 @@ function NavBusinessItem({
 }
 
 // 渲染右侧区域操作面板，随双栏状态展开或折叠。
-function NavAreasPanel({ open, className }: NavAreasPanelProps): JSX.Element {
+function NavAreasPanel({
+  open,
+  navGroup,
+  className,
+}: NavAreasPanelProps): JSX.Element {
   return (
     <nav
       aria-label="操作导航"
@@ -193,17 +207,63 @@ function NavAreasPanel({ open, className }: NavAreasPanelProps): JSX.Element {
         className,
       )}
     >
-      {open ? (
+      {open && navGroup !== null ? (
         <div
           data-slot="dual-sidebar-operation-nav-panel"
           className="bg-sidebar text-sidebar-foreground flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl"
         >
           <div
             data-slot="dual-sidebar-operation-nav-content"
-            className="flex flex-col gap-2 p-3"
+            className="flex min-h-0 flex-col gap-4 overflow-auto p-3"
           >
-            <div className="text-muted-foreground text-xs font-medium">
-              操作菜单栏
+            <div className="px-2 text-sm font-semibold">{navGroup.title}</div>
+
+            <div className="flex flex-col gap-4">
+              {navGroup.content.map((group) => (
+                <div key={group.name ?? "default"} className="flex flex-col gap-2">
+                  {group.name ? (
+                    <div className="text-muted-foreground px-2 text-xs font-medium">
+                      {group.name}
+                    </div>
+                  ) : null}
+
+                  <div className="flex flex-col gap-1">
+                    {group.items.map((item) => {
+                      const Icon = item.icon;
+
+                      return (
+                        <div key={item.href} className="flex flex-col gap-1">
+                          <Link
+                            href={item.href}
+                            data-active={item.active}
+                            className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors"
+                          >
+                            <Icon className="size-4 shrink-0" />
+                            <span className="min-w-0 truncate">{item.name}</span>
+                          </Link>
+
+                          {item.items ? (
+                            <div className="ml-6 flex flex-col gap-1">
+                              {item.items.map((subItem) => (
+                                <Link
+                                  key={subItem.href}
+                                  href={subItem.href}
+                                  data-active={subItem.active}
+                                  className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md px-2 py-1.5 text-sm transition-colors"
+                                >
+                                  <span className="block min-w-0 truncate">
+                                    {subItem.name}
+                                  </span>
+                                </Link>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

@@ -26,6 +26,9 @@ export type NavBusinessDataFn<T extends Record<PropertyKey, unknown>> = (
   data: T,
 ) => NavBusinessItem[];
 
+// 定义左侧业务导航对应的右侧资源区域键。
+export type NavArea = "personal" | "team" | "discover";
+
 // 右侧资源导航栏单个叶子菜单项配置。
 export type NavResourceItem = {
   name: string;
@@ -45,18 +48,40 @@ export type NavItemType = NavResourceItem & {
   items?: NavSubItemType[];
 };
 
+// 右侧资源导航栏单个区域的完整分组配置。
+export type SidebarNavGroup = {
+  title: string;
+  direction?: "left" | "right";
+  content: {
+    name?: string;
+    items: NavItemType[];
+  }[];
+};
+
 // 按区域组织右侧导航分组生成函数，所有分组共享同一份上下文参数。
-export type SidebarNavGroups<T extends Record<PropertyKey, unknown>> = Record<
-  string,
-  (args: T) => {
-    title: string;
-    direction?: "left" | "right";
-    content: {
-      name?: string;
-      items: NavItemType[];
-    }[];
+export type SidebarNavGroups<
+  T extends Record<PropertyKey, unknown>,
+  TArea extends string,
+> = Record<TArea, (args: T) => SidebarNavGroup>;
+
+// 根据当前路径判断右侧资源导航栏应该展示的区域。
+export const getCurrentNavArea = ({
+  pathname,
+}: NavBusinessData): NavArea | null => {
+  if (pathname.startsWith("/spec/personal")) {
+    return "personal";
   }
->;
+
+  if (pathname.startsWith("/spec/team")) {
+    return "team";
+  }
+
+  if (pathname.startsWith("/spec/discover")) {
+    return "discover";
+  }
+
+  return null;
+};
 
 // 生成左侧业务导航栏的空间入口数据，便于统一遍历渲染。
 export const getNavBusinessItems: NavBusinessDataFn<NavBusinessData> = ({
@@ -92,7 +117,7 @@ export const getNavBusinessItems: NavBusinessDataFn<NavBusinessData> = ({
 ];
 
 // 生成右侧资源导航栏的分组数据。
-export const sidebarNavGroups: SidebarNavGroups<NavBusinessData> = {
+export const sidebarNavGroups: SidebarNavGroups<NavBusinessData, NavArea> = {
   personal: ({ pathname }) => ({
     title: "个人空间",
     direction: "right",
