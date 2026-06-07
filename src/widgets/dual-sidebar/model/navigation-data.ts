@@ -23,8 +23,8 @@ export const getPersonalNavItems: NavBusinessDataFn = ({ pathname }) => [
     name: "个人空间",
     description: "管理个人 Prompt、规约和 AI 配置。",
     icon: IconUser,
-    href: "/personal",
-    active: pathname === "/personal",
+    href: "/spec/personal",
+    active: pathname === "/spec/personal",
   },
 ];
 
@@ -34,8 +34,8 @@ export const getTeamNavItems: NavBusinessDataFn = ({ pathname }) => [
     name: "团队空间",
     description: "团队协作、项目管理和共享资产。",
     icon: IconUsers,
-    href: "/team",
-    active: pathname === "/team",
+    href: "/spec/team",
+    active: pathname === "/spec/team",
   },
 ];
 
@@ -45,7 +45,7 @@ export const getDiscoverNavItems: NavBusinessDataFn = ({ pathname }) => [
     name: "发现",
     description: "探索公共资产、热门 Prompt 和社区规约。",
     icon: IconCompass,
-    href: "/discover",
-    active: pathname === "/discover",
+    href: "/spec/discover",
+    active: pathname === "/spec/discover",
   },
 ];
