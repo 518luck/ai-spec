@@ -51,8 +51,8 @@ export function DualSidebar({
       data-slot="dual-sidebar"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "text-foreground flex min-h-dvh max-w-[304px] shrink-0 overflow-hidden border-r transition-[width] duration-200 ease-linear",
-        open ? "w-[304px]" : "w-16",
+        "text-foreground flex min-h-dvh max-w-76 shrink-0 overflow-hidden border-r transition-[width] duration-200 ease-linear",
+        open ? "w-76" : "w-16",
         className,
       )}
       {...props}
@@ -108,7 +108,7 @@ export function DualSidebar({
       </nav>
 
       {/* 右侧导航栏 */}
-      <NavAreasPanel open={open} className="px-2" />
+      <NavAreasPanel open={open} />
     </aside>
   );
 }
@@ -188,16 +188,19 @@ function NavAreasPanel({ open, className }: NavAreasPanelProps): JSX.Element {
       data-slot="dual-sidebar-operation-nav"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "bg-sidebar text-sidebar-foreground flex min-w-0 flex-col justify-between overflow-hidden transition-[width] duration-200 ease-linear",
+        "bg-background flex min-w-0 overflow-hidden py-2 transition-[width] duration-200 ease-linear",
         open ? "flex-1" : "w-0",
         className,
       )}
     >
       {open ? (
-        <>
+        <div
+          data-slot="dual-sidebar-operation-nav-panel"
+          className="bg-sidebar text-sidebar-foreground flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl"
+        >
           <div
             data-slot="dual-sidebar-operation-nav-content"
-            className="flex flex-col gap-2 py-3"
+            className="flex flex-col gap-2 p-3"
           >
             <div className="text-muted-foreground text-xs font-medium">
               操作菜单栏
@@ -206,13 +209,13 @@ function NavAreasPanel({ open, className }: NavAreasPanelProps): JSX.Element {
 
           <div
             data-slot="dual-sidebar-operation-nav-footer"
-            className="flex flex-col gap-2 py-3"
+            className="flex flex-col gap-2 p-3"
           >
             <div className="text-muted-foreground text-xs font-medium">
               底部固定栏
             </div>
           </div>
-        </>
+        </div>
       ) : null}
     </nav>
   );
