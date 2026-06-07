@@ -150,6 +150,8 @@ pnpm dlx shadcn@latest add [组件名]
 
 默认使用 @tabler/icons-react 提供的图标。不要在业务代码中直接从图标库导入图标，也不要在组件内临时定义图标；应先在 icons.tsx 中统一注册，再通过 Icons 对象使用。
 
+注册图标时必须按业务语义命名，不要直接使用图标库原始名称；例如使用 `specCreate`、`helpCenter`，而不是 `IconPlus`、`IconHelpCircle`。
+
 ### 正确示例
 
 添加图标：
