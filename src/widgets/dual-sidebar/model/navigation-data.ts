@@ -2,7 +2,7 @@ import type { Icon } from "@/shared/ui/icons";
 import { Icons } from "@/shared/ui/icons";
 
 // 导航数据生成函数共享的路由上下文。
-export type NavBusinessData = {
+export type NavContext = {
   slug?: string;
   pathname: string;
 };
@@ -22,15 +22,15 @@ export type NavBusinessItem = {
 };
 
 // 根据当前路由上下文生成左侧业务导航项列表。
-export type NavBusinessDataFn<T extends Record<PropertyKey, unknown>> = (
+export type NavBusinessItemsFn<T extends Record<PropertyKey, unknown>> = (
   data: T,
 ) => NavBusinessItem[];
 
 // 定义左侧业务导航对应的右侧资源区域键。
-export type NavArea = "personal" | "team" | "discover";
+export type NavBusinessArea = "personal" | "team" | "discover";
 
-// 右侧资源导航栏单个叶子菜单项配置。
-export type NavResourceItem = {
+// 右侧区域导航栏单个叶子菜单项配置。
+export type NavAreaItem = {
   name: string;
   description?: string;
   href: string;
@@ -39,35 +39,35 @@ export type NavResourceItem = {
   locked?: boolean;
 };
 
-// 右侧资源导航栏的二级菜单项配置。
-export type NavSubItemType = NavResourceItem;
+// 右侧区域导航栏的二级菜单项配置。
+export type NavAreaSubItem = NavAreaItem;
 
-// 右侧资源导航栏的一级菜单项配置，可承载图标和二级菜单。
-export type NavItemType = NavResourceItem & {
+// 右侧区域导航栏的一级菜单项配置，可承载图标和二级菜单。
+export type NavAreaMainItem = NavAreaItem & {
   icon: Icon;
-  items?: NavSubItemType[];
+  items?: NavAreaSubItem[];
 };
 
-// 右侧资源导航栏单个区域的完整分组配置。
-export type SidebarNavGroup = {
+// 右侧区域导航栏单个面板配置。
+export type NavAreaPanel = {
   title: string;
   direction?: "left" | "right";
   content: {
     name?: string;
-    items: NavItemType[];
+    items: NavAreaMainItem[];
   }[];
 };
 
-// 按区域组织右侧导航分组生成函数，所有分组共享同一份上下文参数。
-export type SidebarNavGroups<
+// 按业务区域组织右侧导航面板生成函数，所有面板共享同一份上下文参数。
+export type NavAreaPanels<
   T extends Record<PropertyKey, unknown>,
   TArea extends string,
-> = Record<TArea, (args: T) => SidebarNavGroup>;
+> = Record<TArea, (args: T) => NavAreaPanel>;
 
-// 根据当前路径判断右侧资源导航栏应该展示的区域。
-export const getCurrentNavArea = ({
+// 根据当前路径判断左侧业务导航当前所在区域。
+export const getCurrentNavBusinessArea = ({
   pathname,
-}: NavBusinessData): NavArea | null => {
+}: NavContext): NavBusinessArea | null => {
   if (pathname.startsWith("/spec/personal")) {
     return "personal";
   }
@@ -84,7 +84,7 @@ export const getCurrentNavArea = ({
 };
 
 // 生成左侧业务导航栏的空间入口数据，便于统一遍历渲染。
-export const getNavBusinessItems: NavBusinessDataFn<NavBusinessData> = ({
+export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({
   pathname,
 }) => [
   {
@@ -117,7 +117,7 @@ export const getNavBusinessItems: NavBusinessDataFn<NavBusinessData> = ({
 ];
 
 // 生成右侧资源导航栏的分组数据。
-export const sidebarNavGroups: SidebarNavGroups<NavBusinessData, NavArea> = {
+export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
   personal: ({ pathname }) => ({
     title: "个人空间",
     direction: "right",

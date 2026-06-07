@@ -10,14 +10,14 @@ import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
 import type {
+  NavAreaPanel,
   NavBusinessItem as NavBusinessItemData,
   NavIconAnimation,
-  SidebarNavGroup,
 } from "../model/navigation-data";
 import {
-  getCurrentNavArea,
+  getCurrentNavBusinessArea,
   getNavBusinessItems,
-  sidebarNavGroups,
+  navAreaPanels,
 } from "../model/navigation-data";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
@@ -29,7 +29,7 @@ type NavBusinessItemBaseProps = {
 
 type NavAreasPanelProps = {
   open: boolean;
-  navGroup: SidebarNavGroup | null;
+  navAreaPanel: NavAreaPanel | null;
   className?: string;
 };
 
@@ -50,11 +50,13 @@ export function DualSidebar({
   // 读取右侧操作导航栏的展开状态，左侧业务导航栏始终保留。
   const { open } = useDualSidebarContext();
   const pathname = usePathname();
-  const navData = { pathname: pathname ?? "" };
-  const businessNavItems = getNavBusinessItems(navData);
-  const currentArea = getCurrentNavArea(navData);
-  const navGroup =
-    currentArea === null ? null : sidebarNavGroups[currentArea](navData);
+  const navContext = { pathname: pathname ?? "" };
+  const businessNavItems = getNavBusinessItems(navContext);
+  const currentBusinessArea = getCurrentNavBusinessArea(navContext);
+  const navAreaPanel =
+    currentBusinessArea === null
+      ? null
+      : navAreaPanels[currentBusinessArea](navContext);
 
   return (
     <aside
@@ -118,7 +120,7 @@ export function DualSidebar({
       </nav>
 
       {/* 右侧导航栏 */}
-      <NavAreasPanel open={open} navGroup={navGroup} />
+      <NavAreasPanel open={open} navAreaPanel={navAreaPanel} />
     </aside>
   );
 }
@@ -192,7 +194,7 @@ function NavBusinessItem({
 // 渲染右侧区域操作面板，随双栏状态展开或折叠。
 function NavAreasPanel({
   open,
-  navGroup,
+  navAreaPanel,
   className,
 }: NavAreasPanelProps): JSX.Element {
   return (
@@ -207,7 +209,7 @@ function NavAreasPanel({
         className,
       )}
     >
-      {open && navGroup !== null ? (
+      {open && navAreaPanel !== null ? (
         <div
           data-slot="dual-sidebar-operation-nav-panel"
           className="bg-sidebar text-sidebar-foreground flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl"
@@ -216,10 +218,12 @@ function NavAreasPanel({
             data-slot="dual-sidebar-operation-nav-content"
             className="flex min-h-0 flex-col gap-4 overflow-auto p-3"
           >
-            <div className="px-2 text-sm font-semibold">{navGroup.title}</div>
+            <div className="px-2 text-sm font-semibold">
+              {navAreaPanel.title}
+            </div>
 
             <div className="flex flex-col gap-4">
-              {navGroup.content.map((group) => (
+              {navAreaPanel.content.map((group) => (
                 <div key={group.name ?? "default"} className="flex flex-col gap-2">
                   {group.name ? (
                     <div className="text-muted-foreground px-2 text-xs font-medium">
