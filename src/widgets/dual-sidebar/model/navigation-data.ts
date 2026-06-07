@@ -26,6 +26,32 @@ export type NavBusinessDataFn<T extends Record<PropertyKey, unknown>> = (
   data: T,
 ) => NavBusinessItem[];
 
+// 右侧业务导航栏单个导航项配置
+export type NavResourceItem = {
+  name: string;
+  description: string;
+  href: string;
+  active: boolean;
+  // 是否将菜单项展示为锁定状态。
+  locked?: boolean;
+};
+export type NavSubItemType = NavResourceItem;
+export type NavItemType = NavResourceItem & {
+  icon: Icon;
+  items?: NavSubItemType[];
+};
+export type SidebarNavGroups<T extends Record<any, any>> = Record<
+  string,
+  (args: T) => {
+    title: string;
+    direction?: "left" | "right";
+    content: {
+      name: string;
+      items: NavItemType[];
+    }[];
+  }
+>;
+
 // 生成左侧业务导航栏的空间入口数据，便于统一遍历渲染。
 export const getNavBusinessItems: NavBusinessDataFn<NavBusinessData> = ({
   pathname,
