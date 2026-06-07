@@ -1,22 +1,29 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
+import { getNavBusinessItems } from "../model/navigation-data";
+import type { NavBusinessItem as NavBusinessItemData } from "../model/navigation-data";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
 
-type NavBusinessItemProps = {
-  label: string;
+type NavBusinessItemBaseProps = {
   children: ReactNode;
-  active?: boolean;
   className?: string;
 };
 
-const businessNavItems = ["工作空间", "个人详情", "发现推广"] as const;
+type NavBusinessItemProps = NavBusinessItemBaseProps & {
+  item?: NavBusinessItemData;
+  label?: string;
+  href?: string;
+  active?: boolean;
+};
 
 // 渲染双栏侧边栏，左侧承载业务划分，右侧承载操作划分。
 export function DualSidebar({
@@ -25,6 +32,8 @@ export function DualSidebar({
 }: DualSidebarProps): JSX.Element {
   // 读取右侧操作导航栏的展开状态，左侧业务导航栏始终保留。
   const { open } = useDualSidebarContext();
+  const pathname = usePathname();
+  const businessNavItems = getNavBusinessItems({ pathname: pathname ?? "" });
 
   return (
     <aside
@@ -54,11 +63,15 @@ export function DualSidebar({
             data-slot="dual-sidebar-business-nav-content"
             className="flex flex-col items-center gap-2"
           >
-            {businessNavItems.map((item, index) => (
-              <NavBusinessItem key={item} label={item}>
-                <span className="text-xs font-semibold">{index + 1}</span>
-              </NavBusinessItem>
-            ))}
+            {businessNavItems.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <NavBusinessItem key={item.href} item={item}>
+                  <Icon className="size-5" />
+                </NavBusinessItem>
+              );
+            })}
           </div>
         </div>
 
@@ -105,29 +118,47 @@ export function DualSidebar({
 
 // 渲染左侧图标导航项，并通过 Tooltip 补充文字说明。
 function NavBusinessItem({
+  item,
   label,
   children,
+  href,
   active = false,
   className,
 }: NavBusinessItemProps): JSX.Element {
+  const itemLabel = item?.name ?? label ?? "";
+  const itemHref = item?.href ?? href;
+  const itemActive = item?.active ?? active;
+  const triggerClassName = cn(
+    "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
+    className,
+  );
+
   return (
     <Tooltip>
       <TooltipTrigger
         render={
-          <button
-            type="button"
-            aria-label={label}
-            data-active={active}
-            className={cn(
-              "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
-              className,
-            )}
-          >
-            {children}
-          </button>
+          itemHref === undefined ? (
+            <button
+              type="button"
+              aria-label={itemLabel}
+              data-active={itemActive}
+              className={triggerClassName}
+            >
+              {children}
+            </button>
+          ) : (
+            <Link
+              href={itemHref}
+              aria-label={itemLabel}
+              data-active={itemActive}
+              className={triggerClassName}
+            >
+              {children}
+            </Link>
+          )
         }
       />
-      <TooltipContent side="right">{label}</TooltipContent>
+      <TooltipContent side="right">{itemLabel}</TooltipContent>
     </Tooltip>
   );
 }
