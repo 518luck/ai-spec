@@ -1,12 +1,15 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import {
+  IconBrandTeams,
   IconBrightness,
+  IconCompass,
   IconEye,
   IconEyeOff,
   IconGift,
   IconHelpCircle,
   IconPalette,
   IconRobot,
+  IconUser,
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
 
@@ -22,8 +25,11 @@ export const Icons = {
   palette: IconPalette,
 
   // dual sidebar
+  brandTeams: IconBrandTeams,
+  compass: IconCompass,
   gift: IconGift,
   helpCircle: IconHelpCircle,
+  user: IconUser,
 
   eye: IconEye,
   eyeOff: IconEyeOff,

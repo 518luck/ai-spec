@@ -8,8 +8,8 @@ import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
-import { getNavBusinessItems } from "../model/navigation-data";
 import type { NavBusinessItem as NavBusinessItemData } from "../model/navigation-data";
+import { getNavBusinessItems } from "../model/navigation-data";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
 

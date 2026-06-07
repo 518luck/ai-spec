@@ -1,5 +1,5 @@
 import type { Icon } from "@/shared/ui/icons";
-import { IconCompass, IconUser, IconUsers } from "@tabler/icons-react";
+import { Icons } from "@/shared/ui/icons";
 
 // 左侧业务导航栏单个导航项配置。
 export type NavBusinessItem = {
@@ -22,21 +22,21 @@ export const getNavBusinessItems: NavBusinessDataFn = ({ pathname }) => [
   {
     name: "个人空间",
     description: "管理个人 Prompt、规约和 AI 配置。",
-    icon: IconUser,
+    icon: Icons.user,
     href: "/spec/personal",
     active: pathname === "/spec/personal",
   },
   {
     name: "团队空间",
     description: "团队协作、项目管理和共享资产。",
-    icon: IconUsers,
+    icon: Icons.brandTeams,
     href: "/spec/team",
     active: pathname === "/spec/team",
   },
   {
     name: "发现",
     description: "探索公共资产、热门 Prompt 和社区规约。",
-    icon: IconCompass,
+    icon: Icons.compass,
     href: "/spec/discover",
     active: pathname === "/spec/discover",
   },
