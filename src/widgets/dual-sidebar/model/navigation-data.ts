@@ -22,7 +22,7 @@ export const getNavBusinessItems: NavBusinessDataFn = ({ pathname }) => [
   {
     name: "个人空间",
     description: "管理个人 Prompt、规约和 AI 配置。",
-    icon: Icons.user,
+    icon: Icons.sparkleHighlight,
     href: "/spec/personal",
     active: pathname === "/spec/personal",
   },

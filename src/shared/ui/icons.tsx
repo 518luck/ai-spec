@@ -9,6 +9,7 @@ import {
   IconHelpCircle,
   IconPalette,
   IconRobot,
+  IconSparkleHighlight,
   IconUser,
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
@@ -29,6 +30,7 @@ export const Icons = {
   compass: IconCompass,
   gift: IconGift,
   helpCircle: IconHelpCircle,
+  sparkleHighlight: IconSparkleHighlight,
   user: IconUser,
 
   eye: IconEye,
