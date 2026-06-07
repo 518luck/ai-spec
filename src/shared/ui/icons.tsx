@@ -10,7 +10,6 @@ import {
   IconPalette,
   IconRobot,
   IconSparkleHighlight,
-  IconUser,
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
 
@@ -25,13 +24,13 @@ export const Icons = {
   brightness: IconBrightness,
   palette: IconPalette,
 
-  // dual sidebar
-  brandTeams: IconBrandTeams,
-  compass: IconCompass,
+  // business nav
+  discover: IconCompass,
+  team: IconBrandTeams,
+  personal: IconSparkleHighlight,
+
   gift: IconGift,
   helpCircle: IconHelpCircle,
-  sparkleHighlight: IconSparkleHighlight,
-  user: IconUser,
 
   eye: IconEye,
   eyeOff: IconEyeOff,
