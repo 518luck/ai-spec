@@ -51,35 +51,37 @@ export function DualSidebar({
       data-slot="dual-sidebar"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "bg-sidebar text-sidebar-foreground flex min-h-dvh shrink-0 overflow-hidden border-r",
+        "text-foreground flex min-h-dvh max-w-[304px] shrink-0 overflow-hidden border-r transition-[width] duration-200 ease-linear",
+        open ? "w-[304px]" : "w-16",
         className,
       )}
       {...props}
     >
+      {/* 左侧导航栏 */}
       <nav
         aria-label="业务导航"
         data-slot="dual-sidebar-business-nav"
-        className="flex w-16 shrink-0 flex-col items-center justify-between border-r py-3"
+        className="bg-background flex w-16 shrink-0 flex-col items-center justify-between border-r py-3"
       >
         <div className="flex flex-col items-center gap-3">
           <Link
             href="/"
             aria-label="产品入口"
-            className="bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground flex size-10 items-center justify-center rounded-md"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground flex size-10 items-center justify-center rounded-md"
           >
-            <Icons.logo className="size-5" />
+            <Icons.logo className="size-7" />
           </Link>
 
           <div
             data-slot="dual-sidebar-business-nav-content"
-            className="flex flex-col items-center gap-2"
+            className="mt-6 flex flex-col items-center gap-5"
           >
             {businessNavItems.map((item) => {
               const Icon = item.icon;
 
               return (
                 <NavBusinessItem key={item.href} item={item}>
-                  <Icon className="size-5" />
+                  <Icon className="size-6" />
                 </NavBusinessItem>
               );
             })}
@@ -88,7 +90,7 @@ export function DualSidebar({
 
         <div
           data-slot="dual-sidebar-resource-nav"
-          className="text-sidebar-foreground/70 flex flex-col items-center gap-2"
+          className="text-muted-foreground flex flex-col items-center gap-2"
         >
           <div
             aria-label="活动入口占位"
@@ -105,6 +107,7 @@ export function DualSidebar({
         </div>
       </nav>
 
+      {/* 右侧导航栏 */}
       <NavAreasPanel open={open} className="px-2" />
     </aside>
   );
@@ -129,7 +132,7 @@ function NavBusinessItem({
             aria-label={name}
             data-active={active}
             className={cn(
-              "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
+              "text-muted-foreground hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
               className,
             )}
           >
@@ -185,8 +188,8 @@ function NavAreasPanel({ open, className }: NavAreasPanelProps): JSX.Element {
       data-slot="dual-sidebar-operation-nav"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "flex min-w-0 flex-col justify-between overflow-hidden transition-[width] duration-200 ease-linear",
-        open ? "w-64" : "w-0",
+        "bg-sidebar text-sidebar-foreground flex min-w-0 flex-col justify-between overflow-hidden transition-[width] duration-200 ease-linear",
+        open ? "flex-1" : "w-0",
         className,
       )}
     >
