@@ -2,6 +2,7 @@ import type { ComponentProps, JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { DualSidebarProvider } from "../model/dual-sidebar-context";
+import { dualSidebarZoneClasses } from "../model/dual-sidebar-styles";
 import { DualSidebar } from "./dual-sidebar";
 
 type DualSidebarLayoutProps = ComponentProps<"div"> & {
@@ -24,7 +25,8 @@ export function DualSidebarLayout({
       <div
         data-slot="dual-sidebar-layout"
         className={cn(
-          "bg-background text-foreground flex min-h-dvh w-full overflow-hidden",
+          dualSidebarZoneClasses.layout.shell,
+          "flex min-h-dvh w-full overflow-hidden",
           className,
         )}
         {...props}
@@ -48,12 +50,19 @@ function DualSidebarContent({
   return (
     <main
       data-slot="dual-sidebar-layout-content"
-      className={cn("flex min-w-0 flex-1 py-2", className)}
+      className={cn(
+        dualSidebarZoneClasses.content.shell,
+        "flex min-w-0 flex-1 py-2",
+        className,
+      )}
       {...props}
     >
       <div
         data-slot="dual-sidebar-layout-content-inner"
-        className="min-h-0 flex-1 overflow-auto rounded-xl bg-purple-200"
+        className={cn(
+          dualSidebarZoneClasses.content.surface,
+          "min-h-0 flex-1 overflow-auto rounded-xl",
+        )}
       >
         {children}
       </div>

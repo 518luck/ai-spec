@@ -9,6 +9,7 @@ import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
+import { dualSidebarZoneClasses } from "../model/dual-sidebar-styles";
 import type {
   NavBusinessArea,
   NavBusinessItem as NavBusinessItemData,
@@ -59,7 +60,7 @@ export function DualSidebar({
       data-slot="dual-sidebar"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "text-foreground flex min-h-dvh max-w-76 shrink-0 overflow-hidden border-r transition-[width] duration-200 ease-linear",
+        "flex min-h-dvh max-w-76 shrink-0 overflow-hidden border-r transition-[width] duration-200 ease-linear",
         open ? "w-76" : "w-16",
         className,
       )}
@@ -69,7 +70,10 @@ export function DualSidebar({
       <nav
         aria-label="业务导航"
         data-slot="dual-sidebar-business-nav"
-        className="bg-background flex w-16 shrink-0 flex-col items-center justify-between border-r py-3"
+        className={cn(
+          dualSidebarZoneClasses.businessNav.shell,
+          "flex w-16 shrink-0 flex-col items-center justify-between border-r py-3",
+        )}
       >
         <div className="flex flex-col items-center gap-3">
           <Link
@@ -208,7 +212,8 @@ function NavAreasPanel({
       data-slot="dual-sidebar-operation-nav"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "bg-background flex min-w-0 overflow-hidden bg-black py-2 transition-[width] duration-200 ease-linear",
+        dualSidebarZoneClasses.operationNav.shell,
+        "flex min-w-0 overflow-hidden py-2 transition-[width] duration-200 ease-linear",
         open ? "flex-1" : "w-0",
         className,
       )}
@@ -216,7 +221,8 @@ function NavAreasPanel({
       <div
         data-slot="dual-sidebar-operation-nav-panel"
         className={cn(
-          "bg-sidebar text-sidebar-foreground mr-2 flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl transition-opacity duration-200 ease-linear",
+          dualSidebarZoneClasses.operationNav.surface,
+          "mr-2 flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl transition-opacity duration-200 ease-linear",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
       >
