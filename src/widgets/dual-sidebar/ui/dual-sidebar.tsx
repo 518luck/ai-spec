@@ -217,23 +217,24 @@ function NavAreasPanel({
         >
           <div
             data-slot="dual-sidebar-operation-nav-content"
-            className="flex min-h-0 flex-col gap-4 overflow-auto px-5 py-3"
+            className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-3"
           >
             <div className="text-lg font-semibold">{navAreaPanel.title}</div>
 
-            <div className="flex flex-col gap-4">
+            {/* 菜单分组 */}
+            <div className="flex flex-col gap-8">
               {navAreaPanel.content.map((group) => (
                 <div
                   key={group.name ?? "default"}
                   className="flex flex-col gap-2"
                 >
                   {group.name ? (
-                    <div className="text-muted-foreground text-xs font-medium">
+                    <div className="text-muted-foreground/70 px-4 text-sm font-medium">
                       {group.name}
                     </div>
                   ) : null}
 
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col">
                     {group.items.map((item) => {
                       const Icon = item.icon;
 
@@ -242,7 +243,7 @@ function NavAreasPanel({
                           <Link
                             href={item.href}
                             data-active={item.active}
-                            className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors"
+                            className="text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors"
                           >
                             <Icon className="size-4 shrink-0" />
                             <span className="min-w-0 truncate">
@@ -251,13 +252,13 @@ function NavAreasPanel({
                           </Link>
 
                           {item.items ? (
-                            <div className="ml-6 flex flex-col gap-1">
+                            <div className="ml-4 flex flex-col gap-1">
                               {item.items.map((subItem) => (
                                 <Link
                                   key={subItem.href}
                                   href={subItem.href}
                                   data-active={subItem.active}
-                                  className="text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md px-2 py-1.5 text-sm transition-colors"
+                                  className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md px-2 py-1.5 text-sm transition-colors"
                                 >
                                   <span className="block min-w-0 truncate">
                                     {subItem.name}
