@@ -64,8 +64,27 @@ function DualSidebarContent({
           "min-h-0 flex-1 overflow-auto rounded-xl",
         )}
       >
-        {children}
+        <PageContent>
+          {children}
+        </PageContent>
       </div>
     </main>
+  );
+}
+
+// 页面内容区容器，提供响应式内边距
+function PageContent({
+  className,
+  children,
+  ...props
+}: ComponentProps<"div">): JSX.Element {
+  return (
+    <div
+      data-slot="dual-sidebar-layout-page-content"
+      className={cn("p-3 md:p-6", className)}
+      {...props}
+    >
+      {children}
+    </div>
   );
 }
