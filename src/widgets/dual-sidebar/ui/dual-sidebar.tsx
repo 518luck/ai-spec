@@ -60,7 +60,7 @@ export function DualSidebar({
       data-slot="dual-sidebar"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "flex min-h-dvh max-w-76 shrink-0 overflow-hidden border-r transition-[width] duration-200 ease-linear",
+        "flex min-h-dvh max-w-76 shrink-0 overflow-hidden transition-[width] duration-200 ease-linear",
         open ? "w-76" : "w-16",
         className,
       )}
@@ -72,7 +72,7 @@ export function DualSidebar({
         data-slot="dual-sidebar-business-nav"
         className={cn(
           dualSidebarZoneClasses.businessNav.shell,
-          "flex w-16 shrink-0 flex-col items-center justify-between border-r py-3",
+          "flex w-16 shrink-0 flex-col items-center justify-between py-3",
         )}
       >
         <div className="flex flex-col items-center gap-3">
