@@ -27,13 +27,14 @@ export type NavBusinessItemsFn<T extends Record<PropertyKey, unknown>> = (
 ) => NavBusinessItem[];
 
 // 定义左侧业务导航对应的右侧资源区域键。
-export type NavBusinessArea = "personal" | "team" | "discover";
+export type NavBusinessArea = "personal" | "team" | "discover" | "settings";
 
 // 固定左侧业务区域顺序，供右侧面板切换动画稳定渲染。
 export const navBusinessAreas: readonly NavBusinessArea[] = [
   "personal",
   "team",
   "discover",
+  "settings",
 ];
 
 // 右侧区域导航栏单个叶子菜单项配置。
@@ -88,6 +89,10 @@ export const getCurrentNavBusinessArea = ({
     return "discover";
   }
 
+  if (pathname.startsWith("/spec/settings")) {
+    return "settings";
+  }
+
   return null;
 };
 
@@ -121,6 +126,14 @@ export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({
     href: "/spec/discover",
     active: pathname === "/spec/discover",
     learnMoreHref: "#",
+  },
+  {
+    name: "设置",
+    description: "应用偏好和个人配置。",
+    icon: Icons.settings,
+    iconAnimation: "rotate",
+    href: "/spec/settings",
+    active: pathname === "/spec/settings",
   },
 ];
 
@@ -157,12 +170,6 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
             icon: Icons.discover,
             href: "/spec/personal/rules",
             active: pathname === "/spec/personal/rules",
-          },
-          {
-            name: "设置",
-            icon: Icons.palette,
-            href: "/spec/personal/settings",
-            active: pathname === "/spec/personal/settings",
           },
         ],
       },
@@ -290,5 +297,10 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
         ],
       },
     ],
+  }),
+  settings: () => ({
+    title: "设置",
+    direction: "left",
+    content: [],
   }),
 };
