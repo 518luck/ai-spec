@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentProps, JSX, PropsWithChildren, ReactNode } from "react";
+import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
@@ -13,7 +13,6 @@ import type {
   NavBusinessArea,
   NavBusinessItem as NavBusinessItemData,
   NavContext,
-  NavIconAnimation,
 } from "../model/navigation-data";
 import {
   getCurrentNavBusinessArea,
@@ -21,6 +20,8 @@ import {
   navAreaPanels,
   navBusinessAreas,
 } from "../model/navigation-data";
+import { AnimatedArea } from "./animated-area";
+import { AnimatedNavIcon } from "./animated-nav-icon";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
 
@@ -38,11 +39,6 @@ type NavAreasPanelProps = {
 
 type NavBusinessItemProps = NavBusinessItemBaseProps & {
   item: NavBusinessItemData;
-};
-
-type AnimatedNavIconProps = {
-  animation?: NavIconAnimation;
-  children: ReactNode;
 };
 
 // 渲染双栏侧边栏，左侧承载业务划分，右侧承载操作划分。
@@ -314,67 +310,5 @@ function NavAreasPanel({
         </div>
       </div>
     </nav>
-  );
-}
-
-// 为导航图标提供可配置的悬停动画反馈。
-function AnimatedNavIcon({
-  animation = "none",
-  children,
-}: AnimatedNavIconProps): JSX.Element {
-  if (animation === "rotate") {
-    return (
-      <motion.span
-        className="inline-flex size-full items-center justify-center"
-        whileHover={{ rotate: 360 }}
-        transition={{ duration: 0.45, ease: "easeInOut" }}
-      >
-        {children}
-      </motion.span>
-    );
-  }
-
-  if (animation === "shake") {
-    return (
-      <motion.span
-        className="inline-flex size-full items-center justify-center"
-        whileHover={{
-          rotate: [0, -8, 8, -5, 5, 0],
-          x: [0, -2, 2, -1, 1, 0],
-        }}
-        transition={{ duration: 0.4, ease: "easeInOut" }}
-      >
-        {children}
-      </motion.span>
-    );
-  }
-
-  return (
-    <span className="inline-flex items-center justify-center">{children}</span>
-  );
-}
-
-// 单个右侧 area 的动画容器。
-export function AnimatedArea({
-  visible,
-  direction,
-  children,
-}: PropsWithChildren<{ visible: boolean; direction: "left" | "right" }>) {
-  return (
-    <div
-      className={cn(
-        "flex size-full flex-col transition-[opacity,translate] duration-300",
-        visible
-          ? "relative opacity-100"
-          : cn(
-              "pointer-events-none absolute opacity-0",
-              direction === "left" ? "-translate-x-full" : "translate-x-full",
-            ),
-      )}
-      aria-hidden={!visible ? "true" : undefined}
-      inert={!visible}
-    >
-      {children}
-    </div>
   );
 }
