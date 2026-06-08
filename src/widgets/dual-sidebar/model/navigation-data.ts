@@ -64,6 +64,7 @@ export type NavAreaPanels<
   TArea extends string,
 > = Record<TArea, (args: T) => NavAreaPanel>;
 
+// TODO : 后面可以根据工作空间来分布设置
 // 根据当前路径判断左侧业务导航当前所在区域。
 export const getCurrentNavBusinessArea = ({
   pathname,
@@ -116,6 +117,7 @@ export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({
   },
 ];
 
+// TODO : 后面需要根据工作空间来设置
 // 生成右侧资源导航栏的分组数据。
 export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
   personal: ({ pathname }) => ({

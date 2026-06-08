@@ -49,6 +49,7 @@ export function DualSidebar({
 }: DualSidebarProps): JSX.Element {
   // 读取右侧操作导航栏的展开状态，左侧业务导航栏始终保留。
   const { open } = useDualSidebarContext();
+
   const pathname = usePathname();
   const navContext = { pathname: pathname ?? "" };
   const businessNavItems = getNavBusinessItems(navContext);
@@ -204,7 +205,7 @@ function NavAreasPanel({
       data-slot="dual-sidebar-operation-nav"
       data-state={open ? "expanded" : "collapsed"}
       className={cn(
-        "bg-background flex min-w-0 overflow-hidden py-2 transition-[width] duration-200 ease-linear",
+        "bg-background flex min-w-0 overflow-hidden bg-black py-2 transition-[width] duration-200 ease-linear",
         open ? "flex-1" : "w-0",
         className,
       )}
@@ -212,21 +213,22 @@ function NavAreasPanel({
       {open && navAreaPanel !== null ? (
         <div
           data-slot="dual-sidebar-operation-nav-panel"
-          className="bg-sidebar text-sidebar-foreground flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl"
+          className="bg-sidebar text-sidebar-foreground mr-2 flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl"
         >
           <div
             data-slot="dual-sidebar-operation-nav-content"
-            className="flex min-h-0 flex-col gap-4 overflow-auto p-3"
+            className="flex min-h-0 flex-col gap-4 overflow-auto px-5 py-3"
           >
-            <div className="px-2 text-sm font-semibold">
-              {navAreaPanel.title}
-            </div>
+            <div className="text-lg font-semibold">{navAreaPanel.title}</div>
 
             <div className="flex flex-col gap-4">
               {navAreaPanel.content.map((group) => (
-                <div key={group.name ?? "default"} className="flex flex-col gap-2">
+                <div
+                  key={group.name ?? "default"}
+                  className="flex flex-col gap-2"
+                >
                   {group.name ? (
-                    <div className="text-muted-foreground px-2 text-xs font-medium">
+                    <div className="text-muted-foreground text-xs font-medium">
                       {group.name}
                     </div>
                   ) : null}
@@ -243,7 +245,9 @@ function NavAreasPanel({
                             className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors"
                           >
                             <Icon className="size-4 shrink-0" />
-                            <span className="min-w-0 truncate">{item.name}</span>
+                            <span className="min-w-0 truncate">
+                              {item.name}
+                            </span>
                           </Link>
 
                           {item.items ? (
