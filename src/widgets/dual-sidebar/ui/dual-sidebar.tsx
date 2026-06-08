@@ -10,14 +10,16 @@ import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
 import type {
-  NavAreaPanel,
+  NavBusinessArea,
   NavBusinessItem as NavBusinessItemData,
+  NavContext,
   NavIconAnimation,
 } from "../model/navigation-data";
 import {
   getCurrentNavBusinessArea,
   getNavBusinessItems,
   navAreaPanels,
+  navBusinessAreas,
 } from "../model/navigation-data";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
@@ -29,7 +31,8 @@ type NavBusinessItemBaseProps = {
 
 type NavAreasPanelProps = {
   open: boolean;
-  navAreaPanel: NavAreaPanel | null;
+  currentBusinessArea: NavBusinessArea | null;
+  navContext: NavContext;
   className?: string;
 };
 
@@ -54,10 +57,6 @@ export function DualSidebar({
   const navContext = { pathname: pathname ?? "" };
   const businessNavItems = getNavBusinessItems(navContext);
   const currentBusinessArea = getCurrentNavBusinessArea(navContext);
-  const navAreaPanel =
-    currentBusinessArea === null
-      ? null
-      : navAreaPanels[currentBusinessArea](navContext);
 
   return (
     <aside
@@ -121,7 +120,11 @@ export function DualSidebar({
       </nav>
 
       {/* 右侧导航栏 */}
-      <NavAreasPanel open={open} navAreaPanel={navAreaPanel} />
+      <NavAreasPanel
+        open={open}
+        currentBusinessArea={currentBusinessArea}
+        navContext={navContext}
+      />
     </aside>
   );
 }
@@ -195,9 +198,13 @@ function NavBusinessItem({
 // 渲染右侧区域操作面板，随双栏状态展开或折叠。
 function NavAreasPanel({
   open,
-  navAreaPanel,
+  currentBusinessArea,
+  navContext,
   className,
 }: NavAreasPanelProps): JSX.Element {
+  // 路径未匹配业务区域时，保留默认面板以避免右侧内容整块消失。
+  const visibleBusinessArea = currentBusinessArea ?? "personal";
+
   return (
     <nav
       aria-label="操作导航"
@@ -210,82 +217,102 @@ function NavAreasPanel({
         className,
       )}
     >
-      {open && navAreaPanel !== null ? (
-        <div
-          data-slot="dual-sidebar-operation-nav-panel"
-          className="bg-sidebar text-sidebar-foreground mr-2 flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl"
-        >
-          <div
-            data-slot="dual-sidebar-operation-nav-content"
-            className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-3"
-          >
-            <div className="text-lg font-semibold">{navAreaPanel.title}</div>
+      <div
+        data-slot="dual-sidebar-operation-nav-panel"
+        className={cn(
+          "bg-sidebar text-sidebar-foreground mr-2 flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl transition-opacity duration-200 ease-linear",
+          open ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
+      >
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          {navBusinessAreas.map((businessArea) => {
+            const navAreaPanel = navAreaPanels[businessArea](navContext);
 
-            {/* 菜单分组 */}
-            <div className="flex flex-col gap-8">
-              {navAreaPanel.content.map((group) => (
+            return (
+              <AnimatedArea
+                key={businessArea}
+                visible={visibleBusinessArea === businessArea}
+                direction={navAreaPanel.direction ?? "right"}
+              >
                 <div
-                  key={group.name ?? "default"}
-                  className="flex flex-col gap-2"
+                  data-slot="dual-sidebar-operation-nav-content"
+                  className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-3"
                 >
-                  {group.name ? (
-                    <div className="text-muted-foreground/70 px-4 text-sm font-medium">
-                      {group.name}
-                    </div>
-                  ) : null}
+                  <div className="text-lg font-semibold">
+                    {navAreaPanel.title}
+                  </div>
 
-                  <div className="flex flex-col">
-                    {group.items.map((item) => {
-                      const Icon = item.icon;
+                  {/* 菜单分组 */}
+                  <div className="flex flex-col gap-8">
+                    {navAreaPanel.content.map((group) => (
+                      <div
+                        key={group.name ?? "default"}
+                        className="flex flex-col gap-2"
+                      >
+                        {group.name ? (
+                          <div className="text-muted-foreground/70 px-4 text-sm font-medium">
+                            {group.name}
+                          </div>
+                        ) : null}
 
-                      return (
-                        <div key={item.href} className="flex flex-col gap-1">
-                          <Link
-                            href={item.href}
-                            data-active={item.active}
-                            className="text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors"
-                          >
-                            <Icon className="size-4 shrink-0" />
-                            <span className="min-w-0 truncate">
-                              {item.name}
-                            </span>
-                          </Link>
+                        <div className="flex flex-col">
+                          {group.items.map((item) => {
+                            const Icon = item.icon;
 
-                          {item.items ? (
-                            <div className="ml-4 flex flex-col gap-1">
-                              {item.items.map((subItem) => (
+                            return (
+                              <div
+                                key={item.href}
+                                className="flex flex-col gap-1"
+                              >
                                 <Link
-                                  key={subItem.href}
-                                  href={subItem.href}
-                                  data-active={subItem.active}
-                                  className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md px-2 py-1.5 text-sm transition-colors"
+                                  href={item.href}
+                                  data-active={item.active}
+                                  className="text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors"
                                 >
-                                  <span className="block min-w-0 truncate">
-                                    {subItem.name}
+                                  <Icon className="size-4 shrink-0" />
+                                  <span className="min-w-0 truncate">
+                                    {item.name}
                                   </span>
                                 </Link>
-                              ))}
-                            </div>
-                          ) : null}
+
+                                {item.items ? (
+                                  <div className="ml-4 flex flex-col gap-1">
+                                    {item.items.map((subItem) => (
+                                      <Link
+                                        key={subItem.href}
+                                        href={subItem.href}
+                                        data-active={subItem.active}
+                                        className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md px-2 py-1.5 text-sm transition-colors"
+                                      >
+                                        <span className="block min-w-0 truncate">
+                                          {subItem.name}
+                                        </span>
+                                      </Link>
+                                    ))}
+                                  </div>
+                                ) : null}
+                              </div>
+                            );
+                          })}
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
+              </AnimatedArea>
+            );
+          })}
+        </div>
 
-          <div
-            data-slot="dual-sidebar-operation-nav-footer"
-            className="flex flex-col gap-2 p-3"
-          >
-            <div className="text-muted-foreground text-xs font-medium">
-              底部固定栏
-            </div>
+        <div
+          data-slot="dual-sidebar-operation-nav-footer"
+          className="flex flex-col gap-2 p-3"
+        >
+          <div className="text-muted-foreground text-xs font-medium">
+            底部固定栏
           </div>
         </div>
-      ) : null}
+      </div>
     </nav>
   );
 }
@@ -328,7 +355,7 @@ function AnimatedNavIcon({
 }
 
 // 单个右侧 area 的动画容器。
-export function Area({
+export function AnimatedArea({
   visible,
   direction,
   children,
@@ -336,9 +363,9 @@ export function Area({
   return (
     <div
       className={cn(
-        "top-0 left-0 flex size-full flex-col md:transition-[opacity,transform] md:duration-300",
+        "flex size-full flex-col transition-[opacity,translate] duration-300",
         visible
-          ? "relative opacity-1"
+          ? "relative opacity-100"
           : cn(
               "pointer-events-none absolute opacity-0",
               direction === "left" ? "-translate-x-full" : "translate-x-full",

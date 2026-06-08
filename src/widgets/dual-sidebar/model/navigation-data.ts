@@ -29,6 +29,13 @@ export type NavBusinessItemsFn<T extends Record<PropertyKey, unknown>> = (
 // 定义左侧业务导航对应的右侧资源区域键。
 export type NavBusinessArea = "personal" | "team" | "discover";
 
+// 固定左侧业务区域顺序，供右侧面板切换动画稳定渲染。
+export const navBusinessAreas: readonly NavBusinessArea[] = [
+  "personal",
+  "team",
+  "discover",
+];
+
 // 右侧区域导航栏单个叶子菜单项配置。
 export type NavAreaItem = {
   name: string;
@@ -122,7 +129,7 @@ export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({
 export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
   personal: ({ pathname }) => ({
     title: "个人空间",
-    direction: "right",
+    direction: "left",
     content: [
       {
         items: [
@@ -193,7 +200,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
   }),
   team: ({ pathname }) => ({
     title: "工作空间",
-    direction: "right",
+    direction: "left",
     content: [
       {
         items: [
@@ -245,7 +252,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
   }),
   discover: ({ pathname }) => ({
     title: "发现",
-    direction: "right",
+    direction: "left",
     content: [
       {
         items: [
