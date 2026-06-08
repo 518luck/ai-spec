@@ -30,13 +30,33 @@ export function DualSidebarLayout({
         {...props}
       >
         <DualSidebar className={sidebarClassName} />
-        <main
-          data-slot="dual-sidebar-layout-content"
-          className={cn("min-w-0 flex-1 overflow-auto", contentClassName)}
-        >
+
+        <DualSidebarContent className={contentClassName}>
           {children}
-        </main>
+        </DualSidebarContent>
       </div>
     </DualSidebarProvider>
+  );
+}
+
+// 渲染双栏布局主内容区壳层，分离布局容器和视觉留白。
+function DualSidebarContent({
+  className,
+  children,
+  ...props
+}: ComponentProps<"main">): JSX.Element {
+  return (
+    <main
+      data-slot="dual-sidebar-layout-content"
+      className={cn("flex min-w-0 flex-1 py-2", className)}
+      {...props}
+    >
+      <div
+        data-slot="dual-sidebar-layout-content-inner"
+        className="min-h-0 flex-1 overflow-auto rounded-xl bg-purple-200"
+      >
+        {children}
+      </div>
+    </main>
   );
 }
