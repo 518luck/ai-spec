@@ -3,7 +3,7 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentProps, JSX, ReactNode } from "react";
+import type { ComponentProps, JSX, PropsWithChildren, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
@@ -324,5 +324,30 @@ function AnimatedNavIcon({
 
   return (
     <span className="inline-flex items-center justify-center">{children}</span>
+  );
+}
+
+// 单个右侧 area 的动画容器。
+export function Area({
+  visible,
+  direction,
+  children,
+}: PropsWithChildren<{ visible: boolean; direction: "left" | "right" }>) {
+  return (
+    <div
+      className={cn(
+        "top-0 left-0 flex size-full flex-col md:transition-[opacity,transform] md:duration-300",
+        visible
+          ? "relative opacity-1"
+          : cn(
+              "pointer-events-none absolute opacity-0",
+              direction === "left" ? "-translate-x-full" : "translate-x-full",
+            ),
+      )}
+      aria-hidden={!visible ? "true" : undefined}
+      inert={!visible}
+    >
+      {children}
+    </div>
   );
 }
