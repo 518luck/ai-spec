@@ -153,12 +153,12 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
             active: pathname === "/spec/personal/prompts",
             items: [
               {
-                name: "测试子菜单 A",
+                name: "收录",
                 href: "/spec/personal/mock-group/a",
                 active: pathname === "/spec/personal/mock-group/a",
               },
               {
-                name: "测试子菜单 B",
+                name: "待整理",
                 href: "/spec/personal/mock-group/b",
                 active: pathname === "/spec/personal/mock-group/b",
                 locked: true,
