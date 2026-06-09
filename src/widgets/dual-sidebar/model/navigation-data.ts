@@ -148,7 +148,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
         items: [
           {
             name: "Prompt",
-            icon: Icons.personal,
+            icon: Icons.prompt,
             href: "/spec/personal/prompts",
             active: pathname === "/spec/personal/prompts",
             items: [
@@ -265,7 +265,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
         items: [
           {
             name: "Prompt",
-            icon: Icons.discover,
+            icon: Icons.prompt,
             href: "/spec/discover/prompts",
             active: pathname === "/spec/discover/prompts",
           },
