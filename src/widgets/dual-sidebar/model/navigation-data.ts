@@ -224,16 +224,16 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
       {
         items: [
           {
-            name: "团队",
-            icon: Icons.teamInfo,
+            name: "项目",
+            icon: Icons.team,
             href: navBusinessAreaDefaultHrefs.team,
             active: pathname === navBusinessAreaDefaultHrefs.team,
           },
           {
-            name: "项目",
-            icon: Icons.team,
-            href: "/spec/team/projects",
-            active: pathname === "/spec/team/projects",
+            name: "团队",
+            icon: Icons.teamInfo,
+            href: "/spec/team/team-set",
+            active: pathname === "/spec/team/team-set",
           },
           {
             name: "成员",
