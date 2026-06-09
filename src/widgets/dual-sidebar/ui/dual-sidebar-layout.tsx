@@ -1,4 +1,4 @@
-import type { ComponentProps, JSX } from "react";
+import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { DualSidebarProvider } from "../model/dual-sidebar-context";
@@ -9,6 +9,10 @@ type DualSidebarLayoutProps = ComponentProps<"div"> & {
   sidebarClassName?: string;
   contentClassName?: string;
   defaultSidebarOpen?: boolean;
+};
+
+type PageContentProps = ComponentProps<"div"> & {
+  title?: ReactNode;
 };
 
 // 承载左侧双侧边栏和右侧主内容区的应用级布局。
@@ -61,30 +65,47 @@ function DualSidebarContent({
         data-slot="dual-sidebar-layout-content-inner"
         className={cn(
           dualSidebarZoneClasses.content.surface,
-          "min-h-0 flex-1 overflow-auto rounded-xl",
+          "flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl",
         )}
       >
-        <PageContent>
-          {children}
-        </PageContent>
+        <PageContent>{children}</PageContent>
       </div>
     </main>
   );
 }
 
-// 页面内容区容器，提供响应式内边距
+// 页面内容区容器，提供可选标题栏和可滚动内容区。
 function PageContent({
+  title,
   className,
   children,
   ...props
-}: ComponentProps<"div">): JSX.Element {
+}: PageContentProps): JSX.Element {
   return (
     <div
       data-slot="dual-sidebar-layout-page-content"
-      className={cn("p-3 md:p-6", className)}
+      className={cn("flex h-full min-h-0 flex-col", className)}
       {...props}
     >
-      {children}
+      {title ? (
+        <div
+          data-slot="dual-sidebar-layout-page-header"
+          className="flex h-16 shrink-0 items-center border-b px-6"
+        >
+          {typeof title === "string" ? (
+            <h1 className="text-base font-semibold">{title}</h1>
+          ) : (
+            title
+          )}
+        </div>
+      ) : null}
+
+      <div
+        data-slot="dual-sidebar-layout-page-body"
+        className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto p-6"
+      >
+        {children}
+      </div>
     </div>
   );
 }
