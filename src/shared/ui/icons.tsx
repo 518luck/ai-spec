@@ -1,5 +1,6 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import {
+  IconAdjustmentsAlt,
   IconBrandTeams,
   IconBrightness,
   IconCompass,
@@ -7,6 +8,7 @@ import {
   IconEyeOff,
   IconGift,
   IconHelpCircle,
+  IconKey,
   IconPalette,
   IconRobot,
   IconSettings,
@@ -33,6 +35,8 @@ export const Icons = {
 
   settings: IconSettings,
   prompt: IconTextScanAi,
+  preference: IconAdjustmentsAlt,
+  key: IconKey,
 
   gift: IconGift,
   helpCircle: IconHelpCircle,

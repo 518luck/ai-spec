@@ -298,9 +298,26 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
       },
     ],
   }),
-  settings: () => ({
+  settings: ({ pathname }) => ({
     title: "设置",
     direction: "left",
-    content: [],
+    content: [
+      {
+        items: [
+          {
+            name: "个人偏好",
+            icon: Icons.preference,
+            href: "/spec/settings/preferences",
+            active: pathname === "/spec/settings/preferences",
+          },
+          {
+            name: "Key 管理",
+            icon: Icons.key,
+            href: "/spec/settings/keys",
+            active: pathname === "/spec/settings/keys",
+          },
+        ],
+      },
+    ],
   }),
 };
