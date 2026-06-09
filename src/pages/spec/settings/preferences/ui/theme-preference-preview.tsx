@@ -1,62 +1,21 @@
+"use client";
+
 import type { JSX } from "react";
 
-import { cn } from "@/shared/lib/utils";
+import { THEMES } from "@/shared/configs/theme.config";
+import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 
 type ThemeDisc = {
-  readonly id: string;
   readonly name: string;
-  readonly previewClassName: string;
-  readonly selected?: boolean;
+  readonly value: string;
 };
-
-const themeDiscs: readonly ThemeDisc[] = [
-  {
-    id: "light-default",
-    name: "Light default",
-    previewClassName:
-      "bg-[conic-gradient(from_180deg,#ffffff_0_32%,#f6f8fa_32%_66%,#0969da_66%_100%)]",
-    selected: true,
-  },
-  {
-    id: "light-colorblind",
-    name: "Light protanopia and deuteranopia",
-    previewClassName:
-      "bg-[conic-gradient(from_180deg,#ffffff_0_32%,#f0f3f6_32%_66%,#8250df_66%_100%)]",
-  },
-  {
-    id: "light-tritanopia",
-    name: "Light tritanopia",
-    previewClassName:
-      "bg-[conic-gradient(from_180deg,#ffffff_0_32%,#f6f8fa_32%_66%,#bf8700_66%_100%)]",
-  },
-  {
-    id: "dark-default",
-    name: "Dark default",
-    previewClassName:
-      "bg-[conic-gradient(from_180deg,#0d1117_0_32%,#161b22_32%_66%,#2f81f7_66%_100%)]",
-  },
-  {
-    id: "dark-colorblind",
-    name: "Dark protanopia and deuteranopia",
-    previewClassName:
-      "bg-[conic-gradient(from_180deg,#0d1117_0_32%,#161b22_32%_66%,#a371f7_66%_100%)]",
-  },
-  {
-    id: "dark-tritanopia",
-    name: "Dark tritanopia",
-    previewClassName:
-      "bg-[conic-gradient(from_180deg,#0d1117_0_32%,#161b22_32%_66%,#d29922_66%_100%)]",
-  },
-  {
-    id: "dark-dimmed",
-    name: "Soft dark",
-    previewClassName:
-      "bg-[conic-gradient(from_180deg,#22272e_0_32%,#2d333b_32%_66%,#539bf5_66%_100%)]",
-  },
-];
 
 // 展示类似 GitHub 外观设置的主题预览与色盘选择样式。
 export function ThemePreferencePreview(): JSX.Element {
+  const { activeTheme, setActiveTheme } = useActiveTheme();
+  const activeThemeName =
+    THEMES.find((theme) => theme.value === activeTheme)?.name ?? activeTheme;
+
   return (
     <section className="bg-card text-card-foreground max-w-xl rounded-lg border shadow-xs">
       <div className="border-b px-5 py-4">
@@ -67,15 +26,20 @@ export function ThemePreferencePreview(): JSX.Element {
       </div>
 
       <div className="flex flex-col gap-4 p-5">
-        <ThemePreviewCard />
+        <ThemePreviewCard activeThemeName={activeThemeName} />
 
         <div
           className="flex flex-wrap gap-2"
           role="radiogroup"
-          aria-label="Light theme picker"
+          aria-label="Theme picker"
         >
-          {themeDiscs.map((themeDisc) => (
-            <ThemeDiscOption key={themeDisc.id} themeDisc={themeDisc} />
+          {THEMES.map((themeDisc) => (
+            <ThemeDiscOption
+              key={themeDisc.value}
+              themeDisc={themeDisc}
+              checked={activeTheme === themeDisc.value}
+              onSelect={setActiveTheme}
+            />
           ))}
         </div>
       </div>
@@ -84,7 +48,11 @@ export function ThemePreferencePreview(): JSX.Element {
 }
 
 // 绘制当前选中主题的大尺寸静态预览卡片。
-function ThemePreviewCard(): JSX.Element {
+function ThemePreviewCard({
+  activeThemeName,
+}: {
+  readonly activeThemeName: string;
+}): JSX.Element {
   return (
     <div className="bg-background overflow-hidden rounded-md border">
       <div className="bg-muted/40 border-b p-3">
@@ -137,7 +105,7 @@ function ThemePreviewCard(): JSX.Element {
       <div className="flex items-center justify-between gap-3 px-4 py-3">
         <div>
           <span className="sr-only">Selected theme: </span>
-          <p className="text-sm font-semibold">Light default</p>
+          <p className="text-sm font-semibold">{activeThemeName}</p>
         </div>
         <span className="bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-xs font-medium">
           Preview
@@ -150,29 +118,42 @@ function ThemePreviewCard(): JSX.Element {
 // 渲染保留原生 radio 语义的圆形主题色盘。
 function ThemeDiscOption({
   themeDisc,
+  checked,
+  onSelect,
 }: {
   readonly themeDisc: ThemeDisc;
+  readonly checked: boolean;
+  readonly onSelect: (theme: string) => void;
 }): JSX.Element {
   return (
     <div className="relative">
       <input
         className="peer sr-only"
-        id={`theme-${themeDisc.id}`}
+        id={`theme-${themeDisc.value}`}
         type="radio"
         name="preference-theme-preview"
-        value={themeDisc.id}
+        value={themeDisc.value}
         aria-label={themeDisc.name}
-        defaultChecked={themeDisc.selected}
+        checked={checked}
+        onChange={() => {
+          onSelect(themeDisc.value);
+        }}
       />
       <label
         className="bg-muted hover:border-ring peer-checked:border-primary peer-focus-visible:border-ring peer-focus-visible:ring-ring/50 flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition peer-focus-visible:ring-3"
-        htmlFor={`theme-${themeDisc.id}`}
+        htmlFor={`theme-${themeDisc.value}`}
         title={themeDisc.name}
       >
-        <span className="bg-background flex size-8 items-center justify-center overflow-hidden rounded-full border">
-          <span
-            className={cn("size-full rounded-full", themeDisc.previewClassName)}
-          />
+        <span
+          className="bg-background flex size-8 items-center justify-center overflow-hidden rounded-full border"
+          data-theme={themeDisc.value}
+        >
+          <span className="bg-background grid size-full grid-cols-2 grid-rows-2 rounded-full">
+            <span className="bg-background" />
+            <span className="bg-card" />
+            <span className="bg-muted" />
+            <span className="bg-primary" />
+          </span>
         </span>
       </label>
     </div>
