@@ -14,6 +14,7 @@ import {
   IconSettings,
   IconSparkleHighlight,
   IconTextScanAi,
+  IconUserCircle,
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
 
@@ -37,6 +38,7 @@ export const Icons = {
   prompt: IconTextScanAi,
   preference: IconAdjustmentsAlt,
   key: IconKey,
+  profile: IconUserCircle,
 
   gift: IconGift,
   helpCircle: IconHelpCircle,

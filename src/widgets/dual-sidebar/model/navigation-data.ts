@@ -305,6 +305,12 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
       {
         items: [
           {
+            name: "个人详情",
+            icon: Icons.profile,
+            href: "/spec/settings/profile",
+            active: pathname === "/spec/settings/profile",
+          },
+          {
             name: "个人偏好",
             icon: Icons.preference,
             href: "/spec/settings/preferences",
