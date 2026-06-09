@@ -72,7 +72,7 @@ export function DualSidebar({
         data-slot="dual-sidebar-business-nav"
         className={cn(
           dualSidebarZoneClasses.businessNav.shell,
-          "flex w-16 shrink-0 flex-col items-center justify-between py-3",
+          "flex w-16 shrink-0 flex-col items-center justify-between py-6",
         )}
       >
         <div className="flex flex-col items-center gap-3">
@@ -238,9 +238,9 @@ function NavAreasPanel({
               >
                 <div
                   data-slot="dual-sidebar-operation-nav-content"
-                  className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-3"
+                  className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-6"
                 >
-                  <div className="text-lg font-semibold">
+                  <div className="ml-2 text-lg font-semibold">
                     {navAreaPanel.title}
                   </div>
 
