@@ -261,6 +261,23 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
           },
         ],
       },
+      {
+        name: "管理",
+        items: [
+          {
+            name: "安全",
+            icon: Icons.security,
+            href: "/spec/team/security",
+            active: pathname === "/spec/team/security",
+          },
+          {
+            name: "日志",
+            icon: Icons.logs,
+            href: "/spec/team/logs",
+            active: pathname === "/spec/team/logs",
+          },
+        ],
+      },
     ],
   }),
   discover: ({ pathname }) => ({
