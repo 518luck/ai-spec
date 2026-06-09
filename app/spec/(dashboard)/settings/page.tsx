@@ -1,6 +1,6 @@
-import { SettingsPage } from "@/pages/spec/settings";
+import { ProfilePage } from "@/pages/spec/settings/profile";
 
-// 接入设置页面路由。
+// 接入设置默认页面路由。
 export default function Page() {
-  return <SettingsPage />;
+  return <ProfilePage />;
 }

@@ -37,6 +37,14 @@ export const navBusinessAreas: readonly NavBusinessArea[] = [
   "settings",
 ];
 
+// 定义左侧业务导航点击后应进入的右侧首个菜单项。
+export const navBusinessAreaDefaultHrefs: Record<NavBusinessArea, string> = {
+  personal: "/spec/personal",
+  team: "/spec/team",
+  discover: "/spec/discover",
+  settings: "/spec/settings",
+};
+
 // 右侧区域导航栏单个叶子菜单项配置。
 export type NavAreaItem = {
   name: string;
@@ -99,43 +107,47 @@ export const getCurrentNavBusinessArea = ({
 // 生成左侧业务导航栏的空间入口数据，便于统一遍历渲染。
 export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({
   pathname,
-}) => [
-  {
-    name: "个人空间",
-    description: "管理个人 Prompt、规约和 AI 配置。",
-    icon: Icons.personal,
-    iconAnimation: "rotate",
-    href: "/spec/personal",
-    active: pathname === "/spec/personal",
-    learnMoreHref: "#",
-  },
-  {
-    name: "团队空间",
-    description: "团队协作、项目管理和共享资产。",
-    icon: Icons.team,
-    iconAnimation: "shake",
-    href: "/spec/team",
-    active: pathname === "/spec/team",
-    learnMoreHref: "#",
-  },
-  {
-    name: "发现",
-    description: "探索公共资产、热门 Prompt 和社区规约。",
-    icon: Icons.discover,
-    iconAnimation: "rotate",
-    href: "/spec/discover",
-    active: pathname === "/spec/discover",
-    learnMoreHref: "#",
-  },
-  {
-    name: "设置",
-    description: "应用偏好和个人配置。",
-    icon: Icons.settings,
-    iconAnimation: "rotate",
-    href: "/spec/settings",
-    active: pathname === "/spec/settings",
-  },
-];
+}) => {
+  const currentBusinessArea = getCurrentNavBusinessArea({ pathname });
+
+  return [
+    {
+      name: "个人空间",
+      description: "管理个人 Prompt、规约和 AI 配置。",
+      icon: Icons.personal,
+      iconAnimation: "rotate",
+      href: navBusinessAreaDefaultHrefs.personal,
+      active: currentBusinessArea === "personal",
+      learnMoreHref: "#",
+    },
+    {
+      name: "团队空间",
+      description: "团队协作、项目管理和共享资产。",
+      icon: Icons.team,
+      iconAnimation: "shake",
+      href: navBusinessAreaDefaultHrefs.team,
+      active: currentBusinessArea === "team",
+      learnMoreHref: "#",
+    },
+    {
+      name: "发现",
+      description: "探索公共资产、热门 Prompt 和社区规约。",
+      icon: Icons.discover,
+      iconAnimation: "rotate",
+      href: navBusinessAreaDefaultHrefs.discover,
+      active: currentBusinessArea === "discover",
+      learnMoreHref: "#",
+    },
+    {
+      name: "设置",
+      description: "应用偏好和个人配置。",
+      icon: Icons.settings,
+      iconAnimation: "rotate",
+      href: navBusinessAreaDefaultHrefs.settings,
+      active: currentBusinessArea === "settings",
+    },
+  ];
+};
 
 // TODO : 后面需要根据工作空间来设置
 // 生成右侧资源导航栏的分组数据。
@@ -149,8 +161,8 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
           {
             name: "Prompt",
             icon: Icons.prompt,
-            href: "/spec/personal/prompts",
-            active: pathname === "/spec/personal/prompts",
+            href: navBusinessAreaDefaultHrefs.personal,
+            active: pathname === navBusinessAreaDefaultHrefs.personal,
             items: [
               {
                 name: "收录",
@@ -214,8 +226,8 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
           {
             name: "团队",
             icon: Icons.teamInfo,
-            href: "/spec/team/team-set",
-            active: pathname === "/spec/team/team-set",
+            href: navBusinessAreaDefaultHrefs.team,
+            active: pathname === navBusinessAreaDefaultHrefs.team,
           },
           {
             name: "项目",
@@ -289,8 +301,8 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
           {
             name: "Prompt",
             icon: Icons.prompt,
-            href: "/spec/discover/prompts",
-            active: pathname === "/spec/discover/prompts",
+            href: navBusinessAreaDefaultHrefs.discover,
+            active: pathname === navBusinessAreaDefaultHrefs.discover,
           },
           {
             name: "AGENTS.md",
@@ -330,8 +342,8 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
           {
             name: "个人详情",
             icon: Icons.profile,
-            href: "/spec/settings/profile",
-            active: pathname === "/spec/settings/profile",
+            href: navBusinessAreaDefaultHrefs.settings,
+            active: pathname === navBusinessAreaDefaultHrefs.settings,
           },
           {
             name: "个人偏好",

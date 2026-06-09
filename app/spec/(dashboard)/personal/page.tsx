@@ -1,6 +1,6 @@
-import { PersonalPage } from "@/pages/spec/personal";
+import { PersonalPromptsPage } from "@/pages/spec/personal/prompts";
 
-// 接入个人空间页面路由。
+// 接入个人空间默认页面路由。
 export default function Page() {
-  return <PersonalPage />;
+  return <PersonalPromptsPage />;
 }

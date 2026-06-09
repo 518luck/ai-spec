@@ -7,11 +7,14 @@
     "**/*.svg"
   ],
   "workbench.colorCustomizations": {
-    "activityBar.background": "#3A2A1A",
-    "activityBar.foreground": "#F8F3E7",
-    "statusBar.background": "#5A3E24",
-    "statusBar.foreground": "#F8F3E7",
-    "titleBar.activeBackground": "#5A3E24",
-    "titleBar.activeForeground": "#F8F3E7"
+    "activityBar.background": "#111827",
+    "activityBar.foreground": "#E5E7EB",
+    "activityBar.inactiveForeground": "#9CA3AF",
+    "statusBar.background": "#1F2937",
+    "statusBar.foreground": "#F9FAFB",
+    "titleBar.activeBackground": "#111827",
+    "titleBar.activeForeground": "#F9FAFB",
+    "titleBar.inactiveBackground": "#0F172A",
+    "titleBar.inactiveForeground": "#9CA3AF"
   }
 }

@@ -1,6 +1,6 @@
-import { DiscoverPage } from "@/pages/spec/discover";
+import { DiscoverPromptsPage } from "@/pages/spec/discover/prompts";
 
-// 接入发现页面路由。
+// 接入发现默认页面路由。
 export default function Page() {
-  return <DiscoverPage />;
+  return <DiscoverPromptsPage />;
 }
