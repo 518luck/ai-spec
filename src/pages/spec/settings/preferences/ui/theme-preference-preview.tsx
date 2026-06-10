@@ -17,7 +17,7 @@ export function ThemePreferencePreview(): JSX.Element {
     THEMES.find((theme) => theme.value === activeTheme)?.name ?? activeTheme;
 
   return (
-    <section className="bg-card text-card-foreground max-w-xl rounded-lg border shadow-xs">
+    <section className="bg-card text-card-foreground max-w-sm rounded-lg border shadow-xs">
       <div className="border-b px-5 py-4">
         <h2 className="text-base font-semibold">主题外观</h2>
         <p className="text-muted-foreground mt-1 text-sm">
@@ -47,7 +47,7 @@ export function ThemePreferencePreview(): JSX.Element {
   );
 }
 
-// 绘制当前选中主题的大尺寸静态预览卡片。
+// 绘制当前选中主题的紧凑预览卡片。
 function ThemePreviewCard({
   activeThemeName,
 }: {
@@ -55,54 +55,34 @@ function ThemePreviewCard({
 }): JSX.Element {
   return (
     <div className="bg-background overflow-hidden rounded-md border">
-      <div className="bg-muted/40 border-b p-3">
-        <div className="bg-card overflow-hidden rounded-md border shadow-xs">
-          <div className="bg-muted/30 flex items-center gap-2 border-b px-3 py-2">
-            <span className="bg-muted-foreground/25 size-2.5 rounded-full" />
-            <span className="bg-muted-foreground/25 size-2.5 rounded-full" />
-            <span className="bg-muted-foreground/25 size-2.5 rounded-full" />
-            <div className="bg-background ml-2 h-3 flex-1 rounded-full" />
-          </div>
-
-          <div className="bg-background grid grid-cols-[92px_1fr]">
-            <aside className="bg-muted/35 flex flex-col gap-2 border-r p-3">
-              <div className="bg-foreground/80 h-3 w-12 rounded-full" />
-              <div className="bg-muted-foreground/25 h-2.5 w-16 rounded-full" />
-              <div className="bg-muted-foreground/25 h-2.5 w-14 rounded-full" />
-              <div className="bg-card mt-2 h-7 rounded-md border" />
-              <div className="bg-primary/12 h-7 rounded-md" />
-              <div className="bg-card h-7 rounded-md" />
-            </aside>
-
-            <main className="flex flex-col gap-3 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex flex-col gap-2">
-                  <div className="bg-foreground/80 h-3 w-28 rounded-full" />
-                  <div className="bg-muted-foreground/25 h-2.5 w-40 rounded-full" />
-                </div>
-                <div className="bg-primary h-7 w-16 rounded-md" />
-              </div>
-
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-card h-14 rounded-md border" />
-                <div className="bg-card h-14 rounded-md border" />
-                <div className="bg-card h-14 rounded-md border" />
-              </div>
-
-              <div className="bg-card rounded-md border p-3">
-                <div className="bg-foreground/75 mb-3 h-3 w-24 rounded-full" />
-                <div className="flex flex-col gap-2">
-                  <div className="bg-muted h-2.5 rounded-full" />
-                  <div className="bg-muted h-2.5 w-5/6 rounded-full" />
-                  <div className="bg-muted h-2.5 w-2/3 rounded-full" />
-                </div>
-              </div>
-            </main>
-          </div>
-        </div>
+      <div className="bg-muted/30 flex items-center gap-2 border-b px-3 py-1.5">
+        <span className="bg-muted-foreground/25 size-2 rounded-full" />
+        <span className="bg-muted-foreground/25 size-2 rounded-full" />
+        <span className="bg-muted-foreground/25 size-2 rounded-full" />
+        <div className="bg-background ml-1.5 h-2.5 flex-1 rounded-full" />
       </div>
-
-      <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <div className="grid grid-cols-[56px_1fr]">
+        <aside className="bg-muted/35 flex flex-col gap-1.5 border-r px-2 py-2.5">
+          <div className="bg-foreground/70 h-2 w-8 rounded-full" />
+          <div className="bg-muted-foreground/20 h-2 w-10 rounded-full" />
+          <div className="bg-muted-foreground/20 h-2 w-6 rounded-full" />
+          <div className="bg-muted-foreground/20 h-2 w-6 rounded-full" />
+        </aside>
+        <main className="flex flex-col gap-2 p-2.5">
+          <div className="flex items-center gap-2">
+            <div className="bg-foreground/70 h-2 w-16 rounded-full" />
+            <div className="bg-muted-foreground/20 h-2 w-20 rounded-full" />
+          </div>
+          <div className="flex gap-2">
+            <div className="bg-card h-8 flex-1 rounded-sm border" />
+            <div className="bg-card h-8 flex-1 rounded-sm border" />
+          </div>
+          <div className="flex gap-2">
+            <div className="bg-card h-10 flex-1 rounded-sm border" />
+          </div>
+        </main>
+      </div>
+      <div className="flex items-center justify-between gap-3 border-t px-4 py-2">
         <div>
           <span className="sr-only">Selected theme: </span>
           <p className="text-sm font-semibold">{activeThemeName}</p>
