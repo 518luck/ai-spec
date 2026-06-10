@@ -1,9 +1,19 @@
 "use client";
 
+import { useTheme } from "next-themes";
 import type { JSX, ReactNode } from "react";
+import { useState } from "react";
 
-import { THEMES } from "@/shared/configs/theme.config";
+import {
+  type ColorMode,
+  DEFAULT_THEME,
+  THEMES,
+  getModeThemeCookie,
+  setModeThemeCookie,
+} from "@/shared/configs/theme.config";
+import { cn } from "@/shared/lib/utils";
 import { useActiveTheme } from "@/shared/providers/active-theme-providers";
+import { Badge } from "@/shared/ui/badge";
 
 type ThemeDisc = {
   readonly name: string;
@@ -14,42 +24,76 @@ type ThemePreferencePreviewProps = {
   readonly title?: string;
   readonly description?: string;
   readonly icon?: ReactNode;
+  readonly mode: ColorMode;
 };
 
-// 主题切换卡片
+// 按明暗模式管理色彩主题，点击卡片切换明暗，色盘仅切换色彩
 export function ThemePreferencePreview({
   title = "主题外观",
   description = "当系统唤醒浅色模式，此主题就会亮相。",
   icon,
+  mode,
 }: ThemePreferencePreviewProps): JSX.Element {
+  const { setTheme: setColorMode, resolvedTheme } = useTheme();
   const { activeTheme, setActiveTheme } = useActiveTheme();
-  const activeThemeName =
-    THEMES.find((theme) => theme.value === activeTheme)?.name ?? activeTheme;
+
+  const isCurrentMode = resolvedTheme === mode;
+  const [localTheme, setLocalTheme] = useState<string>(
+    () => getModeThemeCookie(mode) ?? DEFAULT_THEME,
+  );
+
+  const displayedTheme = isCurrentMode ? activeTheme : localTheme;
+  const displayedThemeName =
+    THEMES.find((t) => t.value === displayedTheme)?.name ?? displayedTheme;
+
+  // 点击卡片切换明暗模式并恢复该模式保存的色彩主题
+  const handleCardClick = () => {
+    setColorMode(mode);
+    setActiveTheme(localTheme);
+  };
+
+  // 色盘点击仅切换色彩主题，不切换明暗
+  const handleSelect = (themeValue: string) => {
+    setLocalTheme(themeValue);
+    setModeThemeCookie(mode, themeValue);
+    setActiveTheme(themeValue);
+  };
 
   return (
-    <section className="bg-card text-card-foreground rounded-lg border shadow-xs">
+    <section
+      className="bg-card text-card-foreground cursor-pointer rounded-lg border shadow-xs"
+      onClick={handleCardClick}
+    >
       <div className="border-b px-5 py-4">
-        <div className="flex items-center gap-2">
-          {icon}
-          <h2 className="text-base font-semibold">{title}</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {icon}
+            <h2 className="text-base font-semibold">{title}</h2>
+          </div>
+          {isCurrentMode && <Badge variant="secondary">使用中</Badge>}
         </div>
         <p className="text-muted-foreground mt-1 text-sm">{description}</p>
       </div>
 
       <div className="flex flex-col gap-4 p-5">
-        <ThemePreviewCard activeThemeName={activeThemeName} />
+        <ThemePreviewCard activeThemeName={displayedThemeName} />
 
         <div
           className="flex flex-wrap gap-2"
           role="radiogroup"
           aria-label="Theme picker"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           {THEMES.map((themeDisc) => (
             <ThemeDiscOption
               key={themeDisc.value}
               themeDisc={themeDisc}
-              checked={activeTheme === themeDisc.value}
-              onSelect={setActiveTheme}
+              checked={isCurrentMode && activeTheme === themeDisc.value}
+              onSelect={handleSelect}
+              mode={mode}
+              disabled={!isCurrentMode}
             />
           ))}
         </div>
@@ -91,7 +135,6 @@ function ThemePreviewCard({
           <div className="flex gap-2">
             <div className="bg-card h-10 flex-1 rounded-sm border" />
           </div>
-          <div className="flex items-center gap-2"></div>
         </main>
       </div>
       <div className="flex items-center justify-between gap-3 border-t px-4 py-2">
@@ -99,9 +142,6 @@ function ThemePreviewCard({
           <span className="sr-only">Selected theme: </span>
           <p className="text-sm font-semibold">{activeThemeName}</p>
         </div>
-        <span className="bg-muted text-muted-foreground rounded-full border px-2 py-0.5 text-xs font-medium">
-          Preview
-        </span>
       </div>
     </div>
   );
@@ -112,28 +152,38 @@ function ThemeDiscOption({
   themeDisc,
   checked,
   onSelect,
+  mode,
+  disabled,
 }: {
   readonly themeDisc: ThemeDisc;
   readonly checked: boolean;
   readonly onSelect: (theme: string) => void;
+  readonly mode: ColorMode;
+  readonly disabled: boolean;
 }): JSX.Element {
   return (
     <div className="relative">
       <input
         className="peer sr-only"
-        id={`theme-${themeDisc.value}`}
+        id={`theme-${mode}-${themeDisc.value}`}
         type="radio"
-        name="preference-theme-preview"
+        name={`preference-theme-preview-${mode}`}
         value={themeDisc.value}
         aria-label={themeDisc.name}
         checked={checked}
+        disabled={disabled}
         onChange={() => {
           onSelect(themeDisc.value);
         }}
       />
       <label
-        className="bg-muted hover:border-ring peer-checked:border-primary peer-focus-visible:border-ring peer-focus-visible:ring-ring/50 flex size-10 cursor-pointer items-center justify-center rounded-full border-2 border-transparent transition peer-focus-visible:ring-3"
-        htmlFor={`theme-${themeDisc.value}`}
+        className={cn(
+          "bg-muted flex size-10 items-center justify-center rounded-full border-2 border-transparent transition",
+          disabled
+            ? "opacity-50"
+            : "hover:border-ring peer-checked:border-primary peer-focus-visible:border-ring peer-focus-visible:ring-ring/50 cursor-pointer peer-focus-visible:ring-3",
+        )}
+        htmlFor={`theme-${mode}-${themeDisc.value}`}
         title={themeDisc.name}
       >
         <span

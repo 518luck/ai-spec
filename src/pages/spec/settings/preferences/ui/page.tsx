@@ -11,11 +11,13 @@ export function PreferencesPage(): JSX.Element {
     <HeaderedPageShell title="个人偏好">
       <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2">
         <ThemePreferencePreview
+          mode="light"
           title="浅色主题"
           description="拥抱阳光，界面也要精神抖擞。"
           icon={<Icons.themeLight className="size-5" />}
         />
         <ThemePreferencePreview
+          mode="dark"
           title="深色主题"
           description="属于夜猫子的温柔暗色。"
           icon={<Icons.themeDark className="size-5" />}
