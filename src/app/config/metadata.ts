@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
 import { appConfig } from "@/shared/configs/app.config";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: appConfig.appName,
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       {
-        url: "/crab_bookmark_glasses_centered_transparent.svg",
+        url: "/favicon.svg",
         type: "image/svg+xml",
         sizes: "any",
       },

@@ -12,7 +12,6 @@ import {
   IconFileText,
   IconMoonStars,
   IconPalette,
-  IconRobot,
   IconSettings,
   IconShield,
   IconSparkleHighlight,
@@ -23,12 +22,14 @@ import {
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
 
+import { LogoIcon } from "@/shared/assets/icons/logo";
+
 // 图标组件类型，兼容 tabler 图标和自定义 SVG 图标组件。
 export type Icon = TablerIcon | ComponentType<SVGProps<SVGSVGElement>>;
 
 // 统一管理应用内可复用图标，避免业务组件直接依赖图标库。
 export const Icons = {
-  logo: IconRobot,
+  logo: LogoIcon,
 
   // header
   brightness: IconBrightness,
