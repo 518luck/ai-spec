@@ -7,7 +7,7 @@ import { ThemePreferencePreview } from "./theme-preference-preview";
 export function PreferencesPage(): JSX.Element {
   return (
     <HeaderedPageShell title="个人偏好">
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid w-full grid-cols-1 gap-6 md:grid-cols-2">
         <ThemePreferencePreview />
         <ThemePreferencePreview />
       </div>
