@@ -46,10 +46,24 @@ export function ThemePreferencePreview({
   const displayedThemeName =
     THEMES.find((t) => t.value === displayedTheme)?.name ?? displayedTheme;
 
-  // 点击卡片切换明暗模式并恢复该模式保存的色彩主题
-  const handleCardClick = () => {
-    setColorMode(mode);
-    setActiveTheme(localTheme);
+  // 点击卡片切换明暗模式并恢复该模式保存的色彩主题，带圆形揭示动画
+  const handleCardClick = (e: React.MouseEvent) => {
+    const root = document.documentElement;
+
+    const apply = () => {
+      setColorMode(mode);
+      setActiveTheme(localTheme);
+    };
+
+    if (!document.startViewTransition) {
+      apply();
+      return;
+    }
+
+    root.style.setProperty("--x", `${e.clientX}px`);
+    root.style.setProperty("--y", `${e.clientY}px`);
+
+    document.startViewTransition(apply);
   };
 
   // 色盘点击仅切换色彩主题，不切换明暗
