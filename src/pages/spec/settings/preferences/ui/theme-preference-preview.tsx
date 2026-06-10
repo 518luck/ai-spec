@@ -128,45 +128,75 @@ function ThemePreviewCard({
   readonly mode: ColorMode;
   readonly themeValue: string;
 }): JSX.Element {
+  const isDark = mode === "dark";
+
+  const bg = isDark ? "#0f172a" : "#ffffff";
+  const fg = isDark ? "#f8fafc" : "#0f172a";
+  const card = isDark ? "#1e293b" : "#ffffff";
+  const border = isDark ? "#334155" : "#e2e8f0";
+  const navBar = isDark ? "#1e293b" : "#f1f5f9";
+  const dot = isDark ? "rgba(248,250,252,0.25)" : "rgba(15,23,42,0.25)";
+  const placeholder = isDark ? "rgba(248,250,252,0.2)" : "rgba(15,23,42,0.2)";
+  const strong = isDark ? "rgba(248,250,252,0.7)" : "rgba(15,23,42,0.7)";
+  const sidebar = isDark ? "rgba(30,41,59,0.5)" : "rgba(241,245,249,0.5)";
+
   return (
     <div
-      className={cn(
-        "overflow-hidden rounded-md border",
-        mode === "dark" && "dark",
-      )}
+      className="overflow-hidden rounded-md"
+      style={{ background: bg, borderColor: border, borderWidth: 1 }}
       data-theme={themeValue}
     >
-      <div className="bg-muted/30 flex items-center gap-2 border-b px-3 py-1.5">
-        <span className="bg-muted-foreground/25 size-2 rounded-full" />
-        <span className="bg-muted-foreground/25 size-2 rounded-full" />
-        <span className="bg-muted-foreground/25 size-2 rounded-full" />
-        <div className="bg-background ml-1.5 h-2.5 flex-1 rounded-full" />
+      <div
+        className="flex items-center gap-2 border-b px-3 py-1.5"
+        style={{ background: navBar, borderColor: border }}
+      >
+        <span className="size-2 rounded-full" style={{ background: dot }} />
+        <span className="size-2 rounded-full" style={{ background: dot }} />
+        <span className="size-2 rounded-full" style={{ background: dot }} />
+        <div className="ml-1.5 h-2.5 flex-1 rounded-full" style={{ background: bg }} />
       </div>
       <div className="grid grid-cols-[56px_1fr]">
-        <aside className="bg-muted/35 flex flex-col gap-1.5 border-r px-2 py-2.5">
-          <div className="bg-foreground/70 h-2 w-8 rounded-full" />
-          <div className="bg-muted-foreground/20 h-2 w-10 rounded-full" />
-          <div className="bg-muted-foreground/20 h-2 w-6 rounded-full" />
-          <div className="bg-muted-foreground/20 h-2 w-6 rounded-full" />
+        <aside
+          className="flex flex-col gap-1.5 border-r px-2 py-2.5"
+          style={{ background: sidebar, borderColor: border }}
+        >
+          <div className="h-2 w-8 rounded-full" style={{ background: strong }} />
+          <div className="h-2 w-10 rounded-full" style={{ background: placeholder }} />
+          <div className="h-2 w-6 rounded-full" style={{ background: placeholder }} />
+          <div className="h-2 w-6 rounded-full" style={{ background: placeholder }} />
         </aside>
         <main className="flex flex-col gap-2 p-2.5">
           <div className="flex items-center gap-2">
-            <div className="bg-foreground/70 h-2 w-16 rounded-full" />
-            <div className="bg-muted-foreground/20 h-2 w-20 rounded-full" />
+            <div className="h-2 w-16 rounded-full" style={{ background: strong }} />
+            <div className="h-2 w-20 rounded-full" style={{ background: placeholder }} />
           </div>
           <div className="flex gap-2">
-            <div className="bg-card h-8 flex-1 rounded-sm border" />
-            <div className="bg-card h-8 flex-1 rounded-sm border" />
+            <div
+              className="h-8 flex-1 rounded-sm"
+              style={{ background: card, borderColor: border, borderWidth: 1 }}
+            />
+            <div
+              className="h-8 flex-1 rounded-sm"
+              style={{ background: card, borderColor: border, borderWidth: 1 }}
+            />
           </div>
           <div className="flex gap-2">
-            <div className="bg-card h-10 flex-1 rounded-sm border" />
+            <div
+              className="h-10 flex-1 rounded-sm"
+              style={{ background: card, borderColor: border, borderWidth: 1 }}
+            />
           </div>
         </main>
       </div>
-      <div className="flex items-center justify-between gap-3 border-t px-4 py-2">
+      <div
+        className="flex items-center justify-between gap-3 border-t px-4 py-2"
+        style={{ borderColor: border }}
+      >
         <div>
           <span className="sr-only">Selected theme: </span>
-          <p className="text-sm font-semibold">{activeThemeName}</p>
+          <p className="text-sm font-semibold" style={{ color: fg }}>
+            {activeThemeName}
+          </p>
         </div>
       </div>
     </div>
