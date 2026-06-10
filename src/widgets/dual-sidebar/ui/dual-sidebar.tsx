@@ -79,14 +79,14 @@ export function DualSidebar({
           <Link
             href="/"
             aria-label="产品入口"
-            className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground flex size-10 items-center justify-center rounded-md"
+            className="s flex items-center justify-center rounded-md"
           >
-            <Icons.logo className="size-7" />
+            <Icons.logo className="size-8" />
           </Link>
 
           <div
             data-slot="dual-sidebar-business-nav-content"
-            className="mt-6 flex flex-col items-center gap-5"
+            className="mt-2 flex flex-col items-center gap-5"
           >
             {businessNavItems.map((item) => {
               const Icon = item.icon;
