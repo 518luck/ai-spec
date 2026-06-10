@@ -12,7 +12,7 @@ export function PreferencesPage(): JSX.Element {
   return (
     <HeaderedPageShell title="个人偏好">
       <p className="mb-6 text-sm">
-        定制{appConfig.appName}
+        定制 {appConfig.appName}{" "}
         的外观。你可以锁定单一主题，也可以跟随系统自动切换日夜模式。选项即选即生效，并会自动保存。
       </p>
       <ThemeModeSwitcher />
