@@ -10,8 +10,16 @@ type ThemeDisc = {
   readonly value: string;
 };
 
+type ThemePreferencePreviewProps = {
+  readonly title?: string;
+  readonly description?: string;
+};
+
 // 主题切换卡片
-export function ThemePreferencePreview(): JSX.Element {
+export function ThemePreferencePreview({
+  title = "主题外观",
+  description = "当系统唤醒浅色模式，此主题就会亮相。",
+}: ThemePreferencePreviewProps): JSX.Element {
   const { activeTheme, setActiveTheme } = useActiveTheme();
   const activeThemeName =
     THEMES.find((theme) => theme.value === activeTheme)?.name ?? activeTheme;
@@ -19,9 +27,9 @@ export function ThemePreferencePreview(): JSX.Element {
   return (
     <section className="bg-card text-card-foreground max-w-sm rounded-lg border shadow-xs">
       <div className="border-b px-5 py-4">
-        <h2 className="text-base font-semibold">主题外观</h2>
+        <h2 className="text-base font-semibold">{title}</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          当系统唤醒浅色模式，此主题就会亮相。
+          {description}
         </p>
       </div>
 

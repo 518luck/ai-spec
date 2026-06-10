@@ -7,7 +7,10 @@ import { ThemePreferencePreview } from "./theme-preference-preview";
 export function PreferencesPage(): JSX.Element {
   return (
     <HeaderedPageShell title="个人偏好">
-      <ThemePreferencePreview />
+      <div className="flex flex-wrap gap-4">
+        <ThemePreferencePreview />
+        <ThemePreferencePreview />
+      </div>
     </HeaderedPageShell>
   );
 }
