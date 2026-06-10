@@ -61,10 +61,22 @@ export function ThemePreferencePreview({
 
   return (
     <section
-      className="bg-card text-card-foreground cursor-pointer rounded-lg border shadow-xs"
+      className={cn(
+        "cursor-pointer rounded-lg shadow-xs transition",
+        isCurrentMode
+          ? "border-primary/50 bg-primary/5 text-card-foreground border"
+          : "bg-card text-card-foreground border",
+      )}
       onClick={handleCardClick}
     >
-      <div className="border-b px-5 py-4">
+      <div
+        className={cn(
+          "px-5 py-4",
+          isCurrentMode
+            ? "bg-primary/5 border-primary/20 border-b"
+            : "border-b",
+        )}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {icon}
