@@ -4,6 +4,7 @@ import { useTheme } from "next-themes";
 import type { JSX } from "react";
 
 import { DEFAULT_THEME } from "@/shared/configs/theme.config";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 import { Button } from "@/shared/ui/button";
 import {
@@ -26,8 +27,10 @@ const themeModeItems = [
 export function ThemeModeSwitcher(): JSX.Element {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const { setActiveTheme } = useActiveTheme();
+  const mounted = useMounted();
 
-  const currentMode: ThemeMode = theme === "system" ? "system" : "custom";
+  const currentMode: ThemeMode =
+    mounted ? (theme === "system" ? "system" : "custom") : "system";
 
   const handleModeChange = (value: string | null) => {
     if (!value) return;

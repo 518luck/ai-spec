@@ -12,6 +12,7 @@ import {
   setModeThemeCookie,
 } from "@/shared/configs/theme.config";
 import { cn } from "@/shared/lib/utils";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 import { Badge } from "@/shared/ui/badge";
 
@@ -36,13 +37,17 @@ export function ThemePreferencePreview({
 }: ThemePreferencePreviewProps): JSX.Element {
   const { setTheme: setColorMode, resolvedTheme } = useTheme();
   const { activeTheme, setActiveTheme } = useActiveTheme();
+  const mounted = useMounted();
 
-  const isCurrentMode = resolvedTheme === mode;
+  const safeResolvedTheme = mounted ? resolvedTheme : undefined;
+  const isCurrentMode = safeResolvedTheme === mode;
   const [localTheme, setLocalTheme] = useState<string>(
     () => getModeThemeCookie(mode) ?? DEFAULT_THEME,
   );
 
-  const displayedTheme = isCurrentMode ? activeTheme : localTheme;
+  const safeActiveTheme = mounted ? activeTheme : DEFAULT_THEME;
+  const safeLocalTheme = mounted ? localTheme : DEFAULT_THEME;
+  const displayedTheme = isCurrentMode ? safeActiveTheme : safeLocalTheme;
   const displayedThemeName =
     THEMES.find((t) => t.value === displayedTheme)?.name ?? displayedTheme;
 
@@ -167,22 +172,43 @@ function ThemePreviewCard({
         <span className="size-2 rounded-full" style={{ background: dot }} />
         <span className="size-2 rounded-full" style={{ background: dot }} />
         <span className="size-2 rounded-full" style={{ background: dot }} />
-        <div className="ml-1.5 h-2.5 flex-1 rounded-full" style={{ background: bg }} />
+        <div
+          className="ml-1.5 h-2.5 flex-1 rounded-full"
+          style={{ background: bg }}
+        />
       </div>
       <div className="grid grid-cols-[56px_1fr]">
         <aside
           className="flex flex-col gap-1.5 border-r px-2 py-2.5"
           style={{ background: sidebar, borderColor: border }}
         >
-          <div className="h-2 w-8 rounded-full" style={{ background: strong }} />
-          <div className="h-2 w-10 rounded-full" style={{ background: placeholder }} />
-          <div className="h-2 w-6 rounded-full" style={{ background: placeholder }} />
-          <div className="h-2 w-6 rounded-full" style={{ background: placeholder }} />
+          <div
+            className="h-2 w-8 rounded-full"
+            style={{ background: strong }}
+          />
+          <div
+            className="h-2 w-10 rounded-full"
+            style={{ background: placeholder }}
+          />
+          <div
+            className="h-2 w-6 rounded-full"
+            style={{ background: placeholder }}
+          />
+          <div
+            className="h-2 w-6 rounded-full"
+            style={{ background: placeholder }}
+          />
         </aside>
         <main className="flex flex-col gap-2 p-2.5">
           <div className="flex items-center gap-2">
-            <div className="h-2 w-16 rounded-full" style={{ background: strong }} />
-            <div className="h-2 w-20 rounded-full" style={{ background: placeholder }} />
+            <div
+              className="h-2 w-16 rounded-full"
+              style={{ background: strong }}
+            />
+            <div
+              className="h-2 w-20 rounded-full"
+              style={{ background: placeholder }}
+            />
           </div>
           <div className="flex gap-2">
             <div
