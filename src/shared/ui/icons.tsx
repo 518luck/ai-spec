@@ -10,11 +10,13 @@ import {
   IconHelpCircle,
   IconKey,
   IconFileText,
+  IconMoonStars,
   IconPalette,
   IconRobot,
   IconSettings,
   IconShield,
   IconSparkleHighlight,
+  IconSun,
   IconTextScanAi,
   IconUserCircle,
   IconUsersGroup,
@@ -51,4 +53,7 @@ export const Icons = {
 
   eye: IconEye,
   eyeOff: IconEyeOff,
+
+  themeLight: IconSun,
+  themeDark: IconMoonStars,
 };

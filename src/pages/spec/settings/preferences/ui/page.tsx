@@ -1,6 +1,8 @@
 import { HeaderedPageShell } from "@/widgets/page-shell";
 import type { JSX } from "react";
 
+import { Icons } from "@/shared/ui/icons";
+
 import { ThemePreferencePreview } from "./theme-preference-preview";
 
 // 渲染个人偏好设置页面，展示主题偏好预览样式。
@@ -11,10 +13,12 @@ export function PreferencesPage(): JSX.Element {
         <ThemePreferencePreview
           title="浅色主题"
           description="拥抱阳光，界面也要精神抖擞。"
+          icon={<Icons.themeLight className="size-5" />}
         />
         <ThemePreferencePreview
           title="深色主题"
           description="属于夜猫子的温柔暗色。"
+          icon={<Icons.themeDark className="size-5" />}
         />
       </div>
     </HeaderedPageShell>

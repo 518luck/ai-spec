@@ -1,6 +1,6 @@
 "use client";
 
-import type { JSX } from "react";
+import type { JSX, ReactNode } from "react";
 
 import { THEMES } from "@/shared/configs/theme.config";
 import { useActiveTheme } from "@/shared/providers/active-theme-providers";
@@ -13,12 +13,14 @@ type ThemeDisc = {
 type ThemePreferencePreviewProps = {
   readonly title?: string;
   readonly description?: string;
+  readonly icon?: ReactNode;
 };
 
 // 主题切换卡片
 export function ThemePreferencePreview({
   title = "主题外观",
   description = "当系统唤醒浅色模式，此主题就会亮相。",
+  icon,
 }: ThemePreferencePreviewProps): JSX.Element {
   const { activeTheme, setActiveTheme } = useActiveTheme();
   const activeThemeName =
@@ -27,7 +29,10 @@ export function ThemePreferencePreview({
   return (
     <section className="bg-card text-card-foreground rounded-lg border shadow-xs">
       <div className="border-b px-5 py-4">
-        <h2 className="text-base font-semibold">{title}</h2>
+        <div className="flex items-center gap-2">
+          {icon}
+          <h2 className="text-base font-semibold">{title}</h2>
+        </div>
         <p className="text-muted-foreground mt-1 text-sm">{description}</p>
       </div>
 
@@ -86,6 +91,7 @@ function ThemePreviewCard({
           <div className="flex gap-2">
             <div className="bg-card h-10 flex-1 rounded-sm border" />
           </div>
+          <div className="flex items-center gap-2"></div>
         </main>
       </div>
       <div className="flex items-center justify-between gap-3 border-t px-4 py-2">
