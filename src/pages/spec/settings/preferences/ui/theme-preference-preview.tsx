@@ -88,7 +88,11 @@ export function ThemePreferencePreview({
       </div>
 
       <div className="flex flex-col gap-4 p-5">
-        <ThemePreviewCard activeThemeName={displayedThemeName} />
+        <ThemePreviewCard
+          activeThemeName={displayedThemeName}
+          mode={mode}
+          themeValue={displayedTheme}
+        />
 
         <div
           className="flex flex-wrap gap-2"
@@ -114,14 +118,24 @@ export function ThemePreferencePreview({
   );
 }
 
-// 预览卡片。
+// 预览卡片，根据 mode 强制渲染对应的明暗风格。
 function ThemePreviewCard({
   activeThemeName,
+  mode,
+  themeValue,
 }: {
   readonly activeThemeName: string;
+  readonly mode: ColorMode;
+  readonly themeValue: string;
 }): JSX.Element {
   return (
-    <div className="bg-background overflow-hidden rounded-md border">
+    <div
+      className={cn(
+        "overflow-hidden rounded-md border",
+        mode === "dark" && "dark",
+      )}
+      data-theme={themeValue}
+    >
       <div className="bg-muted/30 flex items-center gap-2 border-b px-3 py-1.5">
         <span className="bg-muted-foreground/25 size-2 rounded-full" />
         <span className="bg-muted-foreground/25 size-2 rounded-full" />
