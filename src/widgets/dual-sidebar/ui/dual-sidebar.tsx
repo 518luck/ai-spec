@@ -23,6 +23,7 @@ import {
 } from "../model/navigation-data";
 import { AnimatedArea } from "./animated-area";
 import { AnimatedNavIcon } from "./animated-nav-icon";
+import { UserAvatarPopover } from "./user-avatar-popover";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
 
@@ -116,6 +117,7 @@ export function DualSidebar({
           >
             <Icons.helpCircle className="size-5" />
           </div>
+          <UserAvatarPopover />
         </div>
       </nav>
 

@@ -10,6 +10,7 @@ import {
   IconHelpCircle,
   IconKey,
   IconFileText,
+  IconLogout,
   IconMoonStars,
   IconPalette,
   IconSettings,
@@ -51,6 +52,7 @@ export const Icons = {
 
   gift: IconGift,
   helpCircle: IconHelpCircle,
+  logout: IconLogout,
 
   eye: IconEye,
   eyeOff: IconEyeOff,
