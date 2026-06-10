@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import { cn } from "@/shared/lib/utils";
+import { useEffect, useRef } from "react";
 
 type Particle = {
   x: number;
@@ -167,23 +167,21 @@ export function ParticleNameBackground({
 
     const animate = () => {
       drawBackground();
-      introProgress = Math.min(1, introProgress + 0.012); // 初始阶段逐步增强收束力度
+      introProgress = Math.min(1, introProgress + 0.012);
       const attractionStrength = 0.004 + 0.014 * introProgress;
       ctx.save();
-      ctx.globalCompositeOperation = "lighter"; // 让相近粒子颜色和亮度彼此叠加
-      ctx.shadowColor = glowColor;
+      ctx.globalCompositeOperation = "lighter";
 
       for (const particle of particles) {
         const revealProgress = Math.min(
           1,
           Math.max(0, (introProgress - particle.revealAt) / 0.2),
         );
-        if (revealProgress <= 0) continue; // 还没到自己的出现时机就先不画
+        if (revealProgress <= 0) continue;
 
         const toTargetX = particle.tx - particle.x;
         const toTargetY = particle.ty - particle.y;
 
-        // 让粒子逐渐被目标文字上的采样点吸过去
         particle.vx += toTargetX * attractionStrength * revealProgress;
         particle.vy += toTargetY * attractionStrength * revealProgress;
 
@@ -194,19 +192,25 @@ export function ParticleNameBackground({
         if (mouse.active && distance < interactionRadius) {
           const force = (1 - distance / interactionRadius) * scatterForce;
           const angle = Math.atan2(dy, dx);
-          // 鼠标靠近时施加一个向外的排斥力
           particle.vx += Math.cos(angle) * force * 2.4;
           particle.vy += Math.sin(angle) * force * 2.4;
         }
 
-        particle.vx *= 0.88; // 阻尼让运动逐渐稳定，避免一直抖动
+        particle.vx *= 0.88;
         particle.vy *= 0.88;
         particle.x += particle.vx;
         particle.y += particle.vy;
 
+        const glowAlpha = particle.alpha * revealProgress * 0.15;
+        const coreAlpha = particle.alpha * revealProgress;
+
         ctx.beginPath();
-        ctx.fillStyle = `hsla(${particle.hue}, 100%, ${58 - revealProgress * 6}%, ${particle.alpha * revealProgress})`; // 提高亮度，让字心更实一些
-        ctx.shadowBlur = 6 - revealProgress * 2; // 降低模糊半径，避免字形边界过糊
+        ctx.fillStyle = `hsla(${particle.hue}, 100%, 70%, ${glowAlpha})`;
+        ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.fillStyle = `hsla(${particle.hue}, 100%, ${58 - revealProgress * 6}%, ${coreAlpha})`;
         ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
       }

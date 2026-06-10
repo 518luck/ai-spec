@@ -1,7 +1,7 @@
 import { appConfig } from "@/shared/configs/app.config";
 import { SidePanel } from "@/widgets/auth-side-panel";
-import { TITLE_NAME_COLOR } from "../config/title-name-color";
 import { Manrope } from "next/font/google";
+import { TITLE_NAME_COLOR } from "../config/title-name-color";
 import { InteractiveGridPattern } from "./Interactive-grid-pattern";
 import { ParticleNameBackground } from "./particle-name-background";
 
@@ -27,7 +27,7 @@ export default function AuthLayout({
               <ParticleNameBackground
                 className="h-18 w-full max-w-md"
                 text={appConfig.appName}
-                particleCount={1500}
+                particleCount={230}
                 glowColor={TITLE_NAME_COLOR.glowColor}
                 baseHue={TITLE_NAME_COLOR.baseHue}
                 hueRange={TITLE_NAME_COLOR.hueRange}
