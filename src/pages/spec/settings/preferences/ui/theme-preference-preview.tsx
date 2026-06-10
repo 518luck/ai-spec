@@ -10,7 +10,7 @@ type ThemeDisc = {
   readonly value: string;
 };
 
-// 展示类似 GitHub 外观设置的主题预览与色盘选择样式。
+// 主题切换卡片
 export function ThemePreferencePreview(): JSX.Element {
   const { activeTheme, setActiveTheme } = useActiveTheme();
   const activeThemeName =
@@ -21,7 +21,7 @@ export function ThemePreferencePreview(): JSX.Element {
       <div className="border-b px-5 py-4">
         <h2 className="text-base font-semibold">主题外观</h2>
         <p className="text-muted-foreground mt-1 text-sm">
-          This theme will be active when your system is set to light mode
+          当系统唤醒浅色模式，此主题就会亮相。
         </p>
       </div>
 
@@ -47,7 +47,7 @@ export function ThemePreferencePreview(): JSX.Element {
   );
 }
 
-// 绘制当前选中主题的紧凑预览卡片。
+// 预览卡片。
 function ThemePreviewCard({
   activeThemeName,
 }: {
