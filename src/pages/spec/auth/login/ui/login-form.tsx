@@ -2,6 +2,7 @@
 
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { AuthMethodsSeparator } from "@/shared/ui/auth-methods-separator";
+import { ClientOnly } from "@/shared/ui/client-only";
 import type { JSX } from "react";
 import {
   email,
@@ -60,9 +61,11 @@ export function LoginForm({
   methods = defaultLoginMethods,
 }: LoginFormProps): JSX.Element {
   return (
-    <LoginProvider>
-      <LoginFormContent methods={methods} />
-    </LoginProvider>
+    <ClientOnly>
+      <LoginProvider>
+        <LoginFormContent methods={methods} />
+      </LoginProvider>
+    </ClientOnly>
   );
 }
 
