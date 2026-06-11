@@ -10,6 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  schemas  = ["auth"]
 }
 
 // 用户本人信息
@@ -27,6 +28,8 @@ model User {
 
   accounts Account[]
   sessions Session[]
+
+  @@schema("auth")
 }
 
 // 第三方登陆账户
@@ -48,6 +51,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId]) // 联合唯一索引
+  @@schema("auth")
 }
 
 // 会话
@@ -59,6 +63,7 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@schema("auth")
 }
 
 // 验证码
@@ -69,6 +74,7 @@ model VerificationToken {
   expires    DateTime
 
   @@id([identifier, token])
+  @@schema("auth")
 }
 
 //自定义的 OTP 验证码
@@ -78,4 +84,5 @@ model EmailVerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@schema("auth")
 }

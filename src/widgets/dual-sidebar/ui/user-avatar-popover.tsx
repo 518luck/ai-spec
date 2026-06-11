@@ -4,16 +4,20 @@ import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";
+import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Icons } from "@/shared/ui/icons";
-import { Popover, PopoverContent, PopoverHeader, PopoverTitle, PopoverTrigger } from "@/shared/ui/popover";
-import { Separator } from "@/shared/ui/separator";
 import {
-  Avatar,
-  AvatarFallback,
-} from "@/shared/ui/avatar";
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/shared/ui/popover";
+import { Separator } from "@/shared/ui/separator";
 
 // 渲染用户头像弹窗，展示个人信息占位与退出登录入口
 export function UserAvatarPopover(): JSX.Element {
+  // const { data: session } = useSession();
   const router = useRouter();
 
   return (
@@ -23,9 +27,11 @@ export function UserAvatarPopover(): JSX.Element {
           "flex size-9 cursor-pointer items-center justify-center rounded-md transition-colors",
         )}
         render={
-          <Avatar>
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
+          <button type="button">
+            <Avatar>
+              <AvatarFallback>U</AvatarFallback>
+            </Avatar>
+          </button>
         }
       />
       <PopoverContent side="right" align="end" sideOffset={8} className="w-56">
