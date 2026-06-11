@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  AUTH_PROVIDER_EMAIL,
+  AUTH_PROVIDER_GITHUB,
+  AUTH_PROVIDER_GOOGLE,
+  type AuthProvider,
+} from "@/shared/lib/auth/constants";
 import { useLocalStorage } from "@/shared/hooks/use-local-storage";
 import {
   createContext,
@@ -10,20 +16,12 @@ import {
   useState,
 } from "react";
 
-// Google 登录方式标识。
-export const google = "google" as const;
+// 登录方式重新导出，保持当前 slice 内引用简洁
+export const google = AUTH_PROVIDER_GOOGLE;
+export const email = AUTH_PROVIDER_EMAIL;
+export const github = AUTH_PROVIDER_GITHUB;
 
-// 邮箱登录方式标识。
-export const email = "email" as const;
-
-// GitHub 登录方式标识。
-export const github = "github" as const;
-
-// 密码凭据字段标识。
-export const password = "password" as const;
-
-export type LoginMethod = typeof google | typeof email | typeof github;
-export type LoginCredentialField = typeof email | typeof password;
+export type LoginMethod = AuthProvider;
 
 type LoginContextType = {
   email: string;

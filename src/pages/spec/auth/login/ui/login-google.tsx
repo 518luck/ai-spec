@@ -1,5 +1,6 @@
 "use client";
 
+import { AUTH_REDIRECT_HOME } from "@/shared/lib/auth/constants";
 import { Google } from "@/shared/assets/icons";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
@@ -16,7 +17,7 @@ export function LoginGoogle(): JSX.Element {
   const handleLogin = (): void => {
     setPreferredMethod(google);
     setIsPending(true);
-    void signIn(google);
+    void signIn(google, { callbackUrl: AUTH_REDIRECT_HOME });
   };
 
   return (

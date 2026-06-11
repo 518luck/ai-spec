@@ -1,65 +1,48 @@
+"use client";
+
+import {
+  AUTH_PROVIDER_GITHUB,
+  AUTH_PROVIDER_GOOGLE,
+  AUTH_REDIRECT_HOME,
+  type AuthProvider,
+} from "@/shared/lib/auth/constants";
 import { Github, Google } from "@/shared/assets/icons";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { signIn } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
+// 渲染第三方 OAuth 注册入口
 export const SignUpOAuth = ({
   methods,
 }: {
-  methods: ("email" | "google" | "github")[];
+  methods: AuthProvider[];
 }) => {
-  // TODO: 添加一个跳转操作,用户登陆进来直接跳转到之前没登陆的页面
+  const [clickedProvider, setClickedProvider] = useState<AuthProvider | null>(null);
 
-  const [clickedGoogle, setClickedGoogle] = useState(false);
-  const [clickedGithub, setClickedGithub] = useState(false);
-
-  useEffect(() => {
-    // 当离开页面时，重置状态
-    return () => {
-      setClickedGoogle(false);
-      setClickedGithub(false);
-    };
-  }, []);
-
-  // 前端点击按钮
-  //   ↓
-  // 调用 NextAuth 的 signIn("google")
-  //   ↓
-  // 浏览器跳到 /api/auth/signin/google
-  //   ↓
-  // NextAuth 再把用户跳到 Google 授权页
-  //   ↓
-  // Google 登录成功后回调到 /api/auth/callback/google
-  //   ↓
-  // NextAuth 后端处理 code/state，创建用户、Account、Session
-  //   ↓
-  // 最后跳到 callbackUrl / redirectTo
+  const handleClick = (provider: AuthProvider): void => {
+    setClickedProvider(provider);
+    void signIn(provider, { callbackUrl: AUTH_REDIRECT_HOME });
+  };
 
   return (
     <>
-      {methods.includes("google") && (
+      {methods.includes(AUTH_PROVIDER_GOOGLE) && (
         <Button
           variant="secondary"
-          onClick={() => {
-            setClickedGoogle(true);
-            signIn("google");
-          }}
+          onClick={() => handleClick(AUTH_PROVIDER_GOOGLE)}
         >
-          {clickedGoogle && <Spinner />}
+          {clickedProvider === AUTH_PROVIDER_GOOGLE && <Spinner />}
           <Google />
           使用 Google 帐号继续
         </Button>
       )}
-      {methods.includes("github") && (
+      {methods.includes(AUTH_PROVIDER_GITHUB) && (
         <Button
           variant="secondary"
-          onClick={() => {
-            setClickedGithub(true);
-            signIn("github");
-          }}
+          onClick={() => handleClick(AUTH_PROVIDER_GITHUB)}
         >
-          {clickedGithub && <Spinner />}
+          {clickedProvider === AUTH_PROVIDER_GITHUB && <Spinner />}
           <Github />
           使用 GitHub 帐号继续
         </Button>

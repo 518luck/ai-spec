@@ -1,13 +1,15 @@
 "use client";
 
+import {
+  AUTH_PROVIDER_EMAIL,
+  AUTH_PROVIDER_GITHUB,
+  AUTH_PROVIDER_GOOGLE,
+} from "@/shared/lib/auth/constants";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { AuthMethodsSeparator } from "@/shared/ui/auth-methods-separator";
 import { ClientOnly } from "@/shared/ui/client-only";
 import type { JSX } from "react";
 import {
-  email,
-  github,
-  google,
   type LoginMethod,
   LoginProvider,
   useLoginContext,
@@ -16,14 +18,14 @@ import { LoginEmail } from "./login-email";
 import { LoginGithub } from "./login-github";
 import { LoginGoogle } from "./login-google";
 
-type OauthLoginMethod = typeof google | typeof github;
+type OauthLoginMethod = typeof AUTH_PROVIDER_GOOGLE | typeof AUTH_PROVIDER_GITHUB;
 
 type LoginFormProps = {
   methods?: readonly LoginMethod[];
 };
 
-const defaultLoginMethods = [email, google, github] as const;
-const oauthLoginMethods = [google, github] as const;
+const defaultLoginMethods = [AUTH_PROVIDER_EMAIL, AUTH_PROVIDER_GOOGLE, AUTH_PROVIDER_GITHUB] as const;
+const oauthLoginMethods = [AUTH_PROVIDER_GOOGLE, AUTH_PROVIDER_GITHUB] as const;
 
 // 根据用户偏好调整第三方登录按钮的显示顺序。
 const getOrderedOauthMethods = (
@@ -49,7 +51,7 @@ const getOrderedOauthMethods = (
 
 // 渲染单个第三方登录方式组件。
 const renderOauthMethod = (method: OauthLoginMethod): JSX.Element => {
-  if (method === google) {
+  if (method === AUTH_PROVIDER_GOOGLE) {
     return <LoginGoogle key={method} />;
   }
 
@@ -72,11 +74,11 @@ export function LoginForm({
 // 按上次登录方式组织邮箱登录与第三方登录顺序。
 function LoginFormContent({ methods }: Required<LoginFormProps>): JSX.Element {
   const { preferredMethod } = useLoginContext();
-  const supportsEmail = methods.includes(email);
+  const supportsEmail = methods.includes(AUTH_PROVIDER_EMAIL);
   const oauthMethods = getOrderedOauthMethods(methods, preferredMethod);
   const shouldShowEmailFirst =
     preferredMethod === null ||
-    preferredMethod === email ||
+    preferredMethod === AUTH_PROVIDER_EMAIL ||
     !oauthMethods.some((method) => method === preferredMethod);
 
   return (

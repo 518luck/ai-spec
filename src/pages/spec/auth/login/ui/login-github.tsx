@@ -1,5 +1,6 @@
 "use client";
 
+import { AUTH_REDIRECT_HOME } from "@/shared/lib/auth/constants";
 import { Github } from "@/shared/assets/icons";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
@@ -16,7 +17,7 @@ export function LoginGithub(): JSX.Element {
   const handleLogin = (): void => {
     setPreferredMethod(github);
     setIsPending(true);
-    void signIn(github);
+    void signIn(github, { callbackUrl: AUTH_REDIRECT_HOME });
   };
 
   return (

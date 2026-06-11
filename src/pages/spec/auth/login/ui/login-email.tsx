@@ -1,22 +1,21 @@
 "use client";
 
+import {
+  AUTH_FIELD_PASSWORD,
+  AUTH_PROVIDER_EMAIL,
+  AUTH_REDIRECT_HOME,
+} from "@/shared/lib/auth/constants";
 import { checkLoginEmailAction } from "@/shared/lib/actions/check-login-email";
 import { Button } from "@/shared/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { Spinner } from "@/shared/ui/spinner";
-import { useAction } from "next-safe-action/hooks";
 import { signIn } from "next-auth/react";
+import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
 import { type JSX, type SubmitEvent, useState } from "react";
 import { toast } from "sonner";
-import {
-  email as emailMethod,
-  password as passwordField,
-  useLoginContext,
-} from "../model/login-context";
-
-const specHomePath = "/spec/prompts";
+import { useLoginContext } from "../model/login-context";
 
 // 渲染邮箱登录表单并按需展开密码输入框。
 export function LoginEmail(): JSX.Element {
@@ -89,7 +88,7 @@ export function LoginEmail(): JSX.Element {
       email,
       password,
       redirect: false,
-      callbackUrl: specHomePath,
+      callbackUrl: AUTH_REDIRECT_HOME,
     });
 
     if (!signInResult?.ok) {
@@ -98,8 +97,8 @@ export function LoginEmail(): JSX.Element {
       return;
     }
 
-    setPreferredMethod(emailMethod);
-    router.replace(signInResult.url ?? specHomePath);
+    setPreferredMethod(AUTH_PROVIDER_EMAIL);
+    router.replace(signInResult.url ?? AUTH_REDIRECT_HOME);
   };
 
   return (
@@ -110,7 +109,7 @@ export function LoginEmail(): JSX.Element {
             <FieldLabel htmlFor="login-email">邮箱</FieldLabel>
             <Input
               id="login-email"
-              name={emailMethod}
+              name={AUTH_PROVIDER_EMAIL}
               type="email"
               placeholder="your-email@example.com"
               autoComplete="email"
@@ -125,8 +124,8 @@ export function LoginEmail(): JSX.Element {
               <FieldLabel htmlFor="login-password">密码</FieldLabel>
               <Input
                 id="login-password"
-                name={passwordField}
-                type={passwordField}
+                name={AUTH_FIELD_PASSWORD}
+                type={AUTH_FIELD_PASSWORD}
                 placeholder="password"
                 autoComplete="current-password"
                 required
@@ -149,7 +148,7 @@ export function LoginEmail(): JSX.Element {
         {isSubmitting && <Spinner />}
         {isSigningIn ? "登录中..." : "登录"}
       </Button>
-      {preferredMethod === emailMethod && (
+      {preferredMethod === AUTH_PROVIDER_EMAIL && (
         <p className="text-muted-foreground mt-2 text-center text-xs font-medium">
           你上次使用邮箱登录的
         </p>
