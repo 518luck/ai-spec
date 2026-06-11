@@ -20,7 +20,10 @@ export const AUTH_PROVIDER_GITHUB = "github" as const;
 export const AUTH_FIELD_PASSWORD = "password" as const;
 
 // 登录后跳转地址
-export const AUTH_REDIRECT_HOME = "/spec/prompts";
+export const AUTH_REDIRECT_HOME = "/spec/personal";
 
 // 登录方式联合类型
-export type AuthProvider = typeof AUTH_PROVIDER_GOOGLE | typeof AUTH_PROVIDER_EMAIL | typeof AUTH_PROVIDER_GITHUB;
+export type AuthProvider =
+  | typeof AUTH_PROVIDER_GOOGLE
+  | typeof AUTH_PROVIDER_EMAIL
+  | typeof AUTH_PROVIDER_GITHUB;
