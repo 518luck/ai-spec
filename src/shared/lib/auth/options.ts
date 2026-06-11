@@ -12,6 +12,7 @@ import { signInSchema } from "@/shared/lib/zod/schemas/auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import { isProd } from "./constants";
 
@@ -93,6 +94,13 @@ export const authOptions: NextAuthConfig = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true, //允许按相同邮箱把 Google 登录和已有账号关联起来
+      authorization: { params: { prompt: "select_account" } },
+    }),
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
+      authorization: { params: { login: "true" } },
     }),
   ],
   // 配置 session token cookie 的名称和安全属性
