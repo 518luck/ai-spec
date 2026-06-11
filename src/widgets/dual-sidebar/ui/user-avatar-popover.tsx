@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import type { JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";
@@ -17,9 +17,6 @@ import { Separator } from "@/shared/ui/separator";
 
 // 渲染用户头像弹窗，展示个人信息占位与退出登录入口
 export function UserAvatarPopover(): JSX.Element {
-  // const { data: session } = useSession();
-  const router = useRouter();
-
   return (
     <Popover>
       <PopoverTrigger
@@ -41,7 +38,7 @@ export function UserAvatarPopover(): JSX.Element {
         <Separator />
         <button
           type="button"
-          onClick={() => router.push("/spec/register")}
+          onClick={() => signOut({ redirectTo: "/spec/login" })}
           className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2 rounded-md text-sm transition-colors"
         >
           <Icons.logout className="size-4" />

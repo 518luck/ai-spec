@@ -102,6 +102,10 @@ export const authOptions: NextAuthConfig = {
     },
   },
   // 自定义认证页面路由，覆盖 NextAuth 默认页面
+  // v5 版本功能
+  // 未登录用户访问受保护页面时重定向
+  // useSession({ required: true }) 触发重定向
+  // signIn() 无参数时的默认跳转
   pages: {
     signIn: "/spec/login",
     error: "/spec/login",
