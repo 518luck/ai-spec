@@ -1,8 +1,32 @@
-# Redis 限流器
+# Redis 连接与限流器
 
-本目录提供基于 Redis 的频率限制能力，底层使用 `rate-limiter-flexible` 的积分消耗模型。
+本目录管理所有 Redis 连接和基于 Redis 的频率限制能力。
 
-## 积分模型
+## 目录结构
+
+```
+redis/
+├── clients.ts          # 统一管理两个 Redis 连接（限流 + 队列）
+├── reatlimit.ts        # 限流逻辑（rate-limiter-flexible）
+└── AGENTS.md
+```
+
+### 为什么需要两个连接
+
+`clients.ts` 提供两个 getter，各自返回配置不同的 Redis 连接：
+
+| getter | maxRetriesPerRequest | 用途 |
+| --- | --- | --- |
+| `getRatelimitRedis()` | 20（默认） | 限流，Redis 故障时快速报错 |
+| `getBullMQRedis()` | null | BullMQ 要求，Redis 故障时无限等待重连 |
+
+两个连接共用一个工厂函数 `createRedisClient(maxRetriesPerRequest)`，但各自维护独立的全局单例，互不干扰。
+
+## 限流器
+
+底层使用 `rate-limiter-flexible` 的积分消耗模型。
+
+### 积分模型
 
 限流器不按"次数"计，而是按"积分"计：
 
@@ -13,7 +37,7 @@
 
 示例：上限 10 积分，每次消耗 2 积分 → 实际 1 分钟内最多 5 次请求。
 
-## key 命名规范
+### key 命名规范
 
 key 格式：`模块:动作:标识符`，模块和动作之间使用冒号分隔，单个分段内的多词名称使用短横线连接。
 
@@ -27,7 +51,7 @@ key 格式：`模块:动作:标识符`，模块和动作之间使用冒号分隔
 
 新增 key 时沿用 `模块:动作:标识符` 格式，标识符选择能唯一区分调用者的值（邮箱、IP、用户 ID 等）。
 
-## 使用方式
+### 使用方式
 
 ```ts
 import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
@@ -45,4 +69,4 @@ await ratelimit({ key: "login:attempts:email", points: 2, duration: 60 });
 
 - 优先复用 `ratelimiter` 和 `ratelimit()`；需要不同上限时先尝试通过调整 `points`（每次消耗量）或 `duration` 实现。
 - 当现有限流器的积分上限、时间窗口或阻塞时长无法满足需求时，可以新建限流器实例，但必须先向用户说明原因并经用户同意后才能创建。
-- `client.ts` 导出的 `redis` 实例同时作为限流器的存储客户端；如需新增非限流的 Redis 用途，复用该实例，不要另建连接。
+- `clients.ts` 提供两个 getter：`getRatelimitRedis()` 供限流器使用，`getBullMQRedis()` 供 BullMQ 使用，两者不要混用。

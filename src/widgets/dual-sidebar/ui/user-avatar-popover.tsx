@@ -18,6 +18,8 @@ import { Separator } from "@/shared/ui/separator";
 // 渲染用户头像弹窗，展示个人信息占位与退出登录入口
 export function UserAvatarPopover(): JSX.Element {
   const { data: session } = useSession();
+  console.log("🚀 ~ UserAvatarPopover ~ session:", session);
+
   return (
     <Popover>
       <PopoverTrigger

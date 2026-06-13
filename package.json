@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "worker": "tsx worker.ts",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -26,6 +27,7 @@
     "@prisma/client": "^7.8.0",
     "@tabler/icons-react": "^3.44.0",
     "bcryptjs": "^3.0.3",
+    "bullmq": "^5.78.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "input-otp": "^1.4.2",
@@ -67,6 +69,7 @@
     "prisma": "^7.8.0",
     "svgo": "^4.0.1",
     "tailwindcss": "^4",
+    "tsx": "^4.22.4",
     "typescript": "^5"
   }
 }
