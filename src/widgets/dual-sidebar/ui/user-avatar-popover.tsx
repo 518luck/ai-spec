@@ -1,6 +1,6 @@
 "use client";
 
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import type { JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";
@@ -17,6 +17,7 @@ import { Separator } from "@/shared/ui/separator";
 
 // 渲染用户头像弹窗，展示个人信息占位与退出登录入口
 export function UserAvatarPopover(): JSX.Element {
+  const { data: session } = useSession();
   return (
     <Popover>
       <PopoverTrigger

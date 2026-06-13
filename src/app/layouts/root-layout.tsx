@@ -1,6 +1,7 @@
 import { RootThemeProvider } from "@/app/providers/root-theme-provider";
 import { ActiveThemeProvider } from "@/shared/providers/active-theme-providers";
 import { Toaster } from "@/shared/ui/sonner";
+import { SessionProvider } from "next-auth/react";
 import { Oxanium, Source_Code_Pro, Source_Serif_4 } from "next/font/google";
 
 const oxanium = Oxanium({
@@ -39,7 +40,9 @@ export function RootLayoutShell({ children }: { children: React.ReactNode }) {
           enableColorScheme
         >
           {/* TODO 这个地方应该从服务器获取主题然后传递下去暂时不写 */}
-          <ActiveThemeProvider>{children}</ActiveThemeProvider>
+          <SessionProvider>
+            <ActiveThemeProvider>{children}</ActiveThemeProvider>
+          </SessionProvider>
           <Toaster />
         </RootThemeProvider>
       </body>
