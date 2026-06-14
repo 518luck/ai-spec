@@ -8,3 +8,11 @@ export interface ImageOptions {
   height?: number;
   headers?: Record<string, string>;
 }
+
+// upload 方法的参数对象
+export interface UploadParams {
+  key: string;
+  body: string | Blob | Buffer;
+  options?: ImageOptions;
+  visibility?: BucketVisibility;
+}

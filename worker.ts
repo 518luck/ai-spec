@@ -1,3 +1,5 @@
+import "dotenv/config";
+
 import { Worker } from "bullmq";
 import { createLogger } from "./src/shared/lib/infrastructure/axiom/server";
 import { AVATAR_SYNC_QUEUE_CONFIG } from "./src/shared/lib/infrastructure/queue/constants";

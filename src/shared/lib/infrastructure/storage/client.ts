@@ -3,7 +3,7 @@ import "server-only";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 import { S3_CONFIG } from "./constants";
-import type { BucketVisibility, ImageOptions } from "./types";
+import type { BucketVisibility, ImageOptions, UploadParams } from "./types";
 import { base64ToBlob, isBase64, isUrl, urlToBlob } from "./utils";
 
 let s3StorageClient: S3StorageClient | undefined;
@@ -34,12 +34,12 @@ export class S3StorageClient {
   }
 
   // 上传文件到 S3 存储桶并返回公开访问 URL
-  async upload(
-    key: string,
-    body: string | Blob | Buffer,
-    options?: ImageOptions,
-    visibility: BucketVisibility = "public",
-  ): Promise<string> {
+  async upload({
+    key,
+    body,
+    options,
+    visibility = "public",
+  }: UploadParams): Promise<string> {
     const targetBucket = this._resolveBucket(visibility);
     const resolvedBody = await this._resolveBody(body, options);
 
@@ -47,7 +47,9 @@ export class S3StorageClient {
       Bucket: targetBucket,
       Key: key,
       Body: resolvedBody,
-      ContentType: options?.contentType,
+      ContentType:
+        options?.contentType ??
+        (resolvedBody instanceof Blob ? resolvedBody.type : undefined),
     });
 
     await this.s3Client.send(command);
