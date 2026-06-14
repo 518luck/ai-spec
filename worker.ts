@@ -1,5 +1,7 @@
 import "dotenv/config";
 
+//TODO :后面这个需要独立创建一个项目,变成一个独立的服务，专门负责处理队列任务，不能和 Next.js 混在一起，否则会有很多不必要的依赖和性能问题
+
 import { Worker } from "bullmq";
 import { AVATAR_SYNC_QUEUE_CONFIG } from "./src/shared/lib/infrastructure/queue/constants";
 import { processSyncOauthAvatar } from "./src/shared/lib/infrastructure/queue/processors/sync-oauth-avatar";
