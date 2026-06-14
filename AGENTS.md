@@ -133,6 +133,25 @@ function SpecEditorPage(): React.JSX.Element {
 - 默认导出或对外导出的主组件放在文件上方。
 - 主组件下方的辅助组件、工具函数，按主组件内从上到下的引用顺序声明。
 
+### 类组织风格
+
+- 私有属性放在最前面，构造函数紧随其后。
+- 公开方法放中间，核心功能在前，辅助方法在后。
+- 私有方法统一放在类的最底部，使用 `_` 前缀命名。
+
+```typescript
+class StorageClient {
+  private bucket: string;          // ① 私有属性
+
+  constructor() { ... }            // ② 构造函数
+
+  async upload() { ... }           // ③ 公开方法（核心）
+  async getSignedUrl() { ... }     // ③ 公开方法（辅助）
+
+  private _resolveBucket() { ... } // ④ 私有方法（最底部）
+}
+```
+
 ## 验证命令
 
 完成代码修改后，根据变更范围运行相关检查：
