@@ -12,7 +12,7 @@
 - `actions/`：基于 `next-safe-action` 的 Server Action、action client 和 action middleware。
 - `api/`：请求上下文、运行环境和 RBAC 等服务端辅助逻辑；不是 Next.js Route Handler 目录。
 - `auth/`：NextAuth 配置、session 读取、OTP 和认证相关常量。
-- `infrastructure/`：Redis、Axiom（日志）、Resend/React Email 等第三方服务适配层。
+- `infrastructure/`：Redis、Axiom（日志）、Resend/React Email、BullMQ 队列等第三方服务适配层。
 - `zod/`：跨入口复用的 Zod 校验 schema。
 - `utils.ts`：少量跨模块通用工具，避免继续膨胀成业务或基础设施集合。
 
@@ -32,3 +32,4 @@
 - `infrastructure/redis/reatlimit.ts` 是当前已有导入路径；不要新增平行的 `ratelimit.ts`，如需更名必须同步更新所有调用方。
 - 邮件发送在缺少 `RESEND_API_KEY` 时会跳过发送并返回空结果；调整失败策略前必须检查调用方是否依赖这种降级行为。
 - 新增或修改 RBAC 资源、权限动作时，同时检查 `api/rbac/resources.ts` 和 `api/rbac/permissions.ts`，保持资源 key、权限 action 与角色映射一致。
+- 业务后台任务（发邮件、头像同步、异步 workflow 等需可靠执行/重试的）统一走 `infrastructure/queue`（BullMQ，独立 worker 进程）；Next.js `after` 仅用于请求生命周期内的日志 flush，不要用它跑业务后台任务。

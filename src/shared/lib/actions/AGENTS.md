@@ -66,21 +66,17 @@ export const submitExampleAction = actionClient
 - 返回值必须可序列化；更新成功且前端不需要数据时返回 `{ ok: true }`。
 - 不要返回 Prisma client、Response、函数、Blob、Stream 或未过滤的数据库对象。
 
-<!-- TODO: 后续需要可靠队列、重试、消费组或日志管道时，再迁移到 Redpanda。 -->
-
 ## 后台任务
 
-不需要阻塞用户请求的任务，应放到响应返回后执行。当前项目统一使用 Next.js 的 `after`，不要引入 `@vercel/functions` 的 `waitUntil`。
+业务后台任务（发邮件、头像同步、异步 workflow 等需可靠执行/重试的）通过 `@/shared/lib/infrastructure/queue` 的 enqueue 助手入队，由独立 worker 进程消费；不要在 action 内直接 `await` 或用 `after` 跑这类任务。
 
 ```ts
-import { after } from "next/server";
+import { enqueueAvatarSync } from "@/shared/lib/infrastructure/queue";
 
-after(async () => {
-  await sendEmail(...);
-});
+await enqueueAvatarSync({ userId, imageUrl });
 ```
 
-适合发送邮件、上报日志、触发异步 workflow、非关键数据同步。
+Next.js `after` 仅用于请求生命周期内的日志 flush 等轻量操作；不要引入 `@vercel/functions` 的 `waitUntil`。
 
 ## Route Handler 边界
 
