@@ -31,6 +31,27 @@ export const logger = new Logger({
   formatters: nextJsFormatters, // 程序格式化程序`
 });
 
+// 子 logger 的结构化字段类型
+type LogFields = Record<string, unknown>;
+
+// 带 module 上下文的子 logger，每条日志自动注入 module 字段
+export interface ScopedLogger {
+  debug: (msg: string, fields?: LogFields) => void;
+  info: (msg: string, fields?: LogFields) => void;
+  warn: (msg: string, fields?: LogFields) => void;
+  error: (msg: string, fields?: LogFields) => void;
+  flush: () => Promise<void>;
+}
+
+// 创建带模块名上下文的子 logger，调用时无需重复写 module 字段
+export const createLogger = (module: string): ScopedLogger => ({
+  debug: (msg, fields) => logger.debug(msg, { module, ...fields }),
+  info: (msg, fields) => logger.info(msg, { module, ...fields }),
+  warn: (msg, fields) => logger.warn(msg, { module, ...fields }),
+  error: (msg, fields) => logger.error(msg, { module, ...fields }),
+  flush: () => logger.flush(),
+});
+
 //调用 createAxiomRouteHandler(...)   生成一个包装器   这个包装器在 route handler 成功执行后会触发 onSuccess
 export const withAxiomBodyLog = createAxiomRouteHandler(logger, {
   // 当被包装的 route handler 成功返回时，执行这里的日志逻辑。
