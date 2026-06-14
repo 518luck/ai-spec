@@ -3,8 +3,8 @@
 import { signOut, useSession } from "next-auth/react";
 import type { JSX } from "react";
 
+import { UserAvatar } from "@/entities/user";
 import { cn } from "@/shared/lib/utils";
-import { Avatar, AvatarFallback } from "@/shared/ui/avatar";
 import { Icons } from "@/shared/ui/icons";
 import {
   Popover,
@@ -18,7 +18,6 @@ import { Separator } from "@/shared/ui/separator";
 // 渲染用户头像弹窗，展示个人信息占位与退出登录入口
 export function UserAvatarPopover(): JSX.Element {
   const { data: session } = useSession();
-  console.log("🚀 ~ UserAvatarPopover ~ session:", session);
 
   return (
     <Popover>
@@ -28,9 +27,7 @@ export function UserAvatarPopover(): JSX.Element {
         )}
         render={
           <button type="button">
-            <Avatar>
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={session?.user} />
           </button>
         }
       />

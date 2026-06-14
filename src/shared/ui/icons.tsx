@@ -19,6 +19,7 @@ import {
   IconSun,
   IconTextScanAi,
   IconUserCircle,
+  IconUserFilled,
   IconUsersGroup,
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
@@ -53,6 +54,8 @@ export const Icons = {
   gift: IconGift,
   helpCircle: IconHelpCircle,
   logout: IconLogout,
+
+  avatarPlaceholder: IconUserFilled,
 
   eye: IconEye,
   eyeOff: IconEyeOff,
