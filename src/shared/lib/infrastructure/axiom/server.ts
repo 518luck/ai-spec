@@ -11,8 +11,8 @@ import {
   transformRouteHandlerSuccessResult, // 辅助函数，把 handler 的结果转成日志消息和报告对象
 } from "@axiomhq/nextjs"; // 针对 Next.js 场景做的一层官方适配 负责“在 Next.js 这个框架里，什么时候记、记什么、怎么拿到请求上下文”
 
-import { axiomClient } from "./axiom";
 import { getSearchParams } from "../../utils";
+import { axiomClient } from "./axiom";
 
 const isAxiomEnabled =
   process.env.IS_AXIOM_ENABLED === "true" &&
@@ -51,6 +51,18 @@ export const createLogger = (module: string): ScopedLogger => ({
   error: (msg, fields) => logger.error(msg, { module, ...fields }),
   flush: () => logger.flush(),
 });
+
+// 将 Error 转为普通对象，保留所有属性（含不可枚举的 message/stack），跳过函数属性
+export const serializeError = (e: Error): Record<string, unknown> => {
+  const obj: Record<string, unknown> = {};
+  for (const key of Object.getOwnPropertyNames(e)) {
+    const value: unknown = Reflect.get(e, key);
+    if (typeof value !== "function") {
+      obj[key] = value;
+    }
+  }
+  return obj;
+};
 
 //调用 createAxiomRouteHandler(...)   生成一个包装器   这个包装器在 route handler 成功执行后会触发 onSuccess
 export const withAxiomBodyLog = createAxiomRouteHandler(logger, {
