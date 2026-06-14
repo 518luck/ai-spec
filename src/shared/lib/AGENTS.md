@@ -12,7 +12,7 @@
 - `actions/`：基于 `next-safe-action` 的 Server Action、action client 和 action middleware。
 - `api/`：请求上下文、运行环境和 RBAC 等服务端辅助逻辑；不是 Next.js Route Handler 目录。
 - `auth/`：NextAuth 配置、session 读取、OTP 和认证相关常量。
-- `infrastructure/`：Redis、Axiom、Resend/React Email 等第三方服务适配层。
+- `infrastructure/`：Redis、Axiom（日志）、Resend/React Email 等第三方服务适配层。
 - `zod/`：跨入口复用的 Zod 校验 schema。
 - `utils.ts`：少量跨模块通用工具，避免继续膨胀成业务或基础设施集合。
 
