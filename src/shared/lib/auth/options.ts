@@ -6,8 +6,8 @@ import {
   hasReachedMaxInvalidLoginAttempts,
   recordInvalidLoginAttempt,
 } from "@/shared/lib/auth/lock-account";
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { enqueueAvatarSync } from "@/shared/lib/infrastructure/queue";
+import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { validatePassword } from "@/shared/lib/utils";
 import { signInSchema } from "@/shared/lib/zod/schemas/auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
@@ -179,6 +179,7 @@ export const authOptions: NextAuthConfig = {
   events: {
     // OAuth 账号关联成功后，把第三方头像 URL 加入队列异步处理
     linkAccount: async ({ user }) => {
+      console.log("🚀 ~ user:", user);
       if (!user.id || !user.image) {
         return;
       }
