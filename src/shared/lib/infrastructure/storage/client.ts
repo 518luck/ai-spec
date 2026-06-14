@@ -43,10 +43,17 @@ export class S3StorageClient {
     const targetBucket = this._resolveBucket(visibility);
     const resolvedBody = await this._resolveBody(body, options);
 
+    // AWS SDK 对 Buffer 支持最稳定；Node + undici 的 Blob 内部 stream 已流动，
+    // 直接传给 SDK 会导致 checksum 计算失败（"Unable to calculate hash for flowing readable stream"）
+    const uploadBody =
+      resolvedBody instanceof Blob
+        ? Buffer.from(await resolvedBody.arrayBuffer())
+        : resolvedBody;
+
     const command = new PutObjectCommand({
       Bucket: targetBucket,
       Key: key,
-      Body: resolvedBody,
+      Body: uploadBody,
       ContentType:
         options?.contentType ??
         (resolvedBody instanceof Blob ? resolvedBody.type : undefined),
