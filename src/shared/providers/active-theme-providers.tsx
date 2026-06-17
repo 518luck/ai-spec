@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { DEFAULT_THEME } from "../configs/theme.config";
 
-const COOKIE_NAME = "active_theme";
+const COOKIE_NAME = "ai-spec.active-theme";
 
 // 设置 cookie
 const setThemeCookie = (theme: string) => {
