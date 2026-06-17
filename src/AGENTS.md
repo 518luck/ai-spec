@@ -33,21 +33,17 @@ shared/db : 这个是脚本生成的代码,严禁修改
 
 - `pages`、`widgets`、`features`、`entities` 下必须先建 slice，再建 segment，例如 `src/features/create-spec/ui/create-spec-form.tsx`。
 - `src/app` 和 `src/shared` 不拆 slice，直接按 segment 组织。
-- 常用 segment 为 `ui`、`model`、`api`、`lib`、`config`。
+- 常用 segment（按代码目的分组）：
+  - `ui` — UI 显示相关：组件、样式、日期格式化等。
+  - `model` — 数据模型：schema、类型、store、业务逻辑。
+  - `api` — 请求与接口封装。
+  - `lib` — 本 slice 复用的工具代码。
+  - `config` — 配置、常量、feature flags。
 - 不要新建 `components`、`hooks`、`types` 这类只描述技术形态的顶层 segment，优先归入 `ui`、`model`、`api`、`lib`。
 
 ### pages 层 slice 规范
 
 pages 是页面级组合：每条路由对应一个 page slice。
-
-#### segment
-
-Slices 以及 layers App 和 Shared 由 segments 组成，segments 按代码的目的对代码进行分组。Segment 名称不受标准约束，但有几个最常见目的的传统名称：
-
-- ui — 与 UI 显示相关的一切：UI 组件、日期、样式等。
-- model — 数据模型：schemas、interfaces、stores 和业务逻辑。
-- lib — 此 slice 上其他模块需要的库代码。
-- config — 配置文件和 feature flags。
 
 #### 嵌套路由
 
