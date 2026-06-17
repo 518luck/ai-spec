@@ -38,7 +38,7 @@ shared/db : 这个是脚本生成的代码,严禁修改
 
 ### pages 层 slice 规范
 
-pages 是页面级组合与编排层：每条路由对应一个 page slice，承载该路由的页面 UI、数据编排、页面状态与静态配置。
+pages 是页面级组合：每条路由对应一个 page slice。
 
 #### segment
 
