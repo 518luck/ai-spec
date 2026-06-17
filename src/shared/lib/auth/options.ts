@@ -150,8 +150,14 @@ export const authOptions: NextAuthConfig = {
   callbacks: {
     // 在 JWT 中持久化登录用户信息，并支持资料更新后刷新 token
     jwt: async ({ token, user, trigger }) => {
+      // 只持久化非敏感字段，避免 passwordHash 等敏感信息泄露到客户端 session
       if (user) {
-        token.user = user;
+        token.user = {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+        };
       }
 
       if (trigger === "update") {
@@ -201,7 +207,6 @@ export const authOptions: NextAuthConfig = {
   events: {
     // OAuth 账号关联成功后，把第三方头像 URL 加入队列异步处理
     linkAccount: async ({ user }) => {
-      console.log("🚀 ~ user:", user);
       if (!user.id || !user.image) {
         return;
       }
