@@ -24,12 +24,47 @@ shared/db : 这个是脚本生成的代码,严禁修改
 | 业务实体、实体展示、实体模型       | `src/entities/<entity>/`  |
 | 与业务无关的通用能力               | `src/shared/<segment>/`   |
 
+### 层职责
+
+- **entities**：为复用而抽取，但复用的是**业务实体的建模**（类型、领域常量、实体展示），而非 UI。
+- **widgets**：把一个完整用例的 UI 封装成可被 pages 复用的**复合 UI 块**；其复用性来自封装本身，不像 features / entities 那样以「复用」为首要目标。
+
 ### Slice 与 Segment
 
 - `pages`、`widgets`、`features`、`entities` 下必须先建 slice，再建 segment，例如 `src/features/create-spec/ui/create-spec-form.tsx`。
 - `src/app` 和 `src/shared` 不拆 slice，直接按 segment 组织。
 - 常用 segment 为 `ui`、`model`、`api`、`lib`、`config`。
 - 不要新建 `components`、`hooks`、`types` 这类只描述技术形态的顶层 segment，优先归入 `ui`、`model`、`api`、`lib`。
+
+### pages 层 slice 规范
+
+pages 是页面级组合与编排层：每条路由对应一个 page slice，承载该路由的页面 UI、数据编排、页面状态与静态配置。
+
+#### segment
+
+Slices 以及 layers App 和 Shared 由 segments 组成，segments 按代码的目的对代码进行分组。Segment 名称不受标准约束，但有几个最常见目的的传统名称：
+
+- ui — 与 UI 显示相关的一切：UI 组件、日期、样式等。
+- model — 数据模型：schemas、interfaces、stores 和业务逻辑。
+- lib — 此 slice 上其他模块需要的库代码。
+- config — 配置文件和 feature flags。
+
+#### 嵌套路由
+
+pages 下的文件夹结构尽量与 URL 路由对应：URL 有共同前缀的路由，可以建一个父文件夹做归拢，父文件夹下每个路由再建独立 slice。
+
+例：`/auth/login` 与 `/auth/register` 共享 `library` 前缀 → 建 `pages/auth/` 父文件夹归拢，下面分别建 `login/`、`register/` 两个 slice。
+
+#### 命名
+
+slice 内的文件不必重复 slice 名（文件夹路径已经标注过了）。常用 segment 下的文件命名约定如下：
+
+- **`ui/`** — 单个页面组件用通用名 `page.tsx`，组件名保留语义，由 `index.ts` 导出（`pages/auth/login/ui/page.tsx` → `LoginPage`）。其余组件：有明确 UI 形态的直接用 UI 形态命名（`card.tsx`、`dialog.tsx`）；同一形态有多个时，用 UI 形态作前缀区分（`card-cluster.tsx`、`dialog-template-edit.tsx`）；无具体 UI 形态的按作用命名。
+- **`model/`** — 数据获取 hook 用 `use-xxx.ts`；schema 用 `schema-xxx.ts`；类型用 `types.ts`；Context 用 `context-xxx.tsx`；纯函数/辅助用 `helpers-xxx.ts`。
+- **`lib/`** — 工具/生成器按语义命名（`docx-builder.ts`、`format.ts`）。
+- **`config/`** — 常量/枚举/静态配置，按内容命名（`constants.ts`、`menu-meta.ts`），内容简单时直接 `index.ts`。
+
+动态段（`:parentId`）可用语义命名。
 
 ### 导入边界
 
