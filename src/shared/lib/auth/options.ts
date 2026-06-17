@@ -1,7 +1,11 @@
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { skipAuthThrottling } from "@/shared/lib/api/environment";
-import { SESSION_TOKEN_NAME } from "@/shared/lib/auth/constants";
+import {
+  CALLBACK_URL_COOKIE_NAME,
+  CSRF_TOKEN_NAME,
+  SESSION_TOKEN_NAME,
+} from "@/shared/lib/auth/constants";
 import {
   hasReachedMaxInvalidLoginAttempts,
   recordInvalidLoginAttempt,
@@ -104,10 +108,28 @@ export const authOptions: NextAuthConfig = {
       authorization: { params: { login: "true" } },
     }),
   ],
-  // 配置 session token cookie 的名称和安全属性
+  // 配置本项目专属 cookie 名和安全属性，避免与 localhost 上其他 NextAuth 项目互相覆盖
   cookies: {
     sessionToken: {
       name: SESSION_TOKEN_NAME,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProd,
+      },
+    },
+    callbackUrl: {
+      name: CALLBACK_URL_COOKIE_NAME,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: isProd,
+      },
+    },
+    csrfToken: {
+      name: CSRF_TOKEN_NAME,
       options: {
         httpOnly: true,
         sameSite: "lax",

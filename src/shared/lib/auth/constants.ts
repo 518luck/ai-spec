@@ -4,6 +4,12 @@ export const isProd = process.env.NODE_ENV === "production";
 // 生产环境 cookie 名加 __Secure- 前缀
 export const SESSION_TOKEN_NAME = `${isProd ? "__Secure-" : ""}ai-spec.session-token`;
 
+// 登录/退出回跳地址 cookie（生产环境加 __Secure- 前缀）
+export const CALLBACK_URL_COOKIE_NAME = `${isProd ? "__Secure-" : ""}ai-spec.callback-url`;
+
+// 防 CSRF 令牌 cookie（生产环境用更严格的 __Host- 前缀，与 @auth/core 默认一致）
+export const CSRF_TOKEN_NAME = `${isProd ? "__Host-" : ""}ai-spec.csrf-token`;
+
 // 邮箱 OTP 验证码有效期（秒）
 export const EMAIL_OTP_EXPIRY_IN = 10 * 60;
 
