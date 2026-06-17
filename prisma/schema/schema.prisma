@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth"]
+  schemas  = ["auth", "token"]
 }
 
 // 用户本人信息
@@ -28,6 +28,7 @@ model User {
 
   accounts Account[]
   sessions Session[]
+  tokens   Token[]
 
   @@schema("auth")
 }
@@ -63,26 +64,5 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@schema("auth")
-}
-
-// 验证码
-// next-auth 官方的邮件魔法链接登录
-model VerificationToken {
-  identifier String // 标识符 标识谁在验证,通常是邮箱之类的
-  token      String // 一次性验证码
-  expires    DateTime
-
-  @@id([identifier, token])
-  @@schema("auth")
-}
-
-//自定义的 OTP 验证码
-model EmailVerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
   @@schema("auth")
 }
