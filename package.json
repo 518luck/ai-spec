@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "worker": "tsx --conditions react-server worker.ts",
+    "dev:all": "concurrently -n next,worker -c cyan,magenta --kill-timeout 5000 \"pnpm dev\" \"pnpm worker\"",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -63,6 +64,7 @@
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "concurrently": "^10.0.3",
     "dotenv": "^17.4.2",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
