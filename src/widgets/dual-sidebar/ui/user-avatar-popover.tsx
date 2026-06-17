@@ -9,6 +9,7 @@ import { Icons } from "@/shared/ui/icons";
 import {
   Popover,
   PopoverContent,
+  PopoverDescription,
   PopoverHeader,
   PopoverTitle,
   PopoverTrigger,
@@ -33,7 +34,12 @@ export function UserAvatarPopover(): JSX.Element {
       />
       <PopoverContent side="right" align="end" sideOffset={8} className="w-56">
         <PopoverHeader>
-          <PopoverTitle>用户名</PopoverTitle>
+          <PopoverTitle>{session?.user?.name ?? "游客"}</PopoverTitle>
+          {session?.user?.email ? (
+            <PopoverDescription className="min-w-0 truncate">
+              {session?.user?.email}
+            </PopoverDescription>
+          ) : null}
         </PopoverHeader>
         <Separator />
         <button
