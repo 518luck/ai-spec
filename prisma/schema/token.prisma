@@ -12,6 +12,7 @@ model Token {
 
     userId String
 
+    @@index([userId])
     @@schema("token")
 }
 
