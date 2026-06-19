@@ -4,7 +4,7 @@ import "dotenv/config";
 
 import { Worker } from "bullmq";
 import { BACKGROUND_JOBS_QUEUE_CONFIG } from "./src/shared/lib/infrastructure/queue/constants";
-import { processBackgroundJob } from "./src/shared/lib/infrastructure/queue/processors/router";
+import { processBackgroundJob } from "./src/shared/lib/infrastructure/queue/operations/router";
 import { getWorkerRedis } from "./src/shared/lib/infrastructure/redis/clients";
 
 // 注册后台任务 Worker，按 job.name 路由分发；消费侧用无限重试连接

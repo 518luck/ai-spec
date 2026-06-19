@@ -1,6 +1,6 @@
 import { nanoid } from "@/shared/lib/nanoid";
 
-import { getS3StorageClient } from "./client";
+import { getS3StorageClient } from "../client";
 
 // 上传用户头像到公共桶并返回 URL，key 带随机后缀做缓存刷新
 export async function uploadUserAvatar({
