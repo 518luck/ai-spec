@@ -5,6 +5,7 @@ import { auth } from "@/shared/lib/auth/auth";
 import { HeaderedPageShell } from "@/widgets/page-shell";
 
 import { EditableFieldCard } from "./editable-field-card";
+import { NameFieldCard } from "./name-field-card";
 
 // 渲染个人详情页面，以可编辑卡片展示名称（含头像）与邮箱
 export async function ProfilePage(): Promise<JSX.Element> {
@@ -17,11 +18,8 @@ export async function ProfilePage(): Promise<JSX.Element> {
   return (
     <HeaderedPageShell title="个人详情">
       <div className="flex flex-col gap-4">
-        <EditableFieldCard
-          title="名称"
+        <NameFieldCard
           defaultValue={name}
-          placeholder="未设置"
-          description="用于展示你的昵称"
           aside={<AvatarUploader className="size-24" />}
         />
         <EditableFieldCard
