@@ -3,7 +3,6 @@
 import { useCallback, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 
-import { cropImage } from "../model/crop-image";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -14,6 +13,7 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Slider } from "@/shared/ui/slider";
+import { cropImage } from "../model/crop-image";
 
 type AvatarCropDialogProps = {
   open: boolean;
@@ -56,11 +56,13 @@ export function AvatarCropDialog({
       <DialogContent showCloseButton={false} className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>裁剪头像</DialogTitle>
-          <DialogDescription>拖动调整位置，滑动缩放，完成后点击保存。</DialogDescription>
+          <DialogDescription>
+            拖动调整位置，滑动缩放，完成后点击保存。
+          </DialogDescription>
         </DialogHeader>
 
         {/* 裁剪区域：固定高度，圆形遮罩由 Cropper object-fit + aspect=1 实现 */}
-        <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
+        <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-lg">
           <Cropper
             image={imageSrc}
             crop={crop}
@@ -76,7 +78,6 @@ export function AvatarCropDialog({
 
         {/* 缩放滑块 */}
         <div className="flex items-center gap-3">
-          <span className="text-muted-foreground text-xs">缩放</span>
           <Slider
             value={[zoom]}
             min={1}
