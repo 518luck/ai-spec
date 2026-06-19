@@ -3,12 +3,12 @@
 import prisma from "@/shared/db";
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod/v4";
-import { getIP } from "../api/utils/get-ip";
-import { skipAuthThrottling } from "../api/environment";
-import { ratelimit } from "../infrastructure/redis/reatlimit";
-import { emailSchema } from "../zod/schemas/auth";
-import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
-import { actionClient } from "./safe-action";
+import { getIP } from "@/shared/lib/api/utils/get-ip";
+import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { emailSchema } from "@/shared/lib/zod/schemas/auth";
+import { throwIfAuthenticated } from "./throw-if-authenticated";
+import { actionClient } from "@/shared/lib/actions/safe-action";
 
 const schema = z.object({
   email: emailSchema,

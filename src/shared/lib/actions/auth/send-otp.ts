@@ -4,15 +4,15 @@ import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod";
-import { getIP } from "../api/utils/get-ip";
-import { EMAIL_OTP_EXPIRY_IN } from "../auth/constants";
-import { generateOTP } from "../auth/utils";
-import { sendEmail } from "../infrastructure/email";
-import VerifyEmail from "../infrastructure/email/templates/verify-email";
-import { ratelimit } from "../infrastructure/redis/reatlimit";
-import { emailSchema, passwordSchema } from "../zod/schemas/auth";
-import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
-import { actionClient } from "./safe-action";
+import { getIP } from "@/shared/lib/api/utils/get-ip";
+import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
+import { generateOTP } from "@/shared/lib/auth/utils";
+import { sendEmail } from "@/shared/lib/infrastructure/email";
+import VerifyEmail from "@/shared/lib/infrastructure/email/templates/verify-email";
+import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
+import { throwIfAuthenticated } from "./throw-if-authenticated";
+import { actionClient } from "@/shared/lib/actions/safe-action";
 
 const schema = z.object({
   email: emailSchema,

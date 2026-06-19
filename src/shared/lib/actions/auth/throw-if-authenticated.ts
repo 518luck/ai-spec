@@ -1,5 +1,5 @@
 import { createMiddleware } from "next-safe-action";
-import { getSession } from "../../auth/utils";
+import { getSession } from "@/shared/lib/auth/utils";
 
 /**
  * @function throwIfAuthenticated

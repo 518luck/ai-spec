@@ -5,7 +5,7 @@ import {
   AUTH_PROVIDER_EMAIL,
   AUTH_REDIRECT_HOME,
 } from "@/shared/lib/auth/constants";
-import { checkLoginEmailAction } from "@/shared/lib/actions/check-login-email";
+import { checkLoginEmailAction } from "@/shared/lib/actions/auth/check-login-email";
 import { Button } from "@/shared/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";

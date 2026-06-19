@@ -3,7 +3,7 @@ import { after } from "next/server";
 import {
   createLogger,
   serializeError,
-} from "../infrastructure/axiom/server";
+} from "@/shared/lib/infrastructure/axiom/server";
 
 // Server Action 专用日志器，每条日志自动带 module: "server-action"
 const log = createLogger("server-action");

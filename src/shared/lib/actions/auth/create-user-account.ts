@@ -5,12 +5,12 @@ import * as z from "zod/v4";
 
 import prisma from "@/shared/db";
 import { flattenValidationErrors } from "next-safe-action";
-import { skipAuthThrottling } from "../api/environment";
-import { ratelimit } from "../infrastructure/redis/reatlimit";
-import { hashPassword } from "../utils";
-import { signUpSchema } from "../zod/schemas/auth";
-import { throwIfAuthenticated } from "./auth/throw-if-authenticated";
-import { actionClient } from "./safe-action";
+import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { hashPassword } from "@/shared/lib/utils";
+import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
+import { throwIfAuthenticated } from "./throw-if-authenticated";
+import { actionClient } from "@/shared/lib/actions/safe-action";
 
 const OTP_ATTEMPTS = 2;
 const OTP_LOCKOUT_DURATION = 24 * 60 * 60; // Block for 24 hours
