@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 
 import prisma from "@/shared/db";
 import { withSession } from "@/shared/lib/auth/with-session";
-import { getS3StorageClient } from "@/shared/lib/infrastructure/storage";
-import { nanoid } from "@/shared/lib/nanoid";
+import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
 import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 
 // 更新当前登录用户资料：name 写库，avatar 走对象存储；email / defaultWorkspace 占位静默忽略
@@ -22,14 +21,8 @@ export const PATCH = withSession(async ({ req, session }) => {
   }
 
   if (avatar !== undefined) {
-    // 从 data URL 提取 content-type，key 采用 avatars/{id}/{随机串} 以刷新缓存
-    const contentType = avatar.match(/^data:(image\/[a-zA-Z0-9.+-]+);/)?.[1];
-    data.image = await getS3StorageClient().upload({
-      key: `avatars/${userId}/${nanoid()}`,
-      body: avatar,
-      options: contentType ? { contentType } : undefined,
-      visibility: "public",
-    });
+    // 上传头像到对象存储（key 带随机后缀做缓存刷新），返回的 URL 写入用户表
+    data.image = await uploadUserAvatar({ userId, body: avatar });
   }
 
   // TODO: email 修改需双因素验证后实现，当前校验通过但不写库

@@ -1,5 +1,5 @@
 import prisma from "@/shared/db";
-import { getS3StorageClient } from "@/shared/lib/infrastructure/storage";
+import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
 import type { Job } from "bullmq";
 import type { SyncOauthAvatarData } from "../types";
 
@@ -9,12 +9,8 @@ export async function processSyncOauthAvatar(
 ): Promise<void> {
   const { userId, imageUrl } = job.data;
 
-  // upload 内部自动 fetch 下载，key 无后缀，ContentType 靠 blob.type 兜底
-  const storedUrl = await getS3StorageClient().upload({
-    key: `avatars/${userId}`,
-    body: imageUrl,
-    visibility: "public",
-  });
+  // uploadUserAvatar 内部自动 fetch 下载，key 带随机后缀做缓存刷新
+  const storedUrl = await uploadUserAvatar({ userId, body: imageUrl });
 
   // 把自有存储 URL 写入用户表，覆盖第三方 URL
   await prisma.user.update({
