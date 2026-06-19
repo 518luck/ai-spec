@@ -2,9 +2,16 @@ import { NextResponse } from "next/server";
 
 import prisma from "@/shared/db";
 import { withSession } from "@/shared/lib/auth/with-session";
+import {
+  createLogger,
+  serializeError,
+} from "@/shared/lib/infrastructure/axiom/server";
 import { enqueueDeleteUserAvatar } from "@/shared/lib/infrastructure/queue";
 import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
 import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
+
+// 用户资料更新路由的专用日志作用域，自动注入 module 字段
+const log = createLogger("user-route");
 
 // 更新当前登录用户资料：name 写库，avatar 走对象存储；email / defaultWorkspace 占位静默忽略
 export const PATCH = withSession(async ({ req, session }) => {
@@ -51,7 +58,12 @@ export const PATCH = withSession(async ({ req, session }) => {
       userId,
       avatarUrl: previousImage,
     }).catch((error) => {
-      console.error("入队旧头像清理任务失败", { userId, error });
+      log.error("入队旧头像清理任务失败", {
+        userId,
+        ...(error instanceof Error
+          ? serializeError(error)
+          : { error: String(error) }),
+      });
     });
   }
 
