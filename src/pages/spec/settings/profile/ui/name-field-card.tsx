@@ -4,6 +4,7 @@ import type { JSX, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+import { updateUser } from "@/entities/user";
 import { userNameSchema } from "@/shared/lib/zod/schemas/user";
 
 import { EditableFieldCard } from "./editable-field-card";
@@ -28,24 +29,7 @@ export function NameFieldCard({
       throw new Error(parsed.error.issues[0]?.message ?? "名称格式不正确");
     }
 
-    const res = await fetch("/api/user", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-
-    if (!res.ok) {
-      let message = "名称保存失败";
-      try {
-        const body = (await res.json()) as { error?: { message?: unknown } };
-        if (typeof body.error?.message === "string") {
-          message = body.error.message;
-        }
-      } catch {
-        // 响应体非 JSON（如网关错误页），使用兜底文案
-      }
-      throw new Error(message);
-    }
+    await updateUser({ name });
 
     await update({});
     router.refresh();

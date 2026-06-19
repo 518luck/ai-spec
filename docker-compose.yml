@@ -39,8 +39,8 @@ services:
     container_name: ai-spec-mailpit
     restart: unless-stopped
     ports:
-      - "1025:1025"
-      - "8025:8025"
+      - "1026:1025"
+      - "8026:8025"
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1

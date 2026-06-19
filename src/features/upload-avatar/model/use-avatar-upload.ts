@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { updateUserAvatar } from "../api/update-user-avatar";
+import { updateUser } from "@/entities/user";
 
 // 头像上传编排：选文件 → 开裁剪弹窗 → 提交 → 刷新 session 与路由
 export const useAvatarUpload = () => {
@@ -26,7 +26,7 @@ export const useAvatarUpload = () => {
   const onConfirm = async (dataUrl: string): Promise<void> => {
     setIsSubmitting(true);
     try {
-      await updateUserAvatar(dataUrl);
+      await updateUser({ avatar: dataUrl });
       // update 触发 jwt callback 的 trigger=update 分支重读 DB image
       await update({});
       // 让 profile 等服务端组件用新 token 重渲染
@@ -35,7 +35,7 @@ export const useAvatarUpload = () => {
       setIsCropOpen(false);
       setImageSrc(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "头像更新失败");
+      toast.error(error instanceof Error && error.message ? error.message : "");
     } finally {
       setIsSubmitting(false);
     }
