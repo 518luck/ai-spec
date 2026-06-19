@@ -69,6 +69,7 @@ export function EditableFieldCard({
         <div className="flex flex-1 flex-col gap-(--card-spacing)">
           <CardTitle>{title}</CardTitle>
           <Input
+            className="max-w-lg"
             value={value}
             placeholder={placeholder}
             disabled={disabled || isSaving}
