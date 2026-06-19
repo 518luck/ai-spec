@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { DragEvent, ReactNode } from "react";
 import { useState } from "react";
 
@@ -172,14 +173,12 @@ export function FileUpload({
     <label
       className={cn(
         fileUploadVariants({ variant }),
-        disabled
-          ? "cursor-not-allowed"
-          : cn(clickToUpload && "cursor-pointer"),
+        disabled ? "cursor-not-allowed" : cn(clickToUpload && "cursor-pointer"),
         className,
       )}
     >
       {loading && (
-        <div className="absolute inset-0 z-5 flex items-center justify-center rounded-[inherit] bg-background/80">
+        <div className="bg-background/80 absolute inset-0 z-5 flex items-center justify-center rounded-[inherit]">
           <Spinner className="size-6" />
         </div>
       )}
@@ -213,11 +212,11 @@ export function FileUpload({
       {/* 提示 / 图标层：有图时默认透明，hover 才露出「换图」遮罩 */}
       <div
         className={cn(
-          "absolute inset-0 z-3 flex flex-col items-center justify-center rounded-[inherit] border-2 border-transparent bg-background/60 text-center backdrop-blur-[2px] transition-all",
+          "bg-background/60 absolute inset-0 z-3 flex flex-col items-center justify-center rounded-[inherit] border-2 border-transparent text-center backdrop-blur-[2px] transition-all",
           disabled && "bg-muted/50",
           dragActive &&
             !disabled &&
-            "cursor-copy border-primary bg-muted opacity-100",
+            "border-primary bg-muted cursor-copy opacity-100",
           imageSrc
             ? cn(
                 "opacity-0",
@@ -239,9 +238,8 @@ export function FileUpload({
           )}
         />
         {content !== null && (
-          <div className="mt-2 text-sm text-muted-foreground">
-            {content ??
-              (clickToUpload ? "拖拽或点击上传" : "拖拽到此处上传")}
+          <div className="text-muted-foreground mt-2 text-sm">
+            {content ?? (clickToUpload ? "拖拽或点击上传" : "拖拽到此处上传")}
           </div>
         )}
         <span className="sr-only">{accessibilityLabel}</span>
@@ -250,13 +248,13 @@ export function FileUpload({
       {/* 预览层 */}
       {imageSrc &&
         (customPreview ?? (
-          <img
+          <Image
             src={imageSrc}
             alt="预览"
-            className={cn(
-              "h-full w-full rounded-[inherit] object-cover",
-              previewClassName,
-            )}
+            fill
+            unoptimized
+            sizes="100%"
+            className={cn("rounded-[inherit] object-cover", previewClassName)}
           />
         ))}
 
