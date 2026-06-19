@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import prisma from "@/shared/db";
 import { withSession } from "@/shared/lib/auth/with-session";
+import { enqueueDeleteUserAvatar } from "@/shared/lib/infrastructure/queue";
 import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
 import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 
@@ -20,7 +21,15 @@ export const PATCH = withSession(async ({ req, session }) => {
     data.name = name;
   }
 
+  // 更新头像前先读旧 image，用于事后清理 S3 中的旧文件
+  let previousImage: string | null = null;
   if (avatar !== undefined) {
+    const current = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { image: true },
+    });
+    previousImage = current?.image ?? null;
+
     // 上传头像到对象存储（key 带随机后缀做缓存刷新），返回的 URL 写入用户表
     data.image = await uploadUserAvatar({ userId, body: avatar });
   }
@@ -35,6 +44,16 @@ export const PATCH = withSession(async ({ req, session }) => {
     data,
     select: { id: true, name: true, email: true, image: true },
   });
+
+  // DB 写入成功后 best-effort 入队清理旧头像；enqueue 失败不得让接口 500
+  if (previousImage) {
+    await enqueueDeleteUserAvatar({
+      userId,
+      avatarUrl: previousImage,
+    }).catch((error) => {
+      console.error("入队旧头像清理任务失败", { userId, error });
+    });
+  }
 
   return NextResponse.json(updated);
 });

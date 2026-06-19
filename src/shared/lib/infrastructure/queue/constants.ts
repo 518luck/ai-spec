@@ -15,5 +15,6 @@ export const BACKGROUND_JOBS_QUEUE_CONFIG = {
 // 后台任务的 job.name 枚举，Worker 据此路由到对应处理器
 export const JOB_NAMES = {
   avatarSync: "avatar-sync",
+  avatarCleanup: "avatar-cleanup",
   emailChange: "email-change",
 } as const;

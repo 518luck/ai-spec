@@ -1,10 +1,25 @@
 import "server-only";
 
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 
 import { S3_CONFIG } from "./constants";
-import type { BucketVisibility, ImageOptions, UploadParams } from "./types";
-import { base64ToBlob, isBase64, isUrl, urlToBlob } from "./utils";
+import type {
+  BucketVisibility,
+  DeleteParams,
+  ImageOptions,
+  UploadParams,
+} from "./types";
+import {
+  base64ToBlob,
+  isBase64,
+  isUrl,
+  parseKeyFromPublicUrl,
+  urlToBlob,
+} from "./utils";
 
 let s3StorageClient: S3StorageClient | undefined;
 
@@ -61,6 +76,18 @@ export class S3StorageClient {
 
     await this.s3Client.send(command);
     return this._buildPublicUrl(key);
+  }
+
+  // 删除 S3 存储桶中的对象（幂等：key 不存在不会报错）
+  async delete({ key, visibility = "public" }: DeleteParams): Promise<void> {
+    const targetBucket = this._resolveBucket(visibility);
+    const command = new DeleteObjectCommand({ Bucket: targetBucket, Key: key });
+    await this.s3Client.send(command);
+  }
+
+  // 从公开访问 URL 反解对象 key；非自有桶 URL 返回 null（不会抛错）
+  parseKeyFromUrl(url: string): string | null {
+    return parseKeyFromPublicUrl(url, this.publicUrl);
   }
 
   // 将上传内容统一解析为可发送的二进制数据

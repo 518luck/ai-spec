@@ -45,3 +45,16 @@ export const urlToBlob = async (url: string): Promise<Blob> => {
   }
   return response.blob();
 };
+
+// 从公开访问 URL 反解对象 key；不属于该 publicUrl 基址时返回 null
+export const parseKeyFromPublicUrl = (
+  url: string,
+  publicUrl: string,
+): string | null => {
+  const base = publicUrl.replace(/\/$/, "");
+  const prefix = `${base}/`;
+  if (!url.startsWith(prefix)) {
+    return null;
+  }
+  return url.slice(prefix.length);
+};

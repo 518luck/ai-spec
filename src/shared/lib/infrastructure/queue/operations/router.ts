@@ -3,9 +3,11 @@ import type { Job } from "bullmq";
 import { JOB_NAMES } from "../constants";
 import type {
   BackgroundJobData,
+  DeleteUserAvatarData,
   EmailChangeData,
   SyncOauthAvatarData,
 } from "../types";
+import { processDeleteUserAvatar } from "./delete-user-avatar";
 import { processEmailChange } from "./email-change";
 import { processSyncOauthAvatar } from "./sync-oauth-avatar";
 
@@ -15,6 +17,13 @@ const isAvatarSyncData = (data: unknown): data is SyncOauthAvatarData =>
   data !== null &&
   "userId" in data &&
   "imageUrl" in data;
+
+// avatar-cleanup 任务数据类型守卫
+const isDeleteUserAvatarData = (data: unknown): data is DeleteUserAvatarData =>
+  typeof data === "object" &&
+  data !== null &&
+  "userId" in data &&
+  "avatarUrl" in data;
 
 // email-change 任务数据类型守卫
 const isEmailChangeData = (data: unknown): data is EmailChangeData =>
@@ -35,6 +44,11 @@ export async function processBackgroundJob(
         throw new Error("avatar-sync 任务数据格式不正确");
       }
       return processSyncOauthAvatar(job.data);
+    case JOB_NAMES.avatarCleanup:
+      if (!isDeleteUserAvatarData(job.data)) {
+        throw new Error("avatar-cleanup 任务数据格式不正确");
+      }
+      return processDeleteUserAvatar(job.data);
     case JOB_NAMES.emailChange:
       if (!isEmailChangeData(job.data)) {
         throw new Error("email-change 任务数据格式不正确");

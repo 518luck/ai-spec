@@ -16,3 +16,9 @@ export interface UploadParams {
   options?: ImageOptions;
   visibility?: BucketVisibility;
 }
+
+// delete 方法的参数对象
+export interface DeleteParams {
+  key: string;
+  visibility?: BucketVisibility;
+}
