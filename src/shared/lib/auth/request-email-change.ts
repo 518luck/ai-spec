@@ -23,7 +23,7 @@ export async function requestEmailChange({
   newEmail: string;
   userId: string;
 }): Promise<void> {
-  // 一天 10 次：复用默认限流器（10 积分），用 customDuration 把窗口拉长到 1 天；超限抛错上浮
+  // 一天 10 次：复用默认限流器（10 积分），用 customDuration 把窗口拉长到 1 天 ；超限抛错上浮
   await ratelimit({
     key: `email-change:request:${userId}`,
     duration: 24 * 60 * 60,

@@ -15,8 +15,8 @@ export async function processEmailChange({
   const url = `${baseUrl}/verify-email-change?token=${token}`;
 
   await sendEmail({
-    to,
     subject: `${appConfig.appName} 邮箱变更确认`,
+    to,
     react: EmailChangeTemplate({ url, oldEmail, newEmail }),
   });
 }

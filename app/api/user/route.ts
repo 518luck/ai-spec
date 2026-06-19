@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 
 import prisma from "@/shared/db";
+import { AiSpecError } from "@/shared/lib/api/error";
+import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
 import { withSession } from "@/shared/lib/auth/with-session";
 import {
   createLogger,
@@ -13,7 +15,7 @@ import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 // 用户资料更新路由的专用日志作用域，自动注入 module 字段
 const log = createLogger("user-route");
 
-// 更新当前登录用户资料：name 写库，avatar 走对象存储；email / defaultWorkspace 占位静默忽略
+// 更新当前登录用户资料：name 写库，avatar 走对象存储；email 查重后走验证邮件流程；defaultWorkspace 占位静默忽略
 export const PATCH = withSession(async ({ req, session }) => {
   const parsed = updateUserSchema.safeParse(await req.json());
   if (!parsed.success) {
@@ -41,9 +43,31 @@ export const PATCH = withSession(async ({ req, session }) => {
     data.image = await uploadUserAvatar({ userId, body: avatar });
   }
 
-  // TODO: email 修改需双因素验证后实现，当前校验通过但不写库
+  // email 走验证流程：先查重，再给新邮箱发确认邮件（真正写库由尚未实现的 /verify-email-change 完成）
+  if (email !== undefined) {
+    const currentEmail = session.user.email ?? "";
+    // 改成自己当前邮箱时跳过，避免无谓发确认邮件并消耗限流额度
+    if (email !== currentEmail) {
+      const taken = await prisma.user.findFirst({
+        where: { email, NOT: { id: userId } },
+        select: { id: true },
+      });
+      if (taken) {
+        throw new AiSpecError({
+          code: "CONFLICT",
+          message: "该邮箱已被其他账号使用",
+        });
+      }
+      // 给新邮箱发确认邮件，不直接写库
+      await requestEmailChange({
+        oldEmail: currentEmail,
+        newEmail: email,
+        userId,
+      });
+    }
+  }
+
   // TODO: defaultWorkspace 等工作空间功能上线后实现，当前校验通过但不写库
-  void email;
   void defaultWorkspace;
 
   const updated = await prisma.user.update({
