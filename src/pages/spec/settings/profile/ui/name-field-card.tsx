@@ -4,6 +4,8 @@ import type { JSX, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
+import { userNameSchema } from "@/shared/lib/zod/schemas/user";
+
 import { EditableFieldCard } from "./editable-field-card";
 
 type NameFieldCardProps = {
@@ -19,8 +21,13 @@ export function NameFieldCard({
   const { update } = useSession();
   const router = useRouter();
 
-  // 提交新名称：写库失败抛错由卡片兜底 toast；成功后重铸 JWT 并刷新服务端组件，使新名称同步到顶栏等位置
+  // 提交新名称：先本地校验长度避免无谓请求，再写库；失败抛错由卡片兜底 toast；成功后重铸 JWT 并刷新，使新名称同步到顶栏等位置
   const handleSave = async (name: string): Promise<void> => {
+    const parsed = userNameSchema.safeParse(name);
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues[0]?.message ?? "名称格式不正确");
+    }
+
     const res = await fetch("/api/user", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },

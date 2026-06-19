@@ -44,8 +44,10 @@ export function EditableFieldCard({
       await onSave(value.trim());
       setBaseline(value.trim());
       toast.success("已保存");
-    } catch {
-      toast.error("保存失败");
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message ? error.message : "保存失败",
+      );
     } finally {
       setIsSaving(false);
     }
