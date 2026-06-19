@@ -48,18 +48,16 @@ function ProfileFieldCard({
 }: ProfileFieldCardProps): JSX.Element {
   return (
     <Card className="gap-0 py-0">
-      <div className="flex items-center gap-(--card-spacing) px-(--card-spacing) pb-(--card-spacing) pt-3">
+      <div className="flex items-center gap-(--card-spacing) px-(--card-spacing) pt-3 pb-(--card-spacing)">
         <div className="flex flex-1 flex-col gap-(--card-spacing)">
           <CardTitle>{title}</CardTitle>
           <div>{children}</div>
         </div>
         {aside ? (
-          <div className="flex shrink-0 self-stretch items-center">
-            {aside}
-          </div>
+          <div className="flex shrink-0 items-center self-stretch">{aside}</div>
         ) : null}
       </div>
-      <div className="border-t border-border bg-muted px-(--card-spacing) py-2 text-xs text-muted-foreground">
+      <div className="border-border bg-muted text-muted-foreground border-t px-(--card-spacing) py-2 text-xs">
         描述
       </div>
     </Card>

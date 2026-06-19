@@ -9,6 +9,14 @@ export const ratelimiter = new RateLimiterRedis({
   blockDuration: 300, // 【阻塞时长】积分耗尽后，额外阻塞 300 秒（5分钟），期间直接拒绝
 });
 
+// API Key 鉴权专用限流器：每个 key 60 秒内最多 60 次请求，耗尽后到窗口结束前拒绝
+export const apiKeyLimiter = new RateLimiterRedis({
+  storeClient: getRatelimitRedis(),
+  keyPrefix: "api-key", // 独立键前缀，避免与通用限流器键冲突
+  points: 60,
+  duration: 60,
+});
+
 type RatelimitOptions = {
   key: string;
   points?: number;
@@ -44,5 +52,35 @@ export async function ratelimit({
     throw new Error(
       `请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`,
     );
+  }
+}
+
+// API Key 限流的返回值：ok 表示本次是否放行，res 携带剩余积分/重置时间用于写响应头
+type ApiKeyRatelimitResult = {
+  ok: boolean;
+  res: RateLimiterRes;
+};
+
+// API Key 限流入参：key 为限流桶标识，points 为本次消耗的积分数（默认 1）
+type ApiKeyRatelimitOptions = {
+  key: string;
+  points?: number;
+};
+
+// API Key 鉴权专用限流：被限流时不抛错，而是返回 ok:false，由调用方决定如何响应（例如返回 429 并附带限流响应头）
+export async function apiKeyRatelimit({
+  key,
+  points = 1,
+}: ApiKeyRatelimitOptions): Promise<ApiKeyRatelimitResult> {
+  try {
+    const res = await apiKeyLimiter.consume(key, points);
+    return { ok: true, res };
+  } catch (rejRes: unknown) {
+    // Redis 本身异常时仍按错误抛出，交由上层统一处理
+    if (rejRes instanceof Error) {
+      throw new Error("限流服务异常");
+    }
+    // 被限流：返回带拒绝信息的限流结果，方便上层构造 429 响应头
+    return { ok: false, res: rejRes as RateLimiterRes };
   }
 }
