@@ -46,6 +46,7 @@
     "rate-limiter-flexible": "^11.1.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-easy-crop": "^6.0.2",
     "react-email": "6.1.4",
     "react-hook-form": "^7.76.0",
     "resend": "^6.12.3",

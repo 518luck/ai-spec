@@ -3,6 +3,7 @@ import {
   IconAdjustmentsAlt,
   IconBrandTeams,
   IconBrightness,
+  IconCamera,
   IconCompass,
   IconEye,
   IconEyeOff,
@@ -18,6 +19,7 @@ import {
   IconSparkleHighlight,
   IconSun,
   IconTextScanAi,
+  IconUpload,
   IconUserCircle,
   IconUserFilled,
   IconUsersGroup,
@@ -56,6 +58,8 @@ export const Icons = {
   logout: IconLogout,
 
   avatarPlaceholder: IconUserFilled,
+  avatarEdit: IconCamera,
+  upload: IconUpload,
 
   eye: IconEye,
   eyeOff: IconEyeOff,

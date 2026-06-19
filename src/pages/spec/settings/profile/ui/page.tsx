@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 
-import { UserAvatar } from "@/entities/user";
+import { AvatarUploader } from "@/features/upload-avatar";
 import { auth } from "@/shared/lib/auth/auth";
 import { HeaderedPageShell } from "@/widgets/page-shell";
 
@@ -22,7 +22,7 @@ export async function ProfilePage(): Promise<JSX.Element> {
           defaultValue={name}
           placeholder="未设置"
           description="用于展示你的昵称"
-          aside={<UserAvatar user={user} className="size-24" />}
+          aside={<AvatarUploader className="size-24" />}
         />
         <EditableFieldCard
           title="邮箱"
