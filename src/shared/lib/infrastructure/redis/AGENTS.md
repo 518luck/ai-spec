@@ -6,21 +6,24 @@
 
 ```
 redis/
-├── clients.ts          # 统一管理两个 Redis 连接（限流 + 队列）
+├── clients.ts          # 两个 Redis 连接（应用 fail-fast / Worker 无限重试）
 ├── reatlimit.ts        # 限流逻辑（rate-limiter-flexible）
+├── kv.ts               # 通用 JSON KV（带 TTL）
 └── AGENTS.md
 ```
 
-### 为什么需要两个连接
+### 为什么是两个连接
 
-`clients.ts` 提供两个 getter，各自返回配置不同的 Redis 连接：
+`clients.ts` 按重试策略（而非用途）提供两个 getter，区分「请求链路」与「后台消费」：
 
 | getter | maxRetriesPerRequest | 用途 |
 | --- | --- | --- |
-| `getRatelimitRedis()` | 20（默认） | 限流，Redis 故障时快速报错 |
-| `getBullMQRedis()` | null | BullMQ 要求，Redis 故障时无限等待重连 |
+| `getAppRedis()` | 20（默认，fail-fast） | 限流、KV、BullMQ **生产者**（HTTP 请求内 `queue.add`）；Redis 故障时快速报错，不挂住请求 |
+| `getWorkerRedis()` | null（无限重试） | 仅 BullMQ **Worker**（阻塞取任务）；Redis 恢复后自动重连 |
 
-两个连接共用一个工厂函数 `createRedisClient(maxRetriesPerRequest)`，但各自维护独立的全局单例，互不干扰。
+> ⚠️ 划分依据是**重试性格**：HTTP 链路要快速失败，Worker 要无限重试。`getAppRedis()` 一条连接被限流 / KV / 队列生产者共用，符合 BullMQ「多个 Queue 共用一条连接」的官方写法；Worker 内部会自行 `.duplicate()` 出阻塞连接。
+
+两者共用工厂函数 `createRedisClient(maxRetriesPerRequest)`。单例缓存采用 Prisma 式：开发环境挂到 `globalThis` 以扛 Next.js 热更新，生产环境用模块级变量保证全进程单例（**不要**在 getter 内每次 `new Redis()`，会泄漏连接）。
 
 ## 限流器
 
@@ -69,4 +72,4 @@ await ratelimit({ key: "login:attempts:email", points: 2, duration: 60 });
 
 - 优先复用 `ratelimiter` 和 `ratelimit()`；需要不同上限时先尝试通过调整 `points`（每次消耗量）或 `duration` 实现。
 - 当现有限流器的积分上限、时间窗口或阻塞时长无法满足需求时，可以新建限流器实例，但必须先向用户说明原因并经用户同意后才能创建。
-- `clients.ts` 提供两个 getter：`getRatelimitRedis()` 供限流器使用，`getBullMQRedis()` 供 BullMQ 使用，两者不要混用。
+- `clients.ts` 提供两个 getter：`getAppRedis()`（fail-fast，限流/KV/队列生产者共用）与 `getWorkerRedis()`（null，仅 Worker），按重试性格区分、不要混用。新增用途时优先复用这两个，不要为每个用途新建连接。

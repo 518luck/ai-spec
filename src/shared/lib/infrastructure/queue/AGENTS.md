@@ -1,51 +1,36 @@
-# BullMQ 消息队列
+# BullMQ 队列设计约束
 
-本目录提供基于 BullMQ 的异步任务队列能力，底层依赖 Redis。
+## 核心原则
 
-## 连接
+- **禁止为每种任务类型创建独立队列**：不要一个 job type 一个 queue。成百上千的
+  queue 难以管理、运维和监控。
+- **单一队列 + 命名任务分发**：使用 1 个 queue 承载多种 job，通过 `name` 字段
+  区分，在 worker 内用 switch（或任务注册表）路由到对应处理逻辑。
 
-BullMQ 专用 Redis 连接定义在 `redis/clients.ts`（`getBullMQRedis()`），要求 `maxRetriesPerRequest: null`。
-不能复用限流连接，详见 `redis/AGENTS.md`。
+## 何时需要例外
 
-## 目录结构
+仅当存在以下**强需求**时，才考虑拆分队列或使用 BullMQ Pro 的 groups 功能：
 
-```
-queue/
-├── constants.ts      # 队列名、默认 Job 配置
-├── types.ts          # Job 数据类型
-├── queues.ts         # Queue 生产者实例（从 redis/queue-client 导入连接）
-├── index.ts          # 公共 API（enqueue 助手）
-└── processors/       # 具体任务处理器
-    └── sync-oauth-avatar.ts
-```
+- 不同 job name 之间需要**均匀/隔离**的处理能力（某类任务不能饿死另一类）。
+- 需要**优先级隔离**或**独立的并发/限流策略**。
 
-## 使用方式
+没有上述需求时，不要因为"看起来更整洁"就拆 queue。
 
-### 生产者（Web 端）
+## 实现要求
 
-业务代码只导入 `index.ts` 的公共 API，不直接操作 Queue：
+1. **集中分发**：worker 处理函数内部按 `job.name` 分派，所有 job 类型共用同一
+   个队列与 worker 实例。
+2. **任务注册表优于裸 switch**：当 job 类型较多时，使用 `{ [name]: processor }`
+   注册表结构代替冗长的 switch，便于扩展。
+3. **输入/输出类型**：queue 的泛型默认面向单一 job 类型，混合多种 job 时：
+   - 定义联合类型或按 name 区分的判别联合（discriminated union）作为 payload。
+   - 在 processor 内通过 name 收窄类型，避免 `any`。
+4. **命名约定**：job 的 `name` 使用稳定的字符串常量（枚举或 `as const` 对象），
+   生产端与消费端共用，避免魔法字符串。
 
-```ts
-import { enqueueAvatarSync } from "@/shared/lib/infrastructure/queue";
+## 反模式（禁止）
 
-await enqueueAvatarSync({ userId: "xxx", imageUrl: "https://..." });
-```
-
-### 消费者（Worker 端）
-
-Worker 进程入口在项目根目录 `worker.ts`，通过 `pnpm worker` 启动。
-
-### 新增任务类型
-
-1. `constants.ts` 添加队列名
-2. `types.ts` 添加 Job 数据类型
-3. `queues.ts` 添加 Queue 实例
-4. `processors/` 添加处理器文件
-5. `index.ts` 导出 enqueue 助手函数
-6. `worker.ts` 注册 Worker
-
-## 注意事项
-
-- Worker 是长驻进程，不能运行在 Next.js serverless 内。
-- 开发时需要同时运行 `pnpm dev` 和 `pnpm worker`。
-- BullMQ Redis key 以 `bull:` 为前缀，不要与限流 key 冲突。
+- ❌ `new Queue('email')`、`new Queue('image')`、`new Queue('report')` ... 每个
+  业务各起一个 queue。
+- ❌ 为绕开类型问题而把多种 job 拆成多个 queue。
+- ❌ 用 `any` 牺牲多 job 类型下的类型安全。

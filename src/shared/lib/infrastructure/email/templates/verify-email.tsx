@@ -25,7 +25,7 @@ export default function VerifyEmail({
       <Preview>{`${appConfig.appName} 验证码`}</Preview>
       <Tailwind>
         <Body className="mx-auto my-auto bg-white font-sans">
-          <Container className="mx-auto my-10 max-w-[600px] rounded border border-solid border-neutral-200 px-10 py-5">
+          <Container className="mx-auto my-10 max-w-150 rounded border border-solid border-neutral-200 px-10 py-5">
             <Heading className="mx-0 my-0 mt-8 p-0 text-3xl font-extrabold text-black">
               {appConfig.appName}
             </Heading>

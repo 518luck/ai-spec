@@ -1,14 +1,13 @@
 import prisma from "@/shared/db";
 import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
-import type { Job } from "bullmq";
+
 import type { SyncOauthAvatarData } from "../types";
 
 // 下载第三方头像并上传到自有 S3，把返回的 URL 写入用户表
-export async function processSyncOauthAvatar(
-  job: Job<SyncOauthAvatarData>,
-): Promise<void> {
-  const { userId, imageUrl } = job.data;
-
+export async function processSyncOauthAvatar({
+  userId,
+  imageUrl,
+}: SyncOauthAvatarData): Promise<void> {
   // uploadUserAvatar 内部自动 fetch 下载，key 带随机后缀做缓存刷新
   const storedUrl = await uploadUserAvatar({ userId, body: imageUrl });
 

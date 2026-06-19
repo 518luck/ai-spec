@@ -1,8 +1,8 @@
 import { RateLimiterRedis, type RateLimiterRes } from "rate-limiter-flexible";
-import { getRatelimitRedis } from "./clients";
+import { getAppRedis } from "./clients";
 
 export const ratelimiter = new RateLimiterRedis({
-  storeClient: getRatelimitRedis(), // 【存储客户端】Redis 连接实例，限流状态都存这里
+  storeClient: getAppRedis(), // 【存储客户端】Redis 连接实例，限流状态都存这里
   keyPrefix: "ratelimiter", // 【键前缀】Redis 里实际 key 会变成 "user_id:xxx"，避免跟其他限流器冲突
   points: 10, // 【积分上限】每个 key 在 duration 时间内最多能消耗 10 点
   duration: 60, // 【时间窗口】60 秒。从第一次消耗开始计时，60 秒后积分重置
@@ -11,7 +11,7 @@ export const ratelimiter = new RateLimiterRedis({
 
 // API Key 鉴权专用限流器：每个 key 60 秒内最多 60 次请求，耗尽后到窗口结束前拒绝
 export const apiKeyLimiter = new RateLimiterRedis({
-  storeClient: getRatelimitRedis(),
+  storeClient: getAppRedis(),
   keyPrefix: "api-key", // 独立键前缀，避免与通用限流器键冲突
   points: 60,
   duration: 60,

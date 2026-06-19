@@ -3,7 +3,7 @@ new Queue("avatar-sync", {
   // ───────────────────────
   // 1. 连接配置（必填）
   // ───────────────────────
-  connection: getBullMQRedis(),
+  connection: getAppRedis(), // Queue 是生产者，用应用侧 fail-fast 连接（Worker 才用 getWorkerRedis）
   // 类型: Redis 实例 | { host, port, password, db, url }
   // IORedis 连接实例或连接参数对象
 
