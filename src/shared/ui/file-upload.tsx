@@ -212,11 +212,11 @@ export function FileUpload({
       {/* 提示 / 图标层：有图时默认透明，hover 才露出「换图」遮罩 */}
       <div
         className={cn(
-          "bg-background/60 absolute inset-0 z-3 flex flex-col items-center justify-center rounded-[inherit] border-2 border-transparent text-center backdrop-blur-[2px] transition-all",
-          disabled && "bg-muted/50",
+          "absolute inset-0 z-3 flex flex-col items-center justify-center bg-background/80 text-center transition-opacity",
+          disabled && "bg-muted/80",
           dragActive &&
             !disabled &&
-            "border-primary bg-muted cursor-copy opacity-100",
+            "cursor-copy bg-muted opacity-100 ring-2 ring-inset ring-primary",
           imageSrc
             ? cn(
                 "opacity-0",
