@@ -1,60 +1,36 @@
-# AI 代理开发指南
+# AI 代理开发指南（monorepo 根）
+
+> 本文件管 **monorepo 全局**：整体结构、turbo 命令、包边界、**跨包通用的代码风格**。
+> 各应用/包的专属规范见其目录下的 `AGENTS.md`（如 `apps/web/AGENTS.md`）。
 
 ## 概述
 
-这个并不是你所熟悉的Next.js项目,前端的业务代码都在src下面,后端的代码都在app/api下面
-
-## 项目结构
+本仓库是一个 **pnpm workspace + turborepo** 的 monorepo。
 
 ```
-
-├── app/                   # Next.js App Router 路由层；除 app/api 外应保持薄层，业务实现委托给 src/
-│   ├── api/               # 后端入口（API 端点及服务端处理逻辑均在此）
-│   └── spec/
-├── src/                   # 前端代码（shared/ 同时存放后端基础设施）
-│   ├── app/               # 让应用运行起来的一切 — 路由、入口点、全局样式、提供者（providers）。
-│   ├── pages/             # 完整页面或嵌套路由中的大块页面内容。
-│   ├── widgets/           # 大型独立的功能或 UI 块，通常承载一个完整的用例。
-│   ├── shared/            # 可复用的通用功能，特别是在与项目/业务的具体内容解耦时
-│   ├── entities/          # 项目所涉及的业务实体，如 user 或 product。
-│   └── features/          # 整个产品功能的可复用实现，即能为用户带来业务价值的操作。
-├── prisma/                # ORM schema + migrations
-└── public/                # 静态资源
+ai-spec/
+├── apps/
+│   └── web/              # Next.js 应用（前端 + HTTP API + 页面渲染）；专属规范见 apps/web/AGENTS.md
+│   └── (worker/、realtime/ —— 规划中，阶段 B 起逐步独立成包)
+├── packages/             # 共享包占位（阶段 B 抽 @repo/db、@repo/shared、@repo/email）
+├── docs/                 # 文档（迁移草稿见 docs/migration-draft/）
+└── 根级配置：package.json（workspace 根）/ pnpm-workspace.yaml / turbo.json / docker-compose.yml / prettier.config.mjs
 ```
 
-## 命令
+> 迁移背景与目标架构见 `docs/migration-draft/monorepo-migration.md`。
 
-| 命令                       | 说明                             |
-| -------------------------- | -------------------------------- |
-| `pnpm run prisma:validate` | 验证 schema 语法                 |
-| `pnpm run prisma:generate` | 生成 Prisma Client 代码          |
-| `pnpm run prisma:migrate`  | 创建并应用数据库迁移（开发环境） |
+## 全局命令（turbo 编排）
 
-## 数据库约束
+在**仓库根目录**运行，turbo 会自动分发到各包的同名脚本：
 
-操作数据库时必须遵循以下流程：
+| 命令             | 说明                                              |
+| ---------------- | ------------------------------------------------- |
+| `pnpm dev`       | 启动所有 app 的 dev（当前 = apps/web 的 next + worker） |
+| `pnpm build`     | 生产构建所有包（按依赖顺序）                      |
+| `pnpm lint`      | 所有包 lint                                       |
+| `pnpm typecheck` | 所有包类型检查                                    |
 
-1. 在 `prisma/schema/schema.prisma` 中定义或修改 Model
-2. 执行 `pnpm run prisma:generate` 生成 Prisma Client 代码
-3. 如需同步数据库结构，执行 `pnpm run prisma:migrate`
-
-**禁止手动修改** `src/shared/db/generator/` 下的任何文件，该目录由脚本自动生成。
-
-## 上下文感知加载
-
-根据你正在工作的区域使用对应的 AGENTS.md：
-
-- **Next.js 路由层**（`app/**`，不含 `app/api/**`）→ `app/AGENTS.md`
-- **后端**（`app/api/**`）→ `app/api/AGENTS.md`
-- **前端业务代码**（`src/**`）→ `src/AGENTS.md`
-
-### 后端
-
-后端开发模式、安全指南和架构说明，参见 `app/api/AGENTS.md`。
-
-### 前端
-
-前端开发模式、设计系统指南和 React 测试最佳实践，参见 `src/AGENTS.md`。
+> 应用专属命令（如 `apps/web` 的 prisma 脚本）见 `apps/web/AGENTS.md`，从根调用用 `pnpm --filter @repo/web <脚本>`。
 
 ## 代码风格指南
 
