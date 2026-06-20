@@ -43,7 +43,7 @@ export const PATCH = withSession(async ({ req, session }) => {
     data.image = await uploadUserAvatar({ userId, body: avatar });
   }
 
-  // email 走验证流程：先查重，再给新邮箱发确认邮件（真正写库由尚未实现的 /verify-email-change 完成）
+  // email 走验证流程：先查重，再给新邮箱发确认邮件（真正写库由 /spec/confirm-email-change/[token] 完成）
   if (email !== undefined) {
     const currentEmail = session.user.email ?? "";
     // 改成自己当前邮箱时跳过，避免无谓发确认邮件并消耗限流额度

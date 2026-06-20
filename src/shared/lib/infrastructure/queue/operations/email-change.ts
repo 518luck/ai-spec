@@ -12,11 +12,12 @@ export async function processEmailChange({
   newEmail,
 }: EmailChangeData): Promise<void> {
   const baseUrl = process.env.BASE_URL ?? "";
-  const url = `${baseUrl}/spec/verify-email-change?token=${token}`;
+  const url = `${baseUrl}/spec/confirm-email-change/${token}`;
+  const cancelUrl = `${baseUrl}/spec/confirm-email-change/${token}?cancel=true`;
 
   await sendEmail({
     subject: `${appConfig.appName} 邮箱变更确认`,
     to,
-    react: EmailChangeTemplate({ url, oldEmail, newEmail }),
+    react: EmailChangeTemplate({ url, cancelUrl, oldEmail, newEmail }),
   });
 }

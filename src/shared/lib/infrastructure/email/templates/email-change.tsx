@@ -13,15 +13,17 @@ import {
 } from "react-email";
 import { Footer } from "../components/footer";
 
-// 邮箱变更确认邮件：魔法链接形态，收件人点击链接完成新邮箱验证
+// 邮箱变更确认邮件：魔法链接形态，收件人点击链接完成新邮箱验证；附带取消链接用于作废本次变更
 export default function EmailChange({
   newEmail = "new@example.com",
   oldEmail = "old@example.com",
-  url = "https://example.com/spec/verify-email-change?token=xxx",
+  url = "https://example.com/spec/confirm-email-change/xxx",
+  cancelUrl = "https://example.com/spec/confirm-email-change/xxx?cancel=true",
 }: {
   newEmail: string;
   oldEmail: string;
   url: string;
+  cancelUrl: string;
 }) {
   return (
     <Html>
@@ -57,6 +59,13 @@ export default function EmailChange({
             </Text>
             <Text className="text-sm leading-6 text-black">
               此链接 15 分钟后过期。
+            </Text>
+            <Text className="text-xs leading-5 text-neutral-500">
+              非本人操作？
+              <Link href={cancelUrl} className="text-neutral-700 underline">
+                取消本次邮箱变更
+              </Link>
+              。
             </Text>
             <Footer email={newEmail} />
           </Container>
