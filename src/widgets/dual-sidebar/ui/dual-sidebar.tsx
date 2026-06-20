@@ -72,7 +72,7 @@ export function DualSidebar({
       data-state={collapsed ? "collapsed" : "expanded"}
       style={{ width: asideWidth }}
       className={cn(
-        "relative flex min-h-dvh shrink-0 overflow-hidden",
+        "flex min-h-dvh shrink-0 overflow-hidden",
         // 拖拽进行时关闭宽度过渡，保证手柄即时跟随指针；非拖拽时保留过渡用于展开/折叠动画
         isResizing ? undefined : "transition-[width] duration-200 ease-linear",
         className,
@@ -138,9 +138,6 @@ export function DualSidebar({
         currentBusinessArea={currentBusinessArea}
         navContext={navContext}
       />
-
-      {/* 拖拽缩放手柄 */}
-      <SidebarResizeHandle />
     </aside>
   );
 }
@@ -229,7 +226,7 @@ function NavAreasPanel({
       data-state={collapsed ? "collapsed" : "expanded"}
       className={cn(
         dualSidebarZoneClasses.operationNav.shell,
-        "flex min-w-0 flex-1 overflow-hidden py-2",
+        "relative flex min-w-0 flex-1 overflow-hidden py-2",
         className,
       )}
     >
@@ -355,6 +352,9 @@ function NavAreasPanel({
           </div>
         </div>
       </div>
+
+      {/* 拖拽缩放手柄：贴在操作面板右边缘（补偿 surface 的 mr-2） */}
+      <SidebarResizeHandle />
     </nav>
   );
 }
