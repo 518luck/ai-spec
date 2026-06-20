@@ -1,6 +1,6 @@
 # AI Spec Monorepo 迁移计划（草稿）
 
-> **状态：草稿** —— 逐项问答细化中，成熟后定为正式计划，再开始执行。
+> **状态：阶段 A（骨架）已执行完成并验证通过；阶段 B（抽包 + 拆 worker）待开始。**
 >
 > 本文件取代被删除的 `docs/architecture/{overview,decisions,migration-phase-1}.md`；其中的 ADR 选型理由已并入本文「关键决策」一节，不丢失。
 
@@ -88,10 +88,10 @@ apps/worker  → {db, shared, email}
 ## 六、执行路线（草稿项，逐项问答细化）
 
 ```
-【项 0】 删除旧架构文档（3 个 .md）
-─── 阶段 A：骨架 ───
-【项 A1】 搭 workspace + turbo 骨架，把 Next 项目平移进 apps/web
-【项 A2】 验证 turbo dev（一条命令拉起 next + worker）
+【项 0】 ✅ 删除旧架构文档（3 个 .md）
+─── 阶段 A：骨架（✅ 已完成并验证） ───
+【项 A1】 ✅ 搭 workspace + turbo 骨架，把 Next 项目平移进 apps/web
+【项 A2】 ✅ 验证 turbo dev（一条命令拉起 next + worker）
 ─── 阶段 B：抽包 + worker 独立 ───
 【项 B1】 抽 @repo/db（Prisma）
 【项 B2】 抽 @repo/shared（queue 生产者 + redis + storage + nanoid + app.config，移除 6 处 server-only）
@@ -154,6 +154,47 @@ web 里：`@/shared/db`→`@repo/db`；`@/shared/lib/infrastructure/{queue,redis
 
 ---
 
-## 九、问答记录（逐项细化时追加）
+## 九、执行记录（按阶段追加，实际操作 + 发现的纠正）
 
-（每项问答、调整、确认结果在此追加，作为草稿→正式计划的演化痕迹。）
+### 阶段 A 执行记录（已完成）
+
+#### 实际完成的操作
+
+1. **删旧文档（项 0）**：删除 `docs/architecture/{overview,decisions,migration-phase-1}.md`，空目录一并移除。ADR 选型理由已并入本文第五节。
+2. **git mv 平移（项 A1）**：整个 Next 项目搬进 `apps/web/`。
+   - 搬进 `apps/web/`：`app/`、`src/`、`prisma/`、`public/`、`worker.ts`、`proxy.ts`、`next.config.ts`、`tsconfig.json`、`postcss.config.mjs`、`prisma.config.ts`、`components.json`、`eslint.config.mjs`、`.env`。
+   - 删除会自动重建的产物：`next-env.d.ts`、`tsconfig.tsbuildinfo`（均被 gitignore，Next/tsc 自动重建）。
+   - `pages/`（FSD+Next 刻意保留的空目录）**跟着 app/ 搬到 `apps/web/pages/`，不删**。
+   - 新建空 `packages/`（`.gitkeep` 占位）。
+   - 留根目录：`AGENTS.md`、`README.md`、`.gitignore`、`.env.example`、`prettier.config.mjs`、`pnpm-lock.yaml`、`pnpm-workspace.yaml`、`docker-compose.yml` 等。
+3. **`pnpm-workspace.yaml`**：加 `packages: [apps/*, packages/*]` 声明，保留原 `allowBuilds`。
+4. **`package.json` 拆分**：根瘦身（仅 turbo + prettier + `turbo dev/build/lint/typecheck` 脚本）；新建 `apps/web/package.json`（`@repo/web`，承载全部原依赖 + `dev/dev:web/worker/build/start/lint/typecheck/email:dev/prisma:*` 脚本）。
+5. **`turbo.json`**：新建（`dev`/`build`/`lint`/`typecheck` + `globalDependencies: ["**/.env","**/.env.*"]`）。安装 `turbo@2.9.18`。
+6. **`packageManager` 字段**：根 package.json 加 `"packageManager": "pnpm@11.7.0"`（turbo v2 强制要求）。
+7. **`AGENTS.md` 分层**：新建 `apps/web/AGENTS.md`（web 专属：概述/内部结构/prisma 命令/DB 约束/上下文加载）；根 `AGENTS.md` 改写为 monorepo 全局（结构 + turbo 命令）+ 保留原代码风格指南。
+8. **`.gitignore` 适配 monorepo**（见下方"纠正 6/7"）。
+
+#### 执行中发现并纠正的坑（重要经验）
+
+1. **`.env` 用 `mv` 不是 `git mv`**：它被 gitignore、未被追踪，`git mv` 会报 "not under version control"。
+2. **`public/` 和 `proxy.ts` 草稿初版漏列**：`public/`（Next 静态资源）、`proxy.ts`（Next 16 代理，原 middleware）必须跟着搬。
+3. **`pages/` 是 FSD+Next 刻意保留的空目录，不是死目录**：其 README 写明"保留空 pages/ 以消除路由解析歧义"。**跟着 app/ 搬到 `apps/web/pages/`，绝不删**。
+4. **`turbo.json` 用 `tasks` 不是 `pipeline`**：`pipeline` 是 turbo v1 旧写法，v2 已废弃；v2 必须 `tasks`。
+5. **`packageManager` 字段必填**：turbo v2 启动时强制要求，缺失直接报错 `Missing packageManager field`。
+6. **`.gitignore` 前导 `/` = 根锚定**：搬进子目录后，`/node_modules`、`/.next/`、`/src/shared/db/generator` 等带斜杠规则全部失效（匹配不到 `apps/web/...`）。修法：去掉前导 `/` 让其匹配任意深度；Prisma 生成代码用 `**/src/shared/db/generator`。
+7. **Prisma 生成代码曾混入 git 索引**：`git mv src apps/web/` 时连带把生成代码搬入，旧规则失效后变成被追踪。修法：`git rm -r --cached apps/web/src/shared/db/generator`（untrack，磁盘文件保留）。**教训：`.gitignore` 对已追踪文件不生效，必须先 untrack。**
+
+#### 验证结果（项 A2，全部通过）
+
+- `pnpm install` ✓（`+ turbo 2.9.18`，4.2s）。
+- `pnpm typecheck` ✓：turbo 发现 `@repo/web` 1 个包，`tsc --noEmit` 全绿。顺带红利：`docs/success-email-verified_副本.tsx` 的旧报错消失（`docs/` 已不在 `apps/web` 的 tsconfig 范围内，monorepo 拆分自然隔离）。
+- `pnpm dev` ✓：turbo → `@repo/web:dev` → `concurrently` 同时起 next（localhost:3000）+ worker（"后台任务 Worker 已启动"）。
+- **端到端 ✓**：改头像触发 `avatar-cleanup` 任务，worker 日志打印「任务完成 { name: 'avatar-cleanup' }」→ BullMQ 整条链路（producer → Redis → worker → 处理）在 monorepo 下跑通。
+
+#### 阶段 A 已知遗留（预期，阶段 B 修）
+
+- worker 仍带 `--conditions react-server` → 改邮箱（`email-change`）任务会崩（react-email 渲染撞 `react-dom/server` 抛错桩）。**这是阶段 B 要根治的核心问题，不是 A 的 bug**；A 阶段冒烟测试刻意避开改邮箱。
+
+#### Checkpoint
+
+阶段 A 在 `chore/monorepo-migration` 分支提交，作为阶段 B 的回滚点。**未合并 main**（迁移未完成 + email 仍坏，main 须保持稳定，待阶段 B 闭环后一次性合并）。
