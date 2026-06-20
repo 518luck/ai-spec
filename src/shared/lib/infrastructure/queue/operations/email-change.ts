@@ -11,7 +11,7 @@ export async function processEmailChange({
   oldEmail,
   newEmail,
 }: EmailChangeData): Promise<void> {
-  const baseUrl = process.env.NEXTAUTH_URL ?? "";
+  const baseUrl = process.env.BASE_URL ?? "";
   const url = `${baseUrl}/spec/verify-email-change?token=${token}`;
 
   await sendEmail({
