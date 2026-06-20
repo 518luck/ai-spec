@@ -10,6 +10,11 @@ import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
 import { dualSidebarZoneClasses } from "../model/dual-sidebar-styles";
+import {
+  SIDEBAR_COMPACT_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+} from "../model/sidebar-config";
 import type {
   NavBusinessArea,
   NavBusinessItem as NavBusinessItemData,
@@ -23,6 +28,7 @@ import {
 } from "../model/navigation-data";
 import { AnimatedArea } from "./animated-area";
 import { AnimatedNavIcon } from "./animated-nav-icon";
+import { SidebarResizeHandle } from "./sidebar-resize-handle";
 import { UserAvatarPopover } from "./user-avatar-popover";
 
 type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
@@ -49,20 +55,29 @@ export function DualSidebar({
   ...props
 }: DualSidebarProps): JSX.Element {
   // 读取右侧操作导航栏的展开状态，左侧业务导航栏始终保留。
-  const { open } = useDualSidebarContext();
+  const { open, width, collapsed, isResizing } = useDualSidebarContext();
 
   const pathname = usePathname();
   const navContext = { pathname: pathname ?? "" };
   const businessNavItems = getNavBusinessItems(navContext);
   const currentBusinessArea = getCurrentNavBusinessArea(navContext);
 
+  // aside 宽度：open=false 仅业务图标栏(64px)；collapsed 紧凑模式(128px)；否则用拖拽存储宽度并钳制到合法范围
+  const asideWidth = !open
+    ? 64
+    : collapsed
+      ? SIDEBAR_COMPACT_WIDTH
+      : Math.max(SIDEBAR_MIN_WIDTH, Math.min(width, SIDEBAR_MAX_WIDTH));
+
   return (
     <aside
       data-slot="dual-sidebar"
       data-state={open ? "expanded" : "collapsed"}
+      style={{ width: asideWidth }}
       className={cn(
-        "flex min-h-dvh max-w-76 shrink-0 overflow-hidden transition-[width] duration-200 ease-linear",
-        open ? "w-76" : "w-16",
+        "relative flex min-h-dvh shrink-0 overflow-hidden",
+        // 拖拽进行时关闭宽度过渡，保证手柄即时跟随指针；非拖拽时保留过渡用于展开/折叠动画
+        isResizing ? undefined : "transition-[width] duration-200 ease-linear",
         className,
       )}
       {...props}
@@ -127,6 +142,9 @@ export function DualSidebar({
         currentBusinessArea={currentBusinessArea}
         navContext={navContext}
       />
+
+      {/* 拖拽缩放手柄：仅展开态显示，折叠/隐藏态不参与缩放 */}
+      {open ? <SidebarResizeHandle /> : null}
     </aside>
   );
 }
