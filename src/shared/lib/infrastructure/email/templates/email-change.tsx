@@ -17,7 +17,7 @@ import { Footer } from "../components/footer";
 export default function EmailChange({
   newEmail = "new@example.com",
   oldEmail = "old@example.com",
-  url = "https://example.com/verify-email-change?token=xxx",
+  url = "https://example.com/spec/verify-email-change?token=xxx",
 }: {
   newEmail: string;
   oldEmail: string;

@@ -12,7 +12,7 @@ export async function processEmailChange({
   newEmail,
 }: EmailChangeData): Promise<void> {
   const baseUrl = process.env.NEXTAUTH_URL ?? "";
-  const url = `${baseUrl}/verify-email-change?token=${token}`;
+  const url = `${baseUrl}/spec/verify-email-change?token=${token}`;
 
   await sendEmail({
     subject: `${appConfig.appName} 邮箱变更确认`,
