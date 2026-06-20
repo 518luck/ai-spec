@@ -1,8 +1,8 @@
 "use client";
 
-import type { JSX, ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import type { JSX, ReactNode } from "react";
 
 import { updateUser } from "@/entities/user";
 import { userNameSchema } from "@/shared/lib/zod/schemas/user";
@@ -40,7 +40,7 @@ export function NameFieldCard({
       title="名称"
       defaultValue={defaultValue}
       placeholder="未设置"
-      description="用于展示你的昵称"
+      description="最多 32 个字，建议简洁，如「张三-AI产品经理」"
       aside={aside}
       onSave={handleSave}
     />
