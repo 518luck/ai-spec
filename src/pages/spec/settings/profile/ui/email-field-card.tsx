@@ -38,7 +38,8 @@ export function EmailFieldCard({
       title="邮箱"
       defaultValue={currentEmail}
       placeholder="未绑定邮箱"
-      description="用于接收通知"
+      // TODO: 后续 description 改为可点击链接，跳转至「邮件管理」页（页面待建）
+      description="管理账号邮箱，更换需通过新邮箱验证"
       onSave={handleSave}
       successMessage="确认邮件已发送，请到新邮箱查收完成验证"
       revertOnSuccess

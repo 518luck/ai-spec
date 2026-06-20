@@ -184,7 +184,7 @@ function NavBusinessItem({
               {learnMoreHref ? (
                 <Link
                   href={learnMoreHref}
-                  className="text-background underline-offset-2 hover:underline"
+                  className="text-background underline underline-offset-2"
                 >
                   查看详情
                 </Link>
