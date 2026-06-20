@@ -18,8 +18,15 @@ export interface EmailChangeData {
   newEmail: string;
 }
 
+// 邮箱变更成功通知老邮箱任务数据
+export interface EmailChangedNoticeData {
+  to: string;
+  newEmail: string;
+}
+
 // 后台任务数据的联合类型，供 Worker 路由时类型收窄
 export type BackgroundJobData =
   | SyncOauthAvatarData
   | DeleteUserAvatarData
-  | EmailChangeData;
+  | EmailChangeData
+  | EmailChangedNoticeData;

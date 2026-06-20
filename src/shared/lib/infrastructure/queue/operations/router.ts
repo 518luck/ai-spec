@@ -5,10 +5,12 @@ import type {
   BackgroundJobData,
   DeleteUserAvatarData,
   EmailChangeData,
+  EmailChangedNoticeData,
   SyncOauthAvatarData,
 } from "../types";
 import { processDeleteUserAvatar } from "./delete-user-avatar";
 import { processEmailChange } from "./email-change";
+import { processEmailChangedNotice } from "./email-changed-notice";
 import { processSyncOauthAvatar } from "./sync-oauth-avatar";
 
 // avatar-sync 任务数据类型守卫
@@ -34,6 +36,12 @@ const isEmailChangeData = (data: unknown): data is EmailChangeData =>
   "oldEmail" in data &&
   "newEmail" in data;
 
+// email-changed-notice 任务数据类型守卫
+const isEmailChangedNoticeData = (
+  data: unknown,
+): data is EmailChangedNoticeData =>
+  typeof data === "object" && data !== null && "to" in data && "newEmail" in data;
+
 // 后台任务总路由：按 job.name 用类型守卫收窄数据后分发到对应处理器
 export async function processBackgroundJob(
   job: Job<BackgroundJobData>,
@@ -54,6 +62,11 @@ export async function processBackgroundJob(
         throw new Error("email-change 任务数据格式不正确");
       }
       return processEmailChange(job.data);
+    case JOB_NAMES.emailChangedNotice:
+      if (!isEmailChangedNoticeData(job.data)) {
+        throw new Error("email-changed-notice 任务数据格式不正确");
+      }
+      return processEmailChangedNotice(job.data);
     default:
       throw new Error(`未知的后台任务类型: ${job.name}`);
   }

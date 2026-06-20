@@ -20,3 +20,8 @@ export const kvGet = async <T>(key: string): Promise<T | null> => {
   }
   return JSON.parse(raw) as T;
 };
+
+// 删除指定 key（用于清理一次性验证上下文等）
+export const kvDel = async (key: string): Promise<void> => {
+  await redis.del(key);
+};

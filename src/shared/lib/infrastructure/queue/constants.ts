@@ -17,4 +17,5 @@ export const JOB_NAMES = {
   avatarSync: "avatar-sync",
   avatarCleanup: "avatar-cleanup",
   emailChange: "email-change",
+  emailChangedNotice: "email-changed-notice",
 } as const;
