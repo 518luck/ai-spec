@@ -1,5 +1,3 @@
-import "server-only";
-
 import type { ImageOptions } from "./types";
 
 // 检测字符串是否为 Base64 编码（兼容 data URI 和纯 Base64）

@@ -1,5 +1,3 @@
-import "server-only";
-
 import Redis from "ioredis";
 
 // 开发环境用 globalThis 缓存连接，避免 Next.js 热更新反复创建；生产环境由模块级变量保证单例

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "worker": "tsx --conditions react-server worker.ts",
+    "worker": "tsx worker.ts",
     "dev:all": "concurrently -n next,worker -c cyan,magenta --kill-timeout 5000 \"pnpm dev\" \"pnpm worker\"",
     "build": "next build",
     "start": "next start",

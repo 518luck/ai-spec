@@ -1,5 +1,3 @@
-import "server-only";
-
 import { getAppRedis } from "./clients";
 
 // 模块级缓存 KV 连接，避免每次读写都新建 Redis 实例造成连接泄漏
