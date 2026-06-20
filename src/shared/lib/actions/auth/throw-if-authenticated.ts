@@ -1,5 +1,5 @@
 import { createMiddleware } from "next-safe-action";
-import { getSession } from "@/shared/lib/auth/utils";
+import { auth } from "@/shared/lib/auth/auth";
 
 /**
  * @function throwIfAuthenticated
@@ -17,7 +17,7 @@ export const throwIfAuthenticated = createMiddleware().define(
   // metadata：action 上配置的元信息
   // bindArgsClientInputs：绑定参数传进来的输入
   async ({ next, ctx }) => {
-    const session = await getSession();
+    const session = await auth();
 
     if (session) {
       throw new Error("您已经登录");

@@ -1,6 +1,6 @@
 import prisma from "@/shared/db";
 import { AiSpecError, toErrorResponse } from "@/shared/lib/api/error";
-import { getSession } from "@/shared/lib/auth/utils";
+import { auth } from "@/shared/lib/auth/auth";
 import { withAxiom } from "@/shared/lib/infrastructure/axiom/server";
 import { apiKeyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { getSearchParams } from "@/shared/lib/utils";
@@ -145,7 +145,7 @@ export const withSession = (handler: SessionHandler) =>
         session = buildSessionFromUser(token.user);
       } else {
         // 未携带 API Key，走 web 端 cookies session 分支
-        const cookieSession = await getSession();
+        const cookieSession = await auth();
 
         if (!cookieSession) {
           throw new Error("未登录");
