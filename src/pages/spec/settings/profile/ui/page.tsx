@@ -4,7 +4,7 @@ import { AvatarUploader } from "@/features/upload-avatar";
 import { auth } from "@/shared/lib/auth/auth";
 import { HeaderedPageShell } from "@/widgets/page-shell";
 
-import { EditableFieldCard } from "./editable-field-card";
+import { EmailFieldCard } from "./email-field-card";
 import { NameFieldCard } from "./name-field-card";
 
 // 渲染个人详情页面，以可编辑卡片展示名称（含头像）与邮箱
@@ -22,12 +22,7 @@ export async function ProfilePage(): Promise<JSX.Element> {
           defaultValue={name}
           aside={<AvatarUploader className="size-24" />}
         />
-        <EditableFieldCard
-          title="邮箱"
-          defaultValue={email}
-          placeholder="未绑定邮箱"
-          description="用于接收通知"
-        />
+        <EmailFieldCard defaultValue={email} />
       </div>
     </HeaderedPageShell>
   );

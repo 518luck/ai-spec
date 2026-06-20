@@ -1,0 +1,13 @@
+{
+  // VSCode 调试配置：attach 到 pnpm dev 启动的 Next.js 服务端进程
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Next.js: debug server-side",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev",
+      "cwd": "${workspaceFolder}"
+    }
+  ]
+}

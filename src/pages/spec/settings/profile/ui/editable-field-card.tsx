@@ -16,6 +16,10 @@ type EditableFieldCardProps = {
   aside?: ReactNode;
   disabled?: boolean;
   onSave?: (value: string) => Promise<void>;
+  // 成功 toast 文案，默认"已保存"
+  successMessage?: string;
+  // 成功后回退输入到基线而非推进基线（用于"提交后待处理"，如邮箱变更待验证）
+  revertOnSuccess?: boolean;
 };
 
 // 自包含的可编辑字段卡片：内部托管输入值、dirty 判定与保存状态，调用方只需传初值与可选保存方法
@@ -27,6 +31,8 @@ export function EditableFieldCard({
   aside,
   disabled = false,
   onSave,
+  successMessage = "已保存",
+  revertOnSuccess = false,
 }: EditableFieldCardProps): JSX.Element {
   // 输入当前值、已保存基线、保存中标志共同表达 idle/dirty/saving 三态
   const [value, setValue] = useState(defaultValue);
@@ -42,8 +48,13 @@ export function EditableFieldCard({
     setIsSaving(true);
     try {
       await onSave(value.trim());
-      setBaseline(value.trim());
-      toast.success("已保存");
+      // 提交后待处理的场景（如邮箱待验证）回退输入，否则推进基线固化新值
+      if (revertOnSuccess) {
+        setValue(baseline);
+      } else {
+        setBaseline(value.trim());
+      }
+      toast.success(successMessage);
     } catch (error) {
       toast.error(
         error instanceof Error && error.message ? error.message : "保存失败",
@@ -54,9 +65,7 @@ export function EditableFieldCard({
   };
 
   // Enter 触发保存，Esc 回退到基线
-  const handleKeyDown = (
-    event: KeyboardEvent<HTMLInputElement>,
-  ): void => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
     if (event.key === "Enter" && onSave && dirty && !isSaving) {
       event.preventDefault();
       void handleSave();

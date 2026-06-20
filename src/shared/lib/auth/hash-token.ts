@@ -2,7 +2,7 @@
 // 带 pepper 是为了即使 Token 表泄露，攻击者没有 pepper 也无法伪造合法哈希。
 export const hashToken = async (token: string): Promise<string> => {
   const encoder = new TextEncoder();
-  const pepper = process.env.NEXTAUTH_SECRET ?? "";
+  const pepper = process.env.AUTH_SECRET ?? "";
 
   // 把 pepper 封装为 HMAC 专用密钥（这是 HMAC 区别于普通 SHA-256 的关键）
   const key = await crypto.subtle.importKey(
