@@ -1,8 +1,8 @@
 "use client";
 
 import { SETTINGS_PROFILE_PATH } from "@/pages/spec/auth/confirm-email-change/model/config";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { type JSX, useEffect } from "react";
 import { StatusMessage } from "./status-message";
 
@@ -14,7 +14,7 @@ export function ConfirmEmailChangeClient(): JSX.Element {
   useEffect(() => {
     const run = async (): Promise<void> => {
       // 触发 jwt 回调 trigger="update"，重读用户表使新邮箱立即生效
-      await update();
+      await update({ trigger: "update" });
       router.replace(SETTINGS_PROFILE_PATH);
     };
 
