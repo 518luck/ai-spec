@@ -1,10 +1,11 @@
 import "server-only";
 
 import prisma from "@/shared/db";
+import { skipAuthThrottling } from "@/shared/lib/api/environment";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { enqueueEmailChange } from "@/shared/lib/infrastructure/queue";
 import { kvSet } from "@/shared/lib/infrastructure/redis/kv";
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { nanoid } from "@/shared/lib/nanoid";
 
 // 邮箱变更 token 有效期（毫秒），数据库过期与 Redis TTL 保持一致
@@ -23,11 +24,10 @@ export async function requestEmailChange({
   newEmail: string;
   userId: string;
 }): Promise<void> {
-  // 一天 10 次：复用默认限流器（10 积分），用 customDuration 把窗口拉长到 1 天 ；超限抛错上浮
-  await ratelimit({
-    key: `email-change:request:${userId}`,
-    duration: 24 * 60 * 60,
-  });
+  // 每日 10 次硬限：用硬性每日限流器，超额锁到当天窗口结束；本地开发/CI 跳过限流
+  if (!skipAuthThrottling) {
+    await hardDailyRatelimit({ key: `request:${userId}` });
+  }
 
   // 清理该用户的历史 VerificationToken，避免遗留
   await prisma.verificationToken.deleteMany({

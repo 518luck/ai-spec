@@ -17,6 +17,14 @@ export const apiKeyLimiter = new RateLimiterRedis({
   duration: 60,
 });
 
+// 硬性每日限流器：每日 10 积分，超额后锁到当天窗口结束（不设 blockDuration，避免短阻塞重置日窗口），供多个"每日 N 次"认证流程复用
+export const hardDailyLimiter = new RateLimiterRedis({
+  storeClient: getAppRedis(),
+  keyPrefix: "hard-daily", // 独立键前缀，与通用限流器隔离
+  points: 10,
+  duration: 24 * 60 * 60, // 1 天固定窗口
+});
+
 type RatelimitOptions = {
   key: string;
   points?: number;
@@ -66,6 +74,30 @@ type ApiKeyRatelimitOptions = {
   key: string;
   points?: number;
 };
+
+// 硬性每日限流入参：key 为限流桶标识（实际 Redis key 会带 "hard-daily:" 前缀），points 为本次消耗积分
+type HardDailyRatelimitOptions = {
+  key: string;
+  points?: number;
+};
+
+// 硬性每日限流：points 指定本次消耗积分，超额抛错（沿用 ratelimit 的抛错语义）
+export async function hardDailyRatelimit({
+  key,
+  points = 1,
+}: HardDailyRatelimitOptions): Promise<RateLimiterRes> {
+  try {
+    return await hardDailyLimiter.consume(key, points);
+  } catch (rejRes: unknown) {
+    if (rejRes instanceof Error) {
+      throw new Error("限流服务异常");
+    }
+    const res = rejRes as RateLimiterRes;
+    throw new Error(
+      `请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`,
+    );
+  }
+}
 
 // API Key 鉴权专用限流：被限流时不抛错，而是返回 ok:false，由调用方决定如何响应（例如返回 429 并附带限流响应头）
 export async function apiKeyRatelimit({

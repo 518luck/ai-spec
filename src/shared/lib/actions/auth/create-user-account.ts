@@ -6,14 +6,13 @@ import * as z from "zod/v4";
 import prisma from "@/shared/db";
 import { flattenValidationErrors } from "next-safe-action";
 import { skipAuthThrottling } from "@/shared/lib/api/environment";
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { hashPassword } from "@/shared/lib/utils";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 import { actionClient } from "@/shared/lib/actions/safe-action";
 
 const OTP_ATTEMPTS = 2;
-const OTP_LOCKOUT_DURATION = 24 * 60 * 60; // Block for 24 hours
 
 const schema = signUpSchema.extend({
   code: z.string().min(6, "OTP must be 6 characters long."),
@@ -33,12 +32,10 @@ export const createUserAccountAction = actionClient
     const signupAttemptKey = `signup:attempts:${email}`;
 
     if (!skipAuthThrottling) {
-      // 最多尝试5次
-
-      await ratelimit({
+      // 每日 10 积分，每次消耗 2 点 → 最多尝试 5 次，超额锁到当天窗口结束
+      await hardDailyRatelimit({
         key: signupAttemptKey,
         points: OTP_ATTEMPTS,
-        duration: OTP_LOCKOUT_DURATION,
       });
     }
 
@@ -51,11 +48,12 @@ export const createUserAccountAction = actionClient
 
     if (!verificationToken) {
       // 验证码错误时累计一次失败次数。
-      await ratelimit({
-        key: signupAttemptKey,
-        points: OTP_ATTEMPTS,
-        duration: OTP_LOCKOUT_DURATION,
-      });
+      if (!skipAuthThrottling) {
+        await hardDailyRatelimit({
+          key: signupAttemptKey,
+          points: OTP_ATTEMPTS,
+        });
+      }
 
       // 验证码不匹配时终止注册。
       throw new Error("输入无效的验证码");
