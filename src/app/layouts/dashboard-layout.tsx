@@ -6,9 +6,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <KBar>
       <TooltipProvider>
-        <DualSidebarLayout defaultSidebarOpen={true}>
-          {children}
-        </DualSidebarLayout>
+        <DualSidebarLayout>{children}</DualSidebarLayout>
       </TooltipProvider>
     </KBar>
   );

@@ -39,7 +39,6 @@ type NavBusinessItemBaseProps = {
 };
 
 type NavAreasPanelProps = {
-  open: boolean;
   currentBusinessArea: NavBusinessArea | null;
   navContext: NavContext;
   className?: string;
@@ -54,25 +53,23 @@ export function DualSidebar({
   className,
   ...props
 }: DualSidebarProps): JSX.Element {
-  // 读取右侧操作导航栏的展开状态，左侧业务导航栏始终保留。
-  const { open, width, collapsed, isResizing } = useDualSidebarContext();
+  // 读取侧边栏宽度/紧凑/拖拽状态，左侧业务导航栏始终保留。
+  const { width, collapsed, isResizing } = useDualSidebarContext();
 
   const pathname = usePathname();
   const navContext = { pathname: pathname ?? "" };
   const businessNavItems = getNavBusinessItems(navContext);
   const currentBusinessArea = getCurrentNavBusinessArea(navContext);
 
-  // aside 宽度：open=false 仅业务图标栏(64px)；collapsed 紧凑模式(128px)；否则用拖拽存储宽度并钳制到合法范围
-  const asideWidth = !open
-    ? 64
-    : collapsed
-      ? SIDEBAR_COMPACT_WIDTH
-      : Math.max(SIDEBAR_MIN_WIDTH, Math.min(width, SIDEBAR_MAX_WIDTH));
+  // aside 宽度：collapsed 紧凑模式(128px)；否则用拖拽存储宽度并钳制到合法范围
+  const asideWidth = collapsed
+    ? SIDEBAR_COMPACT_WIDTH
+    : Math.max(SIDEBAR_MIN_WIDTH, Math.min(width, SIDEBAR_MAX_WIDTH));
 
   return (
     <aside
       data-slot="dual-sidebar"
-      data-state={open ? "expanded" : "collapsed"}
+      data-state={collapsed ? "collapsed" : "expanded"}
       style={{ width: asideWidth }}
       className={cn(
         "relative flex min-h-dvh shrink-0 overflow-hidden",
@@ -138,13 +135,12 @@ export function DualSidebar({
 
       {/* 右侧导航栏 */}
       <NavAreasPanel
-        open={open}
         currentBusinessArea={currentBusinessArea}
         navContext={navContext}
       />
 
-      {/* 拖拽缩放手柄：仅展开态显示，折叠/隐藏态不参与缩放 */}
-      {open ? <SidebarResizeHandle /> : null}
+      {/* 拖拽缩放手柄 */}
+      <SidebarResizeHandle />
     </aside>
   );
 }
@@ -215,26 +211,25 @@ function NavBusinessItem({
   );
 }
 
-// 渲染右侧区域操作面板，随双栏状态展开或折叠。
+// 渲染右侧区域操作面板，紧凑模式下隐藏文字只留图标/点。
 function NavAreasPanel({
-  open,
   currentBusinessArea,
   navContext,
   className,
 }: NavAreasPanelProps): JSX.Element {
   // 路径未匹配业务区域时，保留默认面板以避免右侧内容整块消失。
   const visibleBusinessArea = currentBusinessArea ?? "personal";
+  // 紧凑模式下隐藏标题/分组文字，一级只留图标、二级只留点
+  const { collapsed } = useDualSidebarContext();
 
   return (
     <nav
       aria-label="操作导航"
-      aria-hidden={!open}
       data-slot="dual-sidebar-operation-nav"
-      data-state={open ? "expanded" : "collapsed"}
+      data-state={collapsed ? "collapsed" : "expanded"}
       className={cn(
         dualSidebarZoneClasses.operationNav.shell,
-        "flex min-w-0 overflow-hidden py-2 transition-[width] duration-200 ease-linear",
-        open ? "flex-1" : "w-0",
+        "flex min-w-0 flex-1 overflow-hidden py-2",
         className,
       )}
     >
@@ -242,8 +237,7 @@ function NavAreasPanel({
         data-slot="dual-sidebar-operation-nav-panel"
         className={cn(
           dualSidebarZoneClasses.operationNav.surface,
-          "mr-2 flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl transition-opacity duration-200 ease-linear",
-          open ? "opacity-100" : "pointer-events-none opacity-0",
+          "mr-2 flex min-h-0 flex-1 flex-col justify-between overflow-hidden rounded-xl",
         )}
       >
         <div className="relative min-h-0 flex-1 overflow-hidden">
@@ -260,9 +254,11 @@ function NavAreasPanel({
                   data-slot="dual-sidebar-operation-nav-content"
                   className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-6"
                 >
-                  <div className="ml-2 text-lg font-semibold">
-                    {navAreaPanel.title}
-                  </div>
+                  {collapsed ? null : (
+                    <div className="ml-2 text-lg font-semibold">
+                      {navAreaPanel.title}
+                    </div>
+                  )}
 
                   {/* 菜单分组 */}
                   <div className="flex flex-col gap-8">
@@ -271,7 +267,7 @@ function NavAreasPanel({
                         key={group.name ?? "default"}
                         className="flex flex-col gap-2"
                       >
-                        {group.name ? (
+                        {!collapsed && group.name ? (
                           <div className="text-muted-foreground/70 px-4 text-sm font-medium">
                             {group.name}
                           </div>
@@ -289,26 +285,50 @@ function NavAreasPanel({
                                 <Link
                                   href={item.href}
                                   data-active={item.active}
-                                  className="text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center gap-2 rounded-md px-2 py-2 text-sm transition-colors"
+                                  className={cn(
+                                    "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center rounded-md text-sm transition-colors",
+                                    collapsed
+                                      ? "size-9 shrink-0 justify-center"
+                                      : "gap-2 px-2 py-2",
+                                  )}
                                 >
                                   <Icon className="size-4 shrink-0" />
-                                  <span className="min-w-0 truncate">
-                                    {item.name}
-                                  </span>
+                                  {collapsed ? null : (
+                                    <span className="min-w-0 truncate">
+                                      {item.name}
+                                    </span>
+                                  )}
                                 </Link>
 
                                 {item.items ? (
-                                  <div className="ml-4 flex flex-col gap-1">
+                                  <div
+                                    className={cn(
+                                      "flex flex-col gap-1",
+                                      collapsed ? "" : "ml-4",
+                                    )}
+                                  >
                                     {item.items.map((subItem) => (
                                       <Link
                                         key={subItem.href}
                                         href={subItem.href}
                                         data-active={subItem.active}
-                                        className="text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md px-2 py-1.5 text-sm transition-colors"
+                                        className={cn(
+                                          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md transition-colors",
+                                          collapsed
+                                            ? "flex size-9 shrink-0 items-center justify-center"
+                                            : "px-2 py-1.5 text-sm",
+                                        )}
                                       >
-                                        <span className="block min-w-0 truncate">
-                                          {subItem.name}
-                                        </span>
+                                        {collapsed ? (
+                                          <span
+                                            aria-label={subItem.name}
+                                            className="size-1.5 rounded-full bg-current opacity-60"
+                                          />
+                                        ) : (
+                                          <span className="block min-w-0 truncate">
+                                            {subItem.name}
+                                          </span>
+                                        )}
                                       </Link>
                                     ))}
                                   </div>

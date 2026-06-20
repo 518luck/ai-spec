@@ -14,7 +14,6 @@ import { DualSidebar } from "./dual-sidebar";
 type DualSidebarLayoutProps = ComponentProps<"div"> & {
   sidebarClassName?: string;
   contentClassName?: string;
-  defaultSidebarOpen?: boolean;
 };
 
 // 承载左侧双侧边栏和右侧主内容区的应用级布局。
@@ -22,7 +21,6 @@ export async function DualSidebarLayout({
   className,
   sidebarClassName,
   contentClassName,
-  defaultSidebarOpen,
   children,
   ...props
 }: DualSidebarLayoutProps): Promise<JSX.Element> {
@@ -37,7 +35,6 @@ export async function DualSidebarLayout({
 
   return (
     <DualSidebarProvider
-      defaultOpen={defaultSidebarOpen}
       defaultWidth={defaultWidth}
       defaultCollapsed={defaultCollapsed}
     >

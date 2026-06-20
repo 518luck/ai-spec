@@ -4,11 +4,15 @@ import { type JSX, type PointerEvent, useRef } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
-import { SIDEBAR_MAX_WIDTH, SIDEBAR_MIN_WIDTH } from "../model/sidebar-config";
+import {
+  SIDEBAR_COLLAPSE_THRESHOLD,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+} from "../model/sidebar-config";
 
 // 侧边栏右边缘拖拽手柄：pointerdown 捕获指针，move 实时改宽并钳制到合法范围，up 释放
 export function SidebarResizeHandle(): JSX.Element {
-  const { setWidth, setIsResizing } = useDualSidebarContext();
+  const { setWidth, setCollapsed, setIsResizing } = useDualSidebarContext();
   // 拖拽起点记录的 aside 左边缘（clientX 减它即新宽度），以及拖拽进行中标记
   const asideLeftRef = useRef(0);
   const draggingRef = useRef(false);
@@ -27,13 +31,21 @@ export function SidebarResizeHandle(): JSX.Element {
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  // 拖拽中：用 clientX 减 aside 左边缘得到新宽度，钳制到 [MIN, MAX] 实时写入
+  // 拖拽中：钳制宽度后按阈值吸附——< 阈值进紧凑（冻结 width 保留记忆值），≥ 阈值展开并存宽度
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>): void => {
     if (!draggingRef.current) {
       return;
     }
-    const next = event.clientX - asideLeftRef.current;
-    setWidth(Math.max(SIDEBAR_MIN_WIDTH, Math.min(next, SIDEBAR_MAX_WIDTH)));
+    const next = Math.max(
+      SIDEBAR_MIN_WIDTH,
+      Math.min(event.clientX - asideLeftRef.current, SIDEBAR_MAX_WIDTH),
+    );
+    if (next < SIDEBAR_COLLAPSE_THRESHOLD) {
+      setCollapsed(true);
+    } else {
+      setCollapsed(false);
+      setWidth(next);
+    }
   };
 
   // 拖拽结束：释放拖拽态与指针捕获
