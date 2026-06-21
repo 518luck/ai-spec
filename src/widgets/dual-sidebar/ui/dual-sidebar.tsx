@@ -260,7 +260,7 @@ function NavAreasPanel({
                     )}
                   >
                     {collapsed ? null : (
-                      <div className="text-lg font-semibold">
+                      <div className="min-w-0 truncate text-lg font-semibold">
                         {navAreaPanel.title}
                       </div>
                     )}
@@ -269,14 +269,19 @@ function NavAreasPanel({
                         <Icons.sidebarExpand className="size-4" />
                       </IconButton>
                     ) : (
-                      <div className="flex items-center">
+                      <div className="flex shrink-0 items-center">
                         <IconButton
                           label="收起侧边栏"
+                          tooltip="收起"
                           onClick={toggleCollapsed}
                         >
                           <Icons.sidebarCollapse className="size-4" />
                         </IconButton>
-                        <IconButton label="恢复默认宽度" onClick={resetWidth}>
+                        <IconButton
+                          label="恢复默认宽度"
+                          tooltip="重置"
+                          onClick={resetWidth}
+                        >
                           <Icons.sidebarReset className="size-4" />
                         </IconButton>
                       </div>
@@ -385,23 +390,39 @@ function NavAreasPanel({
   );
 }
 
-// 标题行右侧的图标按钮（收缩/展开/重置宽度），统一尺寸与交互态
+// 标题行右侧的图标按钮（收缩/展开/重置宽度），统一尺寸与交互态；传入 tooltip 则用 Tooltip 包裹
 function IconButton({
   label,
+  tooltip,
   onClick,
   children,
 }: NavBusinessItemBaseProps & {
   label: string;
+  tooltip?: string;
   onClick: () => void;
 }): JSX.Element {
-  return (
+  const button = (
     <button
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+      className="text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex size-7 items-center justify-center rounded-md transition-colors"
     >
       {children}
     </button>
+  );
+
+  // 未提供提示文案时直接渲染按钮，保持调用简洁
+  if (tooltip === undefined) {
+    return button;
+  }
+
+  return (
+    <Tooltip>
+      <TooltipTrigger render={button} />
+      <TooltipContent side="bottom" showArrow={false}>
+        {tooltip}
+      </TooltipContent>
+    </Tooltip>
   );
 }
