@@ -48,8 +48,8 @@ export function SidebarResizeHandle(): JSX.Element {
     }
   };
 
-  // 拖拽结束：释放拖拽态与指针捕获
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>): void => {
+  // 统一结束拖拽：清除拖拽标记与 isResizing，释放指针捕获
+  const endDrag = (event: PointerEvent<HTMLDivElement>): void => {
     if (!draggingRef.current) {
       return;
     }
@@ -57,6 +57,9 @@ export function SidebarResizeHandle(): JSX.Element {
     setIsResizing(false);
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
+
+  // 拖拽结束：松手
+  const handlePointerUp = endDrag;
 
   return (
     <div
@@ -66,6 +69,8 @@ export function SidebarResizeHandle(): JSX.Element {
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
+      onPointerCancel={endDrag}
+      onLostPointerCapture={endDrag}
       className={cn(
         "absolute inset-y-2 right-2 z-20 w-1 cursor-col-resize touch-none rounded-r-xl select-none",
         "bg-transparent transition-colors hover:bg-foreground/20",
