@@ -166,7 +166,7 @@ function NavBusinessItem({
             aria-label={name}
             data-active={active}
             className={cn(
-              "text-muted-foreground hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
+              "text-sidebar-foreground/90 hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
               className,
             )}
           >
@@ -325,7 +325,7 @@ function NavAreasPanel({
                                       : "gap-2 px-2 py-2",
                                   )}
                                 >
-                                  <Icon className="size-4 shrink-0" />
+                                  <Icon className="size-4 shrink-0 opacity-60" />
                                   {collapsed ? null : (
                                     <span className="min-w-0 truncate">
                                       {item.name}

@@ -225,7 +225,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
         items: [
           {
             name: "项目",
-            icon: Icons.team,
+            icon: Icons.projects,
             href: navBusinessAreaDefaultHrefs.team,
             active: pathname === navBusinessAreaDefaultHrefs.team,
           },
@@ -237,7 +237,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
           },
           {
             name: "成员",
-            icon: Icons.personal,
+            icon: Icons.members,
             href: "/spec/team/members",
             active: pathname === "/spec/team/members",
           },
@@ -248,7 +248,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
         items: [
           {
             name: "AGENTS.md",
-            icon: Icons.logo,
+            icon: Icons.agentsMd,
             href: "/spec/team/shared-assets/agents-md",
             active: pathname === "/spec/team/shared-assets/agents-md",
           },

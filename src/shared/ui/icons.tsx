@@ -12,6 +12,7 @@ import {
   IconEyeOff,
   IconFileAi,
   IconFileText,
+  IconFiles,
   IconFolder,
   IconGift,
   IconHelpCircle,
@@ -30,6 +31,7 @@ import {
   IconUpload,
   IconUserCircle,
   IconUserFilled,
+  IconUsers,
   IconUsersGroup,
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
@@ -59,6 +61,8 @@ export const Icons = {
   skills: IconBook,
   aiAgents: IconBrandMetabrainz,
   plugins: IconPlug,
+  projects: IconFiles,
+  members: IconUsers,
   preference: IconAdjustmentsAlt,
   key: IconKey,
   profile: IconUserCircle,
