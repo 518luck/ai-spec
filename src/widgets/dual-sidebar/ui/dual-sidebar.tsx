@@ -28,6 +28,7 @@ import {
 } from "../model/sidebar-config";
 import { AnimatedArea } from "./animated-area";
 import { AnimatedNavIcon } from "./animated-nav-icon";
+import { IconButton } from "./icon-button";
 import { SidebarResizeHandle } from "./sidebar-resize-handle";
 import { UserAvatarPopover } from "./user-avatar-popover";
 
@@ -387,42 +388,5 @@ function NavAreasPanel({
       {/* 拖拽缩放手柄：贴在操作面板右边缘（补偿 surface 的 mr-2） */}
       <SidebarResizeHandle />
     </nav>
-  );
-}
-
-// 标题行右侧的图标按钮（收缩/展开/重置宽度），统一尺寸与交互态；传入 tooltip 则用 Tooltip 包裹
-function IconButton({
-  label,
-  tooltip,
-  onClick,
-  children,
-}: NavBusinessItemBaseProps & {
-  label: string;
-  tooltip?: string;
-  onClick: () => void;
-}): JSX.Element {
-  const button = (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={label}
-      className="text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex size-7 items-center justify-center rounded-md transition-colors"
-    >
-      {children}
-    </button>
-  );
-
-  // 未提供提示文案时直接渲染按钮，保持调用简洁
-  if (tooltip === undefined) {
-    return button;
-  }
-
-  return (
-    <Tooltip>
-      <TooltipTrigger render={button} />
-      <TooltipContent side="bottom" showArrow={false}>
-        {tooltip}
-      </TooltipContent>
-    </Tooltip>
   );
 }
