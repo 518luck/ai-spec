@@ -32,7 +32,8 @@ import { IconButton } from "./icon-button";
 import { SidebarResizeHandle } from "./sidebar-resize-handle";
 import { UserAvatarPopover } from "./user-avatar-popover";
 
-type DualSidebarProps = Omit<ComponentProps<"aside">, "children">;
+// motion.aside 的 props 类型，兼容原生 aside 属性并支持动画相关 props
+type DualSidebarProps = Omit<ComponentProps<typeof motion.aside>, "children">;
 
 type NavBusinessItemBaseProps = {
   children: ReactNode;
@@ -68,16 +69,19 @@ export function DualSidebar({
     : Math.max(SIDEBAR_MIN_WIDTH, Math.min(width, SIDEBAR_MAX_WIDTH));
 
   return (
-    <aside
+    <motion.aside
       data-slot="dual-sidebar"
       data-state={collapsed ? "collapsed" : "expanded"}
-      style={{ width: asideWidth }}
-      className={cn(
-        "flex min-h-dvh shrink-0 overflow-hidden",
-        // 拖拽进行时关闭宽度过渡，保证手柄即时跟随指针；非拖拽时保留过渡用于展开/折叠动画
-        isResizing ? undefined : "transition-[width] duration-200 ease-linear",
-        className,
-      )}
+      animate={{ width: asideWidth }}
+      // 首屏直接渲染目标宽度，不执行入场动画，避免从 0 闪烁展开
+      initial={false}
+      // 拖拽中用 duration:0 瞬时跳变保证手柄即时跟随指针；非拖拽时用弹簧曲线实现收缩/展开的轻微回弹
+      transition={
+        isResizing
+          ? { type: "tween", duration: 0 }
+          : { type: "spring", stiffness: 300, damping: 28, bounce: 0.18 }
+      }
+      className={cn("flex min-h-dvh shrink-0 overflow-hidden", className)}
       {...props}
     >
       {/* 左侧导航栏 */}
@@ -139,7 +143,7 @@ export function DualSidebar({
         currentBusinessArea={currentBusinessArea}
         navContext={navContext}
       />
-    </aside>
+    </motion.aside>
   );
 }
 
