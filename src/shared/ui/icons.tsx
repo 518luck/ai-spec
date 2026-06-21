@@ -1,19 +1,22 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import {
   IconAdjustmentsAlt,
+  IconArrowBarLeft,
   IconBrandTeams,
   IconBrightness,
   IconCamera,
   IconCompass,
   IconEye,
   IconEyeOff,
+  IconFileText,
   IconGift,
   IconHelpCircle,
   IconKey,
-  IconFileText,
+  IconLayoutSidebarLeftExpand,
   IconLogout,
   IconMoonStars,
   IconPalette,
+  IconRepeat,
   IconSettings,
   IconShield,
   IconSparkleHighlight,
@@ -56,6 +59,13 @@ export const Icons = {
   gift: IconGift,
   helpCircle: IconHelpCircle,
   logout: IconLogout,
+
+  // sidebar 折叠/展开切换
+  sidebarCollapse: IconArrowBarLeft,
+  sidebarExpand: IconLayoutSidebarLeftExpand,
+
+  // sidebar 宽度重置
+  sidebarReset: IconRepeat,
 
   avatarPlaceholder: IconUserFilled,
   avatarEdit: IconCamera,

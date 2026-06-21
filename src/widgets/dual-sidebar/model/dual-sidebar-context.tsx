@@ -15,6 +15,8 @@ type DualSidebarContextType = {
   // aside 当前展开宽度（px），紧凑态下不直接使用
   width: number;
   setWidth: (width: number) => void;
+  // 恢复默认展开宽度（清掉用户拖拽后的自定义宽度）
+  resetWidth: () => void;
   // 紧凑模式（一级留图标、二级留点）
   collapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
@@ -47,6 +49,12 @@ export function DualSidebarProvider({
     saveSidebarWidth(nextWidth);
   };
 
+  // 恢复默认展开宽度，用于重置按钮
+  const resetWidth = (): void => {
+    setWidthState(SIDEBAR_DEFAULT_WIDTH);
+    saveSidebarWidth(SIDEBAR_DEFAULT_WIDTH);
+  };
+
   // 设置紧凑模式并持久化
   const setCollapsed = (nextCollapsed: boolean): void => {
     setCollapsedState(nextCollapsed);
@@ -63,6 +71,7 @@ export function DualSidebarProvider({
       value={{
         width,
         setWidth,
+        resetWidth,
         collapsed,
         setCollapsed,
         toggleCollapsed,

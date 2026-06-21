@@ -10,11 +10,6 @@ import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
 import { dualSidebarZoneClasses } from "../model/dual-sidebar-styles";
-import {
-  SIDEBAR_COMPACT_WIDTH,
-  SIDEBAR_MAX_WIDTH,
-  SIDEBAR_MIN_WIDTH,
-} from "../model/sidebar-config";
 import type {
   NavBusinessArea,
   NavBusinessItem as NavBusinessItemData,
@@ -26,6 +21,11 @@ import {
   navAreaPanels,
   navBusinessAreas,
 } from "../model/navigation-data";
+import {
+  SIDEBAR_COMPACT_WIDTH,
+  SIDEBAR_MAX_WIDTH,
+  SIDEBAR_MIN_WIDTH,
+} from "../model/sidebar-config";
 import { AnimatedArea } from "./animated-area";
 import { AnimatedNavIcon } from "./animated-nav-icon";
 import { SidebarResizeHandle } from "./sidebar-resize-handle";
@@ -217,7 +217,7 @@ function NavAreasPanel({
   // 路径未匹配业务区域时，保留默认面板以避免右侧内容整块消失。
   const visibleBusinessArea = currentBusinessArea ?? "personal";
   // 紧凑模式下隐藏标题/分组文字，一级只留图标、二级只留点
-  const { collapsed } = useDualSidebarContext();
+  const { collapsed, toggleCollapsed, resetWidth } = useDualSidebarContext();
 
   return (
     <nav
@@ -251,11 +251,37 @@ function NavAreasPanel({
                   data-slot="dual-sidebar-operation-nav-content"
                   className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-6"
                 >
-                  {collapsed ? null : (
-                    <div className="ml-2 text-lg font-semibold">
-                      {navAreaPanel.title}
-                    </div>
-                  )}
+                  <div
+                    className={cn(
+                      "flex items-center",
+                      collapsed
+                        ? "justify-center"
+                        : "ml-2 justify-between pr-2",
+                    )}
+                  >
+                    {collapsed ? null : (
+                      <div className="text-lg font-semibold">
+                        {navAreaPanel.title}
+                      </div>
+                    )}
+                    {collapsed ? (
+                      <IconButton label="展开侧边栏" onClick={toggleCollapsed}>
+                        <Icons.sidebarExpand className="size-4" />
+                      </IconButton>
+                    ) : (
+                      <div className="flex items-center">
+                        <IconButton
+                          label="收起侧边栏"
+                          onClick={toggleCollapsed}
+                        >
+                          <Icons.sidebarCollapse className="size-4" />
+                        </IconButton>
+                        <IconButton label="恢复默认宽度" onClick={resetWidth}>
+                          <Icons.sidebarReset className="size-4" />
+                        </IconButton>
+                      </div>
+                    )}
+                  </div>
 
                   {/* 菜单分组 */}
                   <div className="flex flex-col gap-8">
@@ -356,5 +382,26 @@ function NavAreasPanel({
       {/* 拖拽缩放手柄：贴在操作面板右边缘（补偿 surface 的 mr-2） */}
       <SidebarResizeHandle />
     </nav>
+  );
+}
+
+// 标题行右侧的图标按钮（收缩/展开/重置宽度），统一尺寸与交互态
+function IconButton({
+  label,
+  onClick,
+  children,
+}: NavBusinessItemBaseProps & {
+  label: string;
+  onClick: () => void;
+}): JSX.Element {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+    >
+      {children}
+    </button>
   );
 }
