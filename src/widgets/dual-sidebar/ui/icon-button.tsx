@@ -9,6 +9,8 @@ type IconButtonProps = {
   onClick: () => void;
   // 传入则用 Tooltip 包裹按钮，悬停显示提示
   tooltip?: string;
+  // tooltip 弹出延迟（ms），默认 500ms，避免快速划过时频繁弹出
+  tooltipDelay?: number;
   children: ReactNode;
 };
 
@@ -17,6 +19,7 @@ export function IconButton({
   label,
   onClick,
   tooltip,
+  tooltipDelay = 500,
   children,
 }: IconButtonProps): JSX.Element {
   const button = (
@@ -37,7 +40,7 @@ export function IconButton({
 
   return (
     <Tooltip>
-      <TooltipTrigger render={button} />
+      <TooltipTrigger render={button} delay={tooltipDelay} />
       <TooltipContent side="bottom" showArrow={false}>
         {tooltip}
       </TooltipContent>

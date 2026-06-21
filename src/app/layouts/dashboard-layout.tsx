@@ -5,7 +5,7 @@ import { KBar } from "../providers/KBar";
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <KBar>
-      <TooltipProvider>
+      <TooltipProvider delay={30}>
         <DualSidebarLayout>{children}</DualSidebarLayout>
       </TooltipProvider>
     </KBar>
