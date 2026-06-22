@@ -8,8 +8,17 @@ import type { NextConfig } from "next";
 // experimental	实验特性开关
 // output: 'export' / 'standalone'	    打包模式
 // eslint / typescript	                是否在构建时跑 lint / typecheck
+// 根路径跳转到个人空间默认页
 const nextConfig: NextConfig = {
-  /* config options here */
+  async redirects() {
+    return [
+      {
+        source: "/",
+        destination: "/spec/personal",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
