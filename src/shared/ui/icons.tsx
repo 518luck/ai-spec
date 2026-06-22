@@ -18,6 +18,7 @@ import {
   IconHelpCircle,
   IconKey,
   IconLayoutSidebarLeftExpand,
+  IconLogin,
   IconLogout,
   IconMoonStars,
   IconNote,
@@ -70,6 +71,7 @@ export const Icons = {
   security: IconShield,
   logs: IconFileText,
 
+  login: IconLogin,
   gift: IconGift,
   helpCircle: IconHelpCircle,
   logout: IconLogout,
