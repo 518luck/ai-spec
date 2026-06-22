@@ -7,44 +7,44 @@
 // }
 export type ROLE = "guest" | "member" | "admin" | "owner";
 
-// 权限动作清单（16 资源 × read/write 两个动作）
+// 权限动作清单（15 资源 × read/write 两个动作）
 export const PERMISSION_ACTIONS = [
   // 个人内容资源
-  "promptRecord.read",
+  "promptRecord.read", // 提示词-收录（已收录的提示词，可发布到发现区）
   "promptRecord.write",
-  "promptDraft.read",
+  "promptDraft.read", // 提示词-草稿（仅自己可见）
   "promptDraft.write",
-  "rules.read",
+  "rules.read", // 规约库
   "rules.write",
 
   // 共享资源
-  "agentMD.read",
+  "agentMD.read", // AGENTS.md 文档
   "agentMD.write",
-  "skills.read",
+  "skills.read", // Skills
   "skills.write",
-  "agents.read",
+  "agents.read", // 智能体（Agents）
   "agents.write",
-  "plugins.read",
+  "plugins.read", // Plugins
   "plugins.write",
 
   // 工作空间
-  "project.read",
+  "project.read", // 项目
   "project.write",
-  "member.read",
+  "member.read", // 成员（邀请、移除、改角色）
   "member.write",
-  "team.read",
+  "team.read", // 团队/工作空间设置
   "team.write",
-  "security.read",
+  "security.read", // 安全策略
   "security.write",
-  "logs.read",
+  "logs.read", // 操作日志
   "logs.write",
 
   // 设置
-  "profile.read",
+  "profile.read", // 个人详情
   "profile.write",
-  "preference.read",
+  "preference.read", // 个人偏好
   "preference.write",
-  "secretKey.read",
+  "secretKey.read", // API Key
   "secretKey.write",
 ] as const;
 
