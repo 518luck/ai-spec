@@ -1,11 +1,9 @@
-// 角色清单
-// export enum ROLE {
-//   GUEST = "guest", //游客，未登录用户
-//   MEMBER = "member", //普通登录用户
-//   ADMIN = "admin", //管理员
-//   OWNER = "owner", //超级管理员
-// }
-export type ROLE = "guest" | "member" | "admin" | "owner";
+// 角色清单（权限层级：guest < user < member < admin）
+// guest：游客，未登录用户
+// user：用户，普通登录用户
+// member：会员，高级会员
+// admin：管理员，拥有全部权限
+export type ROLE = "guest" | "user" | "member" | "admin";
 
 // 权限动作清单（15 资源 × read/write 两个动作）
 export const PERMISSION_ACTIONS = [
@@ -59,179 +57,179 @@ export const ROLE_PERMISSIONS: {
   {
     action: "promptRecord.read",
     description: "浏览已收录的提示词",
-    roles: ["guest", "member", "admin", "owner"],
+    roles: ["guest", "user", "member", "admin"],
   },
   {
     action: "promptRecord.write",
     description: "新建/编辑/删除已收录的提示词",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 2. 提示词-草稿
   {
     action: "promptDraft.read",
     description: "查看自己的提示词草稿",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
   {
     action: "promptDraft.write",
     description: "新建/编辑/删除提示词草稿",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 3. 规约库
   {
     action: "rules.read",
     description: "查看规约库",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
   {
     action: "rules.write",
     description: "新建/编辑规约",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 4. AGENTS.md
   {
     action: "agentMD.read",
     description: "查看 AGENTS.md 文档",
-    roles: ["guest", "member", "admin", "owner"],
+    roles: ["guest", "user", "member", "admin"],
   },
   {
     action: "agentMD.write",
     description: "编辑 AGENTS.md 文档",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 5. Skills
   {
     action: "skills.read",
     description: "查看 Skills",
-    roles: ["guest", "member", "admin", "owner"],
+    roles: ["guest", "user", "member", "admin"],
   },
   {
     action: "skills.write",
     description: "新建/编辑/删除 Skills",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 6. 智能体
   {
     action: "agents.read",
     description: "查看智能体",
-    roles: ["guest", "member", "admin", "owner"],
+    roles: ["guest", "user", "member", "admin"],
   },
   {
     action: "agents.write",
     description: "新建/编辑/删除智能体",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 7. Plugins
   {
     action: "plugins.read",
     description: "查看 Plugins",
-    roles: ["guest", "member", "admin", "owner"],
+    roles: ["guest", "user", "member", "admin"],
   },
   {
     action: "plugins.write",
     description: "新建/编辑/删除 Plugins",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 8. 项目
   {
     action: "project.read",
     description: "查看团队项目",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
   {
     action: "project.write",
     description: "新建/编辑/管理团队项目",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
 
   // 9. 成员
   {
     action: "member.read",
     description: "查看团队成员列表",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
   {
     action: "member.write",
     description: "邀请/移除成员、改角色",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
 
   // 10. 团队
   {
     action: "team.read",
     description: "查看团队设置",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
   {
     action: "team.write",
     description: "修改团队设置",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
 
   // 11. 安全
   {
     action: "security.read",
     description: "查看团队安全策略",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
   {
     action: "security.write",
     description: "修改团队安全策略",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
 
   // 12. 日志
   {
     action: "logs.read",
     description: "查看团队操作日志",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
   {
     action: "logs.write",
     description: "清理/导出团队操作日志",
-    roles: ["admin", "owner"],
+    roles: ["admin"],
   },
 
   // 13. 个人详情
   {
     action: "profile.read",
     description: "查看个人资料",
-    roles: ["guest", "member", "admin", "owner"],
+    roles: ["guest", "user", "member", "admin"],
   },
   {
     action: "profile.write",
     description: "修改个人资料",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 14. 个人偏好
   {
     action: "preference.read",
     description: "查看个人偏好",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
   {
     action: "preference.write",
     description: "修改个人偏好",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 
   // 15. API Key
   {
     action: "secretKey.read",
     description: "查看自己的 API Key",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
   {
     action: "secretKey.write",
     description: "创建/删除/重置 API Key",
-    roles: ["member", "admin", "owner"],
+    roles: ["user", "member", "admin"],
   },
 ];
