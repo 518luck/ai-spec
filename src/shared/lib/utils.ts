@@ -1,5 +1,6 @@
 import { compare, hash } from "bcryptjs";
 
+// lib 是整个工具箱什么都能放（工具/配置/适配/类型/auth…）utils：只放纯函数工具
 // shadcn/ui 的工具函数，用于智能合并 Tailwind CSS 类名
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
