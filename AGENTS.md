@@ -47,6 +47,7 @@
 - **Next.js 路由层**（`app/**`，不含 `app/api/**`）→ `app/AGENTS.md`
 - **后端**（`app/api/**`）→ `app/api/AGENTS.md`
 - **前端业务代码**（`src/**`）→ `src/AGENTS.md`
+- **Prisma / 数据库 schema**（`prisma/**`）→ `prisma/AGENTS.md`
 
 ### 后端
 
@@ -55,6 +56,10 @@
 ### 前端
 
 前端开发模式、设计系统指南和 React 测试最佳实践，参见 `src/AGENTS.md`。
+
+### 数据库
+
+Prisma schema 命名、字段排列顺序、删除策略与旧表迁移规范，参见 `prisma/AGENTS.md`。
 
 ## 代码风格指南
 
