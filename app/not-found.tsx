@@ -146,7 +146,7 @@ function NotFoundPage() {
             size="sm"
             className="h-8 gap-2 text-xs"
             nativeButton={false}
-            render={<Link href="/spec/personal/records" />}
+            render={<Link href="/spec/personal/prompt/records" />}
           >
             <Home className="size-3.5" />
             返回首页
