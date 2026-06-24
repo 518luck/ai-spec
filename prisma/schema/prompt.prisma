@@ -1,7 +1,7 @@
 // 提示词收录主表，承载完整内容、版本、标签与共享
 model PromptRecord {
   id          String   @id @default(cuid()) // 收录主键
-  title       String // 标题
+  name        String // 名称
   description String? // 描述（可选）
   content     String   @db.Text // 提示词正文
   images      String[] @default([]) // 图片 URL 列表，预留扩展
@@ -34,33 +34,33 @@ model PromptRecord {
 
 // 提示词版本快照，parentVersionId 自引用构成完整版本树
 model PromptRecordVersion {
-  id       String       @id @default(cuid())
-  recordId String
-  record   PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  id       String       @id @default(cuid()) // 版本快照主键
+  recordId String // 所属收录记录 ID
+  record   PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade) // 归属的收录记录（收录删除→级联删除所有版本）
 
-  parentVersionId String?
-  parentVersion   PromptRecordVersion?  @relation("VersionTree", fields: [parentVersionId], references: [id], onDelete: SetNull)
-  childVersions   PromptRecordVersion[] @relation("VersionTree")
+  parentVersionId String? // 父版本 ID，null=根版本，自引用构成版本树
+  parentVersion   PromptRecordVersion?  @relation("VersionTree", fields: [parentVersionId], references: [id], onDelete: SetNull) // 父版本（父版本删除→指针置 null，子版本变根）
+  childVersions   PromptRecordVersion[] @relation("VersionTree") // 子版本列表（从该版本分支出去的版本）
 
-  title    String
-  content  String @db.Text
-  editorId String
-  editor   User   @relation("VersionEditor", fields: [editorId], references: [id], onDelete: Cascade)
+  name    String // 该版本的名称快照
+  content  String @db.Text // 该版本的内容快照
+  editorId String // 编辑人 ID
+  editor   User   @relation("VersionEditor", fields: [editorId], references: [id], onDelete: Cascade) // 编辑人（用户删除→级联删除其创建的版本）
 
-  versionNumber Int
-  message       String?
+  versionNumber Int // 版本序号，主线上递增
+  message       String? // 版本说明，类似 commit message
 
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) // 创建时间
 
-  @@index([recordId])
-  @@index([parentVersionId])
+  @@index([recordId]) // 加速"查询某收录的全部版本历史"
+  @@index([parentVersionId]) // 加速版本树遍历
   @@schema("prompt")
 }
 
 // 提示词草稿，轻量暂存，无版本/无团队联动
 model PromptDraft {
   id      String   @id @default(cuid())
-  title   String?
+  name   String?
   content String   @db.Text
   images  String[] @default([])
 
