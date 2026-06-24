@@ -1,104 +1,130 @@
 // 提示词收录主表，承载完整内容、版本、标签与共享
 model PromptRecord {
-  id          String   @id @default(cuid()) // 收录主键
-  name        String // 名称
-  description String? // 描述（可选）
-  content     String   @db.Text // 提示词正文
-  images      String[] @default([]) // 图片 URL 列表，预留扩展
+  // ① 主键
+  id String @id @default(cuid()) // 收录主键
 
-  ownerId      String // 创建者 ID
-  owner        User    @relation("PromptRecordOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删除收录）
-  lastEditorId String? // 最近编辑人 ID（团队协作场景）
-  lastEditor   User?   @relation("PromptRecordEditor", fields: [lastEditorId], references: [id], onDelete: SetNull) // 最近编辑人（用户注销→仅清空记录）
+  // ② 业务字段
+  name             String // 名称
+  description      String? // 描述（可选）
+  content          String     @db.Text // 提示词正文
+  images           String[]   @default([]) // 图片 URL 列表，预留扩展
+  visibility       Visibility @default(private) // 可见性：private=私有，public=公开广场
+  workspace_id     String? // 所属团队空间 ID，null=个人   todo:团队空间之后怎么处理?毕竟需要分开了就
+  source_record_id String? // fork 来源记录 ID，无 FK，允许悬空
+  use_count        Int        @default(0) // 使用次数，驱动"常用"排序
+  view_count       Int        @default(0) // 浏览次数
 
-  visibility     Visibility @default(private) // 可见性：private=私有，public=公开广场
-  workspaceId    String? // 所属团队空间 ID，null=个人   todo:团队空间之后怎么处理?毕竟需要分开了就
-  sourceRecordId String? // fork 来源记录 ID，无 FK，允许悬空
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 创建时间
+  updated_at DateTime @updatedAt // 更新时间，驱动"最近"排序
 
-  useCount  Int @default(0) // 使用次数，驱动"常用"排序
-  viewCount Int @default(0) // 浏览次数
+  // ④ 外键列
+  owner_id       String // 创建者 ID
+  last_editor_id String? // 最近编辑人 ID（团队协作场景）
 
-  createdAt DateTime @default(now()) // 创建时间
-  updatedAt DateTime @updatedAt // 更新时间，驱动"最近"排序
+  // ⑤ 关联关系
+  owner        User                  @relation("PromptRecordOwner", fields: [owner_id], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删除收录）
+  last_editor  User?                 @relation("PromptRecordEditor", fields: [last_editor_id], references: [id], onDelete: SetNull) // 最近编辑人（用户注销→仅清空记录）
+  versions     PromptRecordVersion[] // 版本历史
+  tags         PromptRecordTag[] // 标签关联
+  favorited_by PromptFavorite[] // 收藏记录
 
-  versions    PromptRecordVersion[] // 版本历史
-  tags        PromptRecordTag[] // 标签关联
-  favoritedBy PromptFavorite[] // 收藏记录
-
-  @@index([ownerId]) // 加速"我的收录"查询
-  @@index([workspaceId]) // 加速团队空间内查询
+  // ⑥ 索引
+  @@index([owner_id]) // 加速"我的收录"查询
+  @@index([workspace_id]) // 加速团队空间内查询
   @@index([visibility]) // 加速公开广场筛选
-  @@index([updatedAt]) // 加速"最近"排序
+  @@index([updated_at]) // 加速"最近"排序
   @@schema("prompt")
 }
 
-// 提示词版本快照，parentVersionId 自引用构成完整版本树
+// 提示词版本快照，线性版本历史，每次编辑前存一份快照
 model PromptRecordVersion {
-  id       String       @id @default(cuid()) // 版本快照主键
-  recordId String // 所属收录记录 ID
-  record   PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade) // 归属的收录记录（收录删除→级联删除所有版本）
+  // ① 主键
+  id String @id @default(cuid()) // 版本快照主键
 
-  parentVersionId String? // 父版本 ID，null=根版本，自引用构成版本树
-  parentVersion   PromptRecordVersion?  @relation("VersionTree", fields: [parentVersionId], references: [id], onDelete: SetNull) // 父版本（父版本删除→指针置 null，子版本变根）
-  childVersions   PromptRecordVersion[] @relation("VersionTree") // 子版本列表（从该版本分支出去的版本）
+  // ② 业务字段
+  name           String // 该版本的名称快照
+  content        String  @db.Text // 该版本的内容快照
+  version_number Int // 版本序号，递增
+  message        String? // 版本说明，类似 commit message
 
-  name    String // 该版本的名称快照
-  content  String @db.Text // 该版本的内容快照
-  editorId String // 编辑人 ID
-  editor   User   @relation("VersionEditor", fields: [editorId], references: [id], onDelete: Cascade) // 编辑人（用户删除→级联删除其创建的版本）
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 创建时间
 
-  versionNumber Int // 版本序号，主线上递增
-  message       String? // 版本说明，类似 commit message
+  // ④ 外键列
+  record_id String // 所属收录记录 ID
+  editor_id String // 编辑人 ID
 
-  createdAt DateTime @default(now()) // 创建时间
+  // ⑤ 关联关系
+  record PromptRecord @relation(fields: [record_id], references: [id], onDelete: Cascade) // 归属的收录记录（收录删除→级联删除所有版本）
+  editor User          @relation("VersionEditor", fields: [editor_id], references: [id], onDelete: Cascade) // 编辑人（用户删除→级联删除其创建的版本）
 
-  @@index([recordId]) // 加速"查询某收录的全部版本历史"
-  @@index([parentVersionId]) // 加速版本树遍历
+  // ⑥ 索引
+  @@index([record_id]) // 加速"查询某收录的全部版本历史"
   @@schema("prompt")
 }
 
 // 提示词草稿，轻量暂存，无版本/无团队联动
 model PromptDraft {
-  id      String   @id @default(cuid())
-  name   String?
-  content String   @db.Text
-  images  String[] @default([])
+  // ① 主键
+  id String @id @default(cuid())
 
-  ownerId String
-  owner   User   @relation("PromptDraftOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  // ② 业务字段
+  name        String?
+  description String? // 描述（可选）
+  content     String   @db.Text
+  images      String[] @default([])
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  // ③ 时间戳
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-  @@index([ownerId])
+  // ④ 外键列
+  owner_id String
+
+  // ⑤ 关联关系
+  owner User @relation("PromptDraftOwner", fields: [owner_id], references: [id], onDelete: Cascade)
+
+  // ⑥ 索引
+  @@index([owner_id])
   @@schema("prompt")
 }
 
 // 标签与收录的多对多关联
 model PromptRecordTag {
-  recordId String
-  record   PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
-  tagId    String
-  tag      Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  // ③ 时间戳
+  created_at DateTime @default(now())
 
-  createdAt DateTime @default(now())
+  // ④ 外键列
+  record_id String
+  tag_id    String
 
-  @@id([recordId, tagId])
-  @@index([tagId])
+  // ⑤ 关联关系
+  record PromptRecord @relation(fields: [record_id], references: [id], onDelete: Cascade)
+  tag    Tag          @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  // ⑥ 索引
+  @@id([record_id, tag_id])
+  @@index([tag_id])
   @@schema("prompt")
 }
 
 // 用户收藏的提示词收录，驱动"收集"排序
 model PromptFavorite {
-  userId   String
-  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  recordId String
-  record   PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  // ③ 时间戳
+  created_at DateTime @default(now())
 
-  createdAt DateTime @default(now())
+  // ④ 外键列
+  user_id   String
+  record_id String
 
-  @@id([userId, recordId])
-  @@index([recordId])
+  // ⑤ 关联关系
+  user   User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  record PromptRecord @relation(fields: [record_id], references: [id], onDelete: Cascade)
+
+  // ⑥ 索引
+  @@id([user_id, record_id])
+  @@index([record_id])
   @@schema("prompt")
 }
 

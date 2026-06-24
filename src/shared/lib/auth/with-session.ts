@@ -123,7 +123,7 @@ export const withSession = (handler: SessionHandler) =>
           authHeader.slice(BEARER_PREFIX.length),
         );
         const { ok, res } = await apiKeyRatelimit({
-          key: `api:requests:${token.userId}`,
+          key: `api:requests:${token.user_id}`,
         });
         rateInfo = res;
 
@@ -138,7 +138,7 @@ export const withSession = (handler: SessionHandler) =>
         if (res.consumedPoints === 1) {
           await prisma.token.update({
             where: { id: token.id },
-            data: { lastUsed: new Date() },
+            data: { last_used: new Date() },
           });
         }
 

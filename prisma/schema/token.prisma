@@ -1,38 +1,47 @@
+// 用户 API 令牌
 model Token {
-    id         String    @id @default(cuid())
-    name       String
-    hashedkey  String
-    partialKey String
-    expires    DateTime
-    lastUsed   DateTime?
-    createdAt  DateTime  @default(now())
-    updatedAt  DateTime  @updatedAt
+  // ① 主键
+  id String @id @default(cuid())
 
-    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // ② 业务字段
+  name        String
+  hashedkey   String
+  partial_key String
+  expires     DateTime
+  last_used   DateTime?
 
-    userId String
+  // ③ 时间戳
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
 
-    @@index([userId])
-    @@schema("token")
+  // ④ 外键列
+  user_id String
+
+  // ⑤ 关联关系
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  // ⑥ 索引
+  @@index([user_id])
+  @@schema("token")
 }
 
 // 验证码
 // next-auth 官方的邮件魔法链接登录
 model VerificationToken {
-    identifier String // 标识符 标识谁在验证,通常是邮箱之类的
-    token      String // 一次性验证码
-    expires    DateTime
+  identifier String // 标识符 标识谁在验证,通常是邮箱之类的
+  token      String // 一次性验证码
+  expires    DateTime
 
-    @@id([identifier, token])
-    @@schema("token")
+  @@id([identifier, token])
+  @@schema("token")
 }
 
 //自定义的 OTP 验证码
 model EmailVerificationToken {
-    identifier String
-    token      String   @unique
-    expires    DateTime
+  identifier String
+  token      String @unique
+  expires    DateTime
 
-    @@unique([identifier, token])
-    @@schema("token")
+  @@unique([identifier, token])
+  @@schema("token")
 }

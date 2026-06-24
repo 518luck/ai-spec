@@ -16,7 +16,8 @@
 ❌ ownerId         ❌ createdAt        ❌ lastEditorId     ❌ useCount
 ```
 
-- 关系字段同样使用 snake_case；单词字段无下划线保持原样（如 `owner`），多词字段用下划线（如 `last_editor`）。
+- 单个单词的字段保持全小写，不加下划线（如 `id`、`name`、`content`、`owner`）；只有多个单词组合时才用下划线连接（如 `owner_id`、`created_at`）。
+- 关系字段同样使用 snake_case（如 `owner`、`last_editor`）。
 - 字段类型沿用 Prisma 原生写法（`String` / `DateTime` / `Int` ...），不随字段名变化。
 
 > 与根 AGENTS.md「对象键使用 camelCase」的关系：Prisma 生成的类型字段为 snake_case，TS 中以**属性访问**形式使用（如 `record.owner_id`），该规则约束的是开发者自定义的对象字面量键名，不约束库生成类型的属性访问，二者不冲突。
