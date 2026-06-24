@@ -1,6 +1,6 @@
-import { PersonalPromptsPage } from "@/pages/spec/personal/prompts";
+import { redirect } from "next/navigation";
 
-// 接入个人空间默认页面路由。
-export default function Page() {
-  return <PersonalPromptsPage />;
+// 个人空间默认页重定向到收录。
+export default function Page(): never {
+  redirect("/spec/personal/records");
 }

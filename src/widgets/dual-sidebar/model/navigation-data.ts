@@ -39,7 +39,7 @@ export const navBusinessAreas: readonly NavBusinessArea[] = [
 
 // 定义左侧业务导航点击后应进入的右侧首个菜单项。
 export const navBusinessAreaDefaultHrefs: Record<NavBusinessArea, string> = {
-  personal: "/spec/personal",
+  personal: "/spec/personal/records",
   team: "/spec/team",
   discover: "/spec/discover",
   settings: "/spec/settings",
@@ -162,7 +162,7 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
             name: "Prompt",
             icon: Icons.prompt,
             href: navBusinessAreaDefaultHrefs.personal,
-            active: pathname === navBusinessAreaDefaultHrefs.personal,
+            active: false,
             items: [
               {
                 name: "收录",
