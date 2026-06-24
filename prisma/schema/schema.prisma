@@ -31,10 +31,10 @@ model User {
   tokens   Token[]
 
   // 提示词反向关系
-  promptRecords        PromptRecord[]         @relation("PromptRecordOwner")
-  promptRecordEdited   PromptRecord[]         @relation("PromptRecordEditor")
-  promptRecordVersions PromptRecordVersion[]  @relation("VersionEditor")
-  promptDrafts         PromptDraft[]          @relation("PromptDraftOwner")
+  promptRecords        PromptRecord[]        @relation("PromptRecordOwner")
+  promptRecordEdited   PromptRecord[]        @relation("PromptRecordEditor")
+  promptRecordVersions PromptRecordVersion[] @relation("VersionEditor")
+  promptDrafts         PromptDraft[]         @relation("PromptDraftOwner")
   promptFavorites      PromptFavorite[]
 
   @@schema("auth")

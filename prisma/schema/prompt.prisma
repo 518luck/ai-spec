@@ -57,7 +57,7 @@ model PromptRecordVersion {
 
   // ⑤ 关联关系
   record PromptRecord @relation(fields: [record_id], references: [id], onDelete: Cascade) // 归属的收录记录（收录删除→级联删除所有版本）
-  editor User          @relation("VersionEditor", fields: [editor_id], references: [id], onDelete: Cascade) // 编辑人（用户删除→级联删除其创建的版本）
+  editor User         @relation("VersionEditor", fields: [editor_id], references: [id], onDelete: Cascade) // 编辑人（用户删除→级联删除其创建的版本）
 
   // ⑥ 索引
   @@index([record_id]) // 加速"查询某收录的全部版本历史"
