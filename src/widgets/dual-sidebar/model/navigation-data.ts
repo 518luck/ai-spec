@@ -166,13 +166,13 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
             items: [
               {
                 name: "收录",
-                href: "/spec/personal/mock-group/a",
-                active: pathname === "/spec/personal/mock-group/a",
+                href: "/spec/personal/records",
+                active: pathname === "/spec/personal/records",
               },
               {
                 name: "草稿",
-                href: "/spec/personal/mock-group/b",
-                active: pathname === "/spec/personal/mock-group/b",
+                href: "/spec/personal/drafts",
+                active: pathname === "/spec/personal/drafts",
                 locked: true,
               },
             ],
