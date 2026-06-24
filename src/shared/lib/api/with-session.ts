@@ -27,12 +27,74 @@ type SessionHandler = (
 
 // API Key 限流窗口上限，对应 apiKeyLimiter 的 points
 const RATE_LIMIT_MAX = 60;
-
 // Authorization 头中 Bearer 方案前缀
 const BEARER_PREFIX = "Bearer ";
-
 // 与 cookies 分支保持一致的 session 最大有效期（30 天，单位毫秒）
 const SESSION_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+
+// 高阶函数：把业务 handler 转换为带统一鉴权、限流与错误封装的 Next.js route handler
+export const withSession = (handler: SessionHandler) =>
+  withAxiom(async (req: NextRequest, ctx: RouteContext) => {
+    let rateInfo: RateLimiterRes | null = null;
+
+    try {
+      let session: Session;
+
+      const authHeader = req.headers.get("authorization") ?? "";
+
+      // 携带 Bearer 头视为 SDK 通过 API Key 接入
+      if (authHeader.startsWith(BEARER_PREFIX)) {
+        const token = await resolveApiKeyToken(
+          authHeader.slice(BEARER_PREFIX.length),
+        );
+        const { ok, res } = await apiKeyRatelimit({
+          key: `api:requests:${token.user_id}`,
+        });
+        rateInfo = res;
+
+        if (!ok) {
+          throw new AiSpecError({
+            code: "RATE_LIMITED",
+            message: `请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`,
+          });
+        }
+
+        // 仅在限流窗口的首次请求时更新 last_used，避免每个请求都写库。
+        // consumedPoints 是当前 60 秒窗口内累计消耗的积分总数，等于 1 即代表窗口首请求。
+        if (res.consumedPoints === 1) {
+          await prisma.token.update({
+            where: { id: token.id },
+            data: { last_used: new Date() },
+          });
+        }
+
+        session = buildSessionFromUser(token.user);
+      } else {
+        // 未携带 API Key，走 web 端 cookies session 分支
+        const cookieSession = await auth();
+
+        if (!cookieSession) {
+          throw new Error("未登录");
+        }
+
+        session = cookieSession;
+      }
+
+      const searchParams = getSearchParams(req.url);
+
+      const response = await handler({ req, ctx, session, searchParams });
+
+      return withRateLimitHeaders(response, rateInfo);
+    } catch (e) {
+      const headers = new Headers();
+      applyRateLimitHeaders(
+        headers,
+        rateInfo,
+        e instanceof AiSpecError && e.code === "RATE_LIMITED",
+      );
+      return toErrorResponse(e, headers);
+    }
+  });
 
 // 把限流结果写入响应头；被限流时额外写入 Retry-After
 const applyRateLimitHeaders = (
@@ -106,67 +168,3 @@ const buildSessionFromUser = (user: {
   },
   expires: new Date(Date.now() + SESSION_MAX_AGE_MS).toISOString(),
 });
-
-// 高阶函数：把业务 handler 转换为带统一鉴权、限流与错误封装的 Next.js route handler
-export const withSession = (handler: SessionHandler) =>
-  withAxiom(async (req: NextRequest, ctx: RouteContext) => {
-    let rateInfo: RateLimiterRes | null = null;
-
-    try {
-      let session: Session;
-
-      const authHeader = req.headers.get("authorization") ?? "";
-
-      // 携带 Bearer 头视为 SDK 通过 API Key 接入
-      if (authHeader.startsWith(BEARER_PREFIX)) {
-        const token = await resolveApiKeyToken(
-          authHeader.slice(BEARER_PREFIX.length),
-        );
-        const { ok, res } = await apiKeyRatelimit({
-          key: `api:requests:${token.user_id}`,
-        });
-        rateInfo = res;
-
-        if (!ok) {
-          throw new AiSpecError({
-            code: "RATE_LIMITED",
-            message: `请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`,
-          });
-        }
-
-        // 仅在限流窗口的首次请求时更新 last_used，避免每个请求都写库。
-        // consumedPoints 是当前 60 秒窗口内累计消耗的积分总数，等于 1 即代表窗口首请求。
-        if (res.consumedPoints === 1) {
-          await prisma.token.update({
-            where: { id: token.id },
-            data: { last_used: new Date() },
-          });
-        }
-
-        session = buildSessionFromUser(token.user);
-      } else {
-        // 未携带 API Key，走 web 端 cookies session 分支
-        const cookieSession = await auth();
-
-        if (!cookieSession) {
-          throw new Error("未登录");
-        }
-
-        session = cookieSession;
-      }
-
-      const searchParams = getSearchParams(req.url);
-
-      const response = await handler({ req, ctx, session, searchParams });
-
-      return withRateLimitHeaders(response, rateInfo);
-    } catch (e) {
-      const headers = new Headers();
-      applyRateLimitHeaders(
-        headers,
-        rateInfo,
-        e instanceof AiSpecError && e.code === "RATE_LIMITED",
-      );
-      return toErrorResponse(e, headers);
-    }
-  });
