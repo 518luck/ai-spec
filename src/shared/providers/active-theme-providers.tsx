@@ -30,26 +30,10 @@ export function ActiveThemeProvider({
   const themeToUse = initialTheme ?? DEFAULT_THEME;
   const [activeTheme, setActiveTheme] = useState<string>(themeToUse);
 
+  // 同步主题到 <html> 并写入 cookie；首屏值由 SSR 注入，此处仅处理后续切换
   useEffect(() => {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-
-    if (currentTheme !== activeTheme) {
-      setThemeCookie(activeTheme);
-
-      document.documentElement.removeAttribute("data-theme");
-
-      Array.from(document.body.classList)
-        .filter((className) => className.startsWith("theme-"))
-        .forEach((className) => {
-          document.body.classList.remove(className);
-        });
-
-      if (activeTheme) {
-        document.documentElement.setAttribute("data-theme", activeTheme);
-      }
-    } else {
-      setThemeCookie(activeTheme);
-    }
+    document.documentElement.setAttribute("data-theme", activeTheme);
+    setThemeCookie(activeTheme);
   }, [activeTheme]);
 
   return (

@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { RootThemeProvider } from "@/app/providers/root-theme-provider";
+import { DEFAULT_THEME } from "@/shared/configs/theme.config";
 import { ActiveThemeProvider } from "@/shared/providers/active-theme-providers";
 import { Toaster } from "@/shared/ui/sonner";
 import { SessionProvider } from "next-auth/react";
@@ -19,15 +21,23 @@ const sourceSerif4 = Source_Serif_4({
   variable: "--font-source-serif-4",
 });
 
-export function RootLayoutShell({ children }: { children: React.ReactNode }) {
+const ACTIVE_THEME_COOKIE = "ai-spec.active-theme";
+
+// 根布局外壳：SSR 注入主题，保证首屏即带 data-theme，避免主题闪烁与恢复丢失
+export async function RootLayoutShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  // 服务端读取用户主题偏好，缺失时回退默认主题
+  const cookieStore = await cookies();
+  const activeTheme =
+    cookieStore.get(ACTIVE_THEME_COOKIE)?.value ?? DEFAULT_THEME;
+
   return (
-    //  - cookie
-    // 服务端读取 active_theme
-    // loader
-    // SSR 首屏注入 data-theme
-    // TODO 保证主题首次不闪烁，需要优化(目前用的是ActiveThemeProvider里面useEffect)
     <html
       lang="zh-CN"
+      data-theme={activeTheme}
       suppressHydrationWarning
       className={`${oxanium.variable} ${sourceCodePro.variable} ${sourceSerif4.variable}`}
     >
@@ -39,9 +49,11 @@ export function RootLayoutShell({ children }: { children: React.ReactNode }) {
           disableTransitionOnChange
           enableColorScheme
         >
-          {/* TODO 这个地方应该从服务器获取主题然后传递下去暂时不写 */}
           <SessionProvider>
-            <ActiveThemeProvider>{children}</ActiveThemeProvider>
+            {/* initialTheme 与 SSR 注入值同源，避免挂载时覆盖正确主题 */}
+            <ActiveThemeProvider initialTheme={activeTheme}>
+              {children}
+            </ActiveThemeProvider>
           </SessionProvider>
           <Toaster />
         </RootThemeProvider>
