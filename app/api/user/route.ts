@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/shared/db";
 import { AiSpecError } from "@/shared/lib/api/error";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
-import { withSession } from "@/shared/lib/auth/with-session";
+import { withSession } from "@/shared/lib/api/with-session";
 import {
   createLogger,
   serializeError,

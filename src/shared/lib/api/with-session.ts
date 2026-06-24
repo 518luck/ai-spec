@@ -1,13 +1,13 @@
 import prisma from "@/shared/db";
 import { AiSpecError, toErrorResponse } from "@/shared/lib/api/error";
 import { auth } from "@/shared/lib/auth/auth";
+import { hashToken } from "@/shared/lib/auth/hash-token";
 import { withAxiom } from "@/shared/lib/infrastructure/axiom/server";
 import { apiKeyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { getSearchParams } from "@/shared/lib/utils";
 import type { Session } from "next-auth";
 import { type NextRequest } from "next/server";
 import type { RateLimiterRes } from "rate-limiter-flexible";
-import { hashToken } from "./hash-token";
 
 // Next.js App Router 动态路由上下文类型
 type RouteContext = { params: Promise<Record<string, string | string[]>> };
@@ -134,7 +134,8 @@ export const withSession = (handler: SessionHandler) =>
           });
         }
 
-        // 借限流窗口：本分钟第一次请求才写 lastUsed，避免每次请求都落库
+        // 仅在限流窗口的首次请求时更新 last_used，避免每个请求都写库。
+        // consumedPoints 是当前 60 秒窗口内累计消耗的积分总数，等于 1 即代表窗口首请求。
         if (res.consumedPoints === 1) {
           await prisma.token.update({
             where: { id: token.id },
