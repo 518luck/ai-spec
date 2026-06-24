@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth", "token"]
+  schemas  = ["auth", "token", "prompt", "shared"]
 }
 
 // 用户本人信息
@@ -29,6 +29,13 @@ model User {
   accounts Account[]
   sessions Session[]
   tokens   Token[]
+
+  // 提示词反向关系
+  promptRecords        PromptRecord[]         @relation("PromptRecordOwner")
+  promptRecordEdited   PromptRecord[]         @relation("PromptRecordEditor")
+  promptRecordVersions PromptRecordVersion[]  @relation("VersionEditor")
+  promptDrafts         PromptDraft[]          @relation("PromptDraftOwner")
+  promptFavorites      PromptFavorite[]
 
   @@schema("auth")
 }

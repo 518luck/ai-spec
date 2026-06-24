@@ -1,0 +1,13 @@
+// 跨域共享字典，存放被多个业务领域引用的通用资源
+
+// 全局标签定义，可被任意领域的实体通过各自的关联表引用
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  // 各领域的标签关联（反向关系）
+  promptRecordTags PromptRecordTag[]
+
+  @@schema("shared")
+}

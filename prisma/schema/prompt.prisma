@@ -1,0 +1,111 @@
+// 提示词收录主表，承载完整内容、版本、标签与共享
+model PromptRecord {
+  id           String     @id @default(cuid())
+  title        String
+  description  String?
+  content      String     @db.Text
+  images       String[]   @default([])
+
+  ownerId      String
+  owner        User       @relation("PromptRecordOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  lastEditorId String?
+  lastEditor   User?      @relation("PromptRecordEditor", fields: [lastEditorId], references: [id], onDelete: SetNull)
+
+  visibility     Visibility @default(private)
+  workspaceId    String?
+  sourceRecordId String?
+
+  useCount  Int @default(0)
+  viewCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  versions    PromptRecordVersion[]
+  tags        PromptRecordTag[]
+  favoritedBy PromptFavorite[]
+
+  @@index([ownerId])
+  @@index([workspaceId])
+  @@index([visibility])
+  @@index([updatedAt])
+  @@schema("prompt")
+}
+
+// 提示词版本快照，parentVersionId 自引用构成完整版本树
+model PromptRecordVersion {
+  id      String @id @default(cuid())
+  recordId String
+  record  PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  parentVersionId String?
+  parentVersion   PromptRecordVersion?  @relation("VersionTree", fields: [parentVersionId], references: [id], onDelete: SetNull)
+  childVersions   PromptRecordVersion[] @relation("VersionTree")
+
+  title   String
+  content String @db.Text
+  editorId String
+  editor  User   @relation("VersionEditor", fields: [editorId], references: [id], onDelete: Cascade)
+
+  versionNumber Int
+  message       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([recordId])
+  @@index([parentVersionId])
+  @@schema("prompt")
+}
+
+// 提示词草稿，轻量暂存，无版本/无团队联动
+model PromptDraft {
+  id      String @id @default(cuid())
+  title   String?
+  content String   @db.Text
+  images  String[] @default([])
+
+  ownerId String
+  owner   User     @relation("PromptDraftOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([ownerId])
+  @@schema("prompt")
+}
+
+// 标签与收录的多对多关联
+model PromptRecordTag {
+  recordId String
+  record   PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  tagId    String
+  tag      Tag          @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([recordId, tagId])
+  @@index([tagId])
+  @@schema("prompt")
+}
+
+// 用户收藏的提示词收录，驱动"收集"排序
+model PromptFavorite {
+  userId   String
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordId String
+  record   PromptRecord  @relation(fields: [recordId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@id([userId, recordId])
+  @@index([recordId])
+  @@schema("prompt")
+}
+
+// 可见性枚举：private=仅自己/团队，public=公开广场
+enum Visibility {
+  private
+  public
+
+  @@schema("prompt")
+}
