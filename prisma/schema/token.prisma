@@ -1,28 +1,28 @@
-// 用户 API 令牌
+// 用户 API 令牌：SDK 通过 Authorization: Bearer <key> 接入时的凭证
 model Token {
     // ① 主键
-    id String @id @default(cuid())
+    id String @id @default(cuid()) // 令牌主键
 
     // ② 业务字段
-    name        String
-    hashedkey   String
-    partial_key String
-    expires     DateTime
-    last_used   DateTime?
+    name        String   // 令牌名称，用户自定义用于区分用途（如"本地开发"、"CI"）
+    hashedkey   String   // API Key 明文经 HMAC-SHA256（混入 AUTH_SECRET）后的哈希值；明文仅在创建时返回一次，库里不可反查
+    partial_key String   // API Key 的脱敏片段（前缀+后缀），用于在列表中识别令牌而不暴露完整密钥
+    expires     DateTime // 令牌过期时间，过期后不可再用于鉴权
+    last_used   DateTime? // 最近一次用于鉴权的时间；限流窗口内首次请求才更新，避免每次请求都落库
 
     // ③ 时间戳
-    created_at DateTime @default(now())
-    updated_at DateTime @updatedAt
+    created_at DateTime @default(now()) // 创建时间
+    updated_at DateTime @updatedAt // 更新时间
 
     // ④ 外键列
-    user_id String
+    user_id String // 令牌所属用户 id
 
     // ⑤ 关联关系
-    user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+    user User @relation(fields: [user_id], references: [id], onDelete: Cascade) // 令牌所属用户；用户删除时级联删除其全部令牌
 
     // ⑥ 索引
-    @@index([user_id])
-    @@schema("token")
+    @@index([user_id]) // 按用户查询其全部令牌
+    @@schema("token") // 归属 token 业务库
 }
 
 // 验证码
