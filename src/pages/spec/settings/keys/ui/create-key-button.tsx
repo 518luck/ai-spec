@@ -1,22 +1,24 @@
 "use client";
 
 import type { JSX } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 
-// 创建新密钥入口；本次仅 UI，生成流程后续接入
+import { CreateKeyDialog } from "./create-key-dialog";
+
+// 创建新密钥入口；点击打开创建弹窗，生成流程后续接入
 export function CreateKeyButton(): JSX.Element {
-  // 点击给出占位提示，真正的创建逻辑待后续实现
-  const handleClick = (): void => {
-    toast.info("创建密钥功能即将上线");
-  };
+  const [open, setOpen] = useState(false);
 
   return (
-    <Button size="sm" onClick={handleClick}>
-      <Icons.key />
-      创建密钥
-    </Button>
+    <>
+      <Button size="sm" onClick={() => setOpen(true)}>
+        <Icons.key />
+        创建密钥
+      </Button>
+      <CreateKeyDialog open={open} onOpenChange={setOpen} />
+    </>
   );
 }
