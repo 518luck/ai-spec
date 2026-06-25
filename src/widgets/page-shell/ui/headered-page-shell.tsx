@@ -2,7 +2,7 @@ import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-type HeaderedPageShellProps = ComponentProps<"div"> & {
+type HeaderedPageShellProps = Omit<ComponentProps<"div">, "title"> & {
   title?: ReactNode;
 };
 

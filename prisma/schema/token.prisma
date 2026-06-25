@@ -5,6 +5,7 @@ model Token {
 
     // ② 业务字段
     name        String   // 令牌名称，用户自定义用于区分用途（如"本地开发"、"CI"）
+    description String?  // 令牌描述，可选的业务用途补充说明
     hashedkey   String   // API Key 明文经 HMAC-SHA256（混入 AUTH_SECRET）后的哈希值；明文仅在创建时返回一次，库里不可反查
     partial_key String   // API Key 的脱敏片段（前缀+后缀），用于在列表中识别令牌而不暴露完整密钥
     expires     DateTime // 令牌过期时间，过期后不可再用于鉴权
