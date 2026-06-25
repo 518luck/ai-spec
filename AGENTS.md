@@ -115,6 +115,10 @@ Prisma schema 命名、字段排列顺序、删除策略与旧表迁移规范，
 - 将 hooks 保持在顶层；避免条件式 hooks。
 - 除非与文件约定一致，避免内联样式。
 
+### Tailwind CSS
+
+- 引用 CSS 变量的 arbitrary value 用 v4 简写 `prop-(--var)`，不要写 `prop-[var(--var)]`；计算表达式（如 `[calc(...)]`、`[min(...)]`）除外。
+
 ### Options Object
 
 函数/方法/构造函数满足**任一**条件即用参数对象，禁止位置参数：参数 ≥ 2、含可选参数、含布尔标志、或多个同类型参数。

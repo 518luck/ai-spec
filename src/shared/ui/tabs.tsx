@@ -56,7 +56,7 @@ function TabsList({
         renderBeforeHydration
         className={cn(
           // 消费 base-ui 注入的位置/尺寸变量定位
-          "absolute top-(--active-tab-top) left-[var(--active-tab-left)] h-[var(--active-tab-height)] w-[var(--active-tab-width)] rounded-md",
+          "absolute top-(--active-tab-top) left-(--active-tab-left) h-(--active-tab-height) w-(--active-tab-width) rounded-md",
           // default 变体下为白色凸起背景，line 变体隐藏（由 trigger 底线指示）
           "bg-background shadow-sm transition-all duration-300 ease-out group-data-[variant=line]/tabs-list:opacity-0",
         )}
