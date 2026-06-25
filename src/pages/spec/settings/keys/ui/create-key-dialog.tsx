@@ -91,16 +91,16 @@ export function CreateKeyDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>创建 API 密钥</DialogTitle>
+          <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
           <DialogDescription>
             生成一枚用于程序化接入的密钥，创建后请妥善保存。
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4">
-          {/* 空间选择：决定密钥归属，默认个人工作空间 */}
+        <div className="flex flex-col gap-6">
+          {/* 归属空间选择：决定密钥归属，默认个人工作空间 */}
           <div className="flex flex-col gap-2">
-            <Label>空间</Label>
+            <Label>归属空间</Label>
             <Select
               items={SCOPES}
               value={scope}
