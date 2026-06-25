@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 // 权限选项及对应的权限范围说明，切换权限时联动展示对应文案
 const PERMISSIONS = [
@@ -44,12 +43,18 @@ const PERMISSIONS = [
   },
 ] as const;
 
+// 空间选项：决定密钥归属，默认个人工作空间
+const SCOPES = [
+  { value: "personal", label: "个人工作空间" },
+  { value: "team", label: "团队工作空间" },
+] as const;
+
 type CreateKeyDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 };
 
-// 创建 API 密钥弹窗：顶部按个人/团队空间分 tab，团队空间额外多一个工作空间选择
+// 创建 API 密钥弹窗：通过空间下拉选择个人/团队，团队空间额外多一个工作空间选择
 export function CreateKeyDialog({
   open,
   onOpenChange,
@@ -62,7 +67,7 @@ export function CreateKeyDialog({
   const permissionHint =
     PERMISSIONS.find((item) => item.value === permission)?.hint ?? "";
 
-  // 切换个人/团队空间 tab
+  // 切换个人/团队空间
   const handleScopeChange = (value: string | null): void => {
     if (value === "personal" || value === "team") {
       setScope(value);
@@ -92,46 +97,50 @@ export function CreateKeyDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={scope} onValueChange={handleScopeChange}>
-          <TabsList>
-            <TabsTrigger value="personal">个人空间</TabsTrigger>
-            <TabsTrigger value="team">团队空间</TabsTrigger>
-          </TabsList>
+        <div className="flex flex-col gap-4">
+          {/* 空间选择：决定密钥归属，默认个人工作空间 */}
+          <div className="flex flex-col gap-2">
+            <Label>空间</Label>
+            <Select
+              items={SCOPES}
+              value={scope}
+              onValueChange={handleScopeChange}
+            >
+              <SelectTrigger size="sm" className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="personal">个人工作空间</SelectItem>
+                  <SelectItem value="team">团队工作空间</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
 
-          <TabsContent value="personal">
-            <KeyFormFields
-              name={name}
-              permission={permission}
-              permissionHint={permissionHint}
-              onNameChange={setName}
-              onPermissionChange={handlePermissionChange}
-            />
-          </TabsContent>
-
-          <TabsContent value="team">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-2">
-                <Label>工作空间</Label>
-                {/* Workspace 模型未落地，暂以禁用占位呈现，无可选工作空间 */}
-                <Select disabled>
-                  <SelectTrigger size="sm" className="w-full">
-                    <span className="text-muted-foreground">
-                      暂无可用工作空间
-                    </span>
-                  </SelectTrigger>
-                  <SelectContent />
-                </Select>
-              </div>
-              <KeyFormFields
-                name={name}
-                permission={permission}
-                permissionHint={permissionHint}
-                onNameChange={setName}
-                onPermissionChange={handlePermissionChange}
-              />
+          {/* 团队空间下额外选择具体工作空间（Workspace 模型未落地，暂以禁用占位呈现） */}
+          {scope === "team" && (
+            <div className="flex flex-col gap-2">
+              <Label>工作空间</Label>
+              <Select disabled>
+                <SelectTrigger size="sm" className="w-full">
+                  <span className="text-muted-foreground">
+                    暂无可用工作空间
+                  </span>
+                </SelectTrigger>
+                <SelectContent />
+              </Select>
             </div>
-          </TabsContent>
-        </Tabs>
+          )}
+
+          <KeyFormFields
+            name={name}
+            permission={permission}
+            permissionHint={permissionHint}
+            onNameChange={setName}
+            onPermissionChange={handlePermissionChange}
+          />
+        </div>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
@@ -191,7 +200,7 @@ function KeyFormFields({
             </SelectGroup>
           </SelectContent>
         </Select>
-        <p className="text-xs text-muted-foreground">{permissionHint}</p>
+        <p className="text-muted-foreground text-xs">{permissionHint}</p>
       </div>
     </div>
   );
