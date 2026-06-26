@@ -4,7 +4,13 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import {
+  RESOURCES,
+  RESOURCE_KEYS,
+  type ResourceKey,
+} from "@/shared/lib/api/rbac/resources";
 import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +29,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/shared/ui/table";
 
 // 权限选项及对应的权限范围说明，切换权限时联动展示对应文案
 const PERMISSIONS = [
@@ -49,6 +63,9 @@ const SCOPES = [
   { value: "team", label: "团队工作空间" },
 ] as const;
 
+// 权限勾选矩阵：每个资源对应读/写两个开关，仅「限制」权限下使用
+type PermissionMatrix = Record<ResourceKey, { read: boolean; write: boolean }>;
+
 type CreateKeyDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -62,6 +79,12 @@ export function CreateKeyDialog({
   const [scope, setScope] = useState<"personal" | "team">("personal");
   const [name, setName] = useState("");
   const [permission, setPermission] = useState<string>("full");
+  const [matrix, setMatrix] = useState<PermissionMatrix>(
+    () =>
+      Object.fromEntries(
+        RESOURCE_KEYS.map((key) => [key, { read: false, write: false }]),
+      ) as PermissionMatrix,
+  );
 
   // 根据当前选中权限取对应的范围说明文案
   const permissionHint =
@@ -79,6 +102,18 @@ export function CreateKeyDialog({
     if (value) {
       setPermission(value);
     }
+  };
+
+  // 切换某资源的读/写勾选状态
+  const handleTogglePermission = (
+    key: ResourceKey,
+    field: "read" | "write",
+    checked: boolean,
+  ): void => {
+    setMatrix((prev) => ({
+      ...prev,
+      [key]: { ...prev[key], [field]: checked },
+    }));
   };
 
   // 本次只做 UI：点击创建仅给出占位提示并关闭弹窗
@@ -140,6 +175,11 @@ export function CreateKeyDialog({
             onNameChange={setName}
             onPermissionChange={handlePermissionChange}
           />
+
+          {/* 限制权限下展开资源勾选矩阵，细化可访问范围 */}
+          {permission === "restricted" && (
+            <PermissionTable value={matrix} onToggle={handleTogglePermission} />
+          )}
         </div>
 
         <DialogFooter>
@@ -201,6 +241,63 @@ function KeyFormFields({
           </SelectContent>
         </Select>
         <p className="text-muted-foreground text-xs">{permissionHint}</p>
+      </div>
+    </div>
+  );
+}
+
+type PermissionTableProps = {
+  value: PermissionMatrix;
+  onToggle: (
+    key: ResourceKey,
+    field: "read" | "write",
+    checked: boolean,
+  ) => void;
+};
+
+// 资源×读写勾选矩阵：按 RBAC 资源列出读/写开关，仅「限制」权限下展示
+function PermissionTable({
+  value,
+  onToggle,
+}: PermissionTableProps): JSX.Element {
+  return (
+    <div className="flex flex-col gap-2">
+      <Label>可访问资源</Label>
+      <div className="max-h-[280px] overflow-y-auto rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>资源</TableHead>
+              <TableHead className="text-center">读</TableHead>
+              <TableHead className="text-center">写</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {RESOURCES.map((resource) => (
+              <TableRow key={resource.key}>
+                <TableCell className="font-medium">
+                  {resource.name}
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox
+                    checked={value[resource.key].read}
+                    onCheckedChange={(checked) =>
+                      onToggle(resource.key, "read", checked)
+                    }
+                  />
+                </TableCell>
+                <TableCell className="text-center">
+                  <Checkbox
+                    checked={value[resource.key].write}
+                    onCheckedChange={(checked) =>
+                      onToggle(resource.key, "write", checked)
+                    }
+                  />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </div>
   );
