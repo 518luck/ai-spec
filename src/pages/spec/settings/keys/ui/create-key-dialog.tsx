@@ -22,6 +22,7 @@ import {
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -257,8 +258,8 @@ function PermissionTable({
 }: PermissionTableProps): JSX.Element {
   return (
     <div className="flex flex-col gap-2">
-      <Label>可访问资源</Label>
-      <div className="max-h-70 overflow-y-auto rounded-md border">
+      {/* 滚动区域：用 ScrollArea 替代原生 overflow-y-auto，呈现自定义滚动条 */}
+      <ScrollArea className="max-h-70 rounded-md">
         <div className="flex flex-col divide-y">
           {RESOURCES.map((resource) => (
             <div
@@ -291,7 +292,7 @@ function PermissionTable({
             </div>
           ))}
         </div>
-      </div>
+      </ScrollArea>
     </div>
   );
 }
