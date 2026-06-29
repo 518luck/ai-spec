@@ -177,7 +177,8 @@ export function CreateKeyDialog({
           />
 
           {/* 限制权限下展开资源勾选矩阵，用动画容器平滑过渡展开/收起 */}
-          <AnimatedSizeContainer height>
+          {/* w-full 必需：overflow-hidden 容器默认收缩包裹内容，需显式撑满父级宽度 */}
+          <AnimatedSizeContainer height className="w-full">
             {permission === "restricted" && (
               <PermissionTable
                 value={matrix}
@@ -188,10 +189,10 @@ export function CreateKeyDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
+          {/* 右上角 X 已承担关闭职责，无需取消按钮；创建按钮铺满底部 */}
+          <Button className="w-full" onClick={handleCreate}>
+            创建
           </Button>
-          <Button onClick={handleCreate}>创建</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -260,24 +261,28 @@ function PermissionTable({
     <div className="flex flex-col gap-2">
       {/* 滚动区域：用 ScrollArea 替代原生 overflow-y-auto，呈现自定义滚动条 */}
       <ScrollArea className="max-h-70 rounded-md">
-        <div className="flex flex-col divide-y">
+        {/* w-full 必需：滚动容器子元素默认收缩包裹，不撑满则行内无剩余空间使两端对齐失效 */}
+        <div className="flex w-full flex-col divide-y">
           {RESOURCES.map((resource) => (
             <div
               key={resource.key}
               className="flex items-center justify-between px-3 py-3"
             >
-              {/* 资源名称 + 描述 tooltip */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-medium">{resource.name}</span>
+              {/* 资源名称 + 描述 tooltip：shrink-0 防压缩，whitespace-nowrap 防折行 */}
+              <div className="flex shrink-0 items-center gap-1.5">
+                <span className="text-sm font-medium whitespace-nowrap">
+                  {resource.name}
+                </span>
                 <InfoTooltip content={resource.description} />
               </div>
               {/* 单资源权限单选组：None / Read / Write，互斥 */}
+              {/* w-auto 覆盖 RadioGroup 默认的 w-full，否则单选组占满整行使两端对齐失效 */}
               <RadioGroup
                 value={value[resource.key]}
                 onValueChange={(scopeValue) =>
                   onScopeChange(resource.key, scopeValue as string)
                 }
-                className="flex gap-3"
+                className="flex w-auto shrink-0 gap-3"
               >
                 {RESOURCE_SCOPES.map((scope) => (
                   <Label

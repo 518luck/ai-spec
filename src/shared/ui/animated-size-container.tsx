@@ -88,8 +88,8 @@ const AnimatedSizeContainer: ForwardRefExoticComponent<
         // 根据开启的 width/height 选项，把外层容器动画到测量出的内容尺寸。
         // measuredWidth 和 measuredHeight 是通过 useResizeObserver(containerRef) 测出来的子内容真实尺寸。
         animate={{
-          width: width ? (measuredWidth ?? "auto") : "auto",
-          height: height ? (measuredHeight ?? "auto") : "auto",
+          ...(width && { width: measuredWidth ?? "auto" }),
+          ...(height && { height: measuredHeight ?? "auto" }),
         }}
         // 控制尺寸变化的动画方式；首次测量会禁用动画。
         transition={effectiveTransition}
