@@ -37,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/shared/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 
 // 权限选项及对应的权限范围说明，切换权限时联动展示对应文案
 const PERMISSIONS = [
@@ -201,7 +202,7 @@ type KeyFormFieldsProps = {
   onPermissionChange: (value: string | null) => void;
 };
 
-// 密钥名称 + 权限选择 + 权限范围说明，个人与团队空间共用
+// 密钥名称 + 权限选择（tab 形式） + 权限范围说明，个人与团队空间共用
 function KeyFormFields({
   name,
   permission,
@@ -222,24 +223,19 @@ function KeyFormFields({
 
       <div className="flex flex-col gap-2">
         <Label>权限</Label>
-        <Select
-          items={PERMISSIONS}
+        {/* 权限以 tab 形式选择，选中即对应权限，联动下方范围说明与资源勾选 */}
+        <Tabs
           value={permission}
-          onValueChange={onPermissionChange}
+          onValueChange={(value) => onPermissionChange(value as string | null)}
         >
-          <SelectTrigger size="sm" className="w-full">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              {PERMISSIONS.map((item) => (
-                <SelectItem key={item.value} value={item.value}>
-                  {item.label}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+          <TabsList className="w-full">
+            {PERMISSIONS.map((item) => (
+              <TabsTrigger key={item.value} value={item.value}>
+                {item.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
         <p className="text-muted-foreground text-xs">{permissionHint}</p>
       </div>
     </div>
@@ -275,9 +271,7 @@ function PermissionTable({
           <TableBody>
             {RESOURCES.map((resource) => (
               <TableRow key={resource.key}>
-                <TableCell className="font-medium">
-                  {resource.name}
-                </TableCell>
+                <TableCell className="font-medium">{resource.name}</TableCell>
                 <TableCell className="text-center">
                   <Checkbox
                     checked={value[resource.key].read}
