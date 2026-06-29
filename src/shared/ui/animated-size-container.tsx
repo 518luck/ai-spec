@@ -47,12 +47,12 @@ const AnimatedSizeContainer: ForwardRefExoticComponent<
 > = forwardRef<HTMLDivElement, AnimatedSizeContainerProps>(
   (
     {
-      width = false,
-      height = false,
-      className,
-      transition,
-      children,
-      ...rest
+      width = false, // 是否对「宽度」做动画过渡。true 时外层容器会随内容宽度变化而平滑伸缩；false 时宽度跟随父容器（auto）。
+      height = false, // 是否对「高度」做动画过渡。true 时外层容器会随内容高度变化而平滑伸缩；false 时高度自适应（auto）。
+      className, // 外部传入的额外样式类名，会拼接到内层 motion.div 上（与默认的 overflow-hidden 合并）。
+      transition, // 自定义动画过渡参数（如 duration、ease、type）。不传时走组件内部的默认逻辑：首次测量不动画，之后用 spring 弹簧动画。
+      children, // 容器包裹的子内容；内层 div 会按 children 的真实尺寸「撑开」，供 ResizeObserver 测量。
+      ...rest // 剩余的其它 props（透传给 motion.div），比如 initial、style、onClick、id 等，保证组件能像普通 div 一样被使用。
     }: AnimatedSizeContainerProps,
     forwardedRef,
   ) => {
