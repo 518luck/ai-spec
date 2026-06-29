@@ -28,25 +28,14 @@
 - `zod/**` 可能被客户端导入，禁止引入 Prisma、Redis、NextAuth、`next/headers`、`next/server`、`server-only` 或直接读取环境变量。
 - 通过 schema 解析结果获得类型安全，避免 `any` 和不必要的类型断言。
 
-## 规范
+### 命名规范
 
-### 后缀规则
+类型名为 `[操作动词] + [实体] + 后缀`，实体用单数；列表场景实体用复数。
 
-### 命名三段式
-
-类型名为 `[操作动词] + [实体] + Dto`，实体用单数；列表场景实体用复数。
+- **DTO（Data Transfer Object）**：请求入参，承载前端传入并待校验的数据。
+- **VO（View Object）**：响应出参，承载返回给前端、按展示需要裁剪后的数据。
+- 二者严格分层：**Dto 入 / Vo 出**，请求侧用 `XxxDto`，响应侧用 `XxxVo`，不混用。
 
 - **操作动词**：`Create` / `Update` / `Patch` / `Delete` / `List` / `Get`。
 - **实体**：业务名词，如 `User`、`Order`、`PromptDraft`。
-
-### 命名速查表
-
-| 场景         | schema 名（camelCase）   | 类型名（PascalCase）  |
-| ------------ | ------------------------ | --------------------- |
-| 创建         | `createUserSchema`       | `CreateUserDto`       |
-| 全量更新     | `updateUserSchema`       | `UpdateUserDto`       |
-| 部分更新     | `patchUserSchema`        | `PatchUserDto`        |
-| 列表查询条件 | `listUsersQuerySchema`   | `ListUsersQueryDto`   |
-| 单个查询条件 | `getUserQuerySchema`     | `GetUserQueryDto`     |
-| 返回单个     | `userResponseSchema`     | `UserResponseDto`     |
-| 返回列表     | `userListResponseSchema` | `UserListResponseDto` |
+- **后缀**：入参 `Dto`，出参 `Vo`。

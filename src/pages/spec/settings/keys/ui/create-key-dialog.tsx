@@ -124,7 +124,8 @@ export function CreateKeyDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      {/* 关闭依赖点击遮罩 / ESC，无需右上角 X，保持弹窗简洁 */}
+      <DialogContent showCloseButton={false} className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
           <DialogDescription>
@@ -221,7 +222,7 @@ function KeyFormFields({
         <Label>密钥名称</Label>
         <Input
           value={name}
-          placeholder="例如：本地开发、CI 部署"
+          placeholder="例如：读取 Prompt、同步智能体"
           onChange={(event) => onNameChange(event.target.value)}
         />
       </div>
