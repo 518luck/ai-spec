@@ -30,6 +30,16 @@
 | `pnpm run prisma:generate` | 生成 Prisma Client 代码          |
 | `pnpm run prisma:migrate`  | 创建并应用数据库迁移（开发环境） |
 
+## shadcn 组件安装
+
+**必须使用 `npx` 安装 shadcn 组件，不要用 `pnpm dlx`。**
+
+```bash
+npx shadcn@latest add <component>
+```
+
+原因：项目通过 pnpm 安装的 `shadcn` 是带 bug 的旧版（zod 版本冲突导致 `ERR_PACKAGE_PATH_NOT_EXPORTED` 崩溃）。`pnpm dlx` 会复用本地 store 里这个带 bug 的版本，仍然崩溃；而 `npx` 走 npm 的通道，每次拉取最新版（含官方修复），可正常使用。
+
 ## 数据库约束
 
 操作数据库时必须遵循以下流程：

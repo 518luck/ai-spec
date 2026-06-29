@@ -9,8 +9,8 @@ import {
   RESOURCE_KEYS,
   type ResourceKey,
 } from "@/shared/lib/api/rbac/resources";
+import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
-import { Checkbox } from "@/shared/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -29,15 +30,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/shared/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { InfoIcon } from "lucide-react";
 
 // 权限选项及对应的权限范围说明，切换权限时联动展示对应文案
 const PERMISSIONS = [
@@ -64,8 +59,15 @@ const SCOPES = [
   { value: "team", label: "团队工作空间" },
 ] as const;
 
-// 权限勾选矩阵：每个资源对应读/写两个开关，仅「限制」权限下使用
-type PermissionMatrix = Record<ResourceKey, { read: boolean; write: boolean }>;
+// 资源权限粒度：None(无)/Read(读)/Write(读写)，单选互斥
+const RESOURCE_SCOPES = [
+  { value: "", label: "None" },
+  { value: "read", label: "Read" },
+  { value: "write", label: "Write" },
+] as const;
+
+// 权限勾选矩阵：每个资源对应一个 scope 值（""/read/write），仅「限制」权限下使用
+type PermissionMatrix = Record<ResourceKey, string>;
 
 type CreateKeyDialogProps = {
   open: boolean;
@@ -83,7 +85,7 @@ export function CreateKeyDialog({
   const [matrix, setMatrix] = useState<PermissionMatrix>(
     () =>
       Object.fromEntries(
-        RESOURCE_KEYS.map((key) => [key, { read: false, write: false }]),
+        RESOURCE_KEYS.map((key) => [key, ""]),
       ) as PermissionMatrix,
   );
 
@@ -105,16 +107,12 @@ export function CreateKeyDialog({
     }
   };
 
-  // 切换某资源的读/写勾选状态
-  const handleTogglePermission = (
+  // 切换某资源的权限粒度（None/Read/Write）
+  const handleResourceScopeChange = (
     key: ResourceKey,
-    field: "read" | "write",
-    checked: boolean,
+    scopeValue: string,
   ): void => {
-    setMatrix((prev) => ({
-      ...prev,
-      [key]: { ...prev[key], [field]: checked },
-    }));
+    setMatrix((prev) => ({ ...prev, [key]: scopeValue }));
   };
 
   // 本次只做 UI：点击创建仅给出占位提示并关闭弹窗
@@ -177,10 +175,15 @@ export function CreateKeyDialog({
             onPermissionChange={handlePermissionChange}
           />
 
-          {/* 限制权限下展开资源勾选矩阵，细化可访问范围 */}
-          {permission === "restricted" && (
-            <PermissionTable value={matrix} onToggle={handleTogglePermission} />
-          )}
+          {/* 限制权限下展开资源勾选矩阵，用动画容器平滑过渡展开/收起 */}
+          <AnimatedSizeContainer height>
+            {permission === "restricted" && (
+              <PermissionTable
+                value={matrix}
+                onScopeChange={handleResourceScopeChange}
+              />
+            )}
+          </AnimatedSizeContainer>
         </div>
 
         <DialogFooter>
@@ -244,55 +247,69 @@ function KeyFormFields({
 
 type PermissionTableProps = {
   value: PermissionMatrix;
-  onToggle: (
-    key: ResourceKey,
-    field: "read" | "write",
-    checked: boolean,
-  ) => void;
+  onScopeChange: (key: ResourceKey, scopeValue: string) => void;
 };
 
-// 资源×读写勾选矩阵：按 RBAC 资源列出读/写开关，仅「限制」权限下展示
+// 资源权限清单：每行一个资源，右侧 None/Read/Write 单选组，仅「限制」权限下展示
 function PermissionTable({
   value,
-  onToggle,
+  onScopeChange,
 }: PermissionTableProps): JSX.Element {
   return (
     <div className="flex flex-col gap-2">
       <Label>可访问资源</Label>
-      <div className="max-h-[280px] overflow-y-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>资源</TableHead>
-              <TableHead className="text-center">读</TableHead>
-              <TableHead className="text-center">写</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {RESOURCES.map((resource) => (
-              <TableRow key={resource.key}>
-                <TableCell className="font-medium">{resource.name}</TableCell>
-                <TableCell className="text-center">
-                  <Checkbox
-                    checked={value[resource.key].read}
-                    onCheckedChange={(checked) =>
-                      onToggle(resource.key, "read", checked)
-                    }
-                  />
-                </TableCell>
-                <TableCell className="text-center">
-                  <Checkbox
-                    checked={value[resource.key].write}
-                    onCheckedChange={(checked) =>
-                      onToggle(resource.key, "write", checked)
-                    }
-                  />
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="max-h-70 overflow-y-auto rounded-md border">
+        <div className="flex flex-col divide-y">
+          {RESOURCES.map((resource) => (
+            <div
+              key={resource.key}
+              className="flex items-center justify-between px-3 py-3"
+            >
+              {/* 资源名称 + 描述 tooltip */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium">{resource.name}</span>
+                <InfoTooltip content={resource.description} />
+              </div>
+              {/* 单资源权限单选组：None / Read / Write，互斥 */}
+              <RadioGroup
+                value={value[resource.key]}
+                onValueChange={(scopeValue) =>
+                  onScopeChange(resource.key, scopeValue as string)
+                }
+                className="flex gap-3"
+              >
+                {RESOURCE_SCOPES.map((scope) => (
+                  <Label
+                    key={scope.value}
+                    className="flex cursor-pointer items-center gap-1.5 text-sm font-normal"
+                  >
+                    <RadioGroupItem value={scope.value} />
+                    {scope.label}
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
+  );
+}
+
+type InfoTooltipProps = {
+  content: string;
+};
+
+// 资源描述气泡：hover 显示资源用途说明
+function InfoTooltip({ content }: InfoTooltipProps): JSX.Element {
+  return (
+    <Tooltip>
+      <TooltipTrigger
+        render={
+          <InfoIcon className="text-muted-foreground size-3.5 cursor-help" />
+        }
+      />
+      <TooltipContent>{content}</TooltipContent>
+    </Tooltip>
   );
 }
