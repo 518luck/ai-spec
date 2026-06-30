@@ -1,7 +1,7 @@
 import "server-only";
 
 import prisma from "@/shared/db";
-import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import { skipAuthThrottling } from "@/shared/lib/api/utils/environment";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { enqueueEmailChange } from "@/shared/lib/infrastructure/queue";
 import { kvSet } from "@/shared/lib/infrastructure/redis/kv";

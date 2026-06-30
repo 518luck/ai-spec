@@ -6,7 +6,7 @@ import * as z from "zod/v4";
 import { actionClient } from "@/shared/lib/actions/safe-action";
 import { ActionError } from "@/shared/lib/actions/utils/action-error";
 import prisma from "@/shared/db";
-import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import { skipAuthThrottling } from "@/shared/lib/api/utils/environment";
 import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { hashPassword } from "@/shared/lib/utils";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";

@@ -2,7 +2,7 @@
 
 import prisma from "@/shared/db";
 import { actionClient } from "@/shared/lib/actions/safe-action";
-import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import { skipAuthThrottling } from "@/shared/lib/api/utils/environment";
 import { getIP } from "@/shared/lib/api/utils/get-ip";
 import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { emailSchema } from "@/shared/lib/zod/schemas/auth";

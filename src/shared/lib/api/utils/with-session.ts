@@ -1,5 +1,5 @@
 import prisma from "@/shared/db";
-import { AiSpecError, toErrorResponse } from "@/shared/lib/api/error";
+import { AiSpecError, toErrorResponse } from "@/shared/lib/api/utils/error";
 import { auth } from "@/shared/lib/auth/auth";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { withAxiom } from "@/shared/lib/infrastructure/axiom/server";

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
 import prisma from "@/shared/db";
-import { AiSpecError } from "@/shared/lib/api/error";
+import { AiSpecError } from "@/shared/lib/api/utils/error";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
-import { withSession } from "@/shared/lib/api/with-session";
+import { withSession } from "@/shared/lib/api/utils/with-session";
 import {
   createLogger,
   serializeError,
