@@ -1,14 +1,14 @@
 "use server";
 
 import prisma from "@/shared/db";
-import { flattenValidationErrors } from "next-safe-action";
-import * as z from "zod/v4";
-import { getIP } from "@/shared/lib/api/utils/get-ip";
+import { actionClient } from "@/shared/lib/actions/safe-action";
 import { skipAuthThrottling } from "@/shared/lib/api/environment";
+import { getIP } from "@/shared/lib/api/utils/get-ip";
 import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { emailSchema } from "@/shared/lib/zod/schemas/auth";
+import { flattenValidationErrors } from "next-safe-action";
+import * as z from "zod/v4";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
-import { actionClient } from "@/shared/lib/actions/safe-action";
 
 const schema = z.object({
   email: emailSchema,

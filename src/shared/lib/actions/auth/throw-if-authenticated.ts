@@ -1,5 +1,6 @@
-import { createMiddleware } from "next-safe-action";
+import { ActionError } from "@/shared/lib/actions/safe-action";
 import { auth } from "@/shared/lib/auth/auth";
+import { createMiddleware } from "next-safe-action";
 
 /**
  * @function throwIfAuthenticated
@@ -20,7 +21,7 @@ export const throwIfAuthenticated = createMiddleware().define(
     const session = await auth();
 
     if (session) {
-      throw new Error("您已经登录");
+      throw new ActionError({ code: "FORBIDDEN", message: "您已经登录" });
     }
 
     return next({ ctx });

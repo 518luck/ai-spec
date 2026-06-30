@@ -3,14 +3,14 @@
 import { v4 as uuidv4 } from "uuid";
 import * as z from "zod/v4";
 
+import { ActionError, actionClient } from "@/shared/lib/actions/safe-action";
 import prisma from "@/shared/db";
-import { flattenValidationErrors } from "next-safe-action";
 import { skipAuthThrottling } from "@/shared/lib/api/environment";
 import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { hashPassword } from "@/shared/lib/utils";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
+import { flattenValidationErrors } from "next-safe-action";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
-import { actionClient } from "@/shared/lib/actions/safe-action";
 
 const OTP_ATTEMPTS = 2;
 
@@ -56,7 +56,10 @@ export const createUserAccountAction = actionClient
       }
 
       // 验证码不匹配时终止注册。
-      throw new Error("输入无效的验证码");
+      throw new ActionError({
+        code: "VALIDATION_ERROR",
+        message: "输入无效的验证码",
+      });
     }
 
     if (verificationToken.expires && verificationToken.expires < new Date()) {
@@ -69,7 +72,10 @@ export const createUserAccountAction = actionClient
       });
 
       // 验证码过期时提示用户重新获取。
-      throw new Error("验证码已经过期,请重新发送");
+      throw new ActionError({
+        code: "VALIDATION_ERROR",
+        message: "验证码已经过期，请重新发送",
+      });
     }
 
     await prisma.emailVerificationToken.delete({

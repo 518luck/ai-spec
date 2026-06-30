@@ -1,9 +1,8 @@
 "use server";
 
+import { ActionError, actionClient } from "@/shared/lib/actions/safe-action";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
-import { flattenValidationErrors } from "next-safe-action";
-import * as z from "zod";
 import { getIP } from "@/shared/lib/api/utils/get-ip";
 import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
 import { generateOTP } from "@/shared/lib/auth/utils";
@@ -11,8 +10,9 @@ import { sendEmail } from "@/shared/lib/infrastructure/email";
 import VerifyEmail from "@/shared/lib/infrastructure/email/templates/verify-email";
 import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
+import { flattenValidationErrors } from "next-safe-action";
+import * as z from "zod";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
-import { actionClient } from "@/shared/lib/actions/safe-action";
 
 const schema = z.object({
   email: emailSchema,
@@ -41,7 +41,10 @@ export const sendOtpAction = actionClient
     });
 
     if (isExistingUser) {
-      throw new Error("用户已存在，请登录,或使用忘记密码功能");
+      throw new ActionError({
+        code: "CONFLICT",
+        message: "用户已存在，请登录，或使用忘记密码功能",
+      });
     }
 
     // 6. 生成新的 OTP 验证码，后面会同时写入数据库并发送邮件。
