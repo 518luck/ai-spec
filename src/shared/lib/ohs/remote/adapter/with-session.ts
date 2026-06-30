@@ -140,7 +140,7 @@ const withRateLimitHeaders = (
 const resolveApiKeyToken = async (rawKey: string) => {
   const hashedKey = await hashToken(rawKey);
   const token = await prisma.token.findFirst({
-    where: { hashedkey: hashedKey },
+    where: { hashed_key: hashedKey },
     include: {
       user: { select: { id: true, name: true, email: true, image: true } },
     },
@@ -149,7 +149,7 @@ const resolveApiKeyToken = async (rawKey: string) => {
   if (!token) {
     throw new Error("无效的 API Key");
   }
-  if (token.expires < new Date()) {
+  if (token.expires && token.expires < new Date()) {
     throw new Error("API Key 已过期");
   }
 
