@@ -3,7 +3,8 @@
 import { v4 as uuidv4 } from "uuid";
 import * as z from "zod/v4";
 
-import { ActionError, actionClient } from "@/shared/lib/actions/safe-action";
+import { actionClient } from "@/shared/lib/actions/safe-action";
+import { ActionError } from "@/shared/lib/actions/utils/action-error";
 import prisma from "@/shared/db";
 import { skipAuthThrottling } from "@/shared/lib/api/environment";
 import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";

@@ -1,6 +1,7 @@
 "use server";
 
-import { ActionError, actionClient } from "@/shared/lib/actions/safe-action";
+import { actionClient } from "@/shared/lib/actions/safe-action";
+import { ActionError } from "@/shared/lib/actions/utils/action-error";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { getIP } from "@/shared/lib/api/utils/get-ip";

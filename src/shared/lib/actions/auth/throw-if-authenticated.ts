@@ -1,4 +1,4 @@
-import { ActionError } from "@/shared/lib/actions/safe-action";
+import { ActionError } from "@/shared/lib/actions/utils/action-error";
 import { auth } from "@/shared/lib/auth/auth";
 import { createMiddleware } from "next-safe-action";
 
