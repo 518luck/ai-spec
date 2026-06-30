@@ -1,6 +1,6 @@
 import * as z from "zod/v4";
 
-import { PERMISSION_ACTIONS } from "@/shared/lib/api/rbac/permissions";
+import { PERMISSION_ACTIONS } from "@/shared/lib/ohs/api/rbac/permissions";
 
 // name：令牌显示名称，1-50 字符，必填
 const tokenNameSchema = z

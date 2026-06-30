@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { withSession } from "@/shared/lib/api/utils/with-session";
+import { withSession } from "@/shared/lib/ohs/api/utils/with-session";
 
 // 创建提示词草稿：鉴权入口已就绪，业务逻辑待实现
 export const POST = withSession(async () => {

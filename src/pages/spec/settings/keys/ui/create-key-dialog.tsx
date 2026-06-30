@@ -8,7 +8,7 @@ import {
   RESOURCES,
   RESOURCE_KEYS,
   type ResourceKey,
-} from "@/shared/lib/api/rbac/resources";
+} from "@/shared/lib/ohs/api/rbac/resources";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import {

@@ -1,6 +1,6 @@
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
-import { skipAuthThrottling } from "@/shared/lib/api/utils/environment";
+import { skipAuthThrottling } from "@/shared/lib/ohs/api/utils/environment";
 import {
   CALLBACK_URL_COOKIE_NAME,
   CSRF_TOKEN_NAME,

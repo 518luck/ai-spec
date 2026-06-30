@@ -1,4 +1,4 @@
-import { sendOtpAction } from "@/shared/lib/actions/auth/send-otp";
+import { sendOtpAction } from "@/shared/lib/ohs/actions/auth/send-otp";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";

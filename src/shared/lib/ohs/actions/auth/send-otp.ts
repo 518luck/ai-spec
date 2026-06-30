@@ -1,10 +1,10 @@
 "use server";
 
-import { actionClient } from "@/shared/lib/actions/safe-action";
-import { ActionError } from "@/shared/lib/actions/utils/action-error";
+import { actionClient } from "@/shared/lib/ohs/actions/safe-action";
+import { ActionError } from "@/shared/lib/ohs/actions/utils/action-error";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
-import { getIP } from "@/shared/lib/api/utils/get-ip";
+import { getIP } from "@/shared/lib/ohs/api/utils/get-ip";
 import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
 import { generateOTP } from "@/shared/lib/auth/utils";
 import { sendEmail } from "@/shared/lib/infrastructure/email";
