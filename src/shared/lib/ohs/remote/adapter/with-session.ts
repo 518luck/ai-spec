@@ -1,9 +1,12 @@
 import prisma from "@/shared/db";
-import { AiSpecError, toErrorResponse } from "@/shared/lib/ohs/remote/adapter/error";
 import { auth } from "@/shared/lib/auth/auth";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { withAxiom } from "@/shared/lib/infrastructure/axiom/server";
 import { apiKeyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import {
+  AiSpecError,
+  toErrorResponse,
+} from "@/shared/lib/ohs/remote/adapter/error";
 import { getSearchParams } from "@/shared/lib/utils";
 import type { Session } from "next-auth";
 import { type NextRequest } from "next/server";
