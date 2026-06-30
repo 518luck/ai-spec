@@ -56,6 +56,10 @@ const RESOURCE_SCOPES = [
 // 权限勾选矩阵：每个资源对应一个 scope 值（""/read/write），仅「限制」权限下使用
 type PermissionMatrix = Record<ResourceKey, string>;
 
+// 生成全空的权限勾选矩阵，用于初始化与关闭重置
+const createEmptyMatrix = (): PermissionMatrix =>
+  Object.fromEntries(RESOURCE_KEYS.map((key) => [key, ""])) as PermissionMatrix;
+
 type CreateKeyDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -68,12 +72,7 @@ export function CreateKeyDialog({
 }: CreateKeyDialogProps): JSX.Element {
   const [name, setName] = useState("");
   const [permission, setPermission] = useState<string>("full");
-  const [matrix, setMatrix] = useState<PermissionMatrix>(
-    () =>
-      Object.fromEntries(
-        RESOURCE_KEYS.map((key) => [key, ""]),
-      ) as PermissionMatrix,
-  );
+  const [matrix, setMatrix] = useState<PermissionMatrix>(createEmptyMatrix);
 
   // 根据当前选中权限取对应的范围说明文案
   const permissionHint =
@@ -94,14 +93,24 @@ export function CreateKeyDialog({
     setMatrix((prev) => ({ ...prev, [key]: scopeValue }));
   };
 
+  // 弹窗开合处理：关闭时重置表单为初始态，避免下次打开残留上次输入
+  const handleOpenChange = (next: boolean): void => {
+    if (!next) {
+      setName("");
+      setPermission("full");
+      setMatrix(createEmptyMatrix());
+    }
+    onOpenChange(next);
+  };
+
   // 本次只做 UI：点击创建仅给出占位提示并关闭弹窗
   const handleCreate = (): void => {
     toast.info("创建功能即将上线");
-    onOpenChange(false);
+    handleOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       {/* 关闭依赖点击遮罩 / ESC，无需右上角 X，保持弹窗简洁 */}
       <DialogContent showCloseButton={false} className="sm:max-w-md">
         <DialogHeader>

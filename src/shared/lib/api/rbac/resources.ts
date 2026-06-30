@@ -35,39 +35,39 @@ export const RESOURCES: {
   {
     key: "promptRecord",
     name: "提示词-收录",
-    description: "规整的常用提示词",
+    description: "已收录的常用提示词",
   },
   {
     key: "promptDraft",
     name: "提示词-草稿",
-    description: "杂乱的提示词",
+    description: "未整理的提示词草稿",
   },
   {
     key: "rules",
     name: "规约库",
-    description: "通用的规则约定片段",
+    description: "可复用的规则约定片段",
   },
 
   // —— 共享资源（个人空间与团队空间共有） ——
   {
     key: "agentMD",
     name: "AGENTS.md",
-    description: "写给 AI 看的“岗位职责与工作守则",
+    description: "指导 AI 行为的项目规约文档",
   },
   {
     key: "skills",
     name: "Skills",
-    description: "Skills 的查看、新建、编辑",
+    description: "可复用的 AI 能力模块",
   },
   {
     key: "agents",
     name: "智能体",
-    description: "能够自主规划并调用工具去完成复杂任务的 AI 助理",
+    description: "自主调用工具完成任务的 AI 助理",
   },
   {
     key: "plugins",
     name: "Plugins",
-    description: "塞给 AI 的“工具箱”",
+    description: "供 AI 调用的外部工具集",
   },
 
   // // —— 工作空间 ——
