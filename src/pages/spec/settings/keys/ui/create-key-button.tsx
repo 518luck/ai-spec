@@ -4,7 +4,6 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 import { Button } from "@/shared/ui/button";
-import { Icons } from "@/shared/ui/icons";
 
 import { CreateKeyDialog } from "./create-key-dialog";
 
@@ -15,7 +14,6 @@ export function CreateKeyButton(): JSX.Element {
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)}>
-        <Icons.key />
         创建密钥
       </Button>
       <CreateKeyDialog open={open} onOpenChange={setOpen} />

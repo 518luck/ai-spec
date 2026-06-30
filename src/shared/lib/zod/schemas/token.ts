@@ -14,12 +14,12 @@ const tokenNameSchema = z
 // 注意：前端传数组，后端会 join(" ") 存到 DB 的 scopes 字段
 const tokenScopesSchema = z.array(z.enum(PERMISSION_ACTIONS)).default([]);
 
-// 创建 API 令牌时的输入校验 schema
-export const createTokenSchema = z.object({
+// 创建 API 令牌的请求入参 schema（Dto 入：前端传入待校验数据）
+export const createTokenDtoSchema = z.object({
   name: tokenNameSchema,
 
   scopes: tokenScopesSchema,
 });
 
-// 创建令牌输入类型（供 Server Action / 路由处理器使用）
-export type CreateTokenInput = z.infer<typeof createTokenSchema>;
+// 创建令牌入参类型（供 Server Action / 路由处理器使用）
+export type CreateTokenDto = z.infer<typeof createTokenDtoSchema>;

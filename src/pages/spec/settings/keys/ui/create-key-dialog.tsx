@@ -23,14 +23,6 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/shared/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { InfoIcon } from "lucide-react";
@@ -54,12 +46,6 @@ const PERMISSIONS = [
   },
 ] as const;
 
-// 空间选项：决定密钥归属，默认个人工作空间
-const SCOPES = [
-  { value: "personal", label: "个人工作空间" },
-  { value: "team", label: "团队工作空间" },
-] as const;
-
 // 资源权限粒度：None(无)/Read(读)/Write(读写)，单选互斥
 const RESOURCE_SCOPES = [
   { value: "", label: "None" },
@@ -75,12 +61,11 @@ type CreateKeyDialogProps = {
   onOpenChange: (open: boolean) => void;
 };
 
-// 创建 API 密钥弹窗：通过空间下拉选择个人/团队，团队空间额外多一个工作空间选择
+// 创建 API 密钥弹窗：密钥归属于个人工作空间，支持名称、权限及限制权限下的资源勾选
 export function CreateKeyDialog({
   open,
   onOpenChange,
 }: CreateKeyDialogProps): JSX.Element {
-  const [scope, setScope] = useState<"personal" | "team">("personal");
   const [name, setName] = useState("");
   const [permission, setPermission] = useState<string>("full");
   const [matrix, setMatrix] = useState<PermissionMatrix>(
@@ -93,13 +78,6 @@ export function CreateKeyDialog({
   // 根据当前选中权限取对应的范围说明文案
   const permissionHint =
     PERMISSIONS.find((item) => item.value === permission)?.hint ?? "";
-
-  // 切换个人/团队空间
-  const handleScopeChange = (value: string | null): void => {
-    if (value === "personal" || value === "team") {
-      setScope(value);
-    }
-  };
 
   // 切换权限选项
   const handlePermissionChange = (value: string | null): void => {
@@ -129,46 +107,11 @@ export function CreateKeyDialog({
         <DialogHeader>
           <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
           <DialogDescription>
-            生成一枚用于程序化接入的密钥，创建后请妥善保存。
+            生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-6">
-          {/* 归属空间选择：决定密钥归属，默认个人工作空间 */}
-          <div className="flex flex-col gap-2">
-            <Label>归属空间</Label>
-            <Select
-              items={SCOPES}
-              value={scope}
-              onValueChange={handleScopeChange}
-            >
-              <SelectTrigger size="sm" className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="personal">个人工作空间</SelectItem>
-                  <SelectItem value="team">团队工作空间</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* 团队空间下额外选择具体工作空间（Workspace 模型未落地，暂以禁用占位呈现） */}
-          {scope === "team" && (
-            <div className="flex flex-col gap-2">
-              <Label>工作空间</Label>
-              <Select disabled>
-                <SelectTrigger size="sm" className="w-full">
-                  <span className="text-muted-foreground">
-                    暂无可用工作空间
-                  </span>
-                </SelectTrigger>
-                <SelectContent />
-              </Select>
-            </div>
-          )}
-
           <KeyFormFields
             name={name}
             permission={permission}
@@ -178,7 +121,6 @@ export function CreateKeyDialog({
           />
 
           {/* 限制权限下展开资源勾选矩阵，用动画容器平滑过渡展开/收起 */}
-          {/* w-full 必需：overflow-hidden 容器默认收缩包裹内容，需显式撑满父级宽度 */}
           <AnimatedSizeContainer height className="w-full">
             {permission === "restricted" && (
               <PermissionTable
@@ -262,22 +204,18 @@ function PermissionTable({
     <div className="flex flex-col gap-2">
       {/* 滚动区域：用 ScrollArea 替代原生 overflow-y-auto，呈现自定义滚动条 */}
       <ScrollArea className="max-h-70 rounded-md">
-        {/* w-full 必需：滚动容器子元素默认收缩包裹，不撑满则行内无剩余空间使两端对齐失效 */}
         <div className="flex w-full flex-col divide-y">
           {RESOURCES.map((resource) => (
             <div
               key={resource.key}
               className="flex items-center justify-between px-3 py-3"
             >
-              {/* 资源名称 + 描述 tooltip：shrink-0 防压缩，whitespace-nowrap 防折行 */}
               <div className="flex shrink-0 items-center gap-1.5">
                 <span className="text-sm font-medium whitespace-nowrap">
                   {resource.name}
                 </span>
                 <InfoTooltip content={resource.description} />
               </div>
-              {/* 单资源权限单选组：None / Read / Write，互斥 */}
-              {/* w-auto 覆盖 RadioGroup 默认的 w-full，否则单选组占满整行使两端对齐失效 */}
               <RadioGroup
                 value={value[resource.key]}
                 onValueChange={(scopeValue) =>

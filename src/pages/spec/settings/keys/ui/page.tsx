@@ -72,7 +72,7 @@ export async function KeysPage(): Promise<JSX.Element> {
                   {token.description?.trim() || "—"}
                 </TableCell>
                 <TableCell>
-                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
+                  <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-xs">
                     {token.partial_key}
                   </code>
                 </TableCell>
@@ -98,7 +98,7 @@ type EmptyStateProps = {
 // 列表为空或未登录时的占位提示
 function EmptyState({ description }: EmptyStateProps): JSX.Element {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
+    <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
       <Icons.key className="size-8 opacity-40" />
       <p className="text-sm">{description}</p>
     </div>
