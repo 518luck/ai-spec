@@ -55,8 +55,8 @@ export const submitExampleAction = actionClient
 
 - 认证、注册、验证码、密码重置、账号探测等敏感 action 必须限流。
 - 认证相关 action 使用限流前必须先判断 `skipAuthThrottling`；只有 `!skipAuthThrottling` 时才执行限流。
-- 业务失败直接 `throw new Error("可展示文案")`，交给 `actionClient` 统一处理。
-- 不要默认返回 `{ error: "..." }`。
+- 业务失败应抛出自定义应用错误（如 `ActionError`），由外层调用方（Server Action 的 `actionClient`、Route Handler 包装器等）统一翻译为可展示文案。
+- 不要默认返回 `{ error: "..." }` 对象；让异常自然冒泡，由适配层处理。
 
 ## 数据与返回值
 
