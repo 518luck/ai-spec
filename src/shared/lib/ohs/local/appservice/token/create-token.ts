@@ -6,7 +6,10 @@ import prisma from "@/shared/db";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { nanoid } from "@/shared/lib/nanoid";
 import { authUserActionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { createTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
+import {
+  createTokenDtoSchema,
+  createTokenVoSchema,
+} from "@/shared/lib/zod/schemas/token";
 
 // API Key 固定前缀，便于在列表中识别本平台签发的密钥
 const API_KEY_PREFIX = "aispec_";
@@ -22,6 +25,7 @@ export const createTokenAction = authUserActionClient
     handleValidationErrorsShape: async (ve) =>
       flattenValidationErrors(ve).fieldErrors,
   })
+  .outputSchema(createTokenVoSchema)
   .action(async ({ parsedInput, ctx }) => {
     const { name, scopes } = parsedInput;
     const userId = ctx.user.id;

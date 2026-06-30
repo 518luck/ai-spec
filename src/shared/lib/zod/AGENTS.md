@@ -39,6 +39,28 @@
   - **DTO（Data Transfer Object）**：请求入参，承载前端传入并待校验的数据。
   - **VO（View Object）**：响应出参，承载返回给前端、按展示需要裁剪后的数据。
 
+### 文件内顺序
+
+每个 schema 文件按三段式组织，从上到下：
+
+1. **导入**：外部依赖。
+2. **拼装件**：仅供本文件复用的基础字段 schema（`xxxSchema`，不带 Dto/Vo 后缀），聚在一起。它们是「零件」，第一眼无需关注。
+3. **对外导出**：可直接使用的入参/出参 schema（`xxxDtoSchema` / `xxxVoSchema`）及其类型别名，聚在一起。这是文件的公开 API，应一眼可见。
+
+```
+import ...
+─────────────────  拼装件
+tokenNameSchema
+tokenScopesSchema
+partialKeySchema
+─────────────────  对外导出
+createTokenDtoSchema + CreateTokenDto
+createTokenVoSchema  + CreateTokenVo
+```
+
+- zod schema 是 `const` 运行时求值，不是函数提升；拼装件必须在引用它的导出之前定义，因此「拼装件在上、导出在下」既是约定也是唯一可行顺序。
+- 拼装件不要 `export`（除非被其他文件复用）；对外只暴露 Dto/Vo schema 与类型。
+
 ## 导入策略
 
 - 统一使用 `import * as z from "zod/v4";`，显式锁定 v4 API，避免默认入口随版本漂移，也防止 v3 旧写法混入。
