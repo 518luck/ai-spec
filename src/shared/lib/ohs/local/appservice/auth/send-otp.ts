@@ -1,15 +1,15 @@
 "use server";
 
-import { actionClient } from "@/shared/lib/ohs/actions/safe-action";
-import { ActionError } from "@/shared/lib/ohs/actions/utils/action-error";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
-import { getIP } from "@/shared/lib/ohs/api/utils/get-ip";
 import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
 import { generateOTP } from "@/shared/lib/auth/utils";
 import { sendEmail } from "@/shared/lib/infrastructure/email";
 import VerifyEmail from "@/shared/lib/infrastructure/email/templates/verify-email";
 import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
+import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
+import { getIP } from "@/shared/lib/ohs/remote/adapter/get-ip";
 import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod";

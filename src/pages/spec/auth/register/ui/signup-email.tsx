@@ -1,7 +1,7 @@
 "use client";
 
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
-import { sendOtpAction } from "@/shared/lib/ohs/actions/auth/send-otp";
+import { sendOtpAction } from "@/shared/lib/ohs/local/appservice/auth/send-otp";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
 import { Button } from "@/shared/ui/button";
 import {

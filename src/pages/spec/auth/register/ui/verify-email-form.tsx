@@ -1,5 +1,5 @@
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
-import { createUserAccountAction } from "@/shared/lib/ohs/actions/auth/create-user-account";
+import { createUserAccountAction } from "@/shared/lib/ohs/local/appservice/auth/create-user-account";
 import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Spinner } from "@/shared/ui/spinner";

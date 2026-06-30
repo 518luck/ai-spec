@@ -1,4 +1,4 @@
-import { ActionError } from "@/shared/lib/ohs/actions/utils/action-error";
+import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 import {
   createLogger,
   serializeError,
