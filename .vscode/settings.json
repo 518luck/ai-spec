@@ -6,6 +6,12 @@
   "prettier.documentSelectors": [
     "**/*.svg"
   ],
+  "code-runner.executorMap": {
+    "typescript": "npx tsx"
+  },
+  "code-runner.runInTerminal": true,
+  "code-runner.saveFileBeforeRun": true,
+  "code-runner.respectShebang": false,
   "workbench.colorCustomizations": {
     "activityBar.background": "#111827",
     "activityBar.foreground": "#E5E7EB",
