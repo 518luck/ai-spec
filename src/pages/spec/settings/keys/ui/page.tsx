@@ -5,8 +5,8 @@ import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { scopesToName } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 import { Badge } from "@/shared/ui/badge";
-import { Icons } from "@/shared/ui/icons";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
+import { Icons } from "@/shared/ui/icons";
 import {
   Table,
   TableBody,
@@ -43,7 +43,6 @@ export async function KeysPage(): Promise<JSX.Element> {
       partial_key: true,
       // scopes 为空格分隔的权限串，split 后交给 scopesToName 反查展示标签
       scopes: true,
-      created_at: true,
       // 最后使用时间，null 表示从未调用
       last_used: true,
     },
@@ -55,28 +54,30 @@ export async function KeysPage(): Promise<JSX.Element> {
         <EmptyState description="还没有 API 密钥，创建一个开始接入吧" />
       ) : (
         // 外层圆角边框：卡片式表格，overflow-hidden 让首尾行分隔线被圆角裁剪
+        // table-fixed：列宽由表头决定，内容超出按各自截断策略处理，避免长密钥/描述撑乱布局
         <div className="overflow-hidden rounded-lg border">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>名称</TableHead>
-                <TableHead>描述</TableHead>
-                <TableHead>密钥</TableHead>
-                <TableHead>权限</TableHead>
-                <TableHead>最后使用</TableHead>
-                <TableHead>创建时间</TableHead>
-                <TableHead className="text-right">操作</TableHead>
+                <TableHead className="w-32">名称</TableHead>
+                <TableHead className="w-48">描述</TableHead>
+                <TableHead className="w-40">密钥</TableHead>
+                <TableHead className="w-20">权限</TableHead>
+                <TableHead className="w-28">最后使用</TableHead>
+                <TableHead className="w-16">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {tokens.map((token) => (
                 <TableRow key={token.id}>
-                  <TableCell className="font-medium">{token.name}</TableCell>
-                  <TableCell className="text-muted-foreground">
+                  <TableCell className="truncate font-medium">
+                    {token.name}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground truncate">
                     {token.description?.trim() || "—"}
                   </TableCell>
                   <TableCell>
-                    <code className="bg-muted text-muted-foreground rounded px-1.5 py-0.5 font-mono text-xs">
+                    <code className="text-muted-foreground block truncate font-mono text-xs">
                       {token.partial_key}
                     </code>
                   </TableCell>
@@ -90,10 +91,7 @@ export async function KeysPage(): Promise<JSX.Element> {
                       ? dayjs(token.last_used).format("YYYY/MM/DD")
                       : "—"}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {dayjs(token.created_at).format("YYYY/MM/DD")}
-                  </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell>
                     <DeleteKeyButton name={token.name} />
                   </TableCell>
                 </TableRow>
