@@ -7,6 +7,7 @@ import {
   getScopesForResource,
   getScopesForRole,
   mapScopesToPermissions,
+  scopePresets,
   scopesToName,
   validateScopesForRole,
 } from "./scopes";
@@ -15,6 +16,24 @@ import {
 describe("SCOPES 户口本", () => {
   test("包含全部 16 个合法 scope", () => {
     expect(SCOPES.length).toBe(16);
+  });
+});
+
+// 预设自带 scope：全部/只读映射到通配 scope，限制留空由勾选生成
+describe("scopePresets", () => {
+  test("全部 → apis.all", () => {
+    const preset = scopePresets.find((p) => p.value === "all_access");
+    expect(preset?.scopes).toEqual(["apis.all"]);
+  });
+
+  test("只读 → apis.read", () => {
+    const preset = scopePresets.find((p) => p.value === "read_only");
+    expect(preset?.scopes).toEqual(["apis.read"]);
+  });
+
+  test("限制 → 空（由用户勾选生成）", () => {
+    const preset = scopePresets.find((p) => p.value === "restricted");
+    expect(preset?.scopes).toEqual([]);
   });
 });
 

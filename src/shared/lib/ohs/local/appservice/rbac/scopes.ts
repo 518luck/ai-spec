@@ -238,24 +238,31 @@ export const validateScopesForRole = (
   return scopes.every((scope) => allowed.has(scope));
 };
 
-// 前端「全部 / 只读 / 限制」三档预设的展示元数据
+// 前端「全部 / 只读 / 限制」三档预设：展示元数据 + 对应的通配 scope
+// 「限制」无固定 scope（取决于用户勾选），其 scopes 留空，由调用方按勾选生成
 export const scopePresets = [
   {
     value: "all_access",
     label: "全部",
     description: "对所有资源拥有完整的读写权限",
+    scopes: ["apis.all"] as const,
   },
   {
     value: "read_only",
     label: "只读",
     description: "对所有资源拥有只读权限，无法进行任何修改",
+    scopes: ["apis.read"] as const,
   },
   {
     value: "restricted",
     label: "限制",
     description: "仅能访问指定的资源",
+    scopes: [] as const,
   },
 ] as const;
+
+// 预设 value 的字面量类型，供弹窗等消费方约束选项
+export type ScopePresetValue = (typeof scopePresets)[number]["value"];
 
 // 从 scopes 反推所属预设（编辑已有 key 时高亮按钮用）
 export const scopesToName = (

@@ -6,13 +6,18 @@ import { useRouter } from "next/navigation";
 import { type JSX, useState } from "react";
 import { toast } from "sonner";
 
-import { createTokenAction } from "@/shared/lib/ohs/local/appservice/token/create-token";
 import {
   RESOURCES,
   RESOURCE_KEYS,
   type ResourceKey,
 } from "@/shared/lib/ohs/local/appservice/rbac/resources";
-import type { Scope } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
+import {
+  type Scope,
+  type ScopePresetValue,
+  getScopesForResource,
+  scopePresets,
+} from "@/shared/lib/ohs/local/appservice/rbac/scopes";
+import { createTokenAction } from "@/shared/lib/ohs/local/appservice/token/create-token";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import {
@@ -30,25 +35,6 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
-// 权限选项：value 与 createScopesFromPermission 的分支一一对应
-const PERMISSIONS = [
-  {
-    value: "full",
-    label: "全部",
-    hint: "此 API 密钥将具有对所有资源的完全访问权限",
-  },
-  {
-    value: "readonly",
-    label: "只读",
-    hint: "此 API 密钥将只能读取资源，无法进行任何修改",
-  },
-  {
-    value: "restricted",
-    label: "限制",
-    hint: "此 API 密钥的访问范围将受到限制，仅能访问指定资源",
-  },
-] as const;
-
 // 资源权限粒度：None(无)/Read(读)/Write(读写)，单选互斥
 const RESOURCE_SCOPES = [
   { value: "", label: "None" },
@@ -65,17 +51,24 @@ const createEmptyMatrix = (): PermissionMatrix =>
 
 // 把弹窗权限选择翻译成后端可识别的 scope 数组
 const buildScopes = (
-  permission: string,
+  permission: ScopePresetValue,
   matrix: PermissionMatrix,
 ): Scope[] => {
-  // 全部 / 只读直接用通配 scope
-  if (permission === "full") return ["apis.all"];
-  if (permission === "readonly") return ["apis.read"];
+  // 全部 / 只读直接取预设内带的通配 scope
+  const presetScopes = scopePresets.find(
+    (item) => item.value === permission,
+  )?.scopes;
+  if (presetScopes && presetScopes.length > 0) return [...presetScopes];
 
-  // 限制权限：按矩阵勾选把资源 + 粒度拼成资源级 scope
-  return RESOURCE_KEYS.filter((key) => matrix[key] !== "").map(
-    (key) => `${key}.${matrix[key]}` as Scope,
-  );
+  // 限制权限：按矩阵勾选的资源 + 粒度，从权威表查回对应的 scope
+  return RESOURCE_KEYS.flatMap((resource) => {
+    const scopeValue = matrix[resource];
+    if (scopeValue === "") return [];
+    // getScopesForResource 已返回该资源的 read/write scope，按勾选粒度取对应那条
+    return getScopesForResource(resource)
+      .filter((item) => item.type === scopeValue)
+      .map((item) => item.scope);
+  });
 };
 
 type CreateKeyDialogProps = {
@@ -90,14 +83,14 @@ export function CreateKeyDialog({
 }: CreateKeyDialogProps): JSX.Element {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [permission, setPermission] = useState<string>("full");
+  const [permission, setPermission] = useState<ScopePresetValue>("all_access");
   const [matrix, setMatrix] = useState<PermissionMatrix>(createEmptyMatrix);
   // 创建成功后返回的一次性明文密钥；存在即进入展示态
   const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   // 根据当前选中权限取对应的范围说明文案
   const permissionHint =
-    PERMISSIONS.find((item) => item.value === permission)?.hint ?? "";
+    scopePresets.find((item) => item.value === permission)?.description ?? "";
 
   const { executeAsync, isPending } = useAction(createTokenAction, {
     onSuccess: ({ data }) => {
@@ -114,7 +107,7 @@ export function CreateKeyDialog({
   // 切换权限选项
   const handlePermissionChange = (value: string | null): void => {
     if (value) {
-      setPermission(value);
+      setPermission(value as ScopePresetValue);
     }
   };
 
@@ -130,7 +123,7 @@ export function CreateKeyDialog({
   const handleOpenChange = (next: boolean): void => {
     if (!next) {
       setName("");
-      setPermission("full");
+      setPermission("all_access");
       setMatrix(createEmptyMatrix());
       setCreatedKey(null);
     }
@@ -235,7 +228,7 @@ function CreatedKeyView({
       </DialogHeader>
 
       <div className="bg-muted flex items-center gap-2 rounded-md p-3">
-        <code className="flex-1 break-all font-mono text-sm">
+        <code className="flex-1 font-mono text-sm break-all">
           {visible ? keyValue : "•".repeat(32)}
         </code>
         <Button
@@ -271,7 +264,7 @@ function CreatedKeyView({
 
 type KeyFormFieldsProps = {
   name: string;
-  permission: string;
+  permission: ScopePresetValue;
   permissionHint: string;
   onNameChange: (value: string) => void;
   onPermissionChange: (value: string | null) => void;
@@ -304,7 +297,7 @@ function KeyFormFields({
           onValueChange={(value) => onPermissionChange(value as string | null)}
         >
           <TabsList className="w-full">
-            {PERMISSIONS.map((item) => (
+            {scopePresets.map((item) => (
               <TabsTrigger key={item.value} value={item.value}>
                 {item.label}
               </TabsTrigger>
