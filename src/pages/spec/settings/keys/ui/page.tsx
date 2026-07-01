@@ -1,24 +1,13 @@
-import dayjs from "dayjs";
 import type { JSX } from "react";
 
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
-import { scopesToName } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
-import { Badge } from "@/shared/ui/badge";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
 import { HeaderedPageShell } from "@/widgets/page-shell";
 
 import { CreateKeyButton } from "./create-key-button";
-import { DeleteKeyButton } from "./delete-key-button";
+import { KeysTable } from "./keys-table";
 
 // 渲染 API 密钥总览页面，以表格展示当前登录用户的全部令牌
 export async function KeysPage(): Promise<JSX.Element> {
@@ -53,52 +42,8 @@ export async function KeysPage(): Promise<JSX.Element> {
       {tokens.length === 0 ? (
         <EmptyState description="还没有 API 密钥，创建一个开始接入吧" />
       ) : (
-        // 外层圆角边框：卡片式表格，overflow-hidden 让首尾行分隔线被圆角裁剪
-        // table-fixed：列宽由表头决定，内容超出按各自截断策略处理，避免长密钥/描述撑乱布局
-        <div className="overflow-hidden rounded-lg border">
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-32">名称</TableHead>
-                <TableHead className="w-48">描述</TableHead>
-                <TableHead className="w-40">密钥</TableHead>
-                <TableHead className="w-20">权限</TableHead>
-                <TableHead className="w-28">最后使用</TableHead>
-                <TableHead className="w-16">操作</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {tokens.map((token) => (
-                <TableRow key={token.id}>
-                  <TableCell className="truncate font-medium">
-                    {token.name}
-                  </TableCell>
-                  <TableCell className="text-muted-foreground truncate">
-                    {token.description?.trim() || "—"}
-                  </TableCell>
-                  <TableCell>
-                    <code className="text-muted-foreground block truncate font-mono text-xs">
-                      {token.partial_key}
-                    </code>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {scopesToName(token.scopes?.split(" ") ?? []).name}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {token.last_used
-                      ? dayjs(token.last_used).format("YYYY/MM/DD")
-                      : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <DeleteKeyButton name={token.name} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        // 表格 + 分页交由客户端组件渲染（分页按钮需要交互状态）
+        <KeysTable tokens={tokens} />
       )}
     </HeaderedPageShell>
   );
