@@ -1,7 +1,6 @@
 "use client";
 
 import copy from "copy-to-clipboard";
-import { CopyIcon, EyeIcon, EyeOffIcon, InfoIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
 import { type JSX, useState } from "react";
@@ -30,12 +29,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
+import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
 // 资源权限粒度：None(无)/Read(读)/Write(读写)，单选互斥
 const RESOURCE_SCOPES = [
@@ -241,9 +241,9 @@ function CreatedKeyView({
           aria-label={visible ? "隐藏密钥" : "显示密钥"}
         >
           {visible ? (
-            <EyeOffIcon className="size-4" />
+            <Icons.eyeOff className="size-4" />
           ) : (
-            <EyeIcon className="size-4" />
+            <Icons.eye className="size-4" />
           )}
         </Button>
         <Button
@@ -252,7 +252,7 @@ function CreatedKeyView({
           onClick={onCopy}
           aria-label="复制密钥"
         >
-          <CopyIcon className="size-4" />
+          <Icons.copy className="size-4" />
         </Button>
       </div>
 
@@ -337,7 +337,7 @@ function PermissionTable({
                 <span className="text-sm font-medium whitespace-nowrap">
                   {resource.name}
                 </span>
-                <InfoTooltip content={resource.description} />
+                <HelpTooltip content={resource.description} />
               </div>
               <RadioGroup
                 value={value[resource.key]}
@@ -361,23 +361,5 @@ function PermissionTable({
         </div>
       </ScrollArea>
     </div>
-  );
-}
-
-type InfoTooltipProps = {
-  content: string;
-};
-
-// 资源描述气泡：hover 显示资源用途说明
-function InfoTooltip({ content }: InfoTooltipProps): JSX.Element {
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <InfoIcon className="text-muted-foreground size-3.5 cursor-help" />
-        }
-      />
-      <TooltipContent>{content}</TooltipContent>
-    </Tooltip>
   );
 }

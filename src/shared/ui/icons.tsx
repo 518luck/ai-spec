@@ -8,6 +8,7 @@ import {
   IconBrightness,
   IconCamera,
   IconCompass,
+  IconCopy,
   IconEye,
   IconEyeOff,
   IconFileAi,
@@ -16,6 +17,7 @@ import {
   IconFolder,
   IconGift,
   IconHelpCircle,
+  IconHelpSquareRounded,
   IconKey,
   IconLayoutSidebarLeftExpand,
   IconLogin,
@@ -74,6 +76,7 @@ export const Icons = {
   login: IconLogin,
   gift: IconGift,
   helpCircle: IconHelpCircle,
+  helpSquareRounded: IconHelpSquareRounded,
   logout: IconLogout,
 
   // sidebar 折叠/展开切换
@@ -87,6 +90,7 @@ export const Icons = {
   avatarEdit: IconCamera,
   upload: IconUpload,
 
+  copy: IconCopy,
   eye: IconEye,
   eyeOff: IconEyeOff,
 
