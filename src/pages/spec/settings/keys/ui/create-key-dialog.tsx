@@ -1,5 +1,6 @@
 "use client";
 
+import copy from "copy-to-clipboard";
 import { CopyIcon, EyeIcon, EyeOffIcon, InfoIcon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
@@ -18,6 +19,7 @@ import {
   scopePresets,
 } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 import { createTokenAction } from "@/shared/lib/ohs/local/appservice/token/create-token";
+import { tokenNameSchema } from "@/shared/lib/zod/schemas/token";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import {
@@ -130,10 +132,11 @@ export function CreateKeyDialog({
     onOpenChange(next);
   };
 
-  // 提交创建：名称必填，限制权限下至少勾选一个资源
+  // 提交创建：名称用与后端同一份 schema 预校验；限制权限下至少勾选一个资源
   const handleCreate = (): void => {
-    if (!name.trim()) {
-      toast.error("请输入密钥名称");
+    const parsed = tokenNameSchema.safeParse(name);
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "请输入密钥名称");
       return;
     }
     const scopes = buildScopes(permission, matrix);
@@ -141,13 +144,13 @@ export function CreateKeyDialog({
       toast.error("请至少选择一个资源");
       return;
     }
-    void executeAsync({ name: name.trim(), scopes });
+    void executeAsync({ name: parsed.data, scopes });
   };
 
-  // 复制明文密钥到剪贴板
-  const handleCopy = async (): Promise<void> => {
+  // 复制明文密钥到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
+  const handleCopy = (): void => {
     if (!createdKey) return;
-    await navigator.clipboard.writeText(createdKey);
+    copy(createdKey);
     toast.success("已复制到剪贴板");
   };
 

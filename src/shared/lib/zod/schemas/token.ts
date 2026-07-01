@@ -2,8 +2,8 @@ import * as z from "zod/v4";
 
 import { SCOPES } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 
-// name：令牌显示名称，1-50 字符，必填
-const tokenNameSchema = z
+// name：令牌显示名称，1-50 字符，必填；导出供前端提交前用同一份规则做本地预校验
+export const tokenNameSchema = z
   .string({ error: "请输入令牌名称" })
   .trim()
   .min(1, { error: "请输入令牌名称" })
@@ -20,7 +20,6 @@ const partialKeySchema = z.string().min(1).max(64);
 // 创建 API 令牌的请求入参 schema（Dto 入：前端传入待校验数据）
 export const createTokenDtoSchema = z.object({
   name: tokenNameSchema,
-
   scopes: tokenScopesSchema,
 });
 
