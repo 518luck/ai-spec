@@ -1,4 +1,7 @@
 // 受限 API Key 的权限范围映射体系：scope → 实际放行权限，并约束各角色可授予的范围
+//
+// 现状：当前仅个人空间，登录用户（user/member）可授予全部 scope，roles 字段暂无筛选效果。
+// 团队功能上线后，member 才会与 user 在可授予范围上产生区分（如项目/团队资源）。
 import type {
   PermissionAction,
   ROLE,
