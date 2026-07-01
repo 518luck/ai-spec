@@ -1,6 +1,6 @@
 import * as z from "zod/v4";
 
-import { PERMISSION_ACTIONS } from "@/shared/lib/ohs/local/appservice/rbac/permissions";
+import { SCOPES } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 
 // name：令牌显示名称，1-50 字符，必填
 const tokenNameSchema = z
@@ -9,10 +9,10 @@ const tokenNameSchema = z
   .min(1, { error: "请输入令牌名称" })
   .max(50, { error: "名称长度不能超过 50 个字符" });
 
-// scopes：权限范围数组，如 ["promptRecord.write", "secretKey.read"]
-// 元素必须是 PERMISSION_ACTIONS 枚举里的合法值，可选，默认空数组
+// scopes：权限范围数组，如 ["apis.all"]、["skills.read", "agents.write"]
+// 元素必须是 SCOPES 里登记的合法 scope，可选，默认空数组
 // 注意：前端传数组，后端会 join(" ") 存到 DB 的 scopes 字段
-const tokenScopesSchema = z.array(z.enum(PERMISSION_ACTIONS)).default([]);
+const tokenScopesSchema = z.array(z.enum(SCOPES)).default([]);
 
 // partial_key 脱敏片段：固定「前缀 + 圆点 + 尾部明文」结构，限制长度防止误把完整密钥塞进来
 const partialKeySchema = z.string().min(1).max(64);

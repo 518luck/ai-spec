@@ -1,14 +1,18 @@
 "use client";
 
-import type { JSX } from "react";
-import { useState } from "react";
+import { CopyIcon, EyeIcon, EyeOffIcon, InfoIcon } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { useRouter } from "next/navigation";
+import { type JSX, useState } from "react";
 import { toast } from "sonner";
 
+import { createTokenAction } from "@/shared/lib/ohs/local/appservice/token/create-token";
 import {
   RESOURCES,
   RESOURCE_KEYS,
   type ResourceKey,
 } from "@/shared/lib/ohs/local/appservice/rbac/resources";
+import type { Scope } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import {
@@ -25,9 +29,8 @@ import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-import { InfoIcon } from "lucide-react";
 
-// 权限选项及对应的权限范围说明，切换权限时联动展示对应文案
+// 权限选项：value 与 createScopesFromPermission 的分支一一对应
 const PERMISSIONS = [
   {
     value: "full",
@@ -60,6 +63,21 @@ type PermissionMatrix = Record<ResourceKey, string>;
 const createEmptyMatrix = (): PermissionMatrix =>
   Object.fromEntries(RESOURCE_KEYS.map((key) => [key, ""])) as PermissionMatrix;
 
+// 把弹窗权限选择翻译成后端可识别的 scope 数组
+const buildScopes = (
+  permission: string,
+  matrix: PermissionMatrix,
+): Scope[] => {
+  // 全部 / 只读直接用通配 scope
+  if (permission === "full") return ["apis.all"];
+  if (permission === "readonly") return ["apis.read"];
+
+  // 限制权限：按矩阵勾选把资源 + 粒度拼成资源级 scope
+  return RESOURCE_KEYS.filter((key) => matrix[key] !== "").map(
+    (key) => `${key}.${matrix[key]}` as Scope,
+  );
+};
+
 type CreateKeyDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -70,13 +88,28 @@ export function CreateKeyDialog({
   open,
   onOpenChange,
 }: CreateKeyDialogProps): JSX.Element {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [permission, setPermission] = useState<string>("full");
   const [matrix, setMatrix] = useState<PermissionMatrix>(createEmptyMatrix);
+  // 创建成功后返回的一次性明文密钥；存在即进入展示态
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   // 根据当前选中权限取对应的范围说明文案
   const permissionHint =
     PERMISSIONS.find((item) => item.value === permission)?.hint ?? "";
+
+  const { executeAsync, isPending } = useAction(createTokenAction, {
+    onSuccess: ({ data }) => {
+      if (!data) return;
+      // 明文密钥仅此一次返回，切到展示态让用户复制保存
+      setCreatedKey(data.key);
+      router.refresh();
+    },
+    onError: ({ error }) => {
+      toast.error(error.serverError || "创建失败，请稍后重试");
+    },
+  });
 
   // 切换权限选项
   const handlePermissionChange = (value: string | null): void => {
@@ -99,55 +132,140 @@ export function CreateKeyDialog({
       setName("");
       setPermission("full");
       setMatrix(createEmptyMatrix());
+      setCreatedKey(null);
     }
     onOpenChange(next);
   };
 
-  // 本次只做 UI：点击创建仅给出占位提示并关闭弹窗
+  // 提交创建：名称必填，限制权限下至少勾选一个资源
   const handleCreate = (): void => {
-    toast.info("创建功能即将上线");
-    handleOpenChange(false);
+    if (!name.trim()) {
+      toast.error("请输入密钥名称");
+      return;
+    }
+    const scopes = buildScopes(permission, matrix);
+    if (permission === "restricted" && scopes.length === 0) {
+      toast.error("请至少选择一个资源");
+      return;
+    }
+    void executeAsync({ name: name.trim(), scopes });
+  };
+
+  // 复制明文密钥到剪贴板
+  const handleCopy = async (): Promise<void> => {
+    if (!createdKey) return;
+    await navigator.clipboard.writeText(createdKey);
+    toast.success("已复制到剪贴板");
   };
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {/* 关闭依赖点击遮罩 / ESC，无需右上角 X，保持弹窗简洁 */}
       <DialogContent showCloseButton={false} className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
-          <DialogDescription>
-            生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="flex flex-col gap-6">
-          <KeyFormFields
-            name={name}
-            permission={permission}
-            permissionHint={permissionHint}
-            onNameChange={setName}
-            onPermissionChange={handlePermissionChange}
+        {createdKey ? (
+          <CreatedKeyView
+            keyValue={createdKey}
+            onCopy={handleCopy}
+            onDone={() => handleOpenChange(false)}
           />
+        ) : (
+          <>
+            <DialogHeader>
+              <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
+              <DialogDescription>
+                生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。
+              </DialogDescription>
+            </DialogHeader>
 
-          {/* 限制权限下展开资源勾选矩阵，用动画容器平滑过渡展开/收起 */}
-          <AnimatedSizeContainer height className="w-full">
-            {permission === "restricted" && (
-              <PermissionTable
-                value={matrix}
-                onScopeChange={handleResourceScopeChange}
+            <div className="flex flex-col gap-6">
+              <KeyFormFields
+                name={name}
+                permission={permission}
+                permissionHint={permissionHint}
+                onNameChange={setName}
+                onPermissionChange={handlePermissionChange}
               />
-            )}
-          </AnimatedSizeContainer>
-        </div>
 
-        <DialogFooter>
-          {/* 右上角 X 已承担关闭职责，无需取消按钮；创建按钮铺满底部 */}
-          <Button className="w-full" onClick={handleCreate}>
-            创建
-          </Button>
-        </DialogFooter>
+              {/* 限制权限下展开资源勾选矩阵，用动画容器平滑过渡展开/收起 */}
+              <AnimatedSizeContainer height className="w-full">
+                {permission === "restricted" && (
+                  <PermissionTable
+                    value={matrix}
+                    onScopeChange={handleResourceScopeChange}
+                  />
+                )}
+              </AnimatedSizeContainer>
+            </div>
+
+            <DialogFooter>
+              <Button
+                className="w-full"
+                onClick={handleCreate}
+                disabled={isPending}
+                aria-busy={isPending}
+              >
+                {isPending ? "创建中..." : "创建"}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+// 创建成功后的一次性密钥展示视图：含明文、复制按钮与「关闭后不可再查」警示
+function CreatedKeyView({
+  keyValue,
+  onCopy,
+  onDone,
+}: {
+  keyValue: string;
+  onCopy: () => void;
+  onDone: () => void;
+}): JSX.Element {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle className="text-lg">密钥已创建</DialogTitle>
+        <DialogDescription>
+          请立即复制保存。关闭后将无法再次查看完整密钥。
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="bg-muted flex items-center gap-2 rounded-md p-3">
+        <code className="flex-1 break-all font-mono text-sm">
+          {visible ? keyValue : "•".repeat(32)}
+        </code>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "隐藏密钥" : "显示密钥"}
+        >
+          {visible ? (
+            <EyeOffIcon className="size-4" />
+          ) : (
+            <EyeIcon className="size-4" />
+          )}
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onCopy}
+          aria-label="复制密钥"
+        >
+          <CopyIcon className="size-4" />
+        </Button>
+      </div>
+
+      <DialogFooter>
+        <Button className="w-full" onClick={onDone}>
+          完成
+        </Button>
+      </DialogFooter>
+    </>
   );
 }
 
