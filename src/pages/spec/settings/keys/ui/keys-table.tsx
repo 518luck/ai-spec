@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/shared/ui/table";
 
-import { DeleteKeyButton } from "./delete-key-button";
+import { TokenActions } from "./token-actions";
 
 // 单条密钥的展示字段（由服务端查询后传入，客户端只负责渲染与分页）
 type TokenItem = {
@@ -95,7 +95,7 @@ export function KeysTable({ tokens }: KeysTableProps): JSX.Element {
                     : "—"}
                 </TableCell>
                 <TableCell className="pr-4">
-                  <DeleteKeyButton name={token.name} />
+                  <TokenActions name={token.name} />
                 </TableCell>
               </TableRow>
             ))}
