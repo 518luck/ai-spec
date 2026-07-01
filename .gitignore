@@ -33,6 +33,9 @@ yarn-error.log*
 tempCodeRunnerFile.ts
 .pnpm-debug.log*
 
+# 本地运行日志（开发环境 server 日志，仅本地排查用）
+logs/
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example

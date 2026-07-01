@@ -3,6 +3,7 @@ import {
   ConsoleTransport, // 如果 Axiom 未启用，日志会打印到控制台。
   Logger, //日志主对象。你平时调用的 info()、warn()、error()、debug() 一般都在它上面。
   LogLevel, // 日志级别（info、warn、error 等）。
+  type Transport, // 日志通道接口，所有 transport 实现它
 } from "@axiomhq/logging"; //通用日志能力 负责“怎么记日志、怎么发日志”
 
 import {
@@ -13,21 +14,28 @@ import {
 
 import { getSearchParams } from "../../utils";
 import { axiomClient } from "./axiom";
+import { LocalFileTransport } from "./local-file-transport";
 
 const isAxiomEnabled =
   process.env.IS_AXIOM_ENABLED === "true" &&
   !!process.env.AXIOM_DATASET &&
   !!process.env.AXIOM_TOKEN;
+// 开发环境额外挂本地文件 transport，把日志落盘到 logs/server.log 方便翻阅排查
+const isDev = process.env.NODE_ENV !== "production";
+
+// transports 组合：Axiom(或控制台回退) + 开发环境本地文件；各通道独立、互不影响
+const transports: Transport[] = isAxiomEnabled
+  ? [
+      new AxiomJSTransport({
+        axiom: axiomClient,
+        dataset: process.env.AXIOM_DATASET!,
+      }),
+    ]
+  : [new ConsoleTransport()];
+if (isDev) transports.push(new LocalFileTransport());
 
 export const logger = new Logger({
-  transports: isAxiomEnabled // 决定是把日志发到 Axiom 还是打印到控制台
-    ? [
-        new AxiomJSTransport({
-          axiom: axiomClient,
-          dataset: process.env.AXIOM_DATASET!,
-        }),
-      ]
-    : [new ConsoleTransport()],
+  transports: [transports[0]!, ...transports.slice(1)],
   formatters: nextJsFormatters, // 程序格式化程序`
 });
 
