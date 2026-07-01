@@ -10,6 +10,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "email:dev": "email dev --dir src/shared/lib/infrastructure/email",
     "prisma:validate": "prisma validate",
     "prisma:generate": "prisma generate",
@@ -81,6 +83,7 @@
     "svgo": "^4.0.1",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }
