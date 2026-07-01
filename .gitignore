@@ -28,6 +28,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# VSCode Code Runner 临时文件
+tempCodeRunnerFile.ts
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
