@@ -175,6 +175,18 @@ pnpm dlx shadcn@latest add [组件名]
 
 使用 shadcn 组件时，如果不确定组件 API、组合方式或最佳实践，应调用 /shadcn 技能查看正确用法。
 
+## 排版规范
+
+统一使用 Tailwind 的 `text-*` 工具类，不要自行新增字号档位。
+
+| 场景          | 字号               | 字重            |
+| ------------- | ------------------ | --------------- |
+| 特殊大号      | `text-3xl`（30px） | 视情况          |
+| 页面主标题    | `text-xl`（20px）  | `font-semibold` |
+| 区块/卡片标题 | `text-lg`（18px）  | `font-semibold` |
+| 正文          | `text-sm`（14px）  | —               |
+| 辅助文字      | `text-xs`（12px）  | —               |
+
 ## 图标
 
 大部分图标统一维护在 src/shared/ui/icons.tsx 中。

@@ -4,9 +4,11 @@ import { EllipsisIcon, PencilIcon, Trash2Icon } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { deleteTokenAction } from "@/shared/lib/ohs/local/appservice/token/delete-token";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,9 +21,11 @@ type TokenActionsProps = {
   name: string;
 };
 
-// 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除走 deleteTokenAction，成功后刷新列表
+// 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
 export function TokenActions({ id, name }: TokenActionsProps): JSX.Element {
   const router = useRouter();
+  // 确认弹窗的开关状态；点「删除」菜单项时打开
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { executeAsync } = useAction(deleteTokenAction, {
     onSuccess: () => {
       toast.success("已删除");
@@ -37,34 +41,51 @@ export function TokenActions({ id, name }: TokenActionsProps): JSX.Element {
     toast.info(`编辑「${name}」功能即将上线`);
   };
 
-  // 删除：调用 Server Action，归属/存在校验在后端完成
-  const handleDelete = (): void => {
-    void executeAsync({ id });
+  // 点「删除」菜单项：打开确认弹窗，不直接执行删除
+  const handleDeleteClick = (): void => {
+    setDeleteOpen(true);
+  };
+
+  // 确认弹窗的确认回调：执行删除，返回 Promise 让弹窗显示 loading 直到完成
+  const handleConfirmDelete = async (): Promise<void> => {
+    await executeAsync({ id });
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger
-        render={
-          <button
-            type="button"
-            className="text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors"
-            aria-label="更多操作"
-          />
-        }
-      >
-        <EllipsisIcon className="size-4" />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={handleEdit}>
-          <PencilIcon data-icon="inline-start" />
-          编辑
-        </DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" onClick={handleDelete}>
-          <Trash2Icon data-icon="inline-start" />
-          删除
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <button
+              type="button"
+              className="text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors"
+              aria-label="更多操作"
+            />
+          }
+        >
+          <EllipsisIcon className="size-4" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={handleEdit}>
+            <PencilIcon data-icon="inline-start" />
+            编辑
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={handleDeleteClick}>
+            <Trash2Icon data-icon="inline-start" />
+            删除
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        title={`删除密钥「${name}」`}
+        description="此操作不可撤销，删除后该密钥立即失效，使用它的程序将无法访问。"
+        confirmText="删除"
+        variant="destructive"
+        onConfirm={handleConfirmDelete}
+      />
+    </>
   );
 }
