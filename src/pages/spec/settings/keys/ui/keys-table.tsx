@@ -101,7 +101,11 @@ export function KeysTable({
                     : "—"}
                 </TableCell>
                 <TableCell className="pr-4">
-                  <TokenActions id={token.id} name={token.name} />
+                  <TokenActions
+                    id={token.id}
+                    name={token.name}
+                    partialKey={token.partial_key}
+                  />
                 </TableCell>
               </TableRow>
             ))}

@@ -15,14 +15,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { Icons } from "@/shared/ui/icons";
 
 type TokenActionsProps = {
   id: string;
   name: string;
+  partialKey: string;
 };
 
 // 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
-export function TokenActions({ id, name }: TokenActionsProps): JSX.Element {
+export function TokenActions({
+  id,
+  name,
+  partialKey,
+}: TokenActionsProps): JSX.Element {
   const router = useRouter();
   // 确认弹窗的开关状态；点「删除」菜单项时打开
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -86,7 +92,18 @@ export function TokenActions({ id, name }: TokenActionsProps): JSX.Element {
         variant="destructive"
         onConfirm={handleConfirmDelete}
         requireConfirmInput={{ expected: "确认删除密钥" }}
-      />
+      >
+        {/* 待删密钥信息卡片：左侧图标+名称（固定宽度，超出省略号），右侧脱敏密钥 */}
+        <div className="flex items-center gap-3 rounded-md border p-3">
+          <Icons.key className="text-muted-foreground size-4 shrink-0" />
+          <span className="w-32 shrink-0 truncate text-sm font-medium">
+            {name}
+          </span>
+          <code className="text-muted-foreground min-w-0 flex-1 truncate text-right font-mono text-xs">
+            {partialKey}
+          </code>
+        </div>
+      </ConfirmDialog>
     </>
   );
 }

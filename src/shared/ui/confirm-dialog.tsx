@@ -81,10 +81,10 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {/* p-0 gap-0 覆盖 DialogContent 默认的内边距与间距，交给内部三区块各自控制，以实现分区背景 */}
+      {/* p-0 gap-0 覆盖默认内边距与间距交给三区块控制；overflow-hidden 让子区块背景被圆角裁剪 */}
       <DialogContent
         showCloseButton={false}
-        className="grid gap-0 p-0 sm:max-w-md"
+        className="grid gap-0 overflow-hidden p-0 sm:max-w-md"
       >
         {/* 头部：底部 border 线与内容区分隔；padding 在此处控制 */}
         <DialogHeader className="border-b px-6 py-4">
