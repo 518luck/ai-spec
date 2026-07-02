@@ -27,7 +27,7 @@ export const createTokenAction = authUserActionClient
   })
   .outputSchema(createTokenVoSchema)
   .action(async ({ parsedInput, ctx }) => {
-    const { name, scopes } = parsedInput;
+    const { name, description, scopes } = parsedInput;
     const userId = ctx.user.id;
 
     // 用项目统一的随机串生成器产出密钥随机部分，拼上前缀作为完整密钥明文
@@ -39,10 +39,11 @@ export const createTokenAction = authUserActionClient
       maskApiKey(rawKey),
     ]);
 
-    // 落库只存哈希与脱敏片段；scopes 数组按空格拼接，空数组存为 null
+    // 落库只存哈希与脱敏片段；scopes 数组按空格拼接，空数组存为 null；空描述存为 null
     const created = await prisma.token.create({
       data: {
         name,
+        description: description || null,
         hashed_key: hashedKey,
         partial_key: partialKey,
         scopes: scopes.length > 0 ? scopes.join(" ") : null,

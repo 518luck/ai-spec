@@ -36,6 +36,7 @@ import { Label } from "@/shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
+import { Textarea } from "@/shared/ui/textarea";
 
 // 资源权限粒度：None(无)/Read(读)/Write(读写)，单选互斥
 const RESOURCE_SCOPES = [
@@ -85,6 +86,7 @@ export function CreateKeyDialog({
 }: CreateKeyDialogProps): JSX.Element {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const [permission, setPermission] = useState<ScopePresetValue>("all_access");
   const [matrix, setMatrix] = useState<PermissionMatrix>(createEmptyMatrix);
   // 创建成功后返回的一次性明文密钥；存在即进入展示态
@@ -125,6 +127,7 @@ export function CreateKeyDialog({
   const handleOpenChange = (next: boolean): void => {
     if (!next) {
       setName("");
+      setDescription("");
       setPermission("all_access");
       setMatrix(createEmptyMatrix());
       setCreatedKey(null);
@@ -144,7 +147,7 @@ export function CreateKeyDialog({
       toast.error("请至少选择一个资源");
       return;
     }
-    void executeAsync({ name: parsed.data, scopes });
+    void executeAsync({ name: parsed.data, description, scopes });
   };
 
   // 复制明文密钥到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
@@ -175,9 +178,11 @@ export function CreateKeyDialog({
             <div className="bg-muted flex flex-col gap-6 px-6 pt-4 pb-0">
               <KeyFormFields
                 name={name}
+                description={description}
                 permission={permission}
                 permissionHint={permissionHint}
                 onNameChange={setName}
+                onDescriptionChange={setDescription}
                 onPermissionChange={handlePermissionChange}
               />
 
@@ -269,18 +274,22 @@ function CreatedKeyView({
 
 type KeyFormFieldsProps = {
   name: string;
+  description: string;
   permission: ScopePresetValue;
   permissionHint: string;
   onNameChange: (value: string) => void;
+  onDescriptionChange: (value: string) => void;
   onPermissionChange: (value: string | null) => void;
 };
 
-// 密钥名称 + 权限选择（tab 形式） + 权限范围说明，个人与团队空间共用
+// 密钥名称 + 描述 + 权限选择（tab 形式） + 权限范围说明，个人与团队空间共用
 function KeyFormFields({
   name,
+  description,
   permission,
   permissionHint,
   onNameChange,
+  onDescriptionChange,
   onPermissionChange,
 }: KeyFormFieldsProps): JSX.Element {
   return (
@@ -291,6 +300,16 @@ function KeyFormFields({
           value={name}
           placeholder="例如：读取 Prompt、同步智能体"
           onChange={(event) => onNameChange(event.target.value)}
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Label>描述（可选）</Label>
+        <Textarea
+          value={description}
+          placeholder="例如：用于本地开发环境"
+          onChange={(event) => onDescriptionChange(event.target.value)}
+          rows={2}
         />
       </div>
 

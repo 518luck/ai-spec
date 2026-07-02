@@ -9,6 +9,14 @@ export const tokenNameSchema = z
   .min(1, { error: "请输入令牌名称" })
   .max(50, { error: "名称长度不能超过 50 个字符" });
 
+// description：令牌描述，可选，最多 200 字符，用于补充说明用途
+export const tokenDescriptionSchema = z
+  .string()
+  .trim()
+  .max(200, { error: "描述长度不能超过 200 个字符" })
+  .optional()
+  .or(z.literal(""));
+
 // scopes：权限范围数组，如 ["apis.all"]、["skills.read", "agents.write"]
 // 元素必须是 SCOPES 里登记的合法 scope，可选，默认空数组
 // 注意：前端传数组，后端会 join(" ") 存到 DB 的 scopes 字段
@@ -20,6 +28,7 @@ const partialKeySchema = z.string().min(1).max(64);
 // 创建 API 令牌的请求入参 schema（Dto 入：前端传入待校验数据）
 export const createTokenDtoSchema = z.object({
   name: tokenNameSchema,
+  description: tokenDescriptionSchema,
   scopes: tokenScopesSchema,
 });
 
