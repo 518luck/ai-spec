@@ -7,10 +7,15 @@ import { Icons } from "@/shared/ui/icons";
 import { HeaderedPageShell } from "@/widgets/page-shell";
 
 import { CreateKeyButton } from "./create-key-button";
+import { PAGE_SIZE } from "../config/constants";
 import { KeysTable } from "./keys-table";
 
-// 渲染 API 密钥总览页面，以表格展示当前登录用户的全部令牌
-export async function KeysPage(): Promise<JSX.Element> {
+// 渲染 API 密钥总览页面，按页查询当前登录用户的令牌（服务端分页）
+export async function KeysPage({
+  page,
+}: {
+  page: number;
+}): Promise<JSX.Element> {
   const session = await auth();
   const userId = session?.user.id;
 
@@ -22,28 +27,34 @@ export async function KeysPage(): Promise<JSX.Element> {
     );
   }
 
-  const tokens = await prisma.token.findMany({
-    where: { user_id: userId },
-    orderBy: { created_at: "desc" },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      partial_key: true,
-      // scopes 为空格分隔的权限串，split 后交给 scopesToName 反查展示标签
-      scopes: true,
-      // 最后使用时间，null 表示从未调用
-      last_used: true,
-    },
-  });
+  // findMany 取当前页切片，count 取总数用于分页栏；两者无依赖，并行查询
+  const [tokens, total] = await Promise.all([
+    prisma.token.findMany({
+      where: { user_id: userId },
+      orderBy: { created_at: "desc" },
+      skip: page * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        partial_key: true,
+        // scopes 为空格分隔的权限串，split 后交给 scopesToName 反查展示标签
+        scopes: true,
+        // 最后使用时间，null 表示从未调用
+        last_used: true,
+      },
+    }),
+    prisma.token.count({ where: { user_id: userId } }),
+  ]);
 
   return (
     <HeaderedPageShell title={<KeysPageHeader />}>
-      {tokens.length === 0 ? (
+      {total === 0 ? (
         <EmptyState description="还没有 API 密钥，创建一个开始接入吧" />
       ) : (
-        // 表格 + 分页交由客户端组件渲染（分页按钮需要交互状态）
-        <KeysTable tokens={tokens} />
+        // 表格 + 分页交由客户端组件渲染（翻页按钮需要导航交互）
+        <KeysTable tokens={tokens} page={page} total={total} />
       )}
     </HeaderedPageShell>
   );

@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import dayjs from "dayjs";
-import { type JSX, useMemo, useState } from "react";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { type JSX } from "react";
 
 import { scopesToName } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 import { Badge } from "@/shared/ui/badge";
@@ -17,8 +18,9 @@ import {
 } from "@/shared/ui/table";
 
 import { TokenActions } from "./token-actions";
+import { PAGE_SIZE } from "../config/constants";
 
-// 单条密钥的展示字段（由服务端查询后传入，客户端只负责渲染与分页）
+// 单条密钥的展示字段（由服务端按页查询后传入，客户端只负责渲染）
 type TokenItem = {
   id: string;
   name: string;
@@ -28,31 +30,35 @@ type TokenItem = {
   last_used: Date | null;
 };
 
-// 每页固定展示的密钥条数
-const PAGE_SIZE = 10;
-
 type KeysTableProps = {
   tokens: TokenItem[];
+  // 当前页码（0-based，由 URL ?page=N 转换而来）
+  page: number;
+  // 密钥总条数（服务端 count 得到，用于分页栏计数与翻页边界）
+  total: number;
 };
 
 // 密钥列表：固定高度表格 + 底部分页（左侧计数、右侧上一页/下一页按钮）
-export function KeysTable({ tokens }: KeysTableProps): JSX.Element {
-  const [page, setPage] = useState(0);
-  const total = tokens.length;
+// 数据已由服务端按页查询，这里直接展示 tokens；翻页通过 router.push 改 URL 触发服务端重渲染
+export function KeysTable({
+  tokens,
+  page,
+  total,
+}: KeysTableProps): JSX.Element {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  // 当前页越界（如删除后数据变少）时自动回退到最后一页
-  const currentPage = Math.min(page, pageCount - 1);
+  const start = total === 0 ? 0 : page * PAGE_SIZE + 1;
+  const end = Math.min((page + 1) * PAGE_SIZE, total);
 
-  // 当前页要展示的切片，依赖 currentPage 与 tokens 变化时重算
-  const visible = useMemo(
-    () =>
-      tokens.slice(currentPage * PAGE_SIZE, currentPage * PAGE_SIZE + PAGE_SIZE),
-    [tokens, currentPage],
-  );
-
-  // 当前页起止序号（1-based），用于「第 X-Y 条，共 Z 条」文案
-  const start = total === 0 ? 0 : currentPage * PAGE_SIZE + 1;
-  const end = Math.min((currentPage + 1) * PAGE_SIZE, total);
+  // 翻页：用目标页码（1-based）更新 URL 的 ?page=N，触发服务端重新按页查询
+  const goToPage = (next: number): void => {
+    const params = new URLSearchParams(searchParams?.toString());
+    params.set("page", String(next + 1));
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   return (
     // 外层圆角边框：卡片式表格；h-full 撑满父级，overflow-hidden 让首尾行分隔线被圆角裁剪
@@ -71,7 +77,7 @@ export function KeysTable({ tokens }: KeysTableProps): JSX.Element {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {visible.map((token) => (
+            {tokens.map((token) => (
               <TableRow key={token.id}>
                 <TableCell className="truncate pl-4 font-medium">
                   {token.name}
@@ -112,8 +118,8 @@ export function KeysTable({ tokens }: KeysTableProps): JSX.Element {
           <Button
             variant="outline"
             size="sm"
-            disabled={currentPage === 0}
-            onClick={() => setPage((p) => Math.max(0, p - 1))}
+            disabled={page === 0}
+            onClick={() => goToPage(page - 1)}
             aria-label="上一页"
           >
             <ChevronLeftIcon data-icon="inline-start" />
@@ -122,8 +128,8 @@ export function KeysTable({ tokens }: KeysTableProps): JSX.Element {
           <Button
             variant="outline"
             size="sm"
-            disabled={currentPage >= pageCount - 1}
-            onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+            disabled={page >= pageCount - 1}
+            onClick={() => goToPage(page + 1)}
             aria-label="下一页"
           >
             下一页

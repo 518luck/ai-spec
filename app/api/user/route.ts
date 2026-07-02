@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 
 import prisma from "@/shared/db";
-import { AiSpecError } from "@/shared/lib/ohs/remote/adapter/error";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
-import { withSession } from "@/shared/lib/ohs/remote/adapter/with-session";
 import {
   createLogger,
   serializeError,
 } from "@/shared/lib/infrastructure/axiom/server";
 import { enqueueDeleteUserAvatar } from "@/shared/lib/infrastructure/queue";
 import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
+import { AiSpecError } from "@/shared/lib/ohs/remote/adapter/error";
+import { withSession } from "@/shared/lib/ohs/remote/adapter/with-session";
 import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 
 // 用户资料更新路由的专用日志作用域，自动注入 module 字段
