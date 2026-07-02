@@ -85,10 +85,7 @@ export function TokenActions({ id, name }: TokenActionsProps): JSX.Element {
         confirmText="删除"
         variant="destructive"
         onConfirm={handleConfirmDelete}
-        requireConfirmInput={{
-          expected: "确认删除密钥",
-          label: "为确保是本人操作，请在下方输入「确认删除密钥」",
-        }}
+        requireConfirmInput={{ expected: "确认删除密钥" }}
       />
     </>
   );

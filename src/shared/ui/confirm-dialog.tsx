@@ -13,12 +13,11 @@ import {
   DialogTitle,
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 
 // 输入确认配置：启用后用户必须键入 expected 字符串，确认按钮才可点
 type RequireConfirmInput = {
+  // 必须输入的通关词（如"确认删除密钥"）；同时也作为提示文案的高亮关键词
   expected: string;
-  label?: string;
   placeholder?: string;
 };
 
@@ -101,7 +100,12 @@ export function ConfirmDialog({
 
           {requireConfirmInput ? (
             <div className="flex flex-col gap-2">
-              <Label>{requireConfirmInput.label}</Label>
+              <p className="text-muted-foreground flex items-baseline gap-1 text-sm leading-relaxed">
+                <span className="select-none">为确保是本人操作，请在下方输入</span>
+                <span className="text-foreground font-medium">
+                  {requireConfirmInput.expected}
+                </span>
+              </p>
               <Input
                 value={inputValue}
                 onChange={(event) => setInputValue(event.target.value)}
