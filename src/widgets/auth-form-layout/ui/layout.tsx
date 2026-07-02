@@ -17,7 +17,7 @@ export default function AuthFormLayout({
 
       <div className="flex grow basis-0 flex-col justify-end">
         {showTerms && (
-          <p className="px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
+          <p className="leading-5 px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
             继续操作即表示您同意 {appConfig.appName} 的
             <a
               href={`https://dub.co/legal/${showTerms === "app" ? "terms" : "partners"}`}

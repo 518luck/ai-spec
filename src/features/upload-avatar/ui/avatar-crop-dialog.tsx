@@ -61,32 +61,34 @@ export function AvatarCropDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* 裁剪区域：固定高度，圆形遮罩由 Cropper object-fit + aspect=1 实现 */}
-        <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-lg">
-          <Cropper
-            image={imageSrc}
-            crop={crop}
-            zoom={zoom}
-            aspect={1}
-            cropShape="round"
-            showGrid={false}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={onCropComplete}
-          />
-        </div>
+        <div className="flex flex-col gap-4 px-6 py-4">
+          {/* 裁剪区域：固定高度，圆形遮罩由 Cropper object-fit + aspect=1 实现 */}
+          <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-lg">
+            <Cropper
+              image={imageSrc}
+              crop={crop}
+              zoom={zoom}
+              aspect={1}
+              cropShape="round"
+              showGrid={false}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={onCropComplete}
+            />
+          </div>
 
-        {/* 缩放滑块 */}
-        <div className="flex items-center gap-3">
-          <Slider
-            value={[zoom]}
-            min={1}
-            max={3}
-            step={0.05}
-            onValueChange={(value) => {
-              setZoom(Array.isArray(value) ? value[0] : value);
-            }}
-          />
+          {/* 缩放滑块 */}
+          <div className="flex items-center gap-3">
+            <Slider
+              value={[zoom]}
+              min={1}
+              max={3}
+              step={0.05}
+              onValueChange={(value) => {
+                setZoom(Array.isArray(value) ? value[0] : value);
+              }}
+            />
+          </div>
         </div>
 
         <DialogFooter>

@@ -167,12 +167,12 @@ export function CreateKeyDialog({
           <>
             <DialogHeader>
               <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="leading-6">
                 生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 px-6 py-4">
               <KeyFormFields
                 name={name}
                 permission={permission}
@@ -225,12 +225,13 @@ function CreatedKeyView({
     <>
       <DialogHeader>
         <DialogTitle className="text-lg">密钥已创建</DialogTitle>
-        <DialogDescription>
+        <DialogDescription className="leading-6">
           请立即复制保存。关闭后将无法再次查看完整密钥。
         </DialogDescription>
       </DialogHeader>
 
-      <div className="bg-muted flex items-center gap-2 rounded-md p-3">
+      <div className="px-6 py-4">
+        <div className="bg-muted flex items-center gap-2 rounded-md p-3">
         <code className="flex-1 font-mono text-sm break-all">
           {visible ? keyValue : "•".repeat(32)}
         </code>
@@ -254,6 +255,7 @@ function CreatedKeyView({
         >
           <Icons.copy className="size-4" />
         </Button>
+        </div>
       </div>
 
       <DialogFooter>

@@ -81,21 +81,16 @@ export function ConfirmDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      {/* p-0 gap-0 覆盖默认内边距与间距交给三区块控制；overflow-hidden 让子区块背景被圆角裁剪 */}
-      <DialogContent
-        showCloseButton={false}
-        className="grid gap-0 overflow-hidden p-0 sm:max-w-md"
-      >
-        {/* 头部：底部 border 线与内容区分隔；padding 在此处控制 */}
-        <DialogHeader className="border-b px-6 py-4">
+      <DialogContent showCloseButton={false}>
+        <DialogHeader>
           <DialogTitle className="text-lg">{title}</DialogTitle>
           {description ? (
             <DialogDescription>{description}</DialogDescription>
           ) : null}
         </DialogHeader>
 
-        {/* 内容区：bg-muted 比 popover 默认背景稍深，与头部形成层次 */}
-        <div className="bg-muted flex flex-col gap-4 px-6 py-4">
+        {/* 内容区：自带 padding 由调用方包一层，与头部/底部分区背景配合 */}
+        <div className="flex flex-col gap-4 px-6 py-4">
           {children}
 
           {requireConfirmInput ? (
@@ -120,8 +115,7 @@ export function ConfirmDialog({
           ) : null}
         </div>
 
-        {/* 底部：与内容区同色（bg-muted），按钮浮在该背景上 */}
-        <DialogFooter className="bg-muted px-6 py-4">
+        <DialogFooter>
           <Button
             className="w-full"
             variant={variant}

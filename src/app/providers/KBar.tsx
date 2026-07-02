@@ -87,7 +87,7 @@ function ResultItem({
           {action.shortcut.map((key) => (
             <kbd
               key={key}
-              className="border-border bg-muted text-muted-foreground rounded-sm border px-1.5 py-0.5 text-[11px] font-medium"
+              className="border-border bg-muted text-muted-foreground rounded-sm border px-1.5 py-0.5 text-sm font-medium"
             >
               {key}
             </kbd>
