@@ -36,7 +36,7 @@ export default function VerifyEmail({
               在 {appConfig.appName} 验证页面输入此验证码以完成注册：
             </Text>
             <Section className="my-8 rounded-lg border border-solid border-neutral-200">
-              <div className="mx-auto w-fit px-6 py-3 text-center font-mono text-2xl font-semibold tracking-[0.25em]">
+              <div className="mx-auto w-fit px-6 py-3 text-center font-mono text-3xl font-semibold tracking-[0.25em]">
                 {code}
               </div>
             </Section>
