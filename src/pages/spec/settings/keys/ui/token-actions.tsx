@@ -1,9 +1,12 @@
 "use client";
 
 import { EllipsisIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 import { toast } from "sonner";
 
+import { deleteTokenAction } from "@/shared/lib/ohs/local/appservice/token/delete-token";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,19 +15,31 @@ import {
 } from "@/shared/ui/dropdown-menu";
 
 type TokenActionsProps = {
+  id: string;
   name: string;
 };
 
-// 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除两项；本次仅 UI，真实逻辑后续接入
-export function TokenActions({ name }: TokenActionsProps): JSX.Element {
+// 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除走 deleteTokenAction，成功后刷新列表
+export function TokenActions({ id, name }: TokenActionsProps): JSX.Element {
+  const router = useRouter();
+  const { executeAsync } = useAction(deleteTokenAction, {
+    onSuccess: () => {
+      toast.success("已删除");
+      router.refresh();
+    },
+    onError: ({ error }) => {
+      toast.error(error.serverError || "删除失败，请稍后重试");
+    },
+  });
+
   // 编辑：占位提示，编辑表单后续实现
   const handleEdit = (): void => {
     toast.info(`编辑「${name}」功能即将上线`);
   };
 
-  // 删除：占位提示，删除调用后续接入（预计配合 AlertDialog 二次确认）
+  // 删除：调用 Server Action，归属/存在校验在后端完成
   const handleDelete = (): void => {
-    toast.info(`删除「${name}」功能即将上线`);
+    void executeAsync({ id });
   };
 
   return (

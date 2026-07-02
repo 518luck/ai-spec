@@ -37,3 +37,11 @@ export const createTokenVoSchema = z.object({
 
 // 创建令牌响应类型（前端 useAction 消费 / 列表展示共用）
 export type CreateTokenVo = z.infer<typeof createTokenVoSchema>;
+
+// 删除 API 令牌的请求入参 schema（Dto 入：仅需令牌 id）
+export const deleteTokenDtoSchema = z.object({
+  id: z.string().min(1, { error: "缺少令牌 id" }),
+});
+
+// 删除令牌入参类型
+export type DeleteTokenDto = z.infer<typeof deleteTokenDtoSchema>;
