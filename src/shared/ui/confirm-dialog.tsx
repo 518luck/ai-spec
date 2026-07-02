@@ -101,7 +101,9 @@ export function ConfirmDialog({
           {requireConfirmInput ? (
             <div className="flex flex-col gap-2">
               <p className="text-muted-foreground flex items-baseline gap-1 text-sm leading-relaxed">
-                <span className="select-none">为确保是本人操作，请在下方输入</span>
+                <span className="select-none">
+                  为确保是本人操作，请在下方输入
+                </span>
                 <span className="text-foreground font-medium">
                   {requireConfirmInput.expected}
                 </span>
