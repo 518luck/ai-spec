@@ -17,8 +17,8 @@ import {
   TableRow,
 } from "@/shared/ui/table";
 
-import { TokenActions } from "./token-actions";
 import { PAGE_SIZE } from "../config/constants";
+import { TokenActions } from "./token-actions";
 
 // 单条密钥的展示字段（由服务端按页查询后传入，客户端只负责渲染）
 type TokenItem = {
@@ -101,7 +101,7 @@ export function KeysTable({
                     : "—"}
                 </TableCell>
                 <TableCell className="pr-4">
-                  <TokenActions name={token.name} />
+                  <TokenActions id={token.id} name={token.name} />
                 </TableCell>
               </TableRow>
             ))}
