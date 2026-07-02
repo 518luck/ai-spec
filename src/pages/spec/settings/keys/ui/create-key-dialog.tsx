@@ -167,12 +167,12 @@ export function CreateKeyDialog({
           <>
             <DialogHeader>
               <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
-              <DialogDescription className="leading-6">
+              <DialogDescription className="text-sm leading-6">
                 生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex flex-col gap-6 px-6 py-4">
+            <div className="bg-muted flex flex-col gap-6 px-6 py-4">
               <KeyFormFields
                 name={name}
                 permission={permission}
@@ -230,31 +230,31 @@ function CreatedKeyView({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="px-6 py-4">
+      <div className="bg-muted px-6 py-4">
         <div className="bg-muted flex items-center gap-2 rounded-md p-3">
-        <code className="flex-1 font-mono text-sm break-all">
-          {visible ? keyValue : "•".repeat(32)}
-        </code>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setVisible((v) => !v)}
-          aria-label={visible ? "隐藏密钥" : "显示密钥"}
-        >
-          {visible ? (
-            <Icons.eyeOff className="size-4" />
-          ) : (
-            <Icons.eye className="size-4" />
-          )}
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onCopy}
-          aria-label="复制密钥"
-        >
-          <Icons.copy className="size-4" />
-        </Button>
+          <code className="flex-1 font-mono text-sm break-all">
+            {visible ? keyValue : "•".repeat(32)}
+          </code>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setVisible((v) => !v)}
+            aria-label={visible ? "隐藏密钥" : "显示密钥"}
+          >
+            {visible ? (
+              <Icons.eyeOff className="size-4" />
+            ) : (
+              <Icons.eye className="size-4" />
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onCopy}
+            aria-label="复制密钥"
+          >
+            <Icons.copy className="size-4" />
+          </Button>
         </div>
       </div>
 
@@ -301,7 +301,7 @@ function KeyFormFields({
           value={permission}
           onValueChange={(value) => onPermissionChange(value as string | null)}
         >
-          <TabsList className="w-full">
+          <TabsList className="border-border w-full border bg-transparent">
             {scopePresets.map((item) => (
               <TabsTrigger key={item.value} value={item.value}>
                 {item.label}
@@ -309,7 +309,7 @@ function KeyFormFields({
             ))}
           </TabsList>
         </Tabs>
-        <p className="text-muted-foreground text-xs">{permissionHint}</p>
+        <p className="text-muted-foreground text-sm">{permissionHint}</p>
       </div>
     </div>
   );

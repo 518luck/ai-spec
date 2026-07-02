@@ -89,8 +89,8 @@ export function ConfirmDialog({
           ) : null}
         </DialogHeader>
 
-        {/* 内容区：自带 padding 由调用方包一层，与头部/底部分区背景配合 */}
-        <div className="flex flex-col gap-4 px-6 py-4">
+        {/* 内容区：bg-muted 与底部同色，形成 header(白)→内容(深)→footer(深) 的层次 */}
+        <div className="bg-muted flex flex-col gap-4 px-6 py-4">
           {children}
 
           {requireConfirmInput ? (

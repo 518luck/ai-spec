@@ -61,7 +61,7 @@ export function AvatarCropDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 px-6 py-4">
+        <div className="bg-muted flex flex-col gap-4 px-6 py-4">
           {/* 裁剪区域：固定高度，圆形遮罩由 Cropper object-fit + aspect=1 实现 */}
           <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-lg">
             <Cropper
