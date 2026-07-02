@@ -80,11 +80,15 @@ export function TokenActions({ id, name }: TokenActionsProps): JSX.Element {
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        title={`删除密钥「${name}」`}
-        description="此操作不可撤销，删除后该密钥立即失效，使用它的程序将无法访问。"
+        title={`删除密钥`}
+        description="此操作将永久删除该密钥，并立即吊销其对账户的所有访问权限。确定要继续吗？"
         confirmText="删除"
         variant="destructive"
         onConfirm={handleConfirmDelete}
+        requireConfirmInput={{
+          expected: "确认删除密钥",
+          label: "为确保是本人操作，请在下方输入「确认删除密钥」",
+        }}
       />
     </>
   );
