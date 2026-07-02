@@ -186,8 +186,12 @@ export function CreateKeyDialog({
                 onPermissionChange={handlePermissionChange}
               />
 
-              {/* 限制权限下展开资源勾选矩阵，用动画容器平滑过渡展开/收起 */}
-              <AnimatedSizeContainer height className="w-full">
+              {/* 限制权限下展开资源勾选矩阵，用 tween 线性过渡避免 spring 弹簧的过冲抖动 */}
+              <AnimatedSizeContainer
+                height
+                className="w-full"
+                transition={{ type: "tween", duration: 0.2, ease: "easeInOut" }}
+              >
                 {permission === "restricted" && (
                   <PermissionTable
                     value={matrix}
