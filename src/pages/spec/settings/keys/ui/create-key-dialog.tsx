@@ -172,7 +172,7 @@ export function CreateKeyDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="bg-muted flex flex-col gap-6 px-6 py-4">
+            <div className="bg-muted flex flex-col gap-6 px-6 pt-4 pb-0">
               <KeyFormFields
                 name={name}
                 permission={permission}
@@ -230,7 +230,7 @@ function CreatedKeyView({
         </DialogDescription>
       </DialogHeader>
 
-      <div className="bg-muted px-6 py-4">
+      <div className="bg-muted px-6 pt-4 pb-0">
         <div className="bg-muted flex items-center gap-2 rounded-md p-3">
           <code className="flex-1 font-mono text-sm break-all">
             {visible ? keyValue : "•".repeat(32)}
