@@ -1,24 +1,24 @@
 {
-  "[svg]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
-    "editor.formatOnSave": true
-  },
-  "prettier.documentSelectors": ["**/*.svg"],
-  "code-runner.executorMap": {
-    "typescript": "npx tsx"
-  },
-  "code-runner.runInTerminal": true,
-  "code-runner.saveFileBeforeRun": true,
-  "code-runner.respectShebang": false,
-  "workbench.colorCustomizations": {
-    "activityBar.background": "#111827",
-    "activityBar.foreground": "#E5E7EB",
-    "activityBar.inactiveForeground": "#9CA3AF",
-    "statusBar.background": "#1F2937",
-    "statusBar.foreground": "#F9FAFB",
-    "titleBar.activeBackground": "#111827",
-    "titleBar.activeForeground": "#F9FAFB",
-    "titleBar.inactiveBackground": "#0F172A",
-    "titleBar.inactiveForeground": "#9CA3AF"
-  }
+	"editor.defaultFormatter": "biomejs.biome", // 所有文件（含 SVG）的默认格式化器设为 Biome
+	"editor.formatOnSave": true, // 保存时自动触发格式化器（Biome 按 biome.jsonc 规则格式化代码 + SVG）
+	"editor.codeActionsOnSave": {
+		"source.organizeImports.biome": "explicit" // 保存时让 Biome 整理 import 顺序（用 Biome 的排序规则，不是 VSCode 默认的，避免冲突）
+	},
+	"code-runner.executorMap": {
+		"typescript": "npx tsx"
+	},
+	"code-runner.runInTerminal": true,
+	"code-runner.saveFileBeforeRun": true,
+	"code-runner.respectShebang": false,
+	"workbench.colorCustomizations": {
+		"activityBar.background": "#111827",
+		"activityBar.foreground": "#E5E7EB",
+		"activityBar.inactiveForeground": "#9CA3AF",
+		"statusBar.background": "#1F2937",
+		"statusBar.foreground": "#F9FAFB",
+		"titleBar.activeBackground": "#111827",
+		"titleBar.activeForeground": "#F9FAFB",
+		"titleBar.inactiveBackground": "#0F172A",
+		"titleBar.inactiveForeground": "#9CA3AF"
+	}
 }

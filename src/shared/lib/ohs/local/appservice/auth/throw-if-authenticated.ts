@@ -12,18 +12,18 @@ import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-erro
  * 如果用户已登录，就抛出错误。常用于注册、登录等入口。
  */
 export const throwIfAuthenticated = createMiddleware().define(
-  // next：继续执行后面的 middleware/action
-  // ctx：当前 action 上下文
-  // clientInput：客户端传进 action 的原始输入
-  // metadata：action 上配置的元信息
-  // bindArgsClientInputs：绑定参数传进来的输入
-  async ({ next, ctx }) => {
-    const session = await auth();
+	// next：继续执行后面的 middleware/action
+	// ctx：当前 action 上下文
+	// clientInput：客户端传进 action 的原始输入
+	// metadata：action 上配置的元信息
+	// bindArgsClientInputs：绑定参数传进来的输入
+	async ({ next, ctx }) => {
+		const session = await auth();
 
-    if (session) {
-      throw new ActionError({ code: "FORBIDDEN", message: "您已经登录" });
-    }
+		if (session) {
+			throw new ActionError({ code: "FORBIDDEN", message: "您已经登录" });
+		}
 
-    return next({ ctx });
-  },
+		return next({ ctx });
+	},
 );

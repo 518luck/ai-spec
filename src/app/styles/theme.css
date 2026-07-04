@@ -2,8 +2,8 @@
 @import "./themes/domm64.css";
 
 [data-theme] body {
-  --font-sans: initial;
-  --font-mono: initial;
-  --font-serif: initial;
-  font-family: var(--font-sans);
+	--font-sans: initial;
+	--font-mono: initial;
+	--font-serif: initial;
+	font-family: var(--font-sans);
 }

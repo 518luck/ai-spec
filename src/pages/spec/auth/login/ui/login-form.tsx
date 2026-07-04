@@ -2,9 +2,9 @@
 
 import type { JSX } from "react";
 import {
-  AUTH_PROVIDER_EMAIL,
-  AUTH_PROVIDER_GITHUB,
-  AUTH_PROVIDER_GOOGLE,
+	AUTH_PROVIDER_EMAIL,
+	AUTH_PROVIDER_GITHUB,
+	AUTH_PROVIDER_GOOGLE,
 } from "@/shared/lib/auth/constants";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { AuthMethodsSeparator } from "@/shared/ui/auth-methods-separator";
@@ -17,78 +17,78 @@ import { LoginGoogle } from "./login-google";
 type OauthLoginMethod = typeof AUTH_PROVIDER_GOOGLE | typeof AUTH_PROVIDER_GITHUB;
 
 type LoginFormProps = {
-  methods?: readonly LoginMethod[];
+	methods?: readonly LoginMethod[];
 };
 
 const defaultLoginMethods = [
-  AUTH_PROVIDER_EMAIL,
-  AUTH_PROVIDER_GOOGLE,
-  AUTH_PROVIDER_GITHUB,
+	AUTH_PROVIDER_EMAIL,
+	AUTH_PROVIDER_GOOGLE,
+	AUTH_PROVIDER_GITHUB,
 ] as const;
 const oauthLoginMethods = [AUTH_PROVIDER_GOOGLE, AUTH_PROVIDER_GITHUB] as const;
 
 // 根据用户偏好调整第三方登录按钮的显示顺序。
 const getOrderedOauthMethods = (
-  methods: readonly LoginMethod[],
-  preferredMethod: LoginMethod | null,
+	methods: readonly LoginMethod[],
+	preferredMethod: LoginMethod | null,
 ): OauthLoginMethod[] => {
-  const availableMethods = oauthLoginMethods.filter((method) => methods.includes(method));
-  const preferredOauthMethod = availableMethods.find((method) => method === preferredMethod);
+	const availableMethods = oauthLoginMethods.filter((method) => methods.includes(method));
+	const preferredOauthMethod = availableMethods.find((method) => method === preferredMethod);
 
-  if (!preferredOauthMethod) {
-    return availableMethods;
-  }
+	if (!preferredOauthMethod) {
+		return availableMethods;
+	}
 
-  return [preferredOauthMethod, ...availableMethods.filter((method) => method !== preferredMethod)];
+	return [preferredOauthMethod, ...availableMethods.filter((method) => method !== preferredMethod)];
 };
 
 // 渲染单个第三方登录方式组件。
 const renderOauthMethod = (method: OauthLoginMethod): JSX.Element => {
-  if (method === AUTH_PROVIDER_GOOGLE) {
-    return <LoginGoogle key={method} />;
-  }
+	if (method === AUTH_PROVIDER_GOOGLE) {
+		return <LoginGoogle key={method} />;
+	}
 
-  return <LoginGithub key={method} />;
+	return <LoginGithub key={method} />;
 };
 
 // 提供登录页状态并渲染登录表单。
 export function LoginForm({ methods = defaultLoginMethods }: LoginFormProps): JSX.Element {
-  return (
-    <ClientOnly>
-      <LoginProvider>
-        <LoginFormContent methods={methods} />
-      </LoginProvider>
-    </ClientOnly>
-  );
+	return (
+		<ClientOnly>
+			<LoginProvider>
+				<LoginFormContent methods={methods} />
+			</LoginProvider>
+		</ClientOnly>
+	);
 }
 
 // 按上次登录方式组织邮箱登录与第三方登录顺序。
 function LoginFormContent({ methods }: Required<LoginFormProps>): JSX.Element {
-  const { preferredMethod } = useLoginContext();
-  const supportsEmail = methods.includes(AUTH_PROVIDER_EMAIL);
-  const oauthMethods = getOrderedOauthMethods(methods, preferredMethod);
-  const shouldShowEmailFirst =
-    preferredMethod === null ||
-    preferredMethod === AUTH_PROVIDER_EMAIL ||
-    !oauthMethods.some((method) => method === preferredMethod);
+	const { preferredMethod } = useLoginContext();
+	const supportsEmail = methods.includes(AUTH_PROVIDER_EMAIL);
+	const oauthMethods = getOrderedOauthMethods(methods, preferredMethod);
+	const shouldShowEmailFirst =
+		preferredMethod === null ||
+		preferredMethod === AUTH_PROVIDER_EMAIL ||
+		!oauthMethods.some((method) => method === preferredMethod);
 
-  return (
-    <AnimatedSizeContainer height>
-      <div className="flex flex-col gap-3 p-1">
-        {shouldShowEmailFirst ? (
-          <>
-            {supportsEmail && <LoginEmail />}
-            {supportsEmail && oauthMethods.length > 0 && <AuthMethodsSeparator />}
-            {oauthMethods.map(renderOauthMethod)}
-          </>
-        ) : (
-          <>
-            {oauthMethods.map(renderOauthMethod)}
-            {supportsEmail && oauthMethods.length > 0 && <AuthMethodsSeparator />}
-            {supportsEmail && <LoginEmail />}
-          </>
-        )}
-      </div>
-    </AnimatedSizeContainer>
-  );
+	return (
+		<AnimatedSizeContainer height>
+			<div className="flex flex-col gap-3 p-1">
+				{shouldShowEmailFirst ? (
+					<>
+						{supportsEmail && <LoginEmail />}
+						{supportsEmail && oauthMethods.length > 0 && <AuthMethodsSeparator />}
+						{oauthMethods.map(renderOauthMethod)}
+					</>
+				) : (
+					<>
+						{oauthMethods.map(renderOauthMethod)}
+						{supportsEmail && oauthMethods.length > 0 && <AuthMethodsSeparator />}
+						{supportsEmail && <LoginEmail />}
+					</>
+				)}
+			</div>
+		</AnimatedSizeContainer>
+	);
 }

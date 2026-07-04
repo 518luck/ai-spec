@@ -1,47 +1,47 @@
 {
-  "skill_name": "shadcn",
-  "evals": [
-    {
-      "id": 1,
-      "prompt": "我正在构建一个使用 shadcn/ui 的 Next.js 应用（base-nova preset，lucide icons）。创建一个设置表单组件，字段包括：全名、邮箱地址和通知偏好（email、SMS、push notifications 作为 toggle options）。为必填字段添加校验状态。",
-      "expected_output": "一个使用 FieldGroup、Field、ToggleGroup、data-invalid/aria-invalid 校验、gap-* 间距和语义化颜色的 React 组件。",
-      "files": [],
-      "expectations": [
-        "使用 FieldGroup 和 Field 组件进行表单布局，而不是使用带 space-y 的原始 div",
-        "对独立的 on/off 通知开关使用 Switch（不要循环渲染带手动激活状态的 Button）",
-        "校验状态在 Field 上使用 data-invalid，并在 input 控件上使用 aria-invalid",
-        "使用 gap-*（例如 gap-4、gap-6）而不是 space-y-* 或 space-x-* 做间距",
-        "使用语义化颜色 tokens（例如 bg-background、text-muted-foreground、text-destructive），而不是 bg-red-500 这类原始颜色",
-        "不要手动使用 dark: 颜色覆盖"
-      ]
-    },
-    {
-      "id": 2,
-      "prompt": "创建一个用于编辑用户资料的 dialog 组件。它应在顶部显示用户头像，包含 name 和 bio 输入字段，以及带合适图标的 Save/Cancel 按钮。使用 radix-nova preset 和 tabler icons 的 shadcn/ui。",
-      "expected_output": "一个包含 DialogTitle、Avatar+AvatarFallback、按钮图标上的 data-icon、没有图标尺寸 classes、并从 tabler 导入图标的 React 组件。",
-      "files": [],
-      "expectations": [
-        "包含用于可访问性的 DialogTitle（可见，或使用 sr-only class）",
-        "Avatar 组件包含 AvatarFallback",
-        "按钮上的图标使用 data-icon 属性（data-icon=\"inline-start\" 或 data-icon=\"inline-end\"）",
-        "组件内部图标不要使用尺寸 classes（不要使用 size-4、w-4、h-4 等）",
-        "使用 tabler icons（@tabler/icons-react），而不是 lucide-react",
-        "自定义 triggers 使用 asChild（radix preset）"
-      ]
-    },
-    {
-      "id": 3,
-      "prompt": "创建一个 dashboard 组件，用网格展示 4 个统计卡片。每个卡片包含 title、大号数字、百分比变化 badge 和加载 skeleton 状态。使用 base-nova preset 和 lucide icons 的 shadcn/ui。",
-      "expected_output": "一个使用完整 Card 组合、Skeleton 加载状态、Badge 展示变化、语义化颜色和 gap-* 间距的 React 组件。",
-      "files": [],
-      "expectations": [
-        "使用完整 Card 组合，包括 CardHeader、CardTitle、CardContent（不要把所有内容都堆进 CardContent）",
-        "使用 Skeleton 组件作为加载占位，而不是自定义 animate-pulse div",
-        "使用 Badge 组件展示百分比变化，而不是自定义样式 span",
-        "使用语义化颜色 tokens，而不是 bg-green-500 或 text-red-600 这类原始颜色值",
-        "使用 gap-*，而不是 space-y-* 或 space-x-* 做间距",
-        "宽高相等时使用 size-*，而不是分别使用 w-* h-*"
-      ]
-    }
-  ]
+	"skill_name": "shadcn",
+	"evals": [
+		{
+			"id": 1,
+			"prompt": "我正在构建一个使用 shadcn/ui 的 Next.js 应用（base-nova preset，lucide icons）。创建一个设置表单组件，字段包括：全名、邮箱地址和通知偏好（email、SMS、push notifications 作为 toggle options）。为必填字段添加校验状态。",
+			"expected_output": "一个使用 FieldGroup、Field、ToggleGroup、data-invalid/aria-invalid 校验、gap-* 间距和语义化颜色的 React 组件。",
+			"files": [],
+			"expectations": [
+				"使用 FieldGroup 和 Field 组件进行表单布局，而不是使用带 space-y 的原始 div",
+				"对独立的 on/off 通知开关使用 Switch（不要循环渲染带手动激活状态的 Button）",
+				"校验状态在 Field 上使用 data-invalid，并在 input 控件上使用 aria-invalid",
+				"使用 gap-*（例如 gap-4、gap-6）而不是 space-y-* 或 space-x-* 做间距",
+				"使用语义化颜色 tokens（例如 bg-background、text-muted-foreground、text-destructive），而不是 bg-red-500 这类原始颜色",
+				"不要手动使用 dark: 颜色覆盖"
+			]
+		},
+		{
+			"id": 2,
+			"prompt": "创建一个用于编辑用户资料的 dialog 组件。它应在顶部显示用户头像，包含 name 和 bio 输入字段，以及带合适图标的 Save/Cancel 按钮。使用 radix-nova preset 和 tabler icons 的 shadcn/ui。",
+			"expected_output": "一个包含 DialogTitle、Avatar+AvatarFallback、按钮图标上的 data-icon、没有图标尺寸 classes、并从 tabler 导入图标的 React 组件。",
+			"files": [],
+			"expectations": [
+				"包含用于可访问性的 DialogTitle（可见，或使用 sr-only class）",
+				"Avatar 组件包含 AvatarFallback",
+				"按钮上的图标使用 data-icon 属性（data-icon=\"inline-start\" 或 data-icon=\"inline-end\"）",
+				"组件内部图标不要使用尺寸 classes（不要使用 size-4、w-4、h-4 等）",
+				"使用 tabler icons（@tabler/icons-react），而不是 lucide-react",
+				"自定义 triggers 使用 asChild（radix preset）"
+			]
+		},
+		{
+			"id": 3,
+			"prompt": "创建一个 dashboard 组件，用网格展示 4 个统计卡片。每个卡片包含 title、大号数字、百分比变化 badge 和加载 skeleton 状态。使用 base-nova preset 和 lucide icons 的 shadcn/ui。",
+			"expected_output": "一个使用完整 Card 组合、Skeleton 加载状态、Badge 展示变化、语义化颜色和 gap-* 间距的 React 组件。",
+			"files": [],
+			"expectations": [
+				"使用完整 Card 组合，包括 CardHeader、CardTitle、CardContent（不要把所有内容都堆进 CardContent）",
+				"使用 Skeleton 组件作为加载占位，而不是自定义 animate-pulse div",
+				"使用 Badge 组件展示百分比变化，而不是自定义样式 span",
+				"使用语义化颜色 tokens，而不是 bg-green-500 或 text-red-600 这类原始颜色值",
+				"使用 gap-*，而不是 space-y-* 或 space-x-* 做间距",
+				"宽高相等时使用 size-*，而不是分别使用 w-* h-*"
+			]
+		}
+	]
 }

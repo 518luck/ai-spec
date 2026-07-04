@@ -2,12 +2,12 @@
 import type { CreateEmailOptions } from "resend";
 
 export interface ResendEmailOptions
-  //  \extends 继承 Resend 的所有字段（subject、html、cc 等）
-  extends Omit<CreateEmailOptions, "to" | "from"> {
-  to: string;
-  from?: string;
-  variant?: "primary" | "notifications" | "marketing";
-  unsubscribeUrl?: string; // 自定义退订URL列表退订头
+	//  \extends 继承 Resend 的所有字段（subject、html、cc 等）
+	extends Omit<CreateEmailOptions, "to" | "from"> {
+	to: string;
+	from?: string;
+	variant?: "primary" | "notifications" | "marketing";
+	unsubscribeUrl?: string; // 自定义退订URL列表退订头
 }
 
 export type ResendBulkEmailOptions = ResendEmailOptions[];

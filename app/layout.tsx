@@ -5,9 +5,9 @@ import "@/app/styles/global.css";
 export { metadata };
 
 export default function Layout({
-  children,
+	children,
 }: Readonly<{
-  children: React.ReactNode;
+	children: React.ReactNode;
 }>) {
-  return <RootLayoutShell>{children}</RootLayoutShell>;
+	return <RootLayoutShell>{children}</RootLayoutShell>;
 }

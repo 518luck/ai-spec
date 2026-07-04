@@ -5,19 +5,19 @@ const redis = getAppRedis();
 
 // 写入一条带过期时间的 JSON 数据（业务 KV，如邮箱变更上下文）
 export const kvSet = async (key: string, value: unknown, ttlSeconds: number): Promise<void> => {
-  await redis.set(key, JSON.stringify(value), "EX", ttlSeconds);
+	await redis.set(key, JSON.stringify(value), "EX", ttlSeconds);
 };
 
 // 读取并反序列化一条 JSON 数据，缺失或解析失败时返回 null
 export const kvGet = async <T>(key: string): Promise<T | null> => {
-  const raw = await redis.get(key);
-  if (!raw) {
-    return null;
-  }
-  return JSON.parse(raw) as T;
+	const raw = await redis.get(key);
+	if (!raw) {
+		return null;
+	}
+	return JSON.parse(raw) as T;
 };
 
 // 删除指定 key（用于清理一次性验证上下文等）
 export const kvDel = async (key: string): Promise<void> => {
-  await redis.del(key);
+	await redis.del(key);
 };

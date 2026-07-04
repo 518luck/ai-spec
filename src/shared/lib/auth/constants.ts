@@ -30,6 +30,6 @@ export const AUTH_REDIRECT_HOME = "/spec/personal";
 
 // 登录方式联合类型
 export type AuthProvider =
-  | typeof AUTH_PROVIDER_GOOGLE
-  | typeof AUTH_PROVIDER_EMAIL
-  | typeof AUTH_PROVIDER_GITHUB;
+	| typeof AUTH_PROVIDER_GOOGLE
+	| typeof AUTH_PROVIDER_EMAIL
+	| typeof AUTH_PROVIDER_GITHUB;
