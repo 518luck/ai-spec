@@ -1,0 +1,20 @@
+{
+  // 行宽：超过此长度会自动换行（13 寸屏黄金值）
+  printWidth: 100,
+  // 缩进空格数：2 空格（Next.js 默认）
+  tabWidth: 2,
+  // 普通字符串引号：false = 双引号（与项目现状一致）
+  singleQuote: false,
+  // JSX 字符串引号：false = 双引号
+  jsxSingleQuote: false,
+  // 语句末尾分号：true = 带分号
+  semi: true,
+  // 尾随逗号：all = 最后一个元素也加逗号（方便 git diff）
+  trailingComma: "all",
+  // 对象大括号内空格：{ foo } 而非 {foo}
+  bracketSpacing: true,
+  // 箭头函数参数括号：always = 总是带括号 (x) => x
+  arrowParens: "always",
+  // 换行符：统一用 LF（Unix/Mac）
+  endOfLine: "lf",
+}

@@ -53,14 +53,9 @@ const createEmptyMatrix = (): PermissionMatrix =>
   Object.fromEntries(RESOURCE_KEYS.map((key) => [key, ""])) as PermissionMatrix;
 
 // 把弹窗权限选择翻译成后端可识别的 scope 数组
-const buildScopes = (
-  permission: ScopePresetValue,
-  matrix: PermissionMatrix,
-): Scope[] => {
+const buildScopes = (permission: ScopePresetValue, matrix: PermissionMatrix): Scope[] => {
   // 全部 / 只读直接取预设内带的通配 scope
-  const presetScopes = scopePresets.find(
-    (item) => item.value === permission,
-  )?.scopes;
+  const presetScopes = scopePresets.find((item) => item.value === permission)?.scopes;
   if (presetScopes && presetScopes.length > 0) return [...presetScopes];
 
   // 限制权限：按矩阵勾选的资源 + 粒度，从权威表查回对应的 scope
@@ -80,10 +75,7 @@ type CreateKeyDialogProps = {
 };
 
 // 创建 API 密钥弹窗：密钥归属于个人工作空间，支持名称、权限及限制权限下的资源勾选
-export function CreateKeyDialog({
-  open,
-  onOpenChange,
-}: CreateKeyDialogProps): JSX.Element {
+export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): JSX.Element {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -93,8 +85,7 @@ export function CreateKeyDialog({
   const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   // 根据当前选中权限取对应的范围说明文案
-  const permissionHint =
-    scopePresets.find((item) => item.value === permission)?.description ?? "";
+  const permissionHint = scopePresets.find((item) => item.value === permission)?.description ?? "";
 
   const { executeAsync, isPending } = useAction(createTokenAction, {
     onSuccess: ({ data }) => {
@@ -116,10 +107,7 @@ export function CreateKeyDialog({
   };
 
   // 切换某资源的权限粒度（None/Read/Write）
-  const handleResourceScopeChange = (
-    key: ResourceKey,
-    scopeValue: string,
-  ): void => {
+  const handleResourceScopeChange = (key: ResourceKey, scopeValue: string): void => {
     setMatrix((prev) => ({ ...prev, [key]: scopeValue }));
   };
 
@@ -193,10 +181,7 @@ export function CreateKeyDialog({
                 transition={{ type: "tween", duration: 0.2, ease: "easeInOut" }}
               >
                 {permission === "restricted" && (
-                  <PermissionTable
-                    value={matrix}
-                    onScopeChange={handleResourceScopeChange}
-                  />
+                  <PermissionTable value={matrix} onScopeChange={handleResourceScopeChange} />
                 )}
               </AnimatedSizeContainer>
             </div>
@@ -250,18 +235,9 @@ function CreatedKeyView({
             onClick={() => setVisible((v) => !v)}
             aria-label={visible ? "隐藏密钥" : "显示密钥"}
           >
-            {visible ? (
-              <Icons.eyeOff className="size-4" />
-            ) : (
-              <Icons.eye className="size-4" />
-            )}
+            {visible ? <Icons.eyeOff className="size-4" /> : <Icons.eye className="size-4" />}
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onCopy}
-            aria-label="复制密钥"
-          >
+          <Button variant="ghost" size="icon" onClick={onCopy} aria-label="复制密钥">
             <Icons.copy className="size-4" />
           </Button>
         </div>
@@ -345,31 +321,21 @@ type PermissionTableProps = {
 };
 
 // 资源权限清单：每行一个资源，右侧 None/Read/Write 单选组，仅「限制」权限下展示
-function PermissionTable({
-  value,
-  onScopeChange,
-}: PermissionTableProps): JSX.Element {
+function PermissionTable({ value, onScopeChange }: PermissionTableProps): JSX.Element {
   return (
     <div className="flex flex-col gap-2">
       {/* 滚动区域：用 ScrollArea 替代原生 overflow-y-auto，呈现自定义滚动条 */}
       <ScrollArea className="max-h-70 rounded-md">
         <div className="flex w-full flex-col divide-y">
           {RESOURCES.map((resource) => (
-            <div
-              key={resource.key}
-              className="flex items-center justify-between px-3 py-3"
-            >
+            <div key={resource.key} className="flex items-center justify-between px-3 py-3">
               <div className="flex shrink-0 items-center gap-1.5">
-                <span className="text-sm font-medium whitespace-nowrap">
-                  {resource.name}
-                </span>
+                <span className="text-sm font-medium whitespace-nowrap">{resource.name}</span>
                 <HelpTooltip content={resource.description} />
               </div>
               <RadioGroup
                 value={value[resource.key]}
-                onValueChange={(scopeValue) =>
-                  onScopeChange(resource.key, scopeValue as string)
-                }
+                onValueChange={(scopeValue) => onScopeChange(resource.key, scopeValue as string)}
                 className="flex w-auto shrink-0 gap-3"
               >
                 {RESOURCE_SCOPES.map((scope) => (

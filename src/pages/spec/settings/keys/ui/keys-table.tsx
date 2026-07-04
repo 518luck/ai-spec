@@ -8,14 +8,7 @@ import { type JSX } from "react";
 import { scopesToName } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 
 import { PAGE_SIZE } from "../config/constants";
 import { TokenActions } from "./token-actions";
@@ -40,11 +33,7 @@ type KeysTableProps = {
 
 // 密钥列表：固定高度表格 + 底部分页（左侧计数、右侧上一页/下一页按钮）
 // 数据已由服务端按页查询，这里直接展示 tokens；翻页通过 router.push 改 URL 触发服务端重渲染
-export function KeysTable({
-  tokens,
-  page,
-  total,
-}: KeysTableProps): JSX.Element {
+export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -79,9 +68,7 @@ export function KeysTable({
           <TableBody>
             {tokens.map((token) => (
               <TableRow key={token.id}>
-                <TableCell className="truncate pl-4 font-medium">
-                  {token.name}
-                </TableCell>
+                <TableCell className="truncate pl-4 font-medium">{token.name}</TableCell>
                 <TableCell className="text-muted-foreground truncate">
                   {token.description?.trim() || "—"}
                 </TableCell>
@@ -96,16 +83,10 @@ export function KeysTable({
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {token.last_used
-                    ? dayjs(token.last_used).format("YYYY/MM/DD")
-                    : "—"}
+                  {token.last_used ? dayjs(token.last_used).format("YYYY/MM/DD") : "—"}
                 </TableCell>
                 <TableCell className="pr-4">
-                  <TokenActions
-                    id={token.id}
-                    name={token.name}
-                    partialKey={token.partial_key}
-                  />
+                  <TokenActions id={token.id} name={token.name} partialKey={token.partial_key} />
                 </TableCell>
               </TableRow>
             ))}
