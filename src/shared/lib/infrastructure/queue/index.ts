@@ -1,34 +1,9 @@
-import { JOB_NAMES } from "./constants";
-import { backgroundJobsQueue } from "./queues";
-import type {
-  DeleteUserAvatarData,
-  EmailChangeData,
-  EmailChangedNoticeData,
-  SyncOauthAvatarData,
-} from "./types";
-
-// 入队头像同步任务（以 avatar-sync 为 job.name 投入后台任务队列）
-export async function enqueueAvatarSync(
-  data: SyncOauthAvatarData,
-): Promise<void> {
-  await backgroundJobsQueue.add(JOB_NAMES.avatarSync, data);
-}
-
-// 入队用户旧头像删除任务（以 avatar-cleanup 为 job.name 投入后台任务队列）
-export async function enqueueDeleteUserAvatar(
-  data: DeleteUserAvatarData,
-): Promise<void> {
-  await backgroundJobsQueue.add(JOB_NAMES.avatarCleanup, data);
-}
-
-// 入队邮箱变更验证邮件任务（以 email-change 为 job.name 投入后台任务队列）
-export async function enqueueEmailChange(data: EmailChangeData): Promise<void> {
-  await backgroundJobsQueue.add(JOB_NAMES.emailChange, data);
-}
-
-// 入队邮箱变更成功通知任务（以 email-changed-notice 为 job.name 投入后台任务队列）
-export async function enqueueEmailChangedNotice(
-  data: EmailChangedNoticeData,
-): Promise<void> {
-  await backgroundJobsQueue.add(JOB_NAMES.emailChangedNotice, data);
-}
+// 队列公共出口：re-export 各领域的入队函数，调用方保持从 @/shared/lib/infrastructure/queue 导入
+export {
+  enqueueAvatarSync,
+  enqueueDeleteUserAvatar,
+} from "./operations/user";
+export {
+  enqueueEmailChange,
+  enqueueEmailChangedNotice,
+} from "./operations/email";
