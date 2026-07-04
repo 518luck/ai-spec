@@ -5,6 +5,7 @@ import * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { XIcon } from "lucide-react";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
@@ -53,12 +54,15 @@ function DialogContent({
       <DialogPrimitive.Popup
         data-slot="dialog-content"
         className={cn(
-          "bg-popover text-popover-foreground ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 grid max-h-[85vh] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-0 overflow-y-auto rounded-xl p-0 text-sm ring-1 duration-100 outline-none sm:max-w-md",
+          "bg-popover text-popover-foreground ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 grid max-h-[85vh] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-0 overflow-hidden rounded-xl p-0 text-sm ring-1 duration-100 outline-none sm:max-w-md",
           className,
         )}
         {...props}
       >
-        {children}
+        {/* ScrollArea 包裹所有内容，让超长弹窗自动滚动；max-h-[inherit] 继承 DialogContent 的限高 */}
+        <ScrollArea className="max-h-[inherit]">
+          {children}
+        </ScrollArea>
         {showCloseButton && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
