@@ -54,3 +54,14 @@ export const deleteTokenDtoSchema = z.object({
 
 // 删除令牌入参类型
 export type DeleteTokenDto = z.infer<typeof deleteTokenDtoSchema>;
+
+// 更新 API 令牌的请求入参 schema（id 必填；name/description/scopes 为可编辑字段，复用创建校验规则）
+export const updateTokenDtoSchema = z.object({
+	id: z.string().min(1, { error: "缺少令牌 id" }),
+	name: tokenNameSchema,
+	description: tokenDescriptionSchema,
+	scopes: tokenScopesSchema,
+});
+
+// 更新令牌入参类型（供 Server Action 使用）
+export type UpdateTokenDto = z.infer<typeof updateTokenDtoSchema>;

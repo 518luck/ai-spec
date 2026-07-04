@@ -84,7 +84,13 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 									{token.last_used ? dayjs(token.last_used).format("YYYY/MM/DD") : "—"}
 								</TableCell>
 								<TableCell className="pr-4">
-									<TokenActions id={token.id} name={token.name} partialKey={token.partial_key} />
+									<TokenActions
+										id={token.id}
+										name={token.name}
+										partialKey={token.partial_key}
+										description={token.description}
+										scopes={token.scopes}
+									/>
 								</TableCell>
 							</TableRow>
 						))}

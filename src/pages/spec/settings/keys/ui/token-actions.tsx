@@ -16,18 +16,29 @@ import {
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
+import { EditKeyDialog } from "./edit-key-dialog";
 
 type TokenActionsProps = {
 	id: string;
 	name: string;
 	partialKey: string;
+	description: string | null;
+	scopes: string | null;
 };
 
 // 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
-export function TokenActions({ id, name, partialKey }: TokenActionsProps): JSX.Element {
+export function TokenActions({
+	id,
+	name,
+	partialKey,
+	description,
+	scopes,
+}: TokenActionsProps): JSX.Element {
 	const router = useRouter();
 	// 确认弹窗的开关状态；点「删除」菜单项时打开
 	const [deleteOpen, setDeleteOpen] = useState(false);
+	// 编辑弹窗的开关状态；点「编辑」菜单项时打开
+	const [editOpen, setEditOpen] = useState(false);
 	const { executeAsync } = useAction(deleteTokenAction, {
 		onSuccess: () => {
 			toast.success("已删除");
@@ -38,9 +49,9 @@ export function TokenActions({ id, name, partialKey }: TokenActionsProps): JSX.E
 		},
 	});
 
-	// 编辑：占位提示，编辑表单后续实现
+	// 编辑：打开编辑弹窗，回填当前密钥的名称、描述与权限
 	const handleEdit = (): void => {
-		toast.info(`编辑「${name}」功能即将上线`);
+		setEditOpen(true);
 	};
 
 	// 点「删除」菜单项：打开确认弹窗，不直接执行删除
@@ -98,6 +109,12 @@ export function TokenActions({ id, name, partialKey }: TokenActionsProps): JSX.E
 					</code>
 				</div>
 			</ConfirmDialog>
+
+			<EditKeyDialog
+				open={editOpen}
+				onOpenChange={setEditOpen}
+				token={{ id, name, description, scopes }}
+			/>
 		</>
 	);
 }
