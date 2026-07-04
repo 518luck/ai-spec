@@ -3,9 +3,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.formatOnSave": true
   },
-  "prettier.documentSelectors": [
-    "**/*.svg"
-  ],
+  "prettier.documentSelectors": ["**/*.svg"],
   "code-runner.executorMap": {
     "typescript": "npx tsx"
   },
