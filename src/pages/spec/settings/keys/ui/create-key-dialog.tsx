@@ -159,7 +159,10 @@ export function CreateKeyDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent showCloseButton={false} className="sm:max-w-md">
+      <DialogContent
+        showCloseButton={false}
+        className="max-h-[85vh] sm:max-w-md"
+      >
         {createdKey ? (
           <CreatedKeyView
             keyValue={createdKey}
@@ -167,7 +170,7 @@ export function CreateKeyDialog({
             onDone={() => handleOpenChange(false)}
           />
         ) : (
-          <>
+          <ScrollArea className="max-h-[inherit]">
             <DialogHeader>
               <DialogTitle className="text-lg">创建 API 密钥</DialogTitle>
               <DialogDescription className="text-sm leading-6">
@@ -211,7 +214,7 @@ export function CreateKeyDialog({
                 {isPending ? "创建中..." : "创建"}
               </Button>
             </DialogFooter>
-          </>
+          </ScrollArea>
         )}
       </DialogContent>
     </Dialog>
