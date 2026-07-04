@@ -6,6 +6,7 @@ export class ActionError extends Error {
 
 	constructor({ code, message }: { code: ErrorCode; message: string }) {
 		super(message);
+
 		this.code = code;
 	}
 }
