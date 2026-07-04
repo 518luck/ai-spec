@@ -1,5 +1,5 @@
-// 邮箱领域：入队（生产端）+ 处理（消费端）的统一出口
-export { processEmailChange } from "./email-change";
-export { processEmailChangedNotice } from "./email-changed-notice";
-export { enqueueEmailChange } from "./enqueue-email-change";
-export { enqueueEmailChangedNotice } from "./enqueue-email-changed-notice";
+// 邮箱领域：processors（消费端）+ enqueues（生产端）的统一出口
+export { processEmailChange } from "./processors/email-change";
+export { processEmailChangedNotice } from "./processors/email-changed-notice";
+export { enqueueEmailChange } from "./enqueues/enqueue-email-change";
+export { enqueueEmailChangedNotice } from "./enqueues/enqueue-email-changed-notice";

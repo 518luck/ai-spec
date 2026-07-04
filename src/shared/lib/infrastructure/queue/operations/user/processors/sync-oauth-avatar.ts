@@ -1,7 +1,7 @@
 import prisma from "@/shared/db";
 import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
 
-import type { SyncOauthAvatarData } from "./types";
+import type { SyncOauthAvatarData } from "../types";
 
 // 下载第三方头像并上传到自有 S3，把返回的 URL 写入用户表
 export async function processSyncOauthAvatar({

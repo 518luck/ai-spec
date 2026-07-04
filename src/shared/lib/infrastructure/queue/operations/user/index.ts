@@ -1,5 +1,5 @@
-// 用户领域：入队（生产端）+ 处理（消费端）的统一出口
-export { processSyncOauthAvatar } from "./sync-oauth-avatar";
-export { processDeleteUserAvatar } from "./delete-user-avatar";
-export { enqueueAvatarSync } from "./enqueue-avatar-sync";
-export { enqueueDeleteUserAvatar } from "./enqueue-delete-user-avatar";
+// 用户领域：processors（消费端）+ enqueues（生产端）的统一出口
+export { processSyncOauthAvatar } from "./processors/sync-oauth-avatar";
+export { processDeleteUserAvatar } from "./processors/delete-user-avatar";
+export { enqueueAvatarSync } from "./enqueues/enqueue-avatar-sync";
+export { enqueueDeleteUserAvatar } from "./enqueues/enqueue-delete-user-avatar";
