@@ -71,7 +71,7 @@ export function KeysTable({
               <TableHead className="w-32 pl-4">名称</TableHead>
               <TableHead className="w-48">描述</TableHead>
               <TableHead className="w-40">密钥</TableHead>
-              <TableHead className="w-20">权限</TableHead>
+              <TableHead className="w-20 pl-3">权限</TableHead>
               <TableHead className="w-28">最后使用</TableHead>
               <TableHead className="w-16 pr-4">操作</TableHead>
             </TableRow>
