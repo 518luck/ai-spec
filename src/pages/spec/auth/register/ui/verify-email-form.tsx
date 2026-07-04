@@ -1,12 +1,12 @@
+import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { useMediaQuery } from "@/shared/hooks/use-media-query";
 import { createUserAccountAction } from "@/shared/lib/ohs/local/appservice/auth/create-user-account";
 import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Spinner } from "@/shared/ui/spinner";
-import { useAction } from "next-safe-action/hooks";
-import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
 import { useRegisterContext } from "../model/register-context";
 import { ResendOtp } from "./resend-otp";
 
@@ -58,32 +58,32 @@ export function VerifyEmailForm() {
       >
         <InputOTPGroup className="gap-4 border-0 ring-0 has-aria-invalid:border-0 has-aria-invalid:ring-0">
           <InputOTPSlot
-            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            className="h-14 w-13 rounded-xl border bg-background/60 backdrop-blur-xs"
             index={0}
             aria-invalid={isInvalidCode}
           />
           <InputOTPSlot
-            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            className="h-14 w-13 rounded-xl border bg-background/60 backdrop-blur-xs"
             index={1}
             aria-invalid={isInvalidCode}
           />
           <InputOTPSlot
-            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            className="h-14 w-13 rounded-xl border bg-background/60 backdrop-blur-xs"
             index={2}
             aria-invalid={isInvalidCode}
           />
           <InputOTPSlot
-            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            className="h-14 w-13 rounded-xl border bg-background/60 backdrop-blur-xs"
             index={3}
             aria-invalid={isInvalidCode}
           />
           <InputOTPSlot
-            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            className="h-14 w-13 rounded-xl border bg-background/60 backdrop-blur-xs"
             index={4}
             aria-invalid={isInvalidCode}
           />
           <InputOTPSlot
-            className="bg-background/60 h-14 w-13 rounded-xl border backdrop-blur-xs"
+            className="h-14 w-13 rounded-xl border bg-background/60 backdrop-blur-xs"
             index={5}
             aria-invalid={isInvalidCode}
           />
@@ -91,13 +91,13 @@ export function VerifyEmailForm() {
       </InputOTP>
 
       {isInvalidCode ? (
-        <p id="otp-error" className="text-destructive mt-3 text-center text-sm">
+        <p id="otp-error" className="mt-3 text-center text-destructive text-sm">
           验证码错误，请重新输入
         </p>
       ) : null}
 
       <Button
-        className="bg-primary/70 hover:bg-primary/80 mt-8 flex w-full items-center backdrop-blur-md"
+        className="mt-8 flex w-full items-center bg-primary/70 backdrop-blur-md hover:bg-primary/80"
         type="submit"
         disabled={!code || code.length < 6}
       >

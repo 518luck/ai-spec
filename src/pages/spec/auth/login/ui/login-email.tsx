@@ -1,5 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useAction } from "next-safe-action/hooks";
+import { type JSX, type SubmitEvent, useState } from "react";
+import { toast } from "sonner";
 import {
   AUTH_FIELD_PASSWORD,
   AUTH_PROVIDER_EMAIL,
@@ -10,11 +15,6 @@ import { Button } from "@/shared/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";
 import { Spinner } from "@/shared/ui/spinner";
-import { signIn } from "next-auth/react";
-import { useAction } from "next-safe-action/hooks";
-import { useRouter } from "next/navigation";
-import { type JSX, type SubmitEvent, useState } from "react";
-import { toast } from "sonner";
 import { useLoginContext } from "../model/login-context";
 
 // 渲染邮箱登录表单并按需展开密码输入框。
@@ -49,15 +49,12 @@ export function LoginEmail(): JSX.Element {
   };
 
   // 登录前先检查账户状态，只有存在密码的账户才调用 NextAuth。
-  const handleSubmit = async (
-    event: SubmitEvent<HTMLFormElement>,
-  ): Promise<void> => {
+  const handleSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
     if (!showPasswordField) {
       const result = await executeAsync({ email });
-      const errorMessage =
-        result.serverError || result.validationErrors?.email?.[0];
+      const errorMessage = result.serverError || result.validationErrors?.email?.[0];
 
       if (errorMessage) {
         toast.error(errorMessage);
@@ -149,7 +146,7 @@ export function LoginEmail(): JSX.Element {
         {isSigningIn ? "登录中..." : "登录"}
       </Button>
       {preferredMethod === AUTH_PROVIDER_EMAIL && (
-        <p className="text-muted-foreground mt-2 text-center text-xs font-medium">
+        <p className="mt-2 text-center font-medium text-muted-foreground text-xs">
           你上次使用邮箱登录的
         </p>
       )}

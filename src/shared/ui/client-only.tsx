@@ -44,7 +44,7 @@ export function ClientOnly({
           {children}
         </Comp>
       ) : (
-        fallback ?? null
+        (fallback ?? null)
       )}
     </AnimatePresence>
   );

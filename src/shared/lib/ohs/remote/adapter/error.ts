@@ -1,12 +1,9 @@
-import { Prisma } from "@/shared/db/generator/client";
-import {
-  createLogger,
-  serializeError,
-} from "@/shared/lib/infrastructure/axiom/server";
-import type { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { after, NextResponse } from "next/server";
-import { fromZodError } from "zod-validation-error";
 import { ZodError } from "zod/v4";
+import { fromZodError } from "zod-validation-error";
+import { Prisma } from "@/shared/db/generator/client";
+import { createLogger, serializeError } from "@/shared/lib/infrastructure/axiom/server";
+import type { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // 错误归一化专用 logger，自动带 module: "ai-spec-error"
 const log = createLogger("ai-spec-error");
@@ -93,8 +90,5 @@ export const toErrorResponse = (
   headers?: HeadersInit,
 ): NextResponse<{ error: ErrorBody }> => {
   const result = toError(error);
-  return NextResponse.json(
-    { error: result.error },
-    { status: result.status, headers },
-  );
+  return NextResponse.json({ error: result.error }, { status: result.status, headers });
 };

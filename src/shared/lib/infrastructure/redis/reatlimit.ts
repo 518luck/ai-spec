@@ -33,11 +33,7 @@ type RatelimitOptions = {
 
 // 基于 Redis 的频率限制（限流）工具函数。
 // points 表示本次请求要消耗多少积分，默认一次请求消耗 1 点；duration 表示本次 key 的时间窗口，单位是秒。
-export async function ratelimit({
-  key,
-  points = 1,
-  duration,
-}: RatelimitOptions) {
+export async function ratelimit({ key, points = 1, duration }: RatelimitOptions) {
   try {
     // 返回值
     //     {
@@ -57,9 +53,7 @@ export async function ratelimit({
     }
     const res = rejRes as RateLimiterRes;
     // 被限流了
-    throw new Error(
-      `请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`,
-    );
+    throw new Error(`请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`);
   }
 }
 
@@ -93,9 +87,7 @@ export async function hardDailyRatelimit({
       throw new Error("限流服务异常");
     }
     const res = rejRes as RateLimiterRes;
-    throw new Error(
-      `请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`,
-    );
+    throw new Error(`请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`);
   }
 }
 

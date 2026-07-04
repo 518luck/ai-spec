@@ -15,9 +15,7 @@ export const buildGravatarUrl = (email: string): string => {
 };
 
 // 计算用户头像地址：优先自定义头像，其次 Gravatar，都没有时返回 undefined 交由占位图标兜底
-export const getUserAvatarUrl = (
-  user?: AvatarUser | null,
-): string | undefined => {
+export const getUserAvatarUrl = (user?: AvatarUser | null): string | undefined => {
   if (user?.image) {
     return user.image;
   }

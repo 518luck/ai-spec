@@ -10,8 +10,8 @@ export function StatusMessage({
 }): JSX.Element {
   return (
     <div className="w-full max-w-sm text-center">
-      <h3 className="text-xl font-semibold">{title}</h3>
-      <p className="mt-6 text-sm font-medium text-neutral-500">{description}</p>
+      <h3 className="font-semibold text-xl">{title}</h3>
+      <p className="mt-6 font-medium text-neutral-500 text-sm">{description}</p>
     </div>
   );
 }

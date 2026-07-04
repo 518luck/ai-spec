@@ -15,9 +15,7 @@ const JOB_REGISTRY = {
 } as const;
 
 // 后台任务总路由：按 job.name 从注册表查处理器执行，未知类型抛错
-export async function processBackgroundJob(
-  job: Job<BackgroundJobData>,
-): Promise<void> {
+export async function processBackgroundJob(job: Job<BackgroundJobData>): Promise<void> {
   const processor = JOB_REGISTRY[job.name as keyof typeof JOB_REGISTRY];
   if (!processor) {
     throw new Error(`未知的后台任务类型: ${job.name}`);

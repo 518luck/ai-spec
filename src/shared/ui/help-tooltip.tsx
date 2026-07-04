@@ -13,9 +13,7 @@ export function HelpTooltip({ content }: HelpTooltipProps): JSX.Element {
   const Icon = Icons.helpSquareRounded;
   return (
     <Tooltip>
-      <TooltipTrigger
-        render={<Icon className="text-muted-foreground size-4" />}
-      />
+      <TooltipTrigger render={<Icon className="size-4 text-muted-foreground" />} />
       <TooltipContent>{content}</TooltipContent>
     </Tooltip>
   );

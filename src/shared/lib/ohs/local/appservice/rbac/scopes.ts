@@ -2,10 +2,7 @@
 //
 // 现状：当前仅个人空间，登录用户（user/member）可授予全部 scope，roles 字段暂无筛选效果。
 // 团队功能上线后，member 才会与 user 在可授予范围上产生区分（如项目/团队资源）。
-import type {
-  PermissionAction,
-  ROLE,
-} from "@/shared/lib/ohs/local/appservice/rbac/permissions";
+import type { PermissionAction, ROLE } from "@/shared/lib/ohs/local/appservice/rbac/permissions";
 import type { ResourceKey } from "@/shared/lib/ohs/local/appservice/rbac/resources";
 
 // 所有合法 scope 字符串的户口本，兼作 zod 校验合法值与 Scope 字面量类型的来源
@@ -190,9 +187,7 @@ export const RESOURCE_SCOPES: readonly ResourceScopeEntry[] = [
 // —— 派生查询：基于 RESOURCE_SCOPES 按需查询，零预计算表以保持类型安全 ——
 
 // 单条 scope 展开为实际放行权限；未知 scope 返回空
-export const getPermissionsForScope = (
-  scope: Scope,
-): readonly PermissionAction[] =>
+export const getPermissionsForScope = (scope: Scope): readonly PermissionAction[] =>
   RESOURCE_SCOPES.find((item) => item.scope === scope)?.permissions ?? [];
 
 // 取某资源的全部资源级 scope，供前端渲染「资源 × 读/写」勾选表
@@ -214,14 +209,10 @@ export const getScopesForResource = (
 
 // 取某角色可授予的全部 scope
 export const getScopesForRole = (role: ROLE): readonly Scope[] =>
-  RESOURCE_SCOPES.filter((item) => item.roles.includes(role)).map(
-    (item) => item.scope,
-  );
+  RESOURCE_SCOPES.filter((item) => item.roles.includes(role)).map((item) => item.scope);
 
 // 把 token 的 scopes 展开成实际权限集合（鉴权热路径用）
-export const mapScopesToPermissions = (
-  scopes: readonly Scope[],
-): PermissionAction[] => {
+export const mapScopesToPermissions = (scopes: readonly Scope[]): PermissionAction[] => {
   const permissions: PermissionAction[] = [];
   for (const scope of scopes) {
     permissions.push(...getPermissionsForScope(scope));
@@ -230,10 +221,7 @@ export const mapScopesToPermissions = (
 };
 
 // 校验 scopes 是否在该角色可授予范围内，防止越权授予
-export const validateScopesForRole = (
-  scopes: readonly Scope[],
-  role: ROLE,
-): boolean => {
+export const validateScopesForRole = (scopes: readonly Scope[], role: ROLE): boolean => {
   const allowed = new Set(getScopesForRole(role));
   return scopes.every((scope) => allowed.has(scope));
 };
@@ -265,9 +253,7 @@ export const scopePresets = [
 export type ScopePresetValue = (typeof scopePresets)[number]["value"];
 
 // 从 scopes 反推所属预设（编辑已有 key 时高亮按钮用）
-export const scopesToName = (
-  scopes: readonly string[],
-): { name: string; description: string } => {
+export const scopesToName = (scopes: readonly string[]): { name: string; description: string } => {
   if (scopes.includes("apis.all")) {
     return { name: "全部", description: "对所有资源拥有完整的读写权限" };
   }

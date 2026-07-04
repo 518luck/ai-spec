@@ -84,10 +84,7 @@ export function InteractiveGridPattern({
   return (
     <div
       ref={containerRef}
-      className={cn(
-        "absolute inset-0 overflow-hidden bg-neutral-950",
-        className,
-      )}
+      className={cn("absolute inset-0 overflow-hidden bg-neutral-950", className)}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
@@ -129,10 +126,7 @@ export function InteractiveGridPattern({
                     backgroundColor: isHovered
                       ? glowColor
                       : proximityFactor > 0
-                        ? glowColor.replace(
-                            /[\d.]+\)$/,
-                            `${proximityFactor * 0.15})`,
-                          )
+                        ? glowColor.replace(/[\d.]+\)$/, `${proximityFactor * 0.15})`)
                         : "transparent",
                     // 悬停时额外叠加外发光和内发光，增强聚焦效果
                     boxShadow: isHovered
@@ -170,9 +164,7 @@ export function InteractiveGridPattern({
       />
 
       {/* 内容层放在最上面，避免被背景网格遮住 */}
-      {children && (
-        <div className="relative z-10 h-full w-full">{children}</div>
-      )}
+      {children && <div className="relative z-10 h-full w-full">{children}</div>}
     </div>
   );
 }

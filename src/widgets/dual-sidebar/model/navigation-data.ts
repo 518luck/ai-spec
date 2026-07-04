@@ -75,16 +75,14 @@ export type NavAreaPanel = {
 };
 
 // 按业务区域组织右侧导航面板生成函数，所有面板共享同一份上下文参数。
-export type NavAreaPanels<
-  T extends Record<PropertyKey, unknown>,
-  TArea extends string,
-> = Record<TArea, (args: T) => NavAreaPanel>;
+export type NavAreaPanels<T extends Record<PropertyKey, unknown>, TArea extends string> = Record<
+  TArea,
+  (args: T) => NavAreaPanel
+>;
 
 // TODO : 后面可以根据工作空间来分布设置
 // 根据当前路径判断左侧业务导航当前所在区域。
-export const getCurrentNavBusinessArea = ({
-  pathname,
-}: NavContext): NavBusinessArea | null => {
+export const getCurrentNavBusinessArea = ({ pathname }: NavContext): NavBusinessArea | null => {
   if (pathname.startsWith("/spec/personal")) {
     return "personal";
   }
@@ -105,9 +103,7 @@ export const getCurrentNavBusinessArea = ({
 };
 
 // 生成左侧业务导航栏的空间入口数据，便于统一遍历渲染。
-export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({
-  pathname,
-}) => {
+export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({ pathname }) => {
   const currentBusinessArea = getCurrentNavBusinessArea({ pathname });
 
   return [

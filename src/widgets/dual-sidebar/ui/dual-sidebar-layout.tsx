@@ -1,5 +1,5 @@
-import type { ComponentProps, JSX } from "react";
 import { cookies } from "next/headers";
+import type { ComponentProps, JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { DualSidebarProvider } from "../model/dual-sidebar-context";
@@ -34,10 +34,7 @@ export async function DualSidebarLayout({
   const defaultCollapsed = collapsedRaw === "true";
 
   return (
-    <DualSidebarProvider
-      defaultWidth={defaultWidth}
-      defaultCollapsed={defaultCollapsed}
-    >
+    <DualSidebarProvider defaultWidth={defaultWidth} defaultCollapsed={defaultCollapsed}>
       <div
         data-slot="dual-sidebar-layout"
         className={cn(
@@ -49,9 +46,7 @@ export async function DualSidebarLayout({
       >
         <DualSidebar className={sidebarClassName} />
 
-        <DualSidebarContent className={contentClassName}>
-          {children}
-        </DualSidebarContent>
+        <DualSidebarContent className={contentClassName}>{children}</DualSidebarContent>
       </div>
     </DualSidebarProvider>
   );
@@ -66,11 +61,7 @@ function DualSidebarContent({
   return (
     <main
       data-slot="dual-sidebar-layout-content"
-      className={cn(
-        dualSidebarZoneClasses.content.shell,
-        "flex min-w-0 flex-1 py-2",
-        className,
-      )}
+      className={cn(dualSidebarZoneClasses.content.shell, "flex min-w-0 flex-1 py-2", className)}
       {...props}
     >
       <div

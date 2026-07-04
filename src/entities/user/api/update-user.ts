@@ -1,5 +1,5 @@
-import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 import type * as z from "zod/v4";
+import type { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 
 // PATCH /api/user 的部分更新入参类型，复用后端共享 schema 作为单一真相
 type UpdateUserPayload = Partial<z.infer<typeof updateUserSchema>>;

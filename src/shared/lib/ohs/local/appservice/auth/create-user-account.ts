@@ -1,16 +1,15 @@
 "use server";
 
+import { flattenValidationErrors } from "next-safe-action";
 import { v4 as uuidv4 } from "uuid";
 import * as z from "zod/v4";
-
-import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 import prisma from "@/shared/db";
 import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
 import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
+import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 import { hashPassword } from "@/shared/lib/utils";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
-import { flattenValidationErrors } from "next-safe-action";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
 const OTP_ATTEMPTS = 2;
@@ -23,8 +22,7 @@ const schema = signUpSchema.extend({
 export const createUserAccountAction = actionClient
   .inputSchema(schema, {
     // 把 Zod 校验错误整理成前端更容易消费的字段级错误结构。
-    handleValidationErrorsShape: async (ve) =>
-      flattenValidationErrors(ve).fieldErrors,
+    handleValidationErrorsShape: async (ve) => flattenValidationErrors(ve).fieldErrors,
   })
   .use(throwIfAuthenticated)
   .action(async ({ parsedInput }) => {

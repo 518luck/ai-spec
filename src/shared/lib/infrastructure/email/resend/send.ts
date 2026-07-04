@@ -1,8 +1,8 @@
 import type { CreateEmailOptions } from "resend";
-import type { ResendEmailOptions } from "./types";
 import type { EmailProvider, SendResult } from "../types";
-import { VARIANT_TO_FROM_MAP } from "./constants";
 import { resend } from "./client";
+import { VARIANT_TO_FROM_MAP } from "./constants";
+import type { ResendEmailOptions } from "./types";
 
 // 未配置 API Key 时的跳过结果
 const skipped = (reason: string): SendResult => ({
@@ -38,8 +38,7 @@ const toResendOptions = (opts: ResendEmailOptions): CreateEmailOptions => {
       ? {
           headers: {
             ...(headers || {}),
-            "List-Unsubscribe":
-              unsubscribeUrl || "https://spec.luckyun.shop/account/settings",
+            "List-Unsubscribe": unsubscribeUrl || "https://spec.luckyun.shop/account/settings",
           },
         }
       : headers && { headers }),
@@ -63,9 +62,7 @@ export const resendProvider: EmailProvider = {
   // 发送单封邮件
   send: async (opts: ResendEmailOptions): Promise<SendResult> => {
     if (!resend) {
-      console.warn(
-        ".env 配置文件中未设置 RESEND_API_KEY。已跳过发送邮件的操作。",
-      );
+      console.warn(".env 配置文件中未设置 RESEND_API_KEY。已跳过发送邮件的操作。");
       return skipped("RESEND_API_KEY 未设置");
     }
 
@@ -79,13 +76,9 @@ export const resendProvider: EmailProvider = {
   },
 
   // 批量发送：一人一封，一次调用发出多封不同邮件
-  sendBatch: async (
-    emails: ResendEmailOptions[],
-  ): Promise<SendResult[]> => {
+  sendBatch: async (emails: ResendEmailOptions[]): Promise<SendResult[]> => {
     if (!resend) {
-      console.warn(
-        ".env 配置文件中未设置 RESEND_API_KEY。已跳过发送邮件的操作。",
-      );
+      console.warn(".env 配置文件中未设置 RESEND_API_KEY。已跳过发送邮件的操作。");
       return emails.map(() => skipped("RESEND_API_KEY 未设置"));
     }
 

@@ -21,10 +21,7 @@ const serializeLocalStorageValue = <TValue>(value: TValue): string => {
 };
 
 // 从 localStorage 中读取指定 key 的值。
-const readLocalStorageValue = <TValue>(
-  key: string,
-  initialValue: TValue,
-): TValue => {
+const readLocalStorageValue = <TValue>(key: string, initialValue: TValue): TValue => {
   if (typeof window === "undefined") {
     return initialValue;
   }
@@ -32,9 +29,7 @@ const readLocalStorageValue = <TValue>(
   try {
     const storedValue = window.localStorage.getItem(key);
 
-    return storedValue === null
-      ? initialValue
-      : deserializeLocalStorageValue(storedValue);
+    return storedValue === null ? initialValue : deserializeLocalStorageValue(storedValue);
   } catch {
     return initialValue;
   }

@@ -1,12 +1,11 @@
 "use client";
 
+import { cva, type VariantProps } from "class-variance-authority";
 import Image from "next/image";
 import type { DragEvent, ReactNode } from "react";
 import { useState } from "react";
-
-import { cn } from "@/shared/lib/utils";
-import { cva, type VariantProps } from "class-variance-authority";
 import { toast } from "sonner";
+import { cn } from "@/shared/lib/utils";
 
 import type { Icon } from "@/shared/ui/icons";
 import { Icons } from "@/shared/ui/icons";
@@ -27,10 +26,7 @@ const documentTypes = [
 ];
 
 // 每种格式允许的 MIME 与报错文案，新增类型只改这里
-const acceptFileTypes: Record<
-  AcceptedFileFormats,
-  { types: string[]; errorMessage?: string }
-> = {
+const acceptFileTypes: Record<AcceptedFileFormats, { types: string[]; errorMessage?: string }> = {
   any: { types: [] },
   images: {
     types: ["image/png", "image/jpeg", "image/webp", "image/gif"],
@@ -125,14 +121,10 @@ export function FileUpload({
   const [fileName, setFileName] = useState<string | null>(null);
 
   // 文件进入后的处理：取文件 → 校验大小 → 校验类型 → 按 readFile 决定是否回传 base64 src
-  const onFileChange = async (
-    e: React.ChangeEvent<HTMLInputElement> | DragEvent,
-  ) => {
+  const onFileChange = async (e: React.ChangeEvent<HTMLInputElement> | DragEvent) => {
     // 区分拖拽与点击两种来源
     const file =
-      "dataTransfer" in e
-        ? (e.dataTransfer.files?.[0] ?? null)
-        : (e.target.files?.[0] ?? null);
+      "dataTransfer" in e ? (e.dataTransfer.files?.[0] ?? null) : (e.target.files?.[0] ?? null);
     if (!file) {
       return;
     }
@@ -178,7 +170,7 @@ export function FileUpload({
       )}
     >
       {loading && (
-        <div className="bg-background/80 absolute inset-0 z-5 flex items-center justify-center rounded-[inherit]">
+        <div className="absolute inset-0 z-5 flex items-center justify-center rounded-[inherit] bg-background/80">
           <Spinner className="size-6" />
         </div>
       )}
@@ -216,12 +208,9 @@ export function FileUpload({
           disabled && "bg-muted/80",
           dragActive &&
             !disabled &&
-            "cursor-copy bg-muted opacity-100 ring-2 ring-inset ring-primary",
+            "cursor-copy bg-muted opacity-100 ring-2 ring-primary ring-inset",
           imageSrc
-            ? cn(
-                "opacity-0",
-                showHoverOverlay && !disabled && "group-hover:opacity-100",
-              )
+            ? cn("opacity-0", showHoverOverlay && !disabled && "group-hover:opacity-100")
             : cn(!disabled && "group-hover:bg-muted/50"),
         )}
       >
@@ -238,7 +227,7 @@ export function FileUpload({
           )}
         />
         {content !== null && (
-          <div className="text-muted-foreground mt-2 text-sm">
+          <div className="mt-2 text-muted-foreground text-sm">
             {content ?? (clickToUpload ? "拖拽或点击上传" : "拖拽到此处上传")}
           </div>
         )}

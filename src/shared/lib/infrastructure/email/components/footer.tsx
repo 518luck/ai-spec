@@ -14,21 +14,18 @@ export function Footer({
   return (
     <Tailwind>
       <Hr className="mx-0 my-6 w-full border border-neutral-200" />
-      <Text className="text-[12px] leading-6 text-neutral-500">
+      <Text className="text-[12px] text-neutral-500 leading-6">
         本邮件发送至 <span className="text-black">{email}</span>
         。如非您本人操作，请忽略此邮件。若对账户安全有任何疑虑，欢迎
         {/* TODO 这个地方的联系邮件需要修改 */}
-        <Link
-          className="text-neutral-700 underline"
-          href="https://dub.co/support"
-        >
+        <Link className="text-neutral-700 underline" href="https://dub.co/support">
           联系我们
         </Link>
         。
       </Text>
 
       {(marketing || notificationSettingsUrl) && (
-        <Text className="text-[12px] leading-6 text-neutral-500">
+        <Text className="text-[12px] text-neutral-500 leading-6">
           不想再收到此类邮件？
           <Link
             className="text-neutral-700 underline"

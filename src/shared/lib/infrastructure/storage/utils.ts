@@ -21,34 +21,23 @@ export const isUrl = (value: string): boolean => {
 };
 
 // 将 Base64 字符串转换为 Blob
-export const base64ToBlob = (
-  base64: string,
-  options?: Pick<ImageOptions, "contentType">,
-): Blob => {
+export const base64ToBlob = (base64: string, options?: Pick<ImageOptions, "contentType">): Blob => {
   const data = base64.replace(/^data:.+;base64,/, "");
   const buffer = Buffer.from(data, "base64");
-  return new Blob(
-    [buffer],
-    options?.contentType ? { type: options.contentType } : {},
-  );
+  return new Blob([buffer], options?.contentType ? { type: options.contentType } : {});
 };
 
 // 下载 URL 资源并转为 Blob
 export const urlToBlob = async (url: string): Promise<Blob> => {
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(
-      `下载远程资源失败：${response.status} ${response.statusText}`,
-    );
+    throw new Error(`下载远程资源失败：${response.status} ${response.statusText}`);
   }
   return response.blob();
 };
 
 // 从公开访问 URL 反解对象 key；不属于该 publicUrl 基址时返回 null
-export const parseKeyFromPublicUrl = (
-  url: string,
-  publicUrl: string,
-): string | null => {
+export const parseKeyFromPublicUrl = (url: string, publicUrl: string): string | null => {
   const base = publicUrl.replace(/\/$/, "");
   const prefix = `${base}/`;
   if (!url.startsWith(prefix)) {

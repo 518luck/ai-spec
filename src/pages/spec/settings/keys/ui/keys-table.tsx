@@ -3,7 +3,7 @@
 import dayjs from "dayjs";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type JSX } from "react";
+import type { JSX } from "react";
 
 import { scopesToName } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 import { Badge } from "@/shared/ui/badge";
@@ -69,11 +69,11 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
             {tokens.map((token) => (
               <TableRow key={token.id}>
                 <TableCell className="truncate pl-4 font-medium">{token.name}</TableCell>
-                <TableCell className="text-muted-foreground truncate">
+                <TableCell className="truncate text-muted-foreground">
                   {token.description?.trim() || "—"}
                 </TableCell>
                 <TableCell>
-                  <code className="text-muted-foreground block truncate font-mono text-xs">
+                  <code className="block truncate font-mono text-muted-foreground text-xs">
                     {token.partial_key}
                   </code>
                 </TableCell>
@@ -95,7 +95,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
       </div>
 
       {/* 分页栏：左侧「第 X-Y 条，共 Z 条」；右侧上一页/下一页按钮 */}
-      <div className="text-muted-foreground flex items-center justify-between border-t px-4 py-2 text-xs">
+      <div className="flex items-center justify-between border-t px-4 py-2 text-muted-foreground text-xs">
         <span>
           第 {start}-{end} 条，共 {total} 条
         </span>

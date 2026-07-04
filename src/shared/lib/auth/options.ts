@@ -1,6 +1,10 @@
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { NextAuthConfig } from "next-auth";
+import Credentials from "next-auth/providers/credentials";
+import GitHubProvider from "next-auth/providers/github";
+import GoogleProvider from "next-auth/providers/google";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
-import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
 import {
   CALLBACK_URL_COOKIE_NAME,
   CSRF_TOKEN_NAME,
@@ -10,15 +14,11 @@ import {
   hasReachedMaxInvalidLoginAttempts,
   recordInvalidLoginAttempt,
 } from "@/shared/lib/auth/lock-account";
+import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
 import { enqueueAvatarSync } from "@/shared/lib/infrastructure/queue";
 import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { validatePassword } from "@/shared/lib/utils";
 import { signInSchema } from "@/shared/lib/zod/schemas/auth";
-import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { NextAuthConfig } from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import GitHubProvider from "next-auth/providers/github";
-import GoogleProvider from "next-auth/providers/google";
 import { isProd } from "./constants";
 
 export const authOptions: NextAuthConfig = {

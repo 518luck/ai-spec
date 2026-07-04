@@ -14,11 +14,7 @@ export const hashToken = async (token: string): Promise<string> => {
   );
 
   // 用 pepper 对 token 做 HMAC 签名（带密钥的哈希）
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(token),
-  ); //sign() 产出的 32 字节裸二进制
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(token)); //sign() 产出的 32 字节裸二进制
 
   // 字节数组转 64 位十六进制字符串
   return Array.from(new Uint8Array(signature))

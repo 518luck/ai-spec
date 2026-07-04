@@ -7,10 +7,7 @@ export type LockAccountIdentifier =
   | { readonly id: User["id"]; readonly email?: never }
   | { readonly email: User["email"]; readonly id?: never };
 
-export type InvalidLoginAttemptResult = Pick<
-  User,
-  "invalidLoginAttempts" | "lockedAt"
->;
+export type InvalidLoginAttemptResult = Pick<User, "invalidLoginAttempts" | "lockedAt">;
 
 // 账号被锁定前允许的最大无效登录次数。
 export const MAX_INVALID_LOGIN_ATTEMPTS = 10;
@@ -19,10 +16,7 @@ export const MAX_INVALID_LOGIN_ATTEMPTS = 10;
 export const recordInvalidLoginAttempt = async (
   identifier: LockAccountIdentifier,
 ): Promise<InvalidLoginAttemptResult> => {
-  const where =
-    identifier.id !== undefined
-      ? { id: identifier.id }
-      : { email: identifier.email };
+  const where = identifier.id !== undefined ? { id: identifier.id } : { email: identifier.email };
 
   return prisma.$transaction(async (transaction) => {
     const user = await transaction.user.update({
@@ -39,8 +33,7 @@ export const recordInvalidLoginAttempt = async (
     });
 
     // 如果未达到最大无效登录次数或账号已被锁定，则返回用户信息而不进行锁定。
-    const shouldLockAccount =
-      hasReachedMaxInvalidLoginAttempts(user) && user.lockedAt === null;
+    const shouldLockAccount = hasReachedMaxInvalidLoginAttempts(user) && user.lockedAt === null;
 
     if (!shouldLockAccount) {
       return user;

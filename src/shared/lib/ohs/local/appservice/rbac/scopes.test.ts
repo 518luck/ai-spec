@@ -1,12 +1,12 @@
 import { describe, expect, test } from "vitest";
 
 import {
-  SCOPES,
   consolidateScopes,
   getPermissionsForScope,
   getScopesForResource,
   getScopesForRole,
   mapScopesToPermissions,
+  SCOPES,
   scopePresets,
   scopesToName,
   validateScopesForRole,
@@ -94,15 +94,8 @@ describe("getScopesForRole", () => {
 // scopes 数组 → 实际权限集合（鉴权热路径）
 describe("mapScopesToPermissions", () => {
   test("多个 scope 合并展开，去重后保留全部", () => {
-    const result = mapScopesToPermissions([
-      "promptRecord.write",
-      "skills.read",
-    ]);
-    expect(result).toEqual([
-      "promptRecord.write",
-      "promptRecord.read",
-      "skills.read",
-    ]);
+    const result = mapScopesToPermissions(["promptRecord.write", "skills.read"]);
+    expect(result).toEqual(["promptRecord.write", "promptRecord.read", "skills.read"]);
   });
 
   test("apis.read 展开为全部 7 个只读权限", () => {
@@ -133,22 +126,17 @@ describe("scopesToName", () => {
   });
 
   test("仅资源级 scope → 限制", () => {
-    expect(scopesToName(["promptRecord.read", "skills.read"]).name).toBe(
-      "限制",
-    );
+    expect(scopesToName(["promptRecord.read", "skills.read"]).name).toBe("限制");
   });
 });
 
 // 合并去重：同资源同时有 read 和 write 时只保留 write
 describe("consolidateScopes", () => {
   test("read 被 write 吞掉", () => {
-    expect(
-      consolidateScopes([
-        "promptRecord.read",
-        "promptRecord.write",
-        "skills.read",
-      ]),
-    ).toEqual(["promptRecord.write", "skills.read"]);
+    expect(consolidateScopes(["promptRecord.read", "promptRecord.write", "skills.read"])).toEqual([
+      "promptRecord.write",
+      "skills.read",
+    ]);
   });
 
   test("无冲突时原样返回", () => {

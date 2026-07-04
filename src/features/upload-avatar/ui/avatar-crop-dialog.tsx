@@ -35,12 +35,9 @@ export function AvatarCropDialog({
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
 
   // 裁剪完成回调：记录像素区域，确认时用于 canvas 重绘
-  const onCropComplete = useCallback(
-    (_croppedArea: Area, croppedAreaPixels: Area) => {
-      setCroppedAreaPixels(croppedAreaPixels);
-    },
-    [],
-  );
+  const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPixels: Area) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
 
   // 确认：裁剪输出 dataUrl 后交给父组件提交
   const handleConfirm = async (): Promise<void> => {
@@ -56,14 +53,12 @@ export function AvatarCropDialog({
       <DialogContent showCloseButton={false} className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>裁剪头像</DialogTitle>
-          <DialogDescription>
-            拖动调整位置，滑动缩放，完成后点击保存。
-          </DialogDescription>
+          <DialogDescription>拖动调整位置，滑动缩放，完成后点击保存。</DialogDescription>
         </DialogHeader>
 
-        <div className="bg-muted flex flex-col gap-4 px-6 py-4">
+        <div className="flex flex-col gap-4 bg-muted px-6 py-4">
           {/* 裁剪区域：固定高度，圆形遮罩由 Cropper object-fit + aspect=1 实现 */}
-          <div className="bg-muted relative aspect-square w-full overflow-hidden rounded-lg">
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-muted">
             <Cropper
               image={imageSrc}
               crop={crop}

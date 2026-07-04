@@ -1,7 +1,7 @@
-import { CircleCheckFill } from "@/shared/assets/icons";
-import { cn } from "@/shared/lib/utils";
 import { memo } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
+import { CircleCheckFill } from "@/shared/assets/icons";
+import { cn } from "@/shared/lib/utils";
 
 const REQUIREMENTS: {
   name: string;
@@ -43,12 +43,7 @@ export const PasswordRequirements = memo(function PasswordRequirements({
   const password = useWatch({ name: field });
 
   return (
-    <ul
-      className={cn(
-        "mt-2 flex flex-wrap items-center justify-between gap-3",
-        className,
-      )}
-    >
+    <ul className={cn("mt-2 flex flex-wrap items-center justify-between gap-3", className)}>
       {REQUIREMENTS.map(({ name, check }) => {
         const checked = password?.length && check(password);
 
@@ -56,7 +51,7 @@ export const PasswordRequirements = memo(function PasswordRequirements({
           <li
             key={name}
             className={cn(
-              "flex items-center gap-1 text-xs text-neutral-400 transition-colors",
+              "flex items-center gap-1 text-neutral-400 text-xs transition-colors",
               checked ? "text-green-600" : errors[field] && "text-red-600",
             )}
           >
@@ -64,7 +59,7 @@ export const PasswordRequirements = memo(function PasswordRequirements({
               className={cn(
                 "size-2.5 transition-opacity",
                 checked
-                  ? "animate-scale-in direction-[alternate] animation-duration-[150ms] repeat-2 [--from-scale:1] [--to-scale:1.2] [animation-timing-function:ease-in-out]"
+                  ? "direction-[alternate] animation-duration-[150ms] repeat-2 animate-scale-in [--from-scale:1] [--to-scale:1.2] [animation-timing-function:ease-in-out]"
                   : errors[field]
                     ? "text-red-600"
                     : "text-neutral-200",

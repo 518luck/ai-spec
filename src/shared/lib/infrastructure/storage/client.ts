@@ -1,23 +1,8 @@
-import {
-  DeleteObjectCommand,
-  PutObjectCommand,
-  S3Client,
-} from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 import { S3_CONFIG } from "./constants";
-import type {
-  BucketVisibility,
-  DeleteParams,
-  ImageOptions,
-  UploadParams,
-} from "./types";
-import {
-  base64ToBlob,
-  isBase64,
-  isUrl,
-  parseKeyFromPublicUrl,
-  urlToBlob,
-} from "./utils";
+import type { BucketVisibility, DeleteParams, ImageOptions, UploadParams } from "./types";
+import { base64ToBlob, isBase64, isUrl, parseKeyFromPublicUrl, urlToBlob } from "./utils";
 
 let s3StorageClient: S3StorageClient | undefined;
 
@@ -47,29 +32,21 @@ export class S3StorageClient {
   }
 
   // 上传文件到 S3 存储桶并返回公开访问 URL
-  async upload({
-    key,
-    body,
-    options,
-    visibility = "public",
-  }: UploadParams): Promise<string> {
+  async upload({ key, body, options, visibility = "public" }: UploadParams): Promise<string> {
     const targetBucket = this._resolveBucket(visibility);
     const resolvedBody = await this._resolveBody(body, options);
 
     // AWS SDK 对 Buffer 支持最稳定；Node + undici 的 Blob 内部 stream 已流动，
     // 直接传给 SDK 会导致 checksum 计算失败（"Unable to calculate hash for flowing readable stream"）
     const uploadBody =
-      resolvedBody instanceof Blob
-        ? Buffer.from(await resolvedBody.arrayBuffer())
-        : resolvedBody;
+      resolvedBody instanceof Blob ? Buffer.from(await resolvedBody.arrayBuffer()) : resolvedBody;
 
     const command = new PutObjectCommand({
       Bucket: targetBucket,
       Key: key,
       Body: uploadBody,
       ContentType:
-        options?.contentType ??
-        (resolvedBody instanceof Blob ? resolvedBody.type : undefined),
+        options?.contentType ?? (resolvedBody instanceof Blob ? resolvedBody.type : undefined),
     });
 
     await this.s3Client.send(command);

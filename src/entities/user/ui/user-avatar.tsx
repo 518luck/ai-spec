@@ -17,11 +17,7 @@ type UserAvatarProps = {
 };
 
 // 渲染用户头像：优先自定义头像，其次 Gravatar，均无则显示占位图标
-export function UserAvatar({
-  user,
-  size,
-  className,
-}: UserAvatarProps): JSX.Element {
+export function UserAvatar({ user, size, className }: UserAvatarProps): JSX.Element {
   // 用户身份变化时重新计算头像地址
   const src = useMemo(() => getUserAvatarUrl(user), [user]);
 
@@ -30,7 +26,7 @@ export function UserAvatar({
       {/* 始终渲染，src 为空时 base-ui 自动置为 error 由 Fallback 兜底，避免条件挂载导致的状态问题 */}
       <AvatarImage src={src} alt="用户头像" />
       <AvatarFallback>
-        <Icons.avatarPlaceholder className="text-muted-foreground size-full p-1.5" />
+        <Icons.avatarPlaceholder className="size-full p-1.5 text-muted-foreground" />
       </AvatarFallback>
     </Avatar>
   );

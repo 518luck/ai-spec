@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  type PropsWithChildren,
-  useContext,
-  useState,
-} from "react";
+import { createContext, type PropsWithChildren, useContext, useState } from "react";
 
 type RegisterContextType = {
   email: string;
@@ -18,9 +13,10 @@ type RegisterContextType = {
 
 const RegisterContext = createContext<RegisterContextType | null>(null);
 
-export const RegisterProvider: React.FC<
-  PropsWithChildren<{ email?: string }>
-> = ({ email: emailProp, children }) => {
+export const RegisterProvider: React.FC<PropsWithChildren<{ email?: string }>> = ({
+  email: emailProp,
+  children,
+}) => {
   const [email, setEmail] = useState<string>(emailProp ?? "");
   const [password, setPassword] = useState<string>("");
   const [step, setStep] = useState<"signup" | "verify">("signup");
@@ -45,9 +41,7 @@ export const useRegisterContext = () => {
   const context = useContext(RegisterContext);
 
   if (context === null) {
-    throw new Error(
-      "useRegisterContext 必须在 RegisterProvider 组件内部使用。",
-    );
+    throw new Error("useRegisterContext 必须在 RegisterProvider 组件内部使用。");
   }
 
   return context;

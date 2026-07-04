@@ -1,5 +1,7 @@
 "use server";
 
+import { flattenValidationErrors } from "next-safe-action";
+import * as z from "zod";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
@@ -11,8 +13,6 @@ import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
 import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 import { getIP } from "@/shared/lib/ohs/remote/adapter/get-ip";
 import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
-import { flattenValidationErrors } from "next-safe-action";
-import * as z from "zod";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
 const schema = z.object({

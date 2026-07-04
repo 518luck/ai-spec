@@ -1,13 +1,13 @@
 "use server";
 
-import prisma from "@/shared/db";
-import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
-import { getIP } from "@/shared/lib/ohs/remote/adapter/get-ip";
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
-import { emailSchema } from "@/shared/lib/zod/schemas/auth";
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod/v4";
+import prisma from "@/shared/db";
+import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
+import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
+import { getIP } from "@/shared/lib/ohs/remote/adapter/get-ip";
+import { emailSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
 const schema = z.object({
@@ -18,8 +18,7 @@ const schema = z.object({
 export const checkLoginEmailAction = actionClient
   .inputSchema(schema, {
     // 把邮箱格式错误转换成前端可展示的字段级错误。
-    handleValidationErrorsShape: async (ve) =>
-      flattenValidationErrors(ve).fieldErrors,
+    handleValidationErrorsShape: async (ve) => flattenValidationErrors(ve).fieldErrors,
   })
   .use(throwIfAuthenticated)
   .action(async ({ parsedInput }) => {

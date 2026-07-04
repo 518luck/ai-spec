@@ -1,18 +1,16 @@
 "use client";
 
-import { THEMES } from "@/shared/configs/theme.config";
-import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 import { useRegisterActions } from "kbar";
 import { useTheme } from "next-themes";
+import { THEMES } from "@/shared/configs/theme.config";
+import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 
 function useKBarActions() {
   const { resolvedTheme, setTheme } = useTheme();
   const { activeTheme, setActiveTheme } = useActiveTheme();
 
   const cycleTheme = () => {
-    const currentIndex = THEMES.findIndex(
-      (theme) => theme.value === activeTheme,
-    );
+    const currentIndex = THEMES.findIndex((theme) => theme.value === activeTheme);
     const nextIndex = (currentIndex + 1) % THEMES.length;
     setActiveTheme(THEMES[nextIndex].value);
   };

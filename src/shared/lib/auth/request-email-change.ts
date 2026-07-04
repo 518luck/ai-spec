@@ -1,8 +1,8 @@
 import "server-only";
 
 import prisma from "@/shared/db";
-import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
 import { hashToken } from "@/shared/lib/auth/hash-token";
+import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
 import { enqueueEmailChange } from "@/shared/lib/infrastructure/queue";
 import { kvSet } from "@/shared/lib/infrastructure/redis/kv";
 import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
@@ -44,11 +44,7 @@ export async function requestEmailChange({
   });
 
   // Redis 存新旧邮箱与用户标识，供验证端核对；TTL 与数据库过期一致
-  await kvSet(
-    `email-change:${hashed}`,
-    { oldEmail, newEmail, userId },
-    EMAIL_CHANGE_TTL_SECONDS,
-  );
+  await kvSet(`email-change:${hashed}`, { oldEmail, newEmail, userId }, EMAIL_CHANGE_TTL_SECONDS);
 
   // 入队异步发送确认邮件
   await enqueueEmailChange({ to: newEmail, token, oldEmail, newEmail });

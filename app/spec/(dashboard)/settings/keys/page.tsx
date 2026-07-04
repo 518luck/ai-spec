@@ -7,11 +7,7 @@ const parsePage = (raw: string | undefined): number => {
 };
 
 // 接入 Key 管理页面路由；页码来自 searchParams，透传给服务端组件按页查询
-export default async function Page({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
+export default async function Page({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   const { page: pageParam } = await searchParams;
   return <KeysPage page={parsePage(pageParam)} />;
 }

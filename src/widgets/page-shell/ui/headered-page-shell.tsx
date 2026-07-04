@@ -25,7 +25,7 @@ export function HeaderedPageShell({
           className="flex h-16 shrink-0 items-center border-b px-6"
         >
           {typeof title === "string" ? (
-            <h1 className="text-lg leading-tight font-semibold">{title}</h1>
+            <h1 className="font-semibold text-lg leading-tight">{title}</h1>
           ) : (
             title
           )}

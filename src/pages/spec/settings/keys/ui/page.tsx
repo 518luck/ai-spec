@@ -5,17 +5,12 @@ import { auth } from "@/shared/lib/auth/auth";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { HeaderedPageShell } from "@/widgets/page-shell";
-
-import { CreateKeyButton } from "./create-key-button";
 import { PAGE_SIZE } from "../config/constants";
+import { CreateKeyButton } from "./create-key-button";
 import { KeysTable } from "./keys-table";
 
 // 渲染 API 密钥总览页面，按页查询当前登录用户的令牌（服务端分页）
-export async function KeysPage({
-  page,
-}: {
-  page: number;
-}): Promise<JSX.Element> {
+export async function KeysPage({ page }: { page: number }): Promise<JSX.Element> {
   const session = await auth();
   const userId = session?.user.id;
 
@@ -65,7 +60,7 @@ function KeysPageHeader(): JSX.Element {
   return (
     <div className="flex w-full items-center justify-between">
       <div className="flex items-center gap-1.5">
-        <h1 className="text-lg font-semibold">API 密钥</h1>
+        <h1 className="font-semibold text-lg">API 密钥</h1>
         <HelpTooltip content="生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。" />
       </div>
       <CreateKeyButton />
@@ -80,7 +75,7 @@ type EmptyStateProps = {
 // 列表为空或未登录时的占位提示
 function EmptyState({ description }: EmptyStateProps): JSX.Element {
   return (
-    <div className="text-muted-foreground flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center">
+    <div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
       <Icons.key className="size-8 opacity-40" />
       <p className="text-sm">{description}</p>
     </div>

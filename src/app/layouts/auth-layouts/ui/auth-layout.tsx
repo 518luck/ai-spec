@@ -1,6 +1,6 @@
+import { Manrope } from "next/font/google";
 import { appConfig } from "@/shared/configs/app.config";
 import { SidePanel } from "@/widgets/auth-side-panel";
-import { Manrope } from "next/font/google";
 import { TITLE_NAME_COLOR } from "../config/title-name-color";
 import { InteractiveGridPattern } from "./Interactive-grid-pattern";
 import { ParticleNameBackground } from "./particle-name-background";
@@ -10,13 +10,9 @@ const source_Serif_4 = Manrope({
   display: "swap",
 });
 
-export default function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative grid min-h-screen grid-cols-1 min-[900px]:grid-cols-[minmax(0,1fr)_440px] lg:grid-cols-[minmax(0,1fr)_595px]">
+    <div className="relative grid min-h-screen grid-cols-1 lg:grid-cols-[minmax(0,1fr)_595px] min-[900px]:grid-cols-[minmax(0,1fr)_440px]">
       <div className="relative min-w-0 overflow-hidden">
         <InteractiveGridPattern
           glowColor="rgba(122, 148, 178, 0.30)"

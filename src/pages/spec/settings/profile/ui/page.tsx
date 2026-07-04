@@ -18,10 +18,7 @@ export async function ProfilePage(): Promise<JSX.Element> {
   return (
     <HeaderedPageShell title="个人详情">
       <div className="flex flex-col gap-4">
-        <NameFieldCard
-          defaultValue={name}
-          aside={<AvatarUploader className="size-24" />}
-        />
+        <NameFieldCard defaultValue={name} aside={<AvatarUploader className="size-24" />} />
         <EmailFieldCard defaultValue={email} />
       </div>
     </HeaderedPageShell>

@@ -1,8 +1,8 @@
 "use client";
 
 import { EllipsisIcon, PencilIcon, Trash2Icon } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
 import type { JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -24,11 +24,7 @@ type TokenActionsProps = {
 };
 
 // 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
-export function TokenActions({
-  id,
-  name,
-  partialKey,
-}: TokenActionsProps): JSX.Element {
+export function TokenActions({ id, name, partialKey }: TokenActionsProps): JSX.Element {
   const router = useRouter();
   // 确认弹窗的开关状态；点「删除」菜单项时打开
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -64,7 +60,7 @@ export function TokenActions({
           render={
             <button
               type="button"
-              className="text-muted-foreground hover:text-foreground inline-flex size-7 items-center justify-center rounded-md transition-colors"
+              className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-foreground"
               aria-label="更多操作"
             />
           }
@@ -95,11 +91,9 @@ export function TokenActions({
       >
         {/* 待删密钥信息卡片：左侧图标+名称（固定宽度，超出省略号），右侧脱敏密钥 */}
         <div className="flex items-center gap-3 rounded-md border p-3">
-          <Icons.key className="text-muted-foreground size-4 shrink-0" />
-          <span className="w-32 shrink-0 truncate text-sm font-medium">
-            {name}
-          </span>
-          <code className="text-muted-foreground min-w-0 flex-1 truncate text-right font-mono text-xs">
+          <Icons.key className="size-4 shrink-0 text-muted-foreground" />
+          <span className="w-32 shrink-0 truncate font-medium text-sm">{name}</span>
+          <code className="min-w-0 flex-1 truncate text-right font-mono text-muted-foreground text-xs">
             {partialKey}
           </code>
         </div>

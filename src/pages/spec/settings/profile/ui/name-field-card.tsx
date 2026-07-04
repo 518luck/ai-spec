@@ -1,7 +1,7 @@
 "use client";
 
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import type { JSX, ReactNode } from "react";
 
 import { updateUser } from "@/entities/user";
@@ -15,10 +15,7 @@ type NameFieldCardProps = {
 };
 
 // 名称字段卡片：复用通用 EditableFieldCard，注入调用 /api/user 的保存逻辑
-export function NameFieldCard({
-  defaultValue,
-  aside,
-}: NameFieldCardProps): JSX.Element {
+export function NameFieldCard({ defaultValue, aside }: NameFieldCardProps): JSX.Element {
   const { update } = useSession();
   const router = useRouter();
 

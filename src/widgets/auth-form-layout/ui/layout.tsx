@@ -1,5 +1,5 @@
+import type { PropsWithChildren } from "react";
 import { appConfig } from "@/shared/configs/app.config";
-import { PropsWithChildren } from "react";
 
 export default function AuthFormLayout({
   children,
@@ -11,18 +11,17 @@ export default function AuthFormLayout({
         <div className="h-24" />
       </div>
 
-      <div className="flex w-full flex-1 items-center justify-center">
-        {children}
-      </div>
+      <div className="flex w-full flex-1 items-center justify-center">{children}</div>
 
       <div className="flex grow basis-0 flex-col justify-end">
         {showTerms && (
-          <p className="leading-5 px-20 py-8 text-center text-xs font-medium text-neutral-500 md:px-0">
+          <p className="px-20 py-8 text-center font-medium text-neutral-500 text-xs leading-5 md:px-0">
             继续操作即表示您同意 {appConfig.appName} 的
             <a
               href={`https://dub.co/legal/${showTerms === "app" ? "terms" : "partners"}`}
               target="_blank"
               className="font-semibold text-neutral-600 hover:text-neutral-800"
+              rel="noopener"
             >
               {showTerms === "app" ? "服务条款" : "合作伙伴条款"}
             </a>
@@ -31,6 +30,7 @@ export default function AuthFormLayout({
               href="https://dub.co/legal/privacy"
               target="_blank"
               className="font-semibold text-neutral-600 hover:text-neutral-800"
+              rel="noopener"
             >
               隐私政策
             </a>

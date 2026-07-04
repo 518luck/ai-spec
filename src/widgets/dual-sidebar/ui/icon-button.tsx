@@ -27,7 +27,7 @@ export function IconButton({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+      className="flex size-7 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     >
       {children}
     </button>

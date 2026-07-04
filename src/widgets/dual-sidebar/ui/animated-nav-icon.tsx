@@ -42,7 +42,5 @@ export function AnimatedNavIcon({
     );
   }
 
-  return (
-    <span className="inline-flex items-center justify-center">{children}</span>
-  );
+  return <span className="inline-flex items-center justify-center">{children}</span>;
 }

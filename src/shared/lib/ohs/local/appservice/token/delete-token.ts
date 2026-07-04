@@ -11,8 +11,7 @@ import { deleteTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 export const deleteTokenAction = authUserActionClient
   .inputSchema(deleteTokenDtoSchema, {
     // 把 Zod 校验错误整理成前端更容易消费的字段级错误结构
-    handleValidationErrorsShape: async (ve) =>
-      flattenValidationErrors(ve).fieldErrors,
+    handleValidationErrorsShape: async (ve) => flattenValidationErrors(ve).fieldErrors,
   })
   .action(async ({ parsedInput, ctx }) => {
     const { id } = parsedInput;

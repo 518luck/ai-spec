@@ -1,7 +1,7 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { useSyncExternalStore } from "react";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,

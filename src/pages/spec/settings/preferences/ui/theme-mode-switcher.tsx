@@ -29,8 +29,7 @@ export function ThemeModeSwitcher(): JSX.Element {
   const { setActiveTheme } = useActiveTheme();
   const mounted = useMounted();
 
-  const currentMode: ThemeMode =
-    mounted ? (theme === "system" ? "system" : "custom") : "system";
+  const currentMode: ThemeMode = mounted ? (theme === "system" ? "system" : "custom") : "system";
 
   const handleModeChange = (value: string | null) => {
     if (!value) return;

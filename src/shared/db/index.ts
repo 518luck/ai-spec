@@ -1,5 +1,5 @@
-import { PrismaClient } from "@/shared/db/generator/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@/shared/db/generator/client";
 
 // 将 global 强制转换为包含 prisma 属性的对象类型，用于在全局范围缓存 Prisma 实例
 const globalForPrisma = global as unknown as {

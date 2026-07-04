@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/shared/lib/utils";
 import { useEffect, useRef } from "react";
+import { cn } from "@/shared/lib/utils";
 
 type Particle = {
   x: number;
@@ -173,10 +173,7 @@ export function ParticleNameBackground({
       ctx.globalCompositeOperation = "lighter";
 
       for (const particle of particles) {
-        const revealProgress = Math.min(
-          1,
-          Math.max(0, (introProgress - particle.revealAt) / 0.2),
-        );
+        const revealProgress = Math.min(1, Math.max(0, (introProgress - particle.revealAt) / 0.2));
         if (revealProgress <= 0) continue;
 
         const toTargetX = particle.tx - particle.x;
@@ -251,7 +248,6 @@ export function ParticleNameBackground({
   }, [
     fontFamily,
     fontWeight,
-    glowColor,
     baseHue,
     hueRange,
     interactionRadius,
@@ -262,19 +258,10 @@ export function ParticleNameBackground({
   ]);
 
   return (
-    <div
-      ref={containerRef}
-      className={cn("relative overflow-hidden rounded-[28px]", className)}
-    >
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 h-full w-full"
-        aria-hidden="true"
-      />
+    <div ref={containerRef} className={cn("relative overflow-hidden rounded-[28px]", className)}>
+      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
 
-      {children ? (
-        <div className="relative z-10 h-full w-full">{children}</div>
-      ) : null}
+      {children ? <div className="relative z-10 h-full w-full">{children}</div> : null}
     </div>
   );
 }

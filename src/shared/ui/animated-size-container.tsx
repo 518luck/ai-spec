@@ -2,9 +2,9 @@ import { motion } from "motion/react";
 import {
   type ComponentPropsWithoutRef, // 提取某个组件/元素的 props 类型，但不包含 ref；这里用来继承 motion.div 的属性类型。
   type ForwardRefExoticComponent, // React.forwardRef 返回的组件类型；这里用来给 AnimatedSizeContainer 标注完整组件类型。
+  forwardRef, // 创建可以接收外部 ref 的组件，并把 ref 转发到内部 DOM/motion 元素上。
   type PropsWithChildren, // 给 props 类型自动加上 children 属性。
   type RefAttributes, // 给组件类型补充 ref 属性类型；这里表示外部 ref 指向 HTMLDivElement。
-  forwardRef, // 创建可以接收外部 ref 的组件，并把 ref 转发到内部 DOM/motion 元素上。
   useRef, // 创建跨渲染保持不变的引用；这里用于保存 DOM 节点和是否已完成首次测量。
 } from "react";
 import { useResizeObserver } from "../hooks/use-resize-observer";
@@ -96,10 +96,7 @@ const AnimatedSizeContainer: ForwardRefExoticComponent<
         // 透传其它 motion.div 支持的属性，比如 initial、style、onClick。
         {...rest}
       >
-        <div
-          ref={containerRef}
-          className={cn(height && "h-max", width && "w-max")}
-        >
+        <div ref={containerRef} className={cn(height && "h-max", width && "w-max")}>
           {children}
         </div>
       </motion.div>

@@ -1,13 +1,6 @@
 "use client";
 
 import {
-  AUTH_PROVIDER_EMAIL,
-  AUTH_PROVIDER_GITHUB,
-  AUTH_PROVIDER_GOOGLE,
-  type AuthProvider,
-} from "@/shared/lib/auth/constants";
-import { useLocalStorage } from "@/shared/hooks/use-local-storage";
-import {
   createContext,
   type JSX,
   type PropsWithChildren,
@@ -15,6 +8,13 @@ import {
   useRef,
   useState,
 } from "react";
+import { useLocalStorage } from "@/shared/hooks/use-local-storage";
+import {
+  AUTH_PROVIDER_EMAIL,
+  AUTH_PROVIDER_GITHUB,
+  AUTH_PROVIDER_GOOGLE,
+  type AuthProvider,
+} from "@/shared/lib/auth/constants";
 
 // 登录方式重新导出，保持当前 slice 内引用简洁
 export const google = AUTH_PROVIDER_GOOGLE;
@@ -49,8 +49,10 @@ export function LoginProvider({ children }: PropsWithChildren): JSX.Element {
   const [emailValue, setEmailValue] = useState("");
   const [passwordValue, setPasswordValue] = useState("");
   const [showPasswordField, setShowPasswordField] = useState(false);
-  const [storedPreferredMethod, setStoredPreferredMethod] =
-    useLocalStorage<LoginMethod | null>(loginPreferredMethodStorageKey, null);
+  const [storedPreferredMethod, setStoredPreferredMethod] = useLocalStorage<LoginMethod | null>(
+    loginPreferredMethodStorageKey,
+    null,
+  );
   const [preferredMethod] = useState<LoginMethod | null>(() =>
     isLoginMethod(storedPreferredMethod) ? storedPreferredMethod : null,
   );

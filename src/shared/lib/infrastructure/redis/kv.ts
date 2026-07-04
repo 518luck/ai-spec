@@ -4,11 +4,7 @@ import { getAppRedis } from "./clients";
 const redis = getAppRedis();
 
 // 写入一条带过期时间的 JSON 数据（业务 KV，如邮箱变更上下文）
-export const kvSet = async (
-  key: string,
-  value: unknown,
-  ttlSeconds: number,
-): Promise<void> => {
+export const kvSet = async (key: string, value: unknown, ttlSeconds: number): Promise<void> => {
   await redis.set(key, JSON.stringify(value), "EX", ttlSeconds);
 };
 

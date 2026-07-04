@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  createContext,
-  type JSX,
-  type PropsWithChildren,
-  useContext,
-  useState,
-} from "react";
+import { createContext, type JSX, type PropsWithChildren, useContext, useState } from "react";
 
 import { SIDEBAR_DEFAULT_WIDTH } from "./sidebar-config";
 import { saveSidebarCollapsed, saveSidebarWidth } from "./sidebar-persistence";
@@ -89,9 +83,7 @@ export const useDualSidebarContext = (): DualSidebarContextType => {
   const context = useContext(DualSidebarContext);
 
   if (context === null) {
-    throw new Error(
-      "useDualSidebarContext 必须在 DualSidebarProvider 组件内部使用。",
-    );
+    throw new Error("useDualSidebarContext 必须在 DualSidebarProvider 组件内部使用。");
   }
 
   return context;

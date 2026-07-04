@@ -6,10 +6,7 @@ import prisma from "@/shared/db";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { nanoid } from "@/shared/lib/nanoid";
 import { authUserActionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import {
-  createTokenDtoSchema,
-  createTokenVoSchema,
-} from "@/shared/lib/zod/schemas/token";
+import { createTokenDtoSchema, createTokenVoSchema } from "@/shared/lib/zod/schemas/token";
 
 // API Key 固定前缀，便于在列表中识别本平台签发的密钥
 const API_KEY_PREFIX = "aispec_";
@@ -22,8 +19,7 @@ const PARTIAL_KEY_TAIL_LENGTH = 4;
 export const createTokenAction = authUserActionClient
   .inputSchema(createTokenDtoSchema, {
     // 把 Zod 校验错误整理成前端更容易消费的字段级错误结构
-    handleValidationErrorsShape: async (ve) =>
-      flattenValidationErrors(ve).fieldErrors,
+    handleValidationErrorsShape: async (ve) => flattenValidationErrors(ve).fieldErrors,
   })
   .outputSchema(createTokenVoSchema)
   .action(async ({ parsedInput, ctx }) => {
@@ -34,10 +30,7 @@ export const createTokenAction = authUserActionClient
     const rawKey = API_KEY_PREFIX + nanoid(API_KEY_LENGTH);
 
     // 哈希与脱敏片段互不依赖，并行计算
-    const [hashedKey, partialKey] = await Promise.all([
-      hashToken(rawKey),
-      maskApiKey(rawKey),
-    ]);
+    const [hashedKey, partialKey] = await Promise.all([hashToken(rawKey), maskApiKey(rawKey)]);
 
     // 落库只存哈希与脱敏片段；scopes 数组按空格拼接，空数组存为 null；空描述存为 null
     const created = await prisma.token.create({

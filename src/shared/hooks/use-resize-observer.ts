@@ -1,4 +1,4 @@
-import { RefObject, useEffect, useState } from "react";
+import { type RefObject, useEffect, useState } from "react";
 
 /**
  * Use a ResizeObserver to react to changes in an element's size
@@ -34,7 +34,7 @@ export function useResizeObserver(
 
     // 组件卸载或依赖变化时断开观察，避免继续监听已经不用的 DOM 节点。
     return () => observer.disconnect();
-  }, [elementRef]);
+  }, [elementRef, updateEntry]);
 
   // 把最新一次观察到的尺寸信息返回给调用方。
   return entry;

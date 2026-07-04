@@ -45,7 +45,7 @@ export function UserAvatarPopover(): JSX.Element {
         <button
           type="button"
           onClick={() => signOut({ redirectTo: "/spec/login" })}
-          className="text-muted-foreground hover:text-foreground flex w-full items-center gap-2 rounded-md text-sm transition-colors"
+          className="flex w-full items-center gap-2 rounded-md text-muted-foreground text-sm transition-colors hover:text-foreground"
         >
           <Icons.logout className="size-4" />
           <span>退出登录</span>

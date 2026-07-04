@@ -21,9 +21,7 @@ function getDimensions() {
 
 //用来获取“当前设备类型和窗口尺寸”，并且在窗口大小变化时自动更新。
 export function useMediaQuery() {
-  const [device, setDevice] = useState<"mobile" | "tablet" | "desktop" | null>(
-    getDevice(),
-  );
+  const [device, setDevice] = useState<"mobile" | "tablet" | "desktop" | null>(getDevice());
   const [dimensions, setDimensions] = useState<{
     width: number;
     height: number;

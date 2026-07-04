@@ -56,9 +56,7 @@ export function EditableFieldCard({
       }
       toast.success(successMessage);
     } catch (error) {
-      toast.error(
-        error instanceof Error && error.message ? error.message : "保存失败",
-      );
+      toast.error(error instanceof Error && error.message ? error.message : "保存失败");
     } finally {
       setIsSaving(false);
     }
@@ -88,11 +86,9 @@ export function EditableFieldCard({
             onKeyDown={handleKeyDown}
           />
         </div>
-        {aside ? (
-          <div className="flex shrink-0 items-center self-stretch">{aside}</div>
-        ) : null}
+        {aside ? <div className="flex shrink-0 items-center self-stretch">{aside}</div> : null}
       </div>
-      <div className="border-border bg-muted text-muted-foreground flex items-center justify-between gap-2 border-t px-(--card-spacing) py-2 text-xs">
+      <div className="flex items-center justify-between gap-2 border-border border-t bg-muted px-(--card-spacing) py-2 text-muted-foreground text-xs">
         <span className="line-clamp-1">{description}</span>
         {onSave ? (
           <Button

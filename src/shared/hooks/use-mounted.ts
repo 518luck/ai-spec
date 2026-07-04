@@ -5,4 +5,8 @@ const emptySubscribe = () => () => {};
 
 // 判断组件是否已在客户端挂载，SSR 时始终返回 false
 export const useMounted = (): boolean =>
-  useSyncExternalStore(emptySubscribe, () => true, () => false);
+  useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );

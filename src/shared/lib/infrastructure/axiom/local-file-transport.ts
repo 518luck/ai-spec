@@ -1,8 +1,6 @@
 import { appendFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-
-import type { LogLevel, LogEvent } from "@axiomhq/logging";
-import type { Transport } from "@axiomhq/logging";
+import type { LogEvent, LogLevel, Transport } from "@axiomhq/logging";
 
 // 本地日志文件路径（项目根 logs/server.log）
 const LOG_FILE = resolve(process.cwd(), "logs/server.log");
@@ -20,8 +18,7 @@ const ensureLogDir = async (): Promise<void> => {
 };
 
 // 把 ISO 时间格式化为「YYYY-MM-DD HH:mm:ss.SSS」便于翻阅定位
-const formatTime = (iso: string): string =>
-  `${iso.slice(0, 10)} ${iso.slice(11, 23)}`;
+const formatTime = (iso: string): string => `${iso.slice(0, 10)} ${iso.slice(11, 23)}`;
 
 // 把单条 LogEvent 渲染成单行可读文本，格式：
 // 时间 LEVEL [module] message {fields(json)}
@@ -32,8 +29,7 @@ const renderLine = (ev: LogEvent): string => {
   const moduleName = (ev.fields as Record<string, unknown>)?.module ?? "-";
   const fields = { ...ev.fields };
   delete fields.module;
-  const fieldsStr =
-    Object.keys(fields).length > 0 ? ` ${JSON.stringify(fields)}` : "";
+  const fieldsStr = Object.keys(fields).length > 0 ? ` ${JSON.stringify(fields)}` : "";
   return `${time} ${level} [${moduleName}] ${ev.message}${fieldsStr}\n`;
 };
 

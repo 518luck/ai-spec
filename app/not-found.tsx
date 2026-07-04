@@ -1,9 +1,9 @@
 "use client";
 
-import { Button } from "@/shared/ui/button";
 import { Home, RefreshCcw } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef } from "react";
+import { Button } from "@/shared/ui/button";
 
 // RGB 色道分离的故障配色，screen 混合模式下叠加成主体
 const CHANNEL_RED = "#ff004c";
@@ -15,7 +15,7 @@ type FaultLayerProps = { label: string };
 function FaultLayer({ label }: FaultLayerProps) {
   return (
     <span
-      className="fault-layer text-foreground font-mono text-[18vw] leading-none font-bold tracking-wider select-none"
+      className="fault-layer select-none font-bold font-mono text-[18vw] text-foreground leading-none tracking-wider"
       data-label={label}
     >
       {label}
@@ -31,9 +31,7 @@ function useFaultEffect(containerRef: React.RefObject<HTMLDivElement | null>) {
     const container = containerRef.current;
     if (!container) return;
 
-    const layers = Array.from(
-      container.querySelectorAll<HTMLElement>(".fault-layer"),
-    );
+    const layers = Array.from(container.querySelectorAll<HTMLElement>(".fault-layer"));
     let timer: ReturnType<typeof setInterval> | undefined;
     let stopTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -86,7 +84,7 @@ function NotFoundPage() {
   const trigger = useFaultEffect(containerRef);
 
   return (
-    <main className="bg-background relative flex min-h-svh w-full flex-col items-center justify-center overflow-hidden">
+    <main className="relative flex min-h-svh w-full flex-col items-center justify-center overflow-hidden bg-background">
       {/* 故障文字容器：点击触发一次故障爆发 */}
       <div
         ref={containerRef}
@@ -136,8 +134,8 @@ function NotFoundPage() {
       {/* 文案与操作区 */}
       <div className="relative z-10 mt-12 flex flex-col items-center gap-6 text-center">
         <div>
-          <p className="text-foreground text-sm font-medium">你漂到了一座孤岛</p>
-          <p className="text-muted-foreground mt-1 text-xs">
+          <p className="font-medium text-foreground text-sm">你漂到了一座孤岛</p>
+          <p className="mt-1 text-muted-foreground text-xs">
             四面环海，信号断了。点击上方的「404」也许能重新捕获讯号。
           </p>
         </div>

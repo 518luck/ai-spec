@@ -1,10 +1,10 @@
+import { redirect } from "next/navigation";
+import type { JSX } from "react";
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { resolveEmailChangeToken } from "@/shared/lib/auth/resolve-email-change";
 import { enqueueEmailChangedNotice } from "@/shared/lib/infrastructure/queue";
 import { kvDel } from "@/shared/lib/infrastructure/redis/kv";
-import type { JSX } from "react";
-import { redirect } from "next/navigation";
 import { ConfirmEmailChangeClient } from "./confirm-client";
 import { StatusMessage } from "./status-message";
 
@@ -73,10 +73,7 @@ export async function ConfirmEmailChangeFlow({
   });
   if (taken) {
     return (
-      <StatusMessage
-        title="邮箱已被占用"
-        description="该邮箱已被其他账号使用，邮箱变更未完成。"
-      />
+      <StatusMessage title="邮箱已被占用" description="该邮箱已被其他账号使用，邮箱变更未完成。" />
     );
   }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  ActionImpl,
+  type ActionImpl,
   KBarAnimator,
   KBarPortal,
   KBarPositioner,
@@ -31,11 +31,11 @@ function KBarComponent({ children }: { children: React.ReactNode }) {
     <>
       <KBarPortal>
         <KBarPositioner className="bg-background/70 backdrop-blur-xs">
-          <KBarAnimator className="border-border bg-popover text-popover-foreground w-full max-w-2xl overflow-hidden rounded-xl border shadow-2xl">
+          <KBarAnimator className="w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl">
             <div className="border-border border-b px-3 py-3">
               <KBarSearch
                 defaultPlaceholder="输入命令或页面名称..."
-                className="border-input text-foreground placeholder:text-muted-foreground h-11 w-full bg-transparent px-3 text-sm outline-none"
+                className="h-11 w-full border-input bg-transparent px-3 text-foreground text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
             <KBarResults
@@ -43,7 +43,7 @@ function KBarComponent({ children }: { children: React.ReactNode }) {
               maxHeight={420}
               onRender={({ item, active }) =>
                 typeof item === "string" ? (
-                  <div className="text-muted-foreground px-3 py-2 text-xs font-medium tracking-wide uppercase">
+                  <div className="px-3 py-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
                     {item}
                   </div>
                 ) : (
@@ -60,13 +60,7 @@ function KBarComponent({ children }: { children: React.ReactNode }) {
 }
 
 // 渲染结果的列表项
-function ResultItem({
-  action,
-  active,
-}: {
-  action: ActionImpl;
-  active: boolean;
-}) {
+function ResultItem({ action, active }: { action: ActionImpl; active: boolean }) {
   return (
     <div
       className={cn(
@@ -75,11 +69,9 @@ function ResultItem({
       )}
     >
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-medium">{action.name}</span>
+        <span className="truncate font-medium text-sm">{action.name}</span>
         {action.subtitle ? (
-          <span className="text-muted-foreground truncate text-xs">
-            {action.subtitle}
-          </span>
+          <span className="truncate text-muted-foreground text-xs">{action.subtitle}</span>
         ) : null}
       </div>
       {action.shortcut?.length ? (
@@ -87,7 +79,7 @@ function ResultItem({
           {action.shortcut.map((key) => (
             <kbd
               key={key}
-              className="border-border bg-muted text-muted-foreground rounded-sm border px-1.5 py-0.5 text-sm font-medium"
+              className="rounded-sm border border-border bg-muted px-1.5 py-0.5 font-medium text-muted-foreground text-sm"
             >
               {key}
             </kbd>

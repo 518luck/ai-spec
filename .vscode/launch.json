@@ -16,10 +16,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "tsx",
-        "${file}"
-      ],
+      "runtimeArgs": ["tsx", "${file}"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     }

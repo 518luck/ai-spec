@@ -1,20 +1,20 @@
 "use client";
 
 import copy from "copy-to-clipboard";
-import { useAction } from "next-safe-action/hooks";
 import { useRouter } from "next/navigation";
+import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
 import { toast } from "sonner";
 
 import {
-  RESOURCES,
   RESOURCE_KEYS,
+  RESOURCES,
   type ResourceKey,
 } from "@/shared/lib/ohs/local/appservice/rbac/resources";
 import {
+  getScopesForResource,
   type Scope,
   type ScopePresetValue,
-  getScopesForResource,
   scopePresets,
 } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
 import { createTokenAction } from "@/shared/lib/ohs/local/appservice/token/create-token";
@@ -163,7 +163,7 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
               </DialogDescription>
             </DialogHeader>
 
-            <div className="bg-muted flex flex-col gap-6 px-6 pt-4 pb-0">
+            <div className="flex flex-col gap-6 bg-muted px-6 pt-4 pb-0">
               <KeyFormFields
                 name={name}
                 description={description}
@@ -225,8 +225,8 @@ function CreatedKeyView({
       </DialogHeader>
 
       <div className="bg-muted px-6 pt-4 pb-0">
-        <div className="bg-muted flex items-center gap-2 rounded-md p-3">
-          <code className="flex-1 font-mono text-sm break-all">
+        <div className="flex items-center gap-2 rounded-md bg-muted p-3">
+          <code className="flex-1 break-all font-mono text-sm">
             {visible ? keyValue : "•".repeat(32)}
           </code>
           <Button
@@ -301,7 +301,7 @@ function KeyFormFields({
           value={permission}
           onValueChange={(value) => onPermissionChange(value as string | null)}
         >
-          <TabsList className="border-border w-full border bg-transparent">
+          <TabsList className="w-full border border-border bg-transparent">
             {scopePresets.map((item) => (
               <TabsTrigger key={item.value} value={item.value}>
                 {item.label}
@@ -330,7 +330,7 @@ function PermissionTable({ value, onScopeChange }: PermissionTableProps): JSX.El
           {RESOURCES.map((resource) => (
             <div key={resource.key} className="flex items-center justify-between px-3 py-3">
               <div className="flex shrink-0 items-center gap-1.5">
-                <span className="text-sm font-medium whitespace-nowrap">{resource.name}</span>
+                <span className="whitespace-nowrap font-medium text-sm">{resource.name}</span>
                 <HelpTooltip content={resource.description} />
               </div>
               <RadioGroup
@@ -341,7 +341,7 @@ function PermissionTable({ value, onScopeChange }: PermissionTableProps): JSX.El
                 {RESOURCE_SCOPES.map((scope) => (
                   <Label
                     key={scope.value}
-                    className="flex cursor-pointer items-center gap-1.5 text-sm font-normal"
+                    className="flex cursor-pointer items-center gap-1.5 font-normal text-sm"
                   >
                     <RadioGroupItem value={scope.value} />
                     {scope.label}

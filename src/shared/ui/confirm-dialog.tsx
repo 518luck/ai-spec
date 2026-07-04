@@ -84,24 +84,18 @@ export function ConfirmDialog({
       <DialogContent showCloseButton={false}>
         <DialogHeader>
           <DialogTitle className="text-lg">{title}</DialogTitle>
-          {description ? (
-            <DialogDescription>{description}</DialogDescription>
-          ) : null}
+          {description ? <DialogDescription>{description}</DialogDescription> : null}
         </DialogHeader>
 
         {/* 内容区：bg-muted 与底部同色，形成 header(白)→内容(深)→footer(深) 的层次 */}
-        <div className="bg-muted flex flex-col gap-4 px-6 py-4">
+        <div className="flex flex-col gap-4 bg-muted px-6 py-4">
           {children}
 
           {requireConfirmInput ? (
             <div className="flex flex-col gap-2">
-              <p className="text-muted-foreground flex items-baseline gap-1 text-sm leading-relaxed">
-                <span className="select-none">
-                  为确保是本人操作，请在下方输入
-                </span>
-                <span className="text-foreground font-medium">
-                  {requireConfirmInput.expected}
-                </span>
+              <p className="flex items-baseline gap-1 text-muted-foreground text-sm leading-relaxed">
+                <span className="select-none">为确保是本人操作，请在下方输入</span>
+                <span className="font-medium text-foreground">{requireConfirmInput.expected}</span>
               </p>
               <Input
                 value={inputValue}

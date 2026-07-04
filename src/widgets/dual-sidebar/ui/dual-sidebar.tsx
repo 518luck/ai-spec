@@ -51,10 +51,7 @@ type NavBusinessItemProps = NavBusinessItemBaseProps & {
 };
 
 // 渲染双栏侧边栏，左侧承载业务划分，右侧承载操作划分。
-export function DualSidebar({
-  className,
-  ...props
-}: DualSidebarProps): JSX.Element {
+export function DualSidebar({ className, ...props }: DualSidebarProps): JSX.Element {
   // 读取侧边栏宽度/紧凑/拖拽状态，左侧业务导航栏始终保留。
   const { width, collapsed, isResizing } = useDualSidebarContext();
 
@@ -120,7 +117,7 @@ export function DualSidebar({
 
         <div
           data-slot="dual-sidebar-resource-nav"
-          className="text-muted-foreground flex flex-col items-center gap-2"
+          className="flex flex-col items-center gap-2 text-muted-foreground"
         >
           <div
             aria-label="活动入口占位"
@@ -139,22 +136,14 @@ export function DualSidebar({
       </nav>
 
       {/* 右侧导航栏 */}
-      <NavAreasPanel
-        currentBusinessArea={currentBusinessArea}
-        navContext={navContext}
-      />
+      <NavAreasPanel currentBusinessArea={currentBusinessArea} navContext={navContext} />
     </motion.aside>
   );
 }
 
 // 渲染左侧图标导航项，并通过 Tooltip 补充文字说明。
-function NavBusinessItem({
-  item,
-  children,
-  className,
-}: NavBusinessItemProps): JSX.Element {
-  const { name, description, learnMoreHref, href, active, iconAnimation } =
-    item;
+function NavBusinessItem({ item, children, className }: NavBusinessItemProps): JSX.Element {
+  const { name, description, learnMoreHref, href, active, iconAnimation } = item;
   const hasDetail = Boolean(description || learnMoreHref);
 
   return (
@@ -166,21 +155,15 @@ function NavBusinessItem({
             aria-label={name}
             data-active={active}
             className={cn(
-              "text-sidebar-foreground/90 hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground flex size-9 items-center justify-center rounded-md transition-colors",
+              "flex size-9 items-center justify-center rounded-md text-sidebar-foreground/90 transition-colors hover:bg-accent hover:text-accent-foreground data-[active=true]:bg-accent data-[active=true]:text-accent-foreground",
               className,
             )}
           >
-            <AnimatedNavIcon animation={iconAnimation ?? "none"}>
-              {children}
-            </AnimatedNavIcon>
+            <AnimatedNavIcon animation={iconAnimation ?? "none"}>{children}</AnimatedNavIcon>
           </Link>
         }
       />
-      <TooltipContent
-        side="right"
-        showArrow={false}
-        className="flex-col items-start gap-0"
-      >
+      <TooltipContent side="right" showArrow={false} className="flex-col items-start gap-0">
         <div className="font-medium">{name}</div>
         {hasDetail ? (
           <motion.div
@@ -194,14 +177,9 @@ function NavBusinessItem({
             }}
           >
             <div className="flex w-44 flex-col gap-1 leading-snug">
-              {description ? (
-                <div className="text-background/65">{description}</div>
-              ) : null}
+              {description ? <div className="text-background/65">{description}</div> : null}
               {learnMoreHref ? (
-                <Link
-                  href={learnMoreHref}
-                  className="text-background underline underline-offset-2"
-                >
+                <Link href={learnMoreHref} className="text-background underline underline-offset-2">
                   查看详情
                 </Link>
               ) : null}
@@ -259,13 +237,11 @@ function NavAreasPanel({
                   <div
                     className={cn(
                       "flex items-center",
-                      collapsed
-                        ? "justify-center"
-                        : "ml-2 justify-between pr-2",
+                      collapsed ? "justify-center" : "ml-2 justify-between pr-2",
                     )}
                   >
                     {collapsed ? null : (
-                      <div className="min-w-0 truncate text-lg font-semibold">
+                      <div className="min-w-0 truncate font-semibold text-lg">
                         {navAreaPanel.title}
                       </div>
                     )}
@@ -275,18 +251,10 @@ function NavAreasPanel({
                       </IconButton>
                     ) : (
                       <div className="flex shrink-0 items-center">
-                        <IconButton
-                          label="收起侧边栏"
-                          tooltip="收起"
-                          onClick={toggleCollapsed}
-                        >
+                        <IconButton label="收起侧边栏" tooltip="收起" onClick={toggleCollapsed}>
                           <Icons.sidebarCollapse className="size-4" />
                         </IconButton>
-                        <IconButton
-                          label="恢复默认宽度"
-                          tooltip="重置"
-                          onClick={resetWidth}
-                        >
+                        <IconButton label="恢复默认宽度" tooltip="重置" onClick={resetWidth}>
                           <Icons.sidebarReset className="size-4" />
                         </IconButton>
                       </div>
@@ -296,12 +264,9 @@ function NavAreasPanel({
                   {/* 菜单分组 */}
                   <div className="flex flex-col gap-8">
                     {navAreaPanel.content.map((group) => (
-                      <div
-                        key={group.name ?? "default"}
-                        className="flex flex-col gap-2"
-                      >
+                      <div key={group.name ?? "default"} className="flex flex-col gap-2">
                         {!collapsed && group.name ? (
-                          <div className="text-muted-foreground/70 px-4 text-sm font-medium">
+                          <div className="px-4 font-medium text-muted-foreground/70 text-sm">
                             {group.name}
                           </div>
                         ) : null}
@@ -311,15 +276,12 @@ function NavAreasPanel({
                             const Icon = item.icon;
 
                             return (
-                              <div
-                                key={item.href}
-                                className="flex flex-col gap-1"
-                              >
+                              <div key={item.href} className="flex flex-col gap-1">
                                 <Link
                                   href={item.href}
                                   data-active={item.active}
                                   className={cn(
-                                    "text-sidebar-foreground/90 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground flex items-center rounded-md text-sm transition-colors",
+                                    "flex items-center rounded-md text-sidebar-foreground/90 text-sm transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
                                     collapsed
                                       ? "size-9 shrink-0 justify-center"
                                       : "gap-2 px-2 py-2",
@@ -327,18 +289,13 @@ function NavAreasPanel({
                                 >
                                   <Icon className="size-4 shrink-0 opacity-60" />
                                   {collapsed ? null : (
-                                    <span className="min-w-0 truncate">
-                                      {item.name}
-                                    </span>
+                                    <span className="min-w-0 truncate">{item.name}</span>
                                   )}
                                 </Link>
 
                                 {item.items ? (
                                   <div
-                                    className={cn(
-                                      "flex flex-col gap-1",
-                                      collapsed ? "" : "ml-4",
-                                    )}
+                                    className={cn("flex flex-col gap-1", collapsed ? "" : "ml-4")}
                                   >
                                     {item.items.map((subItem) => (
                                       <Link
@@ -346,7 +303,7 @@ function NavAreasPanel({
                                         href={subItem.href}
                                         data-active={subItem.active}
                                         className={cn(
-                                          "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground rounded-md transition-colors",
+                                          "rounded-md text-sidebar-foreground/80 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground",
                                           collapsed
                                             ? "flex size-9 shrink-0 items-center justify-center"
                                             : "px-2 py-1.5 text-sm",
@@ -379,13 +336,8 @@ function NavAreasPanel({
           })}
         </div>
 
-        <div
-          data-slot="dual-sidebar-operation-nav-footer"
-          className="flex flex-col gap-2 p-3"
-        >
-          <div className="text-muted-foreground text-xs font-medium">
-            底部固定栏
-          </div>
+        <div data-slot="dual-sidebar-operation-nav-footer" className="flex flex-col gap-2 p-3">
+          <div className="font-medium text-muted-foreground text-xs">底部固定栏</div>
         </div>
       </div>
 

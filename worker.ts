@@ -6,11 +6,9 @@ import { processBackgroundJob } from "./src/shared/lib/infrastructure/queue/oper
 import { getWorkerRedis } from "./src/shared/lib/infrastructure/redis/clients";
 
 // 注册后台任务 Worker，按 job.name 路由分发；消费侧用无限重试连接
-const backgroundJobsWorker = new Worker(
-  BACKGROUND_JOBS_QUEUE_CONFIG.name,
-  processBackgroundJob,
-  { connection: getWorkerRedis() },
-);
+const backgroundJobsWorker = new Worker(BACKGROUND_JOBS_QUEUE_CONFIG.name, processBackgroundJob, {
+  connection: getWorkerRedis(),
+});
 
 backgroundJobsWorker.on("ready", () => {
   console.warn("后台任务 Worker 已启动，等待任务...");

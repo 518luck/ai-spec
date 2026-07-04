@@ -1,16 +1,13 @@
+import type { NextRequest } from "next/server";
+import type { Session } from "next-auth";
+import type { RateLimiterRes } from "rate-limiter-flexible";
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { withAxiom } from "@/shared/lib/infrastructure/axiom/server";
 import { apiKeyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
-import {
-  AiSpecError,
-  toErrorResponse,
-} from "@/shared/lib/ohs/remote/adapter/error";
+import { AiSpecError, toErrorResponse } from "@/shared/lib/ohs/remote/adapter/error";
 import { getSearchParams } from "@/shared/lib/utils";
-import type { Session } from "next-auth";
-import { type NextRequest } from "next/server";
-import type { RateLimiterRes } from "rate-limiter-flexible";
 
 // Next.js App Router 动态路由上下文类型
 type RouteContext = { params: Promise<Record<string, string | string[]>> };
@@ -24,9 +21,7 @@ type SessionHandlerArgs = {
 };
 
 // 被 withSession 包装的业务 handler 签名：接收单一对象参数
-type SessionHandler = (
-  args: SessionHandlerArgs,
-) => Promise<Response> | Response;
+type SessionHandler = (args: SessionHandlerArgs) => Promise<Response> | Response;
 
 // API Key 限流窗口上限，对应 apiKeyLimiter 的 points
 const RATE_LIMIT_MAX = 60;
@@ -47,9 +42,7 @@ export const withSession = (handler: SessionHandler) =>
 
       // 携带 Bearer 头视为 SDK 通过 API Key 接入
       if (authHeader.startsWith(BEARER_PREFIX)) {
-        const token = await resolveApiKeyToken(
-          authHeader.slice(BEARER_PREFIX.length),
-        );
+        const token = await resolveApiKeyToken(authHeader.slice(BEARER_PREFIX.length));
         const { ok, res } = await apiKeyRatelimit({
           key: `api:requests:${token.user_id}`,
         });
@@ -110,20 +103,14 @@ const applyRateLimitHeaders = (
   }
   headers.set("X-RateLimit-Limit", String(RATE_LIMIT_MAX));
   headers.set("X-RateLimit-Remaining", String(info.remainingPoints));
-  headers.set(
-    "X-RateLimit-Reset",
-    String(Math.ceil((Date.now() + info.msBeforeNext) / 1000)),
-  );
+  headers.set("X-RateLimit-Reset", String(Math.ceil((Date.now() + info.msBeforeNext) / 1000)));
   if (includeRetryAfter) {
     headers.set("Retry-After", String(Math.ceil(info.msBeforeNext / 1000)));
   }
 };
 
 // 给业务 handler 的成功响应追加限流响应头
-const withRateLimitHeaders = (
-  response: Response,
-  info: RateLimiterRes | null,
-): Response => {
+const withRateLimitHeaders = (response: Response, info: RateLimiterRes | null): Response => {
   if (!info) {
     return response;
   }

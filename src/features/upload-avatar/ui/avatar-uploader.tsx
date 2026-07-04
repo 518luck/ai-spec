@@ -15,18 +15,10 @@ type AvatarUploaderProps = {
 };
 
 // 头像上传入口：可点击的头像 + 隐藏文件选择 + 裁剪弹窗编排
-export function AvatarUploader({
-  className,
-}: AvatarUploaderProps): React.JSX.Element {
+export function AvatarUploader({ className }: AvatarUploaderProps): React.JSX.Element {
   const { data: session } = useSession();
-  const {
-    imageSrc,
-    isCropOpen,
-    isSubmitting,
-    onFileSelected,
-    onConfirm,
-    cancel,
-  } = useAvatarUpload();
+  const { imageSrc, isCropOpen, isSubmitting, onFileSelected, onConfirm, cancel } =
+    useAvatarUpload();
 
   return (
     <>

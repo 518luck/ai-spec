@@ -28,9 +28,7 @@ export const getModeThemeCookie = (mode: ColorMode): string | undefined => {
   if (typeof document === "undefined") return undefined;
 
   const name = `${MODE_THEME_COOKIE_PREFIX}${mode}=`;
-  const match = document.cookie
-    .split("; ")
-    .find((cookie) => cookie.startsWith(name));
+  const match = document.cookie.split("; ").find((cookie) => cookie.startsWith(name));
 
   return match?.slice(name.length);
 };

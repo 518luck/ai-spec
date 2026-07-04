@@ -1,24 +1,18 @@
 "use client";
 
-import { useMediaQuery } from "@/shared/hooks/use-media-query";
-import { sendOtpAction } from "@/shared/lib/ohs/local/appservice/auth/send-otp";
-import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
-import { Button } from "@/shared/ui/button";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-  FieldSet,
-} from "@/shared/ui/field";
-import { Icons } from "@/shared/ui/icons";
-import { Input } from "@/shared/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
 import { type SubmitEvent, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import * as z from "zod";
+import type * as z from "zod";
+import { useMediaQuery } from "@/shared/hooks/use-media-query";
+import { sendOtpAction } from "@/shared/lib/ohs/local/appservice/auth/send-otp";
+import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
+import { Button } from "@/shared/ui/button";
+import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
+import { Icons } from "@/shared/ui/icons";
+import { Input } from "@/shared/ui/input";
 import { useRegisterContext } from "../model/register-context";
 import { PasswordRequirements } from "./password-requirements";
 
@@ -88,13 +82,9 @@ export function SignUpEmail() {
               placeholder="your-email@example.com" /* 输入框为空时展示的提示文本 */
               autoComplete="email" /* 允许浏览器自动填充邮箱 */
               required /* HTML 原生必填校验 */
-              autoFocus={
-                !isMobile && showPassword
-              } /* 非移动端且显示密码框时自动聚焦 */
+              autoFocus={!isMobile && showPassword} /* 非移动端且显示密码框时自动聚焦 */
               {...register("email")}
-              aria-invalid={
-                !!errors?.email
-              } /* 告诉辅助技术当前邮箱字段是否校验失败 */
+              aria-invalid={!!errors?.email} /* 告诉辅助技术当前邮箱字段是否校验失败 */
             />
             <FieldError errors={[errors.email]} />
           </Field>
@@ -122,9 +112,9 @@ export function SignUpEmail() {
                   variant="ghost"
                 >
                   {showPasswordText ? (
-                    <Icons.eyeOff className="text-muted-foreground h-4 w-4" />
+                    <Icons.eyeOff className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Icons.eye className="text-muted-foreground h-4 w-4" />
+                    <Icons.eye className="h-4 w-4 text-muted-foreground" />
                   )}
                 </Button>
               </div>
@@ -137,12 +127,7 @@ export function SignUpEmail() {
         </FieldGroup>
       </FieldSet>
 
-      <Button
-        className="mt-4 w-full"
-        type="submit"
-        disabled={isPending}
-        aria-busy={isPending}
-      >
+      <Button className="mt-4 w-full" type="submit" disabled={isPending} aria-busy={isPending}>
         {isPending ? "注册中..." : "注册"}
       </Button>
     </form>

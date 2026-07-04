@@ -1,5 +1,5 @@
-import { getAppRedis } from "@/shared/lib/infrastructure/redis/clients";
 import { Queue } from "bullmq";
+import { getAppRedis } from "@/shared/lib/infrastructure/redis/clients";
 
 import { BACKGROUND_JOBS_QUEUE_CONFIG } from "./constants";
 

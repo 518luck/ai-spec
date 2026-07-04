@@ -1,6 +1,6 @@
-import type { EmailProvider, EmailProviderName } from "./types";
-import { resendProvider } from "./resend/send";
 import { mailpitProvider } from "./mailpit/send";
+import { resendProvider } from "./resend/send";
+import type { EmailProvider, EmailProviderName } from "./types";
 
 // provider 注册表
 const PROVIDERS: Record<EmailProviderName, EmailProvider> = {

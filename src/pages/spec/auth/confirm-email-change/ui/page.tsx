@@ -1,7 +1,7 @@
-import { Spinner } from "@/shared/ui/spinner";
-import { AuthFormLayout } from "@/widgets/auth-form-layout";
 import type { JSX } from "react";
 import { Suspense } from "react";
+import { Spinner } from "@/shared/ui/spinner";
+import { AuthFormLayout } from "@/widgets/auth-form-layout";
 import { ConfirmEmailChangeFlow } from "./confirm-flow";
 
 type ConfirmEmailChangePageProps = {

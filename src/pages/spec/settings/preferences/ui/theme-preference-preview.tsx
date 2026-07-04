@@ -7,12 +7,12 @@ import { useState } from "react";
 import {
   type ColorMode,
   DEFAULT_THEME,
-  THEMES,
   getModeThemeCookie,
   setModeThemeCookie,
+  THEMES,
 } from "@/shared/configs/theme.config";
-import { cn } from "@/shared/lib/utils";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { cn } from "@/shared/lib/utils";
 import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 import { Badge } from "@/shared/ui/badge";
 
@@ -48,8 +48,7 @@ export function ThemePreferencePreview({
   const safeActiveTheme = mounted ? activeTheme : DEFAULT_THEME;
   const safeLocalTheme = mounted ? localTheme : DEFAULT_THEME;
   const displayedTheme = isCurrentMode ? safeActiveTheme : safeLocalTheme;
-  const displayedThemeName =
-    THEMES.find((t) => t.value === displayedTheme)?.name ?? displayedTheme;
+  const displayedThemeName = THEMES.find((t) => t.value === displayedTheme)?.name ?? displayedTheme;
 
   // 点击卡片切换明暗模式并恢复该模式保存的色彩主题，带圆形揭示动画
   const handleCardClick = (e: React.MouseEvent) => {
@@ -83,27 +82,25 @@ export function ThemePreferencePreview({
       className={cn(
         "cursor-pointer rounded-lg shadow-xs transition",
         isCurrentMode
-          ? "border-primary/50 bg-primary/5 text-card-foreground border"
-          : "bg-card text-card-foreground border",
+          ? "border border-primary/50 bg-primary/5 text-card-foreground"
+          : "border bg-card text-card-foreground",
       )}
       onClick={handleCardClick}
     >
       <div
         className={cn(
           "px-5 py-4",
-          isCurrentMode
-            ? "bg-primary/5 border-primary/20 border-b"
-            : "border-b",
+          isCurrentMode ? "border-primary/20 border-b bg-primary/5" : "border-b",
         )}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {icon}
-            <h2 className="text-base font-semibold">{title}</h2>
+            <h2 className="font-semibold text-base">{title}</h2>
           </div>
           {isCurrentMode && <Badge variant="secondary">使用中</Badge>}
         </div>
-        <p className="text-muted-foreground mt-1 text-sm">{description}</p>
+        <p className="mt-1 text-muted-foreground text-sm">{description}</p>
       </div>
 
       <div className="flex flex-col gap-4 p-5">
@@ -172,43 +169,22 @@ function ThemePreviewCard({
         <span className="size-2 rounded-full" style={{ background: dot }} />
         <span className="size-2 rounded-full" style={{ background: dot }} />
         <span className="size-2 rounded-full" style={{ background: dot }} />
-        <div
-          className="ml-1.5 h-2.5 flex-1 rounded-full"
-          style={{ background: bg }}
-        />
+        <div className="ml-1.5 h-2.5 flex-1 rounded-full" style={{ background: bg }} />
       </div>
       <div className="grid grid-cols-[56px_1fr]">
         <aside
           className="flex flex-col gap-1.5 border-r px-2 py-2.5"
           style={{ background: sidebar, borderColor: border }}
         >
-          <div
-            className="h-2 w-8 rounded-full"
-            style={{ background: strong }}
-          />
-          <div
-            className="h-2 w-10 rounded-full"
-            style={{ background: placeholder }}
-          />
-          <div
-            className="h-2 w-6 rounded-full"
-            style={{ background: placeholder }}
-          />
-          <div
-            className="h-2 w-6 rounded-full"
-            style={{ background: placeholder }}
-          />
+          <div className="h-2 w-8 rounded-full" style={{ background: strong }} />
+          <div className="h-2 w-10 rounded-full" style={{ background: placeholder }} />
+          <div className="h-2 w-6 rounded-full" style={{ background: placeholder }} />
+          <div className="h-2 w-6 rounded-full" style={{ background: placeholder }} />
         </aside>
         <main className="flex flex-col gap-2 p-2.5">
           <div className="flex items-center gap-2">
-            <div
-              className="h-2 w-16 rounded-full"
-              style={{ background: strong }}
-            />
-            <div
-              className="h-2 w-20 rounded-full"
-              style={{ background: placeholder }}
-            />
+            <div className="h-2 w-16 rounded-full" style={{ background: strong }} />
+            <div className="h-2 w-20 rounded-full" style={{ background: placeholder }} />
           </div>
           <div className="flex gap-2">
             <div
@@ -234,7 +210,7 @@ function ThemePreviewCard({
       >
         <div>
           <span className="sr-only">Selected theme: </span>
-          <p className="text-sm font-semibold" style={{ color: fg }}>
+          <p className="font-semibold text-sm" style={{ color: fg }}>
             {activeThemeName}
           </p>
         </div>
@@ -274,19 +250,19 @@ function ThemeDiscOption({
       />
       <label
         className={cn(
-          "bg-muted flex size-10 items-center justify-center rounded-full border-2 border-transparent transition",
+          "flex size-10 items-center justify-center rounded-full border-2 border-transparent bg-muted transition",
           disabled
             ? "opacity-50"
-            : "hover:border-ring peer-checked:border-primary peer-focus-visible:border-ring peer-focus-visible:ring-ring/50 cursor-pointer peer-focus-visible:ring-3",
+            : "cursor-pointer hover:border-ring peer-checked:border-primary peer-focus-visible:border-ring peer-focus-visible:ring-3 peer-focus-visible:ring-ring/50",
         )}
         htmlFor={`theme-${mode}-${themeDisc.value}`}
         title={themeDisc.name}
       >
         <span
-          className="bg-background flex size-8 items-center justify-center overflow-hidden rounded-full border"
+          className="flex size-8 items-center justify-center overflow-hidden rounded-full border bg-background"
           data-theme={themeDisc.value}
         >
-          <span className="bg-background grid size-full grid-cols-2 grid-rows-2 rounded-full">
+          <span className="grid size-full grid-cols-2 grid-rows-2 rounded-full bg-background">
             <span className="bg-background" />
             <span className="bg-card" />
             <span className="bg-muted" />

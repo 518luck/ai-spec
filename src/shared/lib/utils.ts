@@ -2,7 +2,7 @@ import { compare, hash } from "bcryptjs";
 
 // lib 是整个工具箱什么都能放（工具/配置/适配/类型/auth…）utils：只放纯函数工具
 // shadcn/ui 的工具函数，用于智能合并 Tailwind CSS 类名
-import { clsx, type ClassValue } from "clsx";
+import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -15,7 +15,7 @@ export const getSearchParams = (url: string) => {
   const params = {} as Record<string, string>;
 
   // new url是 JS 自带的 URL 类。   把一个完整 URL 字符串解析成结构化对象。
-  new URL(url).searchParams.forEach(function (val, key) {
+  new URL(url).searchParams.forEach((val, key) => {
     params[key] = val;
   });
 
@@ -23,10 +23,7 @@ export const getSearchParams = (url: string) => {
 };
 
 // 将过长字符串截断到指定长度，并用省略号结尾。
-export const truncate = (
-  str: string | null | undefined,
-  length: number,
-): string | null => {
+export const truncate = (str: string | null | undefined, length: number): string | null => {
   if (!str || str.length <= length) return str ?? null;
   return `${str.slice(0, length - 3)}...`;
 };

@@ -1,7 +1,7 @@
 import { render } from "react-email";
+import { VARIANT_TO_FROM_MAP } from "../resend/constants";
 import type { ResendEmailOptions } from "../resend/types";
 import type { EmailProvider, SendResult } from "../types";
-import { VARIANT_TO_FROM_MAP } from "../resend/constants";
 import { mailpitTransport } from "./client";
 
 // 未提供收件人时的跳过结果
@@ -38,9 +38,7 @@ const sendOne = async (opts: ResendEmailOptions): Promise<SendResult> => {
     ...(opts.text ? { text: opts.text } : {}),
     ...(opts.cc ? { cc: opts.cc } : {}),
     ...(opts.bcc ? { bcc: opts.bcc } : {}),
-    ...(opts.replyTo && opts.replyTo !== "noreply"
-      ? { replyTo: opts.replyTo }
-      : {}),
+    ...(opts.replyTo && opts.replyTo !== "noreply" ? { replyTo: opts.replyTo } : {}),
     ...(opts.headers ? { headers: opts.headers } : {}),
   });
 

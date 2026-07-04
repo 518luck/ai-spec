@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 
 import prisma from "@/shared/db";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
-import {
-  createLogger,
-  serializeError,
-} from "@/shared/lib/infrastructure/axiom/server";
+import { createLogger, serializeError } from "@/shared/lib/infrastructure/axiom/server";
 import { enqueueDeleteUserAvatar } from "@/shared/lib/infrastructure/queue";
 import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
 import { AiSpecError } from "@/shared/lib/ohs/remote/adapter/error";
@@ -84,9 +81,7 @@ export const PATCH = withSession(async ({ req, session }) => {
     }).catch((error) => {
       log.error("入队旧头像清理任务失败", {
         userId,
-        ...(error instanceof Error
-          ? serializeError(error)
-          : { error: String(error) }),
+        ...(error instanceof Error ? serializeError(error) : { error: String(error) }),
       });
     });
   }

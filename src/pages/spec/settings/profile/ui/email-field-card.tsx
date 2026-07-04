@@ -1,7 +1,7 @@
 "use client";
 
-import type { JSX } from "react";
 import { useSession } from "next-auth/react";
+import type { JSX } from "react";
 
 import { updateUser } from "@/entities/user";
 import { emailSchema } from "@/shared/lib/zod/schemas/auth";
@@ -13,9 +13,7 @@ type EmailFieldCardProps = {
 };
 
 // 邮箱字段卡片：邮箱取自客户端 session（响应 update() 实时变化），提交后给新邮箱发确认邮件
-export function EmailFieldCard({
-  defaultValue,
-}: EmailFieldCardProps): JSX.Element {
+export function EmailFieldCard({ defaultValue }: EmailFieldCardProps): JSX.Element {
   // 优先用客户端 session 的邮箱（响应 update() 实时变化），加载期兜底用服务端传入的初值
   const { data: session } = useSession();
   const currentEmail = session?.user?.email ?? defaultValue ?? "";

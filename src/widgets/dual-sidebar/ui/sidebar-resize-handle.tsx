@@ -19,9 +19,7 @@ export function SidebarResizeHandle(): JSX.Element {
 
   // 拖拽起点：记录 aside 左边缘，进入拖拽态并捕获指针
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>): void => {
-    const aside = event.currentTarget.closest<HTMLElement>(
-      "[data-slot='dual-sidebar']",
-    );
+    const aside = event.currentTarget.closest<HTMLElement>("[data-slot='dual-sidebar']");
     if (!aside) {
       return;
     }
@@ -72,7 +70,7 @@ export function SidebarResizeHandle(): JSX.Element {
       onPointerCancel={endDrag}
       onLostPointerCapture={endDrag}
       className={cn(
-        "absolute inset-y-2 right-2 z-20 w-1 cursor-col-resize touch-none rounded-r-xl select-none",
+        "absolute inset-y-2 right-2 z-20 w-1 cursor-col-resize touch-none select-none rounded-r-xl",
         "bg-transparent transition-colors hover:bg-foreground/20",
       )}
     />
