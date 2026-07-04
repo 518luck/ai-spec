@@ -1,25 +1,28 @@
 {
-	"editor.defaultFormatter": "biomejs.biome", // 所有文件（含 SVG）的默认格式化器设为 Biome
-	"editor.formatOnSave": true, // 保存时自动触发格式化器（Biome 按 biome.jsonc 规则格式化代码 + SVG）
+	"editor.defaultFormatter": "biomejs.biome", // 默认格式化器：所有文件（含 SVG）都用 Biome 格式化
+	"editor.formatOnSave": true, // 保存时自动格式化：按 biome.jsonc 规则整理缩进/空格/引号等
 	"editor.codeActionsOnSave": {
-		"source.fixAll.biome": "explicit", // 保存时自动修复 lint 问题（如 let→const、==→===、删未用变量），类比 ESLint 时代的 source.fixAll.eslint
-		"source.organizeImports.biome": "explicit" // 保存时让 Biome 整理 import 顺序（用 Biome 的排序规则，不是 VSCode 默认的，避免冲突）
+		// 保存时执行的代码操作（保存时自动触发）
+		"source.fixAll.biome": "explicit", // 自动修复 lint 问题：let→const、==→===、删未用变量等
+		"source.organizeImports.biome": "explicit" // 自动整理 import：按分组排序、合并重复引用
 	},
 	"code-runner.executorMap": {
-		"typescript": "npx tsx"
+		// 各语言运行命令（点右上角 ▶ 按钮时执行）
+		"typescript": "npx tsx" // TypeScript 用 tsx 直接运行，不用先编译
 	},
-	"code-runner.runInTerminal": true,
-	"code-runner.saveFileBeforeRun": true,
-	"code-runner.respectShebang": false,
+	"code-runner.runInTerminal": true, // 在终端里运行（能用 stdin，比输出面板更完整）
+	"code-runner.saveFileBeforeRun": true, // 运行前先保存（确保跑的是最新代码）
+	"code-runner.respectShebang": false, // 忽略文件顶部的 #!/usr/bin/env（统一用上面的 executorMap）
 	"workbench.colorCustomizations": {
-		"activityBar.background": "#111827",
-		"activityBar.foreground": "#E5E7EB",
-		"activityBar.inactiveForeground": "#9CA3AF",
-		"statusBar.background": "#1F2937",
-		"statusBar.foreground": "#F9FAFB",
-		"titleBar.activeBackground": "#111827",
-		"titleBar.activeForeground": "#F9FAFB",
-		"titleBar.inactiveBackground": "#0F172A",
-		"titleBar.inactiveForeground": "#9CA3AF"
+		// 自定义 VSCode 界面颜色（深灰主题）
+		"activityBar.background": "#111827", // 左侧活动栏背景（最深）
+		"activityBar.foreground": "#E5E7EB", // 活动栏图标颜色（最亮）
+		"activityBar.inactiveForeground": "#9CA3AF", // 活动栏未选中图标（灰色）
+		"statusBar.background": "#1F2937", // 底部状态栏背景
+		"statusBar.foreground": "#F9FAFB", // 底部状态栏文字
+		"titleBar.activeBackground": "#111827", // 窗口标题栏背景（当前窗口）
+		"titleBar.activeForeground": "#F9FAFB", // 窗口标题栏文字（当前窗口）
+		"titleBar.inactiveBackground": "#0F172A", // 窗口标题栏背景（非当前窗口，更深）
+		"titleBar.inactiveForeground": "#9CA3AF" // 窗口标题栏文字（非当前窗口，灰色）
 	}
 }

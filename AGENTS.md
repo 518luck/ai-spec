@@ -26,7 +26,7 @@
 
 | 命令                       | 说明                             |
 | -------------------------- | -------------------------------- |
-| `pnpm run prisma:validate` | 验证 schema 语法                 |
+| `pnpm run prisma:validate` | 验证 schema 语法     |
 | `pnpm run prisma:generate` | 生成 Prisma Client 代码          |
 | `pnpm run prisma:migrate`  | 创建并应用数据库迁移（开发环境） |
 
