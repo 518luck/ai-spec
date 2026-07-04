@@ -1,1113 +1,1144 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AI Spec 项目设计草图 v1.0</title>
-    <style>
-      :root {
-        --bg: #f5f1e8;
-        --surface: #fffaf0;
-        --surface-strong: #fff4dc;
-        --ink: #28231d;
-        --muted: #766b5c;
-        --line: #d8c8ad;
-        --line-strong: #b99e72;
-        --accent: #8b5cf6;
-        --accent-soft: #ede9fe;
-        --green: #2f855a;
-        --blue: #2563eb;
-        --orange: #c2410c;
-        --red: #b91c1c;
-        --shadow: 0 18px 50px rgb(92 64 31 / 12%);
-      }
-
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        background:
-          radial-gradient(circle at top left, rgb(139 92 246 / 16%), transparent 30%),
-          linear-gradient(135deg, #f7efe0 0%, #fdf8ee 45%, #f1eadf 100%);
-        color: var(--ink);
-        font-family:
-          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-          sans-serif;
-      }
-
-      button,
-      input,
-      select {
-        font: inherit;
-      }
-
-      .app-shell {
-        display: grid;
-        grid-template-columns: 280px minmax(0, 1fr);
-        min-height: 100vh;
-      }
-
-      .sidebar {
-        position: sticky;
-        top: 0;
-        height: 100vh;
-        padding: 28px 20px;
-        border-right: 1px solid var(--line);
-        background: rgb(255 250 240 / 82%);
-        backdrop-filter: blur(18px);
-      }
-
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 28px;
-      }
-
-      .brand-mark {
-        display: grid;
-        width: 42px;
-        height: 42px;
-        place-items: center;
-        border: 2px solid var(--ink);
-        border-radius: 14px;
-        background: var(--surface-strong);
-        font-weight: 900;
-        letter-spacing: -0.08em;
-      }
-
-      .brand-title {
-        margin: 0;
-        font-size: 20px;
-        line-height: 1.1;
-      }
-
-      .brand-subtitle {
-        margin: 4px 0 0;
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .nav-section-title {
-        margin: 22px 10px 8px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.12em;
-        text-transform: uppercase;
-      }
-
-      .nav-button {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin: 5px 0;
-        padding: 11px 12px;
-        border: 1px solid transparent;
-        border-radius: 14px;
-        background: transparent;
-        color: var(--ink);
-        cursor: pointer;
-        text-align: left;
-      }
-
-      .nav-button:hover,
-      .nav-button.active {
-        border-color: var(--line-strong);
-        background: var(--surface-strong);
-      }
-
-      .nav-main {
-        font-weight: 760;
-      }
-
-      .nav-path {
-        color: var(--muted);
-        font-size: 11px;
-      }
-
-      .main {
-        min-width: 0;
-        padding: 28px;
-      }
-
-      .topbar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 18px;
-        margin-bottom: 24px;
-        padding: 18px 20px;
-        border: 1px solid var(--line);
-        border-radius: 24px;
-        background: rgb(255 250 240 / 76%);
-        box-shadow: var(--shadow);
-      }
-
-      .topbar h1 {
-        margin: 0;
-        font-size: 22px;
-      }
-
-      .topbar p {
-        margin: 6px 0 0;
-        color: var(--muted);
-      }
-
-      .status-strip {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 8px;
-      }
-
-      .pill {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        min-height: 28px;
-        padding: 5px 10px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: #fff;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 700;
-        white-space: nowrap;
-      }
-
-      .pill.accent {
-        border-color: rgb(139 92 246 / 28%);
-        background: var(--accent-soft);
-        color: #5b21b6;
-      }
-
-      .pill.green {
-        border-color: rgb(47 133 90 / 22%);
-        background: #e8f5ee;
-        color: var(--green);
-      }
-
-      .page {
-        display: none;
-      }
-
-      .page.active {
-        display: block;
-      }
-
-      .page-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        gap: 20px;
-        margin-bottom: 18px;
-      }
-
-      .page-header h2 {
-        margin: 0;
-        font-size: 30px;
-        letter-spacing: -0.04em;
-      }
-
-      .page-header p {
-        max-width: 760px;
-        margin: 8px 0 0;
-        color: var(--muted);
-        line-height: 1.7;
-      }
-
-      .primary-button,
-      .secondary-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 38px;
-        padding: 8px 14px;
-        border-radius: 12px;
-        cursor: pointer;
-        font-weight: 760;
-      }
-
-      .primary-button {
-        border: 1px solid #241a35;
-        background: #21162f;
-        color: #fff;
-      }
-
-      .secondary-button {
-        border: 1px solid var(--line);
-        background: #fff;
-        color: var(--ink);
-      }
-
-      .wire-card {
-        border: 1px solid var(--line);
-        border-radius: 22px;
-        background: rgb(255 250 240 / 92%);
-        box-shadow: var(--shadow);
-      }
-
-      .split-view {
-        display: grid;
-        grid-template-columns: 230px minmax(0, 1fr);
-        gap: 16px;
-      }
-
-      .category-panel {
-        padding: 16px;
-      }
-
-      .category-group {
-        margin-bottom: 18px;
-      }
-
-      .category-title {
-        margin: 0 0 8px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      .category-item {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        margin: 4px 0;
-        padding: 9px 10px;
-        border: 1px dashed transparent;
-        border-radius: 12px;
-        color: var(--ink);
-        font-size: 13px;
-      }
-
-      .category-item.active,
-      .category-item:hover {
-        border-color: var(--line-strong);
-        background: #fff;
-      }
-
-      .content-panel {
-        padding: 18px;
-      }
-
-      .toolbar {
-        display: flex;
-        flex-wrap: wrap;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 16px;
-      }
-
-      .filters {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-
-      .search-box,
-      .select-box,
-      .text-input {
-        height: 38px;
-        padding: 0 12px;
-        border: 1px solid var(--line);
-        border-radius: 12px;
-        background: #fff;
-        color: var(--muted);
-      }
-
-      .search-box {
-        min-width: 260px;
-      }
-
-      .card-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .item-card {
-        position: relative;
-        min-height: 148px;
-        padding: 16px;
-        border: 1px solid var(--line);
-        border-radius: 18px;
-        background: #fff;
-      }
-
-      .item-card::after {
-        position: absolute;
-        right: 14px;
-        bottom: 12px;
-        width: 82px;
-        height: 8px;
-        border-radius: 999px;
-        background: linear-gradient(90deg, var(--line), transparent);
-        content: "";
-      }
-
-      .item-topline {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-
-      .item-card h3 {
-        margin: 0;
-        font-size: 17px;
-      }
-
-      .item-card p {
-        margin: 8px 0 12px;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      .badge {
-        display: inline-flex;
-        align-items: center;
-        border-radius: 999px;
-        padding: 4px 8px;
-        background: #f3ede3;
-        color: var(--muted);
-        font-size: 11px;
-        font-weight: 760;
-      }
-
-      .badge.snippet {
-        background: #eef2ff;
-        color: #4338ca;
-      }
-
-      .badge.prompt {
-        background: #ecfdf5;
-        color: #047857;
-      }
-
-      .badge.skill {
-        background: #fff7ed;
-        color: var(--orange);
-      }
-
-      .badge.agent {
-        background: #f5f3ff;
-        color: #7c3aed;
-      }
-
-      .badge.danger {
-        background: #fef2f2;
-        color: var(--red);
-      }
-
-      .mini-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 12px;
-      }
-
-      .mini-button {
-        border: 1px solid var(--line);
-        border-radius: 10px;
-        background: #fffaf0;
-        color: var(--ink);
-        cursor: pointer;
-        font-size: 12px;
-        font-weight: 760;
-        padding: 7px 9px;
-      }
-
-      .editor-preview {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 16px;
-      }
-
-      .editor-pane {
-        min-height: 210px;
-        padding: 14px;
-        border: 1px dashed var(--line-strong);
-        border-radius: 18px;
-        background: #fff;
-      }
-
-      .pane-title {
-        margin: 0 0 12px;
-        color: var(--muted);
-        font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-      }
-
-      .code-lines {
-        margin: 0;
-        color: #40372c;
-        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-        font-size: 12px;
-        line-height: 1.8;
-        white-space: pre-wrap;
-      }
-
-      .var-chip {
-        display: inline-flex;
-        margin: 2px 4px 2px 0;
-        padding: 4px 7px;
-        border-radius: 999px;
-        background: #e0f2fe;
-        color: #075985;
-        font-size: 11px;
-        font-weight: 780;
-      }
-
-      .skill-detail {
-        display: grid;
-        grid-template-columns: 1.1fr 0.9fr;
-        gap: 14px;
-        margin-top: 16px;
-      }
-
-      .detail-panel {
-        padding: 16px;
-        border: 1px dashed var(--line-strong);
-        border-radius: 18px;
-        background: #fff;
-      }
-
-      .composer {
-        display: grid;
-        grid-template-columns: 270px minmax(360px, 1fr) 280px;
-        gap: 16px;
-      }
-
-      .composer-column {
-        min-height: 620px;
-        padding: 16px;
-      }
-
-      .asset-list {
-        display: grid;
-        gap: 10px;
-      }
-
-      .asset-card {
-        padding: 12px;
-        border: 1px dashed var(--line-strong);
-        border-radius: 14px;
-        background: #fff;
-        cursor: grab;
-      }
-
-      .asset-card strong {
-        display: block;
-        margin-bottom: 4px;
-        font-size: 13px;
-      }
-
-      .asset-card span {
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .canvas-stage {
-        position: relative;
-        min-height: 520px;
-        padding: 22px;
-        border: 2px dashed var(--line-strong);
-        border-radius: 22px;
-        background:
-          linear-gradient(90deg, rgb(216 200 173 / 24%) 1px, transparent 1px),
-          linear-gradient(rgb(216 200 173 / 24%) 1px, transparent 1px),
-          #fffdfa;
-        background-size: 28px 28px;
-      }
-
-      .canvas-title {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 20px;
-      }
-
-      .canvas-title h3 {
-        margin: 0;
-        font-size: 22px;
-      }
-
-      .flow {
-        display: grid;
-        gap: 16px;
-        max-width: 460px;
-        margin: 0 auto;
-      }
-
-      .flow-node {
-        position: relative;
-        padding: 16px;
-        border: 1px solid var(--line-strong);
-        border-radius: 18px;
-        background: #fff;
-        box-shadow: 0 10px 24px rgb(92 64 31 / 10%);
-      }
-
-      .flow-node:not(:last-child)::after {
-        position: absolute;
-        left: 50%;
-        bottom: -17px;
-        width: 2px;
-        height: 17px;
-        background: var(--line-strong);
-        content: "";
-      }
-
-      .flow-node h4 {
-        margin: 0 0 8px;
-      }
-
-      .property-stack {
-        display: grid;
-        gap: 12px;
-      }
-
-      .property-box {
-        padding: 14px;
-        border: 1px solid var(--line);
-        border-radius: 16px;
-        background: #fff;
-      }
-
-      .property-box h4 {
-        margin: 0 0 10px;
-      }
-
-      .metric-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 10px;
-      }
-
-      .metric {
-        padding: 12px;
-        border: 1px solid var(--line);
-        border-radius: 14px;
-        background: #fff;
-      }
-
-      .metric strong {
-        display: block;
-        font-size: 22px;
-      }
-
-      .metric span {
-        color: var(--muted);
-        font-size: 12px;
-      }
-
-      .space-grid,
-      .discover-grid,
-      .settings-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 14px;
-      }
-
-      .space-card,
-      .discover-card,
-      .mcp-card {
-        padding: 18px;
-        border: 1px solid var(--line);
-        border-radius: 20px;
-        background: #fff;
-      }
-
-      .space-card h3,
-      .discover-card h3,
-      .mcp-card h3 {
-        margin: 0 0 10px;
-      }
-
-      .tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin: 18px 0 12px;
-      }
-
-      .tab {
-        padding: 8px 12px;
-        border: 1px solid var(--line);
-        border-radius: 999px;
-        background: #fff;
-        color: var(--muted);
-        font-weight: 760;
-      }
-
-      .tab.active {
-        border-color: #21162f;
-        background: #21162f;
-        color: #fff;
-      }
-
-      .timeline {
-        display: grid;
-        gap: 10px;
-        padding: 16px;
-        border: 1px dashed var(--line-strong);
-        border-radius: 18px;
-        background: #fff;
-      }
-
-      .timeline-item {
-        display: grid;
-        grid-template-columns: 120px 1fr;
-        gap: 12px;
-        color: var(--muted);
-        font-size: 13px;
-      }
-
-      .discover-hero,
-      .settings-hero {
-        padding: 20px;
-        margin-bottom: 16px;
-      }
-
-      .rating {
-        color: #92400e;
-        font-weight: 900;
-      }
-
-      .mcp-status {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-bottom: 12px;
-      }
-
-      .status-dot {
-        display: inline-flex;
-        width: 10px;
-        height: 10px;
-        border-radius: 999px;
-        background: var(--line-strong);
-      }
-
-      .status-dot.online {
-        background: var(--green);
-      }
-
-      .status-dot.error {
-        background: var(--red);
-      }
-
-      .empty-figure {
-        min-height: 190px;
-        border: 1px dashed var(--line-strong);
-        border-radius: 18px;
-        background:
-          linear-gradient(90deg, transparent 0 12px, rgb(216 200 173 / 18%) 12px 13px),
-          linear-gradient(transparent 0 12px, rgb(216 200 173 / 18%) 12px 13px),
-          #fff;
-        background-size: 26px 26px;
-      }
-
-      @media (max-width: 1160px) {
-        .app-shell {
-          grid-template-columns: 1fr;
-        }
-
-        .sidebar {
-          position: static;
-          height: auto;
-          border-right: 0;
-          border-bottom: 1px solid var(--line);
-        }
-
-        .nav-scroll {
-          display: grid;
-          grid-template-columns: repeat(4, minmax(160px, 1fr));
-          gap: 8px;
-        }
-
-        .nav-section-title {
-          grid-column: 1 / -1;
-        }
-
-        .composer,
-        .split-view {
-          grid-template-columns: 1fr;
-        }
-
-        .composer-column {
-          min-height: auto;
-        }
-      }
-
-      @media (max-width: 820px) {
-        .main {
-          padding: 16px;
-        }
-
-        .topbar,
-        .page-header {
-          align-items: flex-start;
-          flex-direction: column;
-        }
-
-        .card-grid,
-        .editor-preview,
-        .skill-detail,
-        .space-grid,
-        .discover-grid,
-        .settings-grid,
-        .metric-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .search-box {
-          min-width: 100%;
-        }
-
-        .timeline-item {
-          grid-template-columns: 1fr;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand">
-          <div class="brand-mark">AI</div>
-          <div>
-            <h1 class="brand-title">AI Spec</h1>
-            <p class="brand-subtitle">项目设计草图 v1.0</p>
-          </div>
-        </div>
-
-        <div class="nav-scroll" aria-label="页面导航">
-          <div class="nav-section-title">素材管理</div>
-          <button class="nav-button active" data-page="snippets">
-            <span>
-              <span class="nav-main">Snippets</span><br />
-              <span class="nav-path">/spec/snippets</span>
-            </span>
-            <span class="badge snippet">AGENTS.md</span>
-          </button>
-          <button class="nav-button" data-page="prompts">
-            <span>
-              <span class="nav-main">Prompts</span><br />
-              <span class="nav-path">/spec/prompts</span>
-            </span>
-            <span class="badge prompt">模板</span>
-          </button>
-          <button class="nav-button" data-page="skills">
-            <span>
-              <span class="nav-main">Skills</span><br />
-              <span class="nav-path">/spec/skills</span>
-            </span>
-            <span class="badge skill">能力</span>
-          </button>
-          <button class="nav-button" data-page="agents">
-            <span>
-              <span class="nav-main">Agents</span><br />
-              <span class="nav-path">/spec/agents</span>
-            </span>
-            <span class="badge agent">编排</span>
-          </button>
-
-          <div class="nav-section-title">协作与发现</div>
-          <button class="nav-button" data-page="workspace">
-            <span>
-              <span class="nav-main">Workspace</span><br />
-              <span class="nav-path">/spec/workspace</span>
-            </span>
-            <span class="badge">团队</span>
-          </button>
-          <button class="nav-button" data-page="discover">
-            <span>
-              <span class="nav-main">Discover</span><br />
-              <span class="nav-path">/spec/discover</span>
-            </span>
-            <span class="badge">公开</span>
-          </button>
-
-          <div class="nav-section-title">系统</div>
-          <button class="nav-button" data-page="settings">
-            <span>
-              <span class="nav-main">Settings</span><br />
-              <span class="nav-path">/spec/settings</span>
-            </span>
-            <span class="badge">MCP</span>
-          </button>
-        </div>
-      </aside>
-
-      <main class="main">
-        <header class="topbar">
-          <div>
-            <h1 id="topbar-title">Snippets 管理</h1>
-            <p id="topbar-description">AGENTS.md 片段的创建、分类、预览与导出。</p>
-          </div>
-          <div class="status-strip">
-            <span class="pill accent">Block 统一模型</span>
-            <span class="pill">预定义 + 自定义分类</span>
-            <span class="pill green">v1.0 草图</span>
-          </div>
-        </header>
-
-        <section class="page active" id="snippets">
-          <div class="page-header">
-            <div>
-              <h2>Snippets 管理</h2>
-              <p>存放 AGENTS.md 的可复用片段，用户可以按分类管理、选择多个片段预览组合，并导出为完整的 AGENTS.md 文件。</p>
-            </div>
-            <button class="primary-button">新建片段</button>
-          </div>
-
-          <div class="split-view">
-            <aside class="wire-card category-panel">
-              <div class="category-group">
-                <p class="category-title">系统分类</p>
-                <div class="category-item active"><span>代码风格</span><span>12</span></div>
-                <div class="category-item"><span>项目结构</span><span>8</span></div>
-                <div class="category-item"><span>数据库</span><span>5</span></div>
-                <div class="category-item"><span>测试规则</span><span>4</span></div>
-              </div>
-              <div class="category-group">
-                <p class="category-title">自定义分类</p>
-                <div class="category-item"><span>部署规范</span><span>3</span></div>
-                <div class="category-item"><span>团队约束</span><span>6</span></div>
-              </div>
-              <button class="secondary-button" style="width: 100%">管理分类</button>
-            </aside>
-
-            <div class="wire-card content-panel">
-              <div class="toolbar">
-                <div class="filters">
-                  <input class="search-box" value="搜索 AGENTS.md 片段..." aria-label="搜索" />
-                  <select class="select-box" aria-label="标签筛选"><option>标签：全部</option></select>
-                  <select class="select-box" aria-label="状态筛选"><option>状态：已发布</option></select>
-                </div>
-                <div class="filters">
-                  <button class="secondary-button">组合预览</button>
-                  <button class="secondary-button">导出 .md</button>
-                </div>
-              </div>
-
-              <div class="card-grid">
-                <article class="item-card">
-                  <div class="item-topline">
-                    <h3>TypeScript 代码规范</h3>
-                    <span class="badge snippet">snippet</span>
-                  </div>
-                  <p>禁止使用 any、类型专用导入使用 import type、React 组件使用 function 声明。</p>
-                  <span class="pill">代码风格</span>
-                  <span class="pill">3 个标签</span>
-                  <span class="pill">2 天前</span>
-                </article>
-                <article class="item-card">
-                  <div class="item-topline">
-                    <h3>数据库操作约束</h3>
-                    <span class="badge snippet">snippet</span>
-                  </div>
-                  <p>修改 Prisma schema 后运行 generate，严禁手动修改自动生成目录。</p>
-                  <span class="pill">数据库</span>
-                  <span class="pill">1 个标签</span>
-                  <span class="pill">1 周前</span>
-                </article>
-              </div>
-
-              <div class="editor-preview">
-                <div class="editor-pane">
-                  <p class="pane-title">编辑区</p>
-                  <pre class="code-lines">## TypeScript 规范
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>AI Spec 项目设计草图 v1.0</title>
+		<style>
+		:root {
+			--bg: #f5f1e8;
+			--surface: #fffaf0;
+			--surface-strong: #fff4dc;
+			--ink: #28231d;
+			--muted: #766b5c;
+			--line: #d8c8ad;
+			--line-strong: #b99e72;
+			--accent: #8b5cf6;
+			--accent-soft: #ede9fe;
+			--green: #2f855a;
+			--blue: #2563eb;
+			--orange: #c2410c;
+			--red: #b91c1c;
+			--shadow: 0 18px 50px rgb(92 64 31 / 12%);
+		}
+
+		* {
+			box-sizing: border-box;
+		}
+
+		body {
+			margin: 0;
+			background:
+				radial-gradient(circle at top left, rgb(139 92 246 / 16%), transparent 30%),
+				linear-gradient(135deg, #f7efe0 0%, #fdf8ee 45%, #f1eadf 100%);
+			color: var(--ink);
+			font-family:
+				Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		}
+
+		button,
+		input,
+		select {
+			font: inherit;
+		}
+
+		.app-shell {
+			display: grid;
+			grid-template-columns: 280px minmax(0, 1fr);
+			min-height: 100vh;
+		}
+
+		.sidebar {
+			position: sticky;
+			top: 0;
+			height: 100vh;
+			padding: 28px 20px;
+			border-right: 1px solid var(--line);
+			background: rgb(255 250 240 / 82%);
+			backdrop-filter: blur(18px);
+		}
+
+		.brand {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			margin-bottom: 28px;
+		}
+
+		.brand-mark {
+			display: grid;
+			width: 42px;
+			height: 42px;
+			place-items: center;
+			border: 2px solid var(--ink);
+			border-radius: 14px;
+			background: var(--surface-strong);
+			font-weight: 900;
+			letter-spacing: -0.08em;
+		}
+
+		.brand-title {
+			margin: 0;
+			font-size: 20px;
+			line-height: 1.1;
+		}
+
+		.brand-subtitle {
+			margin: 4px 0 0;
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.nav-section-title {
+			margin: 22px 10px 8px;
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 700;
+			letter-spacing: 0.12em;
+			text-transform: uppercase;
+		}
+
+		.nav-button {
+			display: flex;
+			width: 100%;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin: 5px 0;
+			padding: 11px 12px;
+			border: 1px solid transparent;
+			border-radius: 14px;
+			background: transparent;
+			color: var(--ink);
+			cursor: pointer;
+			text-align: left;
+		}
+
+		.nav-button:hover,
+		.nav-button.active {
+			border-color: var(--line-strong);
+			background: var(--surface-strong);
+		}
+
+		.nav-main {
+			font-weight: 760;
+		}
+
+		.nav-path {
+			color: var(--muted);
+			font-size: 11px;
+		}
+
+		.main {
+			min-width: 0;
+			padding: 28px;
+		}
+
+		.topbar {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 18px;
+			margin-bottom: 24px;
+			padding: 18px 20px;
+			border: 1px solid var(--line);
+			border-radius: 24px;
+			background: rgb(255 250 240 / 76%);
+			box-shadow: var(--shadow);
+		}
+
+		.topbar h1 {
+			margin: 0;
+			font-size: 22px;
+		}
+
+		.topbar p {
+			margin: 6px 0 0;
+			color: var(--muted);
+		}
+
+		.status-strip {
+			display: flex;
+			flex-wrap: wrap;
+			justify-content: flex-end;
+			gap: 8px;
+		}
+
+		.pill {
+			display: inline-flex;
+			align-items: center;
+			gap: 6px;
+			min-height: 28px;
+			padding: 5px 10px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: #fff;
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 700;
+			white-space: nowrap;
+		}
+
+		.pill.accent {
+			border-color: rgb(139 92 246 / 28%);
+			background: var(--accent-soft);
+			color: #5b21b6;
+		}
+
+		.pill.green {
+			border-color: rgb(47 133 90 / 22%);
+			background: #e8f5ee;
+			color: var(--green);
+		}
+
+		.page {
+			display: none;
+		}
+
+		.page.active {
+			display: block;
+		}
+
+		.page-header {
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			gap: 20px;
+			margin-bottom: 18px;
+		}
+
+		.page-header h2 {
+			margin: 0;
+			font-size: 30px;
+			letter-spacing: -0.04em;
+		}
+
+		.page-header p {
+			max-width: 760px;
+			margin: 8px 0 0;
+			color: var(--muted);
+			line-height: 1.7;
+		}
+
+		.primary-button,
+		.secondary-button {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 38px;
+			padding: 8px 14px;
+			border-radius: 12px;
+			cursor: pointer;
+			font-weight: 760;
+		}
+
+		.primary-button {
+			border: 1px solid #241a35;
+			background: #21162f;
+			color: #fff;
+		}
+
+		.secondary-button {
+			border: 1px solid var(--line);
+			background: #fff;
+			color: var(--ink);
+		}
+
+		.wire-card {
+			border: 1px solid var(--line);
+			border-radius: 22px;
+			background: rgb(255 250 240 / 92%);
+			box-shadow: var(--shadow);
+		}
+
+		.split-view {
+			display: grid;
+			grid-template-columns: 230px minmax(0, 1fr);
+			gap: 16px;
+		}
+
+		.category-panel {
+			padding: 16px;
+		}
+
+		.category-group {
+			margin-bottom: 18px;
+		}
+
+		.category-title {
+			margin: 0 0 8px;
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 800;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+		}
+
+		.category-item {
+			display: flex;
+			justify-content: space-between;
+			gap: 8px;
+			margin: 4px 0;
+			padding: 9px 10px;
+			border: 1px dashed transparent;
+			border-radius: 12px;
+			color: var(--ink);
+			font-size: 13px;
+		}
+
+		.category-item.active,
+		.category-item:hover {
+			border-color: var(--line-strong);
+			background: #fff;
+		}
+
+		.content-panel {
+			padding: 18px;
+		}
+
+		.toolbar {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 16px;
+		}
+
+		.filters {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+		}
+
+		.search-box,
+		.select-box,
+		.text-input {
+			height: 38px;
+			padding: 0 12px;
+			border: 1px solid var(--line);
+			border-radius: 12px;
+			background: #fff;
+			color: var(--muted);
+		}
+
+		.search-box {
+			min-width: 260px;
+		}
+
+		.card-grid {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 14px;
+		}
+
+		.item-card {
+			position: relative;
+			min-height: 148px;
+			padding: 16px;
+			border: 1px solid var(--line);
+			border-radius: 18px;
+			background: #fff;
+		}
+
+		.item-card::after {
+			position: absolute;
+			right: 14px;
+			bottom: 12px;
+			width: 82px;
+			height: 8px;
+			border-radius: 999px;
+			background: linear-gradient(90deg, var(--line), transparent);
+			content: "";
+		}
+
+		.item-topline {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+
+		.item-card h3 {
+			margin: 0;
+			font-size: 17px;
+		}
+
+		.item-card p {
+			margin: 8px 0 12px;
+			color: var(--muted);
+			line-height: 1.6;
+		}
+
+		.badge {
+			display: inline-flex;
+			align-items: center;
+			border-radius: 999px;
+			padding: 4px 8px;
+			background: #f3ede3;
+			color: var(--muted);
+			font-size: 11px;
+			font-weight: 760;
+		}
+
+		.badge.snippet {
+			background: #eef2ff;
+			color: #4338ca;
+		}
+
+		.badge.prompt {
+			background: #ecfdf5;
+			color: #047857;
+		}
+
+		.badge.skill {
+			background: #fff7ed;
+			color: var(--orange);
+		}
+
+		.badge.agent {
+			background: #f5f3ff;
+			color: #7c3aed;
+		}
+
+		.badge.danger {
+			background: #fef2f2;
+			color: var(--red);
+		}
+
+		.mini-actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin-top: 12px;
+		}
+
+		.mini-button {
+			border: 1px solid var(--line);
+			border-radius: 10px;
+			background: #fffaf0;
+			color: var(--ink);
+			cursor: pointer;
+			font-size: 12px;
+			font-weight: 760;
+			padding: 7px 9px;
+		}
+
+		.editor-preview {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 12px;
+			margin-top: 16px;
+		}
+
+		.editor-pane {
+			min-height: 210px;
+			padding: 14px;
+			border: 1px dashed var(--line-strong);
+			border-radius: 18px;
+			background: #fff;
+		}
+
+		.pane-title {
+			margin: 0 0 12px;
+			color: var(--muted);
+			font-size: 12px;
+			font-weight: 800;
+			letter-spacing: 0.1em;
+			text-transform: uppercase;
+		}
+
+		.code-lines {
+			margin: 0;
+			color: #40372c;
+			font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+			font-size: 12px;
+			line-height: 1.8;
+			white-space: pre-wrap;
+		}
+
+		.var-chip {
+			display: inline-flex;
+			margin: 2px 4px 2px 0;
+			padding: 4px 7px;
+			border-radius: 999px;
+			background: #e0f2fe;
+			color: #075985;
+			font-size: 11px;
+			font-weight: 780;
+		}
+
+		.skill-detail {
+			display: grid;
+			grid-template-columns: 1.1fr 0.9fr;
+			gap: 14px;
+			margin-top: 16px;
+		}
+
+		.detail-panel {
+			padding: 16px;
+			border: 1px dashed var(--line-strong);
+			border-radius: 18px;
+			background: #fff;
+		}
+
+		.composer {
+			display: grid;
+			grid-template-columns: 270px minmax(360px, 1fr) 280px;
+			gap: 16px;
+		}
+
+		.composer-column {
+			min-height: 620px;
+			padding: 16px;
+		}
+
+		.asset-list {
+			display: grid;
+			gap: 10px;
+		}
+
+		.asset-card {
+			padding: 12px;
+			border: 1px dashed var(--line-strong);
+			border-radius: 14px;
+			background: #fff;
+			cursor: grab;
+		}
+
+		.asset-card strong {
+			display: block;
+			margin-bottom: 4px;
+			font-size: 13px;
+		}
+
+		.asset-card span {
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.canvas-stage {
+			position: relative;
+			min-height: 520px;
+			padding: 22px;
+			border: 2px dashed var(--line-strong);
+			border-radius: 22px;
+			background:
+				linear-gradient(90deg, rgb(216 200 173 / 24%) 1px, transparent 1px),
+				linear-gradient(rgb(216 200 173 / 24%) 1px, transparent 1px), #fffdfa;
+			background-size: 28px 28px;
+		}
+
+		.canvas-title {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 20px;
+		}
+
+		.canvas-title h3 {
+			margin: 0;
+			font-size: 22px;
+		}
+
+		.flow {
+			display: grid;
+			gap: 16px;
+			max-width: 460px;
+			margin: 0 auto;
+		}
+
+		.flow-node {
+			position: relative;
+			padding: 16px;
+			border: 1px solid var(--line-strong);
+			border-radius: 18px;
+			background: #fff;
+			box-shadow: 0 10px 24px rgb(92 64 31 / 10%);
+		}
+
+		.flow-node:not(:last-child)::after {
+			position: absolute;
+			left: 50%;
+			bottom: -17px;
+			width: 2px;
+			height: 17px;
+			background: var(--line-strong);
+			content: "";
+		}
+
+		.flow-node h4 {
+			margin: 0 0 8px;
+		}
+
+		.property-stack {
+			display: grid;
+			gap: 12px;
+		}
+
+		.property-box {
+			padding: 14px;
+			border: 1px solid var(--line);
+			border-radius: 16px;
+			background: #fff;
+		}
+
+		.property-box h4 {
+			margin: 0 0 10px;
+		}
+
+		.metric-grid {
+			display: grid;
+			grid-template-columns: repeat(3, 1fr);
+			gap: 10px;
+		}
+
+		.metric {
+			padding: 12px;
+			border: 1px solid var(--line);
+			border-radius: 14px;
+			background: #fff;
+		}
+
+		.metric strong {
+			display: block;
+			font-size: 22px;
+		}
+
+		.metric span {
+			color: var(--muted);
+			font-size: 12px;
+		}
+
+		.space-grid,
+		.discover-grid,
+		.settings-grid {
+			display: grid;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			gap: 14px;
+		}
+
+		.space-card,
+		.discover-card,
+		.mcp-card {
+			padding: 18px;
+			border: 1px solid var(--line);
+			border-radius: 20px;
+			background: #fff;
+		}
+
+		.space-card h3,
+		.discover-card h3,
+		.mcp-card h3 {
+			margin: 0 0 10px;
+		}
+
+		.tabs {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin: 18px 0 12px;
+		}
+
+		.tab {
+			padding: 8px 12px;
+			border: 1px solid var(--line);
+			border-radius: 999px;
+			background: #fff;
+			color: var(--muted);
+			font-weight: 760;
+		}
+
+		.tab.active {
+			border-color: #21162f;
+			background: #21162f;
+			color: #fff;
+		}
+
+		.timeline {
+			display: grid;
+			gap: 10px;
+			padding: 16px;
+			border: 1px dashed var(--line-strong);
+			border-radius: 18px;
+			background: #fff;
+		}
+
+		.timeline-item {
+			display: grid;
+			grid-template-columns: 120px 1fr;
+			gap: 12px;
+			color: var(--muted);
+			font-size: 13px;
+		}
+
+		.discover-hero,
+		.settings-hero {
+			padding: 20px;
+			margin-bottom: 16px;
+		}
+
+		.rating {
+			color: #92400e;
+			font-weight: 900;
+		}
+
+		.mcp-status {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 12px;
+			margin-bottom: 12px;
+		}
+
+		.status-dot {
+			display: inline-flex;
+			width: 10px;
+			height: 10px;
+			border-radius: 999px;
+			background: var(--line-strong);
+		}
+
+		.status-dot.online {
+			background: var(--green);
+		}
+
+		.status-dot.error {
+			background: var(--red);
+		}
+
+		.empty-figure {
+			min-height: 190px;
+			border: 1px dashed var(--line-strong);
+			border-radius: 18px;
+			background:
+				linear-gradient(90deg, transparent 0 12px, rgb(216 200 173 / 18%) 12px 13px),
+				linear-gradient(transparent 0 12px, rgb(216 200 173 / 18%) 12px 13px), #fff;
+			background-size: 26px 26px;
+		}
+
+		@media (max-width: 1160px) {
+			.app-shell {
+				grid-template-columns: 1fr;
+			}
+
+			.sidebar {
+				position: static;
+				height: auto;
+				border-right: 0;
+				border-bottom: 1px solid var(--line);
+			}
+
+			.nav-scroll {
+				display: grid;
+				grid-template-columns: repeat(4, minmax(160px, 1fr));
+				gap: 8px;
+			}
+
+			.nav-section-title {
+				grid-column: 1 / -1;
+			}
+
+			.composer,
+			.split-view {
+				grid-template-columns: 1fr;
+			}
+
+			.composer-column {
+				min-height: auto;
+			}
+		}
+
+		@media (max-width: 820px) {
+			.main {
+				padding: 16px;
+			}
+
+			.topbar,
+			.page-header {
+				align-items: flex-start;
+				flex-direction: column;
+			}
+
+			.card-grid,
+			.editor-preview,
+			.skill-detail,
+			.space-grid,
+			.discover-grid,
+			.settings-grid,
+			.metric-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.search-box {
+				min-width: 100%;
+			}
+
+			.timeline-item {
+				grid-template-columns: 1fr;
+			}
+		}
+		</style>
+	</head>
+	<body>
+		<div class="app-shell">
+			<aside class="sidebar">
+				<div class="brand">
+					<div class="brand-mark">AI</div>
+					<div>
+						<h1 class="brand-title">AI Spec</h1>
+						<p class="brand-subtitle">项目设计草图 v1.0</p>
+					</div>
+				</div>
+
+				<div class="nav-scroll" aria-label="页面导航">
+					<div class="nav-section-title">素材管理</div>
+					<button class="nav-button active" data-page="snippets">
+						<span>
+							<span class="nav-main">Snippets</span><br>
+							<span class="nav-path">/spec/snippets</span>
+						</span>
+						<span class="badge snippet">AGENTS.md</span>
+					</button>
+					<button class="nav-button" data-page="prompts">
+						<span>
+							<span class="nav-main">Prompts</span><br>
+							<span class="nav-path">/spec/prompts</span>
+						</span>
+						<span class="badge prompt">模板</span>
+					</button>
+					<button class="nav-button" data-page="skills">
+						<span>
+							<span class="nav-main">Skills</span><br>
+							<span class="nav-path">/spec/skills</span>
+						</span>
+						<span class="badge skill">能力</span>
+					</button>
+					<button class="nav-button" data-page="agents">
+						<span>
+							<span class="nav-main">Agents</span><br>
+							<span class="nav-path">/spec/agents</span>
+						</span>
+						<span class="badge agent">编排</span>
+					</button>
+
+					<div class="nav-section-title">协作与发现</div>
+					<button class="nav-button" data-page="workspace">
+						<span>
+							<span class="nav-main">Workspace</span><br>
+							<span class="nav-path">/spec/workspace</span>
+						</span>
+						<span class="badge">团队</span>
+					</button>
+					<button class="nav-button" data-page="discover">
+						<span>
+							<span class="nav-main">Discover</span><br>
+							<span class="nav-path">/spec/discover</span>
+						</span>
+						<span class="badge">公开</span>
+					</button>
+
+					<div class="nav-section-title">系统</div>
+					<button class="nav-button" data-page="settings">
+						<span>
+							<span class="nav-main">Settings</span><br>
+							<span class="nav-path">/spec/settings</span>
+						</span>
+						<span class="badge">MCP</span>
+					</button>
+				</div>
+			</aside>
+
+			<main class="main">
+				<header class="topbar">
+					<div>
+						<h1 id="topbar-title">Snippets 管理</h1>
+						<p id="topbar-description">AGENTS.md 片段的创建、分类、预览与导出。</p>
+					</div>
+					<div class="status-strip">
+						<span class="pill accent">Block 统一模型</span>
+						<span class="pill">预定义 + 自定义分类</span>
+						<span class="pill green">v1.0 草图</span>
+					</div>
+				</header>
+
+				<section class="page active" id="snippets">
+					<div class="page-header">
+						<div>
+							<h2>Snippets 管理</h2>
+							<p>
+								存放 AGENTS.md
+								的可复用片段，用户可以按分类管理、选择多个片段预览组合，并导出为完整的 AGENTS.md
+								文件。
+							</p>
+						</div>
+						<button class="primary-button">新建片段</button>
+					</div>
+
+					<div class="split-view">
+						<aside class="wire-card category-panel">
+							<div class="category-group">
+								<p class="category-title">系统分类</p>
+								<div class="category-item active"><span>代码风格</span><span>12</span></div>
+								<div class="category-item"><span>项目结构</span><span>8</span></div>
+								<div class="category-item"><span>数据库</span><span>5</span></div>
+								<div class="category-item"><span>测试规则</span><span>4</span></div>
+							</div>
+							<div class="category-group">
+								<p class="category-title">自定义分类</p>
+								<div class="category-item"><span>部署规范</span><span>3</span></div>
+								<div class="category-item"><span>团队约束</span><span>6</span></div>
+							</div>
+							<button class="secondary-button" style="width: 100%">管理分类</button>
+						</aside>
+
+						<div class="wire-card content-panel">
+							<div class="toolbar">
+								<div class="filters">
+									<input class="search-box" value="搜索 AGENTS.md 片段..." aria-label="搜索">
+									<select class="select-box" aria-label="标签筛选">
+										<option>标签：全部</option>
+									</select>
+									<select class="select-box" aria-label="状态筛选">
+										<option>状态：已发布</option>
+									</select>
+								</div>
+								<div class="filters">
+									<button class="secondary-button">组合预览</button>
+									<button class="secondary-button">导出 .md</button>
+								</div>
+							</div>
+
+							<div class="card-grid">
+								<article class="item-card">
+									<div class="item-topline">
+										<h3>TypeScript 代码规范</h3>
+										<span class="badge snippet">snippet</span>
+									</div>
+									<p>禁止使用 any、类型专用导入使用 import type、React 组件使用 function 声明。</p>
+									<span class="pill">代码风格</span>
+									<span class="pill">3 个标签</span>
+									<span class="pill">2 天前</span>
+								</article>
+								<article class="item-card">
+									<div class="item-topline">
+										<h3>数据库操作约束</h3>
+										<span class="badge snippet">snippet</span>
+									</div>
+									<p>修改 Prisma schema 后运行 generate，严禁手动修改自动生成目录。</p>
+									<span class="pill">数据库</span>
+									<span class="pill">1 个标签</span>
+									<span class="pill">1 周前</span>
+								</article>
+							</div>
+
+							<div class="editor-preview">
+								<div class="editor-pane">
+									<p class="pane-title">编辑区</p>
+									<pre class="code-lines">## TypeScript 规范
 - 所有新代码使用 TypeScript
 - 避免使用 any
 - 类型专用导入使用 import type
 - React 组件使用 function 声明</pre>
-                </div>
-                <div class="editor-pane">
-                  <p class="pane-title">预览区</p>
-                  <p><strong>TypeScript 规范</strong></p>
-                  <p>所有新代码使用 TypeScript；避免使用 any；类型专用导入使用 import type。</p>
-                  <div class="mini-actions">
-                    <button class="mini-button">保存草稿</button>
-                    <button class="mini-button">保存并发布</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+								</div>
+								<div class="editor-pane">
+									<p class="pane-title">预览区</p>
+									<p><strong>TypeScript 规范</strong></p>
+									<p>所有新代码使用 TypeScript；避免使用 any；类型专用导入使用 import type。</p>
+									<div class="mini-actions">
+										<button class="mini-button">保存草稿</button>
+										<button class="mini-button">保存并发布</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
 
-        <section class="page" id="prompts">
-          <div class="page-header">
-            <div>
-              <h2>Prompts 管理</h2>
-              <p>管理常用提示词模板，支持变量占位符、测试运行，并可一键转换为 Skill。</p>
-            </div>
-            <button class="primary-button">新建 Prompt</button>
-          </div>
+				<section class="page" id="prompts">
+					<div class="page-header">
+						<div>
+							<h2>Prompts 管理</h2>
+							<p>管理常用提示词模板，支持变量占位符、测试运行，并可一键转换为 Skill。</p>
+						</div>
+						<button class="primary-button">新建 Prompt</button>
+					</div>
 
-          <div class="split-view">
-            <aside class="wire-card category-panel">
-              <div class="category-group">
-                <p class="category-title">代码生成</p>
-                <div class="category-item active"><span>代码重构</span><span>9</span></div>
-                <div class="category-item"><span>代码补全</span><span>7</span></div>
-                <div class="category-item"><span>Bug 修复</span><span>5</span></div>
-              </div>
-              <div class="category-group">
-                <p class="category-title">文本处理</p>
-                <div class="category-item"><span>翻译</span><span>6</span></div>
-                <div class="category-item"><span>摘要</span><span>4</span></div>
-                <div class="category-item"><span>改写</span><span>3</span></div>
-              </div>
-              <div class="category-group">
-                <p class="category-title">分析审查</p>
-                <div class="category-item"><span>代码审查</span><span>8</span></div>
-                <div class="category-item"><span>逻辑分析</span><span>5</span></div>
-              </div>
-            </aside>
+					<div class="split-view">
+						<aside class="wire-card category-panel">
+							<div class="category-group">
+								<p class="category-title">代码生成</p>
+								<div class="category-item active"><span>代码重构</span><span>9</span></div>
+								<div class="category-item"><span>代码补全</span><span>7</span></div>
+								<div class="category-item"><span>Bug 修复</span><span>5</span></div>
+							</div>
+							<div class="category-group">
+								<p class="category-title">文本处理</p>
+								<div class="category-item"><span>翻译</span><span>6</span></div>
+								<div class="category-item"><span>摘要</span><span>4</span></div>
+								<div class="category-item"><span>改写</span><span>3</span></div>
+							</div>
+							<div class="category-group">
+								<p class="category-title">分析审查</p>
+								<div class="category-item"><span>代码审查</span><span>8</span></div>
+								<div class="category-item"><span>逻辑分析</span><span>5</span></div>
+							</div>
+						</aside>
 
-            <div class="wire-card content-panel">
-              <div class="toolbar">
-                <div class="filters">
-                  <input class="search-box" value="搜索 Prompt..." aria-label="搜索" />
-                  <select class="select-box" aria-label="变量筛选"><option>变量：全部</option></select>
-                  <select class="select-box" aria-label="来源筛选"><option>来源：我的</option></select>
-                </div>
-                <button class="secondary-button">批量转换为 Skill</button>
-              </div>
+						<div class="wire-card content-panel">
+							<div class="toolbar">
+								<div class="filters">
+									<input class="search-box" value="搜索 Prompt..." aria-label="搜索">
+									<select class="select-box" aria-label="变量筛选">
+										<option>变量：全部</option>
+									</select>
+									<select class="select-box" aria-label="来源筛选">
+										<option>来源：我的</option>
+									</select>
+								</div>
+								<button class="secondary-button">批量转换为 Skill</button>
+							</div>
 
-              <div class="card-grid">
-                <article class="item-card">
-                  <div class="item-topline">
-                    <h3>代码重构 Prompt</h3>
-                    <span class="badge prompt">prompt</span>
-                  </div>
-                  <p>请将以下代码重构为符合指定框架最佳实践的写法。</p>
-                  <div>
-                    <span class="var-chip">language</span>
-                    <span class="var-chip">framework</span>
-                    <span class="var-chip">code</span>
-                  </div>
-                  <div class="mini-actions">
-                    <button class="mini-button">测试运行</button>
-                    <button class="mini-button">转换为 Skill</button>
-                  </div>
-                </article>
-                <article class="item-card">
-                  <div class="item-topline">
-                    <h3>代码审查 Prompt</h3>
-                    <span class="badge prompt">prompt</span>
-                  </div>
-                  <p>根据项目规则检查提交内容，输出风险、建议和优先级。</p>
-                  <div>
-                    <span class="var-chip">diff</span>
-                    <span class="var-chip">rules</span>
-                  </div>
-                  <div class="mini-actions">
-                    <button class="mini-button">测试运行</button>
-                    <button class="mini-button">转换为 Skill</button>
-                  </div>
-                </article>
-              </div>
+							<div class="card-grid">
+								<article class="item-card">
+									<div class="item-topline">
+										<h3>代码重构 Prompt</h3>
+										<span class="badge prompt">prompt</span>
+									</div>
+									<p>请将以下代码重构为符合指定框架最佳实践的写法。</p>
+									<div>
+										<span class="var-chip">language</span>
+										<span class="var-chip">framework</span>
+										<span class="var-chip">code</span>
+									</div>
+									<div class="mini-actions">
+										<button class="mini-button">测试运行</button>
+										<button class="mini-button">转换为 Skill</button>
+									</div>
+								</article>
+								<article class="item-card">
+									<div class="item-topline">
+										<h3>代码审查 Prompt</h3>
+										<span class="badge prompt">prompt</span>
+									</div>
+									<p>根据项目规则检查提交内容，输出风险、建议和优先级。</p>
+									<div>
+										<span class="var-chip">diff</span>
+										<span class="var-chip">rules</span>
+									</div>
+									<div class="mini-actions">
+										<button class="mini-button">测试运行</button>
+										<button class="mini-button">转换为 Skill</button>
+									</div>
+								</article>
+							</div>
 
-              <div class="editor-preview">
-                <div class="editor-pane">
-                  <p class="pane-title">模板编辑</p>
-                  <pre class="code-lines">请将以下 {{language}} 代码重构为符合 {{framework}} 最佳实践的写法：
+							<div class="editor-preview">
+								<div class="editor-pane">
+									<p class="pane-title">模板编辑</p>
+									<pre
+										class="code-lines"
+									>请将以下 {{language}} 代码重构为符合 {{framework}} 最佳实践的写法：
 
 {{code}}
 
 要求：
 - 遵循 {{style_guide}} 规范
 - 保持原有功能不变</pre>
-                </div>
-                <div class="editor-pane">
-                  <p class="pane-title">变量测试</p>
-                  <input class="text-input" style="width: 100%; margin-bottom: 8px" value="language = TypeScript" />
-                  <input class="text-input" style="width: 100%; margin-bottom: 8px" value="framework = React" />
-                  <div class="empty-figure"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+								</div>
+								<div class="editor-pane">
+									<p class="pane-title">变量测试</p>
+									<input
+										class="text-input"
+										style="width: 100%; margin-bottom: 8px"
+										value="language = TypeScript"
+									>
+									<input
+										class="text-input"
+										style="width: 100%; margin-bottom: 8px"
+										value="framework = React"
+									>
+									<div class="empty-figure"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
 
-        <section class="page" id="skills">
-          <div class="page-header">
-            <div>
-              <h2>Skills 管理</h2>
-              <p>定义 AI 可复用能力，包括触发条件、能力范围、约束条件，以及关联的 Prompt 和 Snippet。</p>
-            </div>
-            <button class="primary-button">新建 Skill</button>
-          </div>
+				<section class="page" id="skills">
+					<div class="page-header">
+						<div>
+							<h2>Skills 管理</h2>
+							<p>
+								定义 AI 可复用能力，包括触发条件、能力范围、约束条件，以及关联的 Prompt 和 Snippet。
+							</p>
+						</div>
+						<button class="primary-button">新建 Skill</button>
+					</div>
 
-          <div class="split-view">
-            <aside class="wire-card category-panel">
-              <div class="category-group">
-                <p class="category-title">开发工具</p>
-                <div class="category-item active"><span>代码审查</span><span>5</span></div>
-                <div class="category-item"><span>测试生成</span><span>4</span></div>
-                <div class="category-item"><span>重构建议</span><span>3</span></div>
-              </div>
-              <div class="category-group">
-                <p class="category-title">写作工具</p>
-                <div class="category-item"><span>文档生成</span><span>7</span></div>
-                <div class="category-item"><span>翻译辅助</span><span>2</span></div>
-              </div>
-            </aside>
+					<div class="split-view">
+						<aside class="wire-card category-panel">
+							<div class="category-group">
+								<p class="category-title">开发工具</p>
+								<div class="category-item active"><span>代码审查</span><span>5</span></div>
+								<div class="category-item"><span>测试生成</span><span>4</span></div>
+								<div class="category-item"><span>重构建议</span><span>3</span></div>
+							</div>
+							<div class="category-group">
+								<p class="category-title">写作工具</p>
+								<div class="category-item"><span>文档生成</span><span>7</span></div>
+								<div class="category-item"><span>翻译辅助</span><span>2</span></div>
+							</div>
+						</aside>
 
-            <div class="wire-card content-panel">
-              <div class="toolbar">
-                <div class="filters">
-                  <input class="search-box" value="搜索 Skill..." aria-label="搜索" />
-                  <select class="select-box" aria-label="依赖筛选"><option>依赖：全部</option></select>
-                </div>
-                <button class="secondary-button">导出 SKILL.md</button>
-              </div>
+						<div class="wire-card content-panel">
+							<div class="toolbar">
+								<div class="filters">
+									<input class="search-box" value="搜索 Skill..." aria-label="搜索">
+									<select class="select-box" aria-label="依赖筛选">
+										<option>依赖：全部</option>
+									</select>
+								</div>
+								<button class="secondary-button">导出 SKILL.md</button>
+							</div>
 
-              <div class="card-grid">
-                <article class="item-card">
-                  <div class="item-topline">
-                    <h3>代码审查 Skill</h3>
-                    <span class="badge skill">skill</span>
-                  </div>
-                  <p>触发：当用户提交代码变更时，检查 bug、回归风险和测试缺口。</p>
-                  <span class="pill">关联 2 个 Prompt</span>
-                  <span class="pill">关联 1 个 Snippet</span>
-                </article>
-                <article class="item-card">
-                  <div class="item-topline">
-                    <h3>测试生成 Skill</h3>
-                    <span class="badge skill">skill</span>
-                  </div>
-                  <p>根据业务逻辑和已有测试风格，生成覆盖关键分支的测试用例。</p>
-                  <span class="pill">关联 1 个 Prompt</span>
-                  <span class="pill">被 3 个 Agent 使用</span>
-                </article>
-              </div>
+							<div class="card-grid">
+								<article class="item-card">
+									<div class="item-topline">
+										<h3>代码审查 Skill</h3>
+										<span class="badge skill">skill</span>
+									</div>
+									<p>触发：当用户提交代码变更时，检查 bug、回归风险和测试缺口。</p>
+									<span class="pill">关联 2 个 Prompt</span>
+									<span class="pill">关联 1 个 Snippet</span>
+								</article>
+								<article class="item-card">
+									<div class="item-topline">
+										<h3>测试生成 Skill</h3>
+										<span class="badge skill">skill</span>
+									</div>
+									<p>根据业务逻辑和已有测试风格，生成覆盖关键分支的测试用例。</p>
+									<span class="pill">关联 1 个 Prompt</span>
+									<span class="pill">被 3 个 Agent 使用</span>
+								</article>
+							</div>
 
-              <div class="skill-detail">
-                <div class="detail-panel">
-                  <p class="pane-title">Skill 编辑</p>
-                  <input class="text-input" style="width: 100%; margin-bottom: 8px" value="名称：代码审查 Skill" />
-                  <input class="text-input" style="width: 100%; margin-bottom: 8px" value="触发：用户要求 review 或提交 diff" />
-                  <pre class="code-lines">能力：
+							<div class="skill-detail">
+								<div class="detail-panel">
+									<p class="pane-title">Skill 编辑</p>
+									<input
+										class="text-input"
+										style="width: 100%; margin-bottom: 8px"
+										value="名称：代码审查 Skill"
+									>
+									<input
+										class="text-input"
+										style="width: 100%; margin-bottom: 8px"
+										value="触发：用户要求 review 或提交 diff"
+									>
+									<pre class="code-lines">能力：
 - 识别 bug 和行为回归
 - 标注文件/行号
 - 给出优先级
@@ -1115,107 +1146,148 @@
 约束：
 - 不做无关重构
 - 发现优先于总结</pre>
-                </div>
-                <div class="detail-panel">
-                  <p class="pane-title">关联关系</p>
-                  <div class="asset-card"><strong>Prompt：代码审查 Prompt</strong><span>提供检查输出格式</span></div>
-                  <div class="asset-card" style="margin-top: 10px"><strong>Snippet：代码风格规则</strong><span>提供项目上下文</span></div>
-                  <div class="mini-actions">
-                    <button class="mini-button">添加 Prompt</button>
-                    <button class="mini-button">添加 Snippet</button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+								</div>
+								<div class="detail-panel">
+									<p class="pane-title">关联关系</p>
+									<div class="asset-card">
+										<strong>Prompt：代码审查 Prompt</strong><span>提供检查输出格式</span>
+									</div>
+									<div class="asset-card" style="margin-top: 10px">
+										<strong>Snippet：代码风格规则</strong><span>提供项目上下文</span>
+									</div>
+									<div class="mini-actions">
+										<button class="mini-button">添加 Prompt</button>
+										<button class="mini-button">添加 Snippet</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
 
-        <section class="page" id="agents">
-          <div class="page-header">
-            <div>
-              <h2>Agents 管理与编排</h2>
-              <p>从 Snippet、Prompt、Skill 中拖拽素材到画布，组成完整 Agent 配置，并实时预览最终导出的 AGENTS.md 或 JSON。</p>
-            </div>
-            <button class="primary-button">新建 Agent</button>
-          </div>
+				<section class="page" id="agents">
+					<div class="page-header">
+						<div>
+							<h2>Agents 管理与编排</h2>
+							<p>
+								从 Snippet、Prompt、Skill 中拖拽素材到画布，组成完整 Agent
+								配置，并实时预览最终导出的 AGENTS.md 或 JSON。
+							</p>
+						</div>
+						<button class="primary-button">新建 Agent</button>
+					</div>
 
-          <div class="composer">
-            <aside class="wire-card composer-column">
-              <p class="pane-title">素材面板</p>
-              <input class="search-box" style="min-width: 100%; margin-bottom: 10px" value="搜索素材..." aria-label="搜索素材" />
-              <div class="filters" style="margin-bottom: 12px">
-                <select class="select-box"><option>类型：全部</option></select>
-                <select class="select-box"><option>分类：全部</option></select>
-              </div>
-              <div class="asset-list">
-                <div class="asset-card"><span class="badge snippet">snippet</span><strong>代码风格规范</strong><span>TypeScript / React 规则</span></div>
-                <div class="asset-card"><span class="badge prompt">prompt</span><strong>代码重构模板</strong><span>3 个变量，可转 Skill</span></div>
-                <div class="asset-card"><span class="badge skill">skill</span><strong>测试生成 Skill</strong><span>关联 1 个 Prompt</span></div>
-                <div class="asset-card"><span class="badge snippet">snippet</span><strong>数据库约束规则</strong><span>Prisma 操作流程</span></div>
-                <div class="asset-card"><span class="badge agent">agent</span><strong>已有前端 Agent</strong><span>可作为子 Agent 嵌套</span></div>
-              </div>
-            </aside>
+					<div class="composer">
+						<aside class="wire-card composer-column">
+							<p class="pane-title">素材面板</p>
+							<input
+								class="search-box"
+								style="min-width: 100%; margin-bottom: 10px"
+								value="搜索素材..."
+								aria-label="搜索素材"
+							>
+							<div class="filters" style="margin-bottom: 12px">
+								<select class="select-box">
+									<option>类型：全部</option>
+								</select>
+								<select class="select-box">
+									<option>分类：全部</option>
+								</select>
+							</div>
+							<div class="asset-list">
+								<div class="asset-card">
+									<span class="badge snippet">snippet</span><strong>代码风格规范</strong
+									><span>TypeScript / React 规则</span>
+								</div>
+								<div class="asset-card">
+									<span class="badge prompt">prompt</span><strong>代码重构模板</strong
+									><span>3 个变量，可转 Skill</span>
+								</div>
+								<div class="asset-card">
+									<span class="badge skill">skill</span><strong>测试生成 Skill</strong
+									><span>关联 1 个 Prompt</span>
+								</div>
+								<div class="asset-card">
+									<span class="badge snippet">snippet</span><strong>数据库约束规则</strong
+									><span>Prisma 操作流程</span>
+								</div>
+								<div class="asset-card">
+									<span class="badge agent">agent</span><strong>已有前端 Agent</strong
+									><span>可作为子 Agent 嵌套</span>
+								</div>
+							</div>
+						</aside>
 
-            <section class="wire-card composer-column">
-              <div class="canvas-title">
-                <div>
-                  <h3>My Frontend Agent</h3>
-                  <span class="pill">拖拽排序 · DAG 组合</span>
-                </div>
-                <button class="secondary-button">协作中：3 人</button>
-              </div>
-              <div class="canvas-stage">
-                <div class="flow">
-                  <div class="flow-node">
-                    <span class="badge snippet">AGENTS.md</span>
-                    <h4>代码风格规范</h4>
-                    <p>作为 Agent 的基础行为和代码约束。</p>
-                  </div>
-                  <div class="flow-node">
-                    <span class="badge prompt">Prompt</span>
-                    <h4>代码重构模板</h4>
-                    <p>为重构任务提供可变量化的指令模板。</p>
-                  </div>
-                  <div class="flow-node">
-                    <span class="badge skill">Skill</span>
-                    <h4>测试生成 Skill</h4>
-                    <p>触发测试生成能力，引用相关 Prompt。</p>
-                  </div>
-                  <div class="flow-node">
-                    <span class="badge snippet">AGENTS.md</span>
-                    <h4>数据库约束规则</h4>
-                    <p>约束 Prisma schema 和自动生成目录。</p>
-                  </div>
-                </div>
-              </div>
-            </section>
+						<section class="wire-card composer-column">
+							<div class="canvas-title">
+								<div>
+									<h3>My Frontend Agent</h3>
+									<span class="pill">拖拽排序 · DAG 组合</span>
+								</div>
+								<button class="secondary-button">协作中：3 人</button>
+							</div>
+							<div class="canvas-stage">
+								<div class="flow">
+									<div class="flow-node">
+										<span class="badge snippet">AGENTS.md</span>
+										<h4>代码风格规范</h4>
+										<p>作为 Agent 的基础行为和代码约束。</p>
+									</div>
+									<div class="flow-node">
+										<span class="badge prompt">Prompt</span>
+										<h4>代码重构模板</h4>
+										<p>为重构任务提供可变量化的指令模板。</p>
+									</div>
+									<div class="flow-node">
+										<span class="badge skill">Skill</span>
+										<h4>测试生成 Skill</h4>
+										<p>触发测试生成能力，引用相关 Prompt。</p>
+									</div>
+									<div class="flow-node">
+										<span class="badge snippet">AGENTS.md</span>
+										<h4>数据库约束规则</h4>
+										<p>约束 Prisma schema 和自动生成目录。</p>
+									</div>
+								</div>
+							</div>
+						</section>
 
-            <aside class="wire-card composer-column">
-              <p class="pane-title">属性面板</p>
-              <div class="property-stack">
-                <div class="property-box">
-                  <h4>Agent 配置</h4>
-                  <input class="text-input" style="width: 100%; margin-bottom: 8px" value="名称：My Frontend Agent" />
-                  <input class="text-input" style="width: 100%; margin-bottom: 8px" value="分类：全栈开发" />
-                  <textarea class="text-input" style="width: 100%; height: 78px; padding-top: 10px">描述：面向 Next.js + TypeScript 项目的前端开发代理。</textarea>
-                </div>
-                <div class="property-box">
-                  <h4>包含组件</h4>
-                  <span class="pill">Snippet × 2</span>
-                  <span class="pill">Prompt × 1</span>
-                  <span class="pill">Skill × 1</span>
-                </div>
-                <div class="property-box">
-                  <h4>导出</h4>
-                  <div class="mini-actions">
-                    <button class="mini-button">AGENTS.md</button>
-                    <button class="mini-button">JSON</button>
-                    <button class="mini-button">MCP Push</button>
-                  </div>
-                </div>
-                <div class="property-box">
-                  <h4>实时预览</h4>
-                  <pre class="code-lines"># My Frontend Agent
+						<aside class="wire-card composer-column">
+							<p class="pane-title">属性面板</p>
+							<div class="property-stack">
+								<div class="property-box">
+									<h4>Agent 配置</h4>
+									<input
+										class="text-input"
+										style="width: 100%; margin-bottom: 8px"
+										value="名称：My Frontend Agent"
+									>
+									<input
+										class="text-input"
+										style="width: 100%; margin-bottom: 8px"
+										value="分类：全栈开发"
+									>
+									<textarea class="text-input" style="width: 100%; height: 78px; padding-top: 10px">
+										描述：面向 Next.js + TypeScript 项目的前端开发代理。
+									</textarea>
+								</div>
+								<div class="property-box">
+									<h4>包含组件</h4>
+									<span class="pill">Snippet × 2</span>
+									<span class="pill">Prompt × 1</span>
+									<span class="pill">Skill × 1</span>
+								</div>
+								<div class="property-box">
+									<h4>导出</h4>
+									<div class="mini-actions">
+										<button class="mini-button">AGENTS.md</button>
+										<button class="mini-button">JSON</button>
+										<button class="mini-button">MCP Push</button>
+									</div>
+								</div>
+								<div class="property-box">
+									<h4>实时预览</h4>
+									<pre class="code-lines"># My Frontend Agent
 
 ## 代码风格规范
 ...
@@ -1225,273 +1297,315 @@
 
 ## 测试生成 Skill
 ...</pre>
-                </div>
-              </div>
-            </aside>
-          </div>
-        </section>
+								</div>
+							</div>
+						</aside>
+					</div>
+				</section>
 
-        <section class="page" id="workspace">
-          <div class="page-header">
-            <div>
-              <h2>Workspace 工作空间</h2>
-              <p>团队协作中心：管理空间、邀请成员、共享 Block 和 Agent 编排方案，并通过活动流追踪变更。</p>
-            </div>
-            <button class="primary-button">创建空间</button>
-          </div>
+				<section class="page" id="workspace">
+					<div class="page-header">
+						<div>
+							<h2>Workspace 工作空间</h2>
+							<p>
+								团队协作中心：管理空间、邀请成员、共享 Block 和 Agent
+								编排方案，并通过活动流追踪变更。
+							</p>
+						</div>
+						<button class="primary-button">创建空间</button>
+					</div>
 
-          <div class="metric-grid" style="margin-bottom: 16px">
-            <div class="metric"><strong>2</strong><span>加入的空间</span></div>
-            <div class="metric"><strong>20</strong><span>共享 Block</span></div>
-            <div class="metric"><strong>5</strong><span>共享 Agent 方案</span></div>
-          </div>
+					<div class="metric-grid" style="margin-bottom: 16px">
+						<div class="metric"><strong>2</strong><span>加入的空间</span></div>
+						<div class="metric"><strong>20</strong><span>共享 Block</span></div>
+						<div class="metric"><strong>5</strong><span>共享 Agent 方案</span></div>
+					</div>
 
-          <div class="space-grid">
-            <article class="space-card">
-              <h3>前端团队</h3>
-              <p><span class="pill">5 位成员</span> <span class="pill">12 个 Block</span></p>
-              <p>3 个 Agent 方案，最近活跃：2 小时前。</p>
-              <button class="secondary-button">进入空间</button>
-            </article>
-            <article class="space-card">
-              <h3>AI 研究组</h3>
-              <p><span class="pill">3 位成员</span> <span class="pill">8 个 Block</span></p>
-              <p>2 个 Agent 方案，最近活跃：1 天前。</p>
-              <button class="secondary-button">进入空间</button>
-            </article>
-            <article class="space-card">
-              <h3>个人实验室</h3>
-              <p><span class="pill">仅本人</span> <span class="pill">草稿区</span></p>
-              <p>用于实验未发布的 Prompt 和 Agent 编排。</p>
-              <button class="secondary-button">进入空间</button>
-            </article>
-          </div>
+					<div class="space-grid">
+						<article class="space-card">
+							<h3>前端团队</h3>
+							<p><span class="pill">5 位成员</span> <span class="pill">12 个 Block</span></p>
+							<p>3 个 Agent 方案，最近活跃：2 小时前。</p>
+							<button class="secondary-button">进入空间</button>
+						</article>
+						<article class="space-card">
+							<h3>AI 研究组</h3>
+							<p><span class="pill">3 位成员</span> <span class="pill">8 个 Block</span></p>
+							<p>2 个 Agent 方案，最近活跃：1 天前。</p>
+							<button class="secondary-button">进入空间</button>
+						</article>
+						<article class="space-card">
+							<h3>个人实验室</h3>
+							<p><span class="pill">仅本人</span> <span class="pill">草稿区</span></p>
+							<p>用于实验未发布的 Prompt 和 Agent 编排。</p>
+							<button class="secondary-button">进入空间</button>
+						</article>
+					</div>
 
-          <div class="wire-card content-panel" style="margin-top: 16px">
-            <div class="toolbar">
-              <div>
-                <h3 style="margin: 0">空间详情：前端团队</h3>
-                <p style="margin: 6px 0 0; color: var(--muted)">共享素材库、编排、成员和活动集中管理。</p>
-              </div>
-              <button class="secondary-button">邀请成员</button>
-            </div>
-            <div class="tabs">
-              <span class="tab active">素材</span>
-              <span class="tab">编排</span>
-              <span class="tab">成员</span>
-              <span class="tab">活动</span>
-            </div>
-            <div class="timeline">
-              <div class="timeline-item"><strong>2 小时前</strong><span>小云更新了「代码风格规范」Snippet。</span></div>
-              <div class="timeline-item"><strong>昨天</strong><span>小李新增了「测试生成 Skill」。</span></div>
-              <div class="timeline-item"><strong>3 天前</strong><span>管理员邀请了 2 位成员加入前端团队。</span></div>
-            </div>
-          </div>
-        </section>
+					<div class="wire-card content-panel" style="margin-top: 16px">
+						<div class="toolbar">
+							<div>
+								<h3 style="margin: 0">空间详情：前端团队</h3>
+								<p style="margin: 6px 0 0; color: var(--muted)">
+									共享素材库、编排、成员和活动集中管理。
+								</p>
+							</div>
+							<button class="secondary-button">邀请成员</button>
+						</div>
+						<div class="tabs">
+							<span class="tab active">素材</span>
+							<span class="tab">编排</span>
+							<span class="tab">成员</span>
+							<span class="tab">活动</span>
+						</div>
+						<div class="timeline">
+							<div class="timeline-item">
+								<strong>2 小时前</strong><span>小云更新了「代码风格规范」Snippet。</span>
+							</div>
+							<div class="timeline-item">
+								<strong>昨天</strong><span>小李新增了「测试生成 Skill」。</span>
+							</div>
+							<div class="timeline-item">
+								<strong>3 天前</strong><span>管理员邀请了 2 位成员加入前端团队。</span>
+							</div>
+						</div>
+					</div>
+				</section>
 
-        <section class="page" id="discover">
-          <div class="page-header">
-            <div>
-              <h2>Discover 发现广场</h2>
-              <p>浏览公开的 Snippet、Prompt、Skill 和 Agent，支持搜索、分类筛选、导入到个人素材库。</p>
-            </div>
-            <button class="primary-button">发布我的 Block</button>
-          </div>
+				<section class="page" id="discover">
+					<div class="page-header">
+						<div>
+							<h2>Discover 发现广场</h2>
+							<p>
+								浏览公开的 Snippet、Prompt、Skill 和 Agent，支持搜索、分类筛选、导入到个人素材库。
+							</p>
+						</div>
+						<button class="primary-button">发布我的 Block</button>
+					</div>
 
-          <div class="wire-card discover-hero">
-            <div class="toolbar">
-              <input class="search-box" value="搜索公开素材、Agent、Skill..." aria-label="搜索发现内容" />
-              <div class="filters">
-                <select class="select-box"><option>类型：全部</option></select>
-                <select class="select-box"><option>分类：全部</option></select>
-                <select class="select-box"><option>排序：热门</option></select>
-              </div>
-            </div>
-          </div>
+					<div class="wire-card discover-hero">
+						<div class="toolbar">
+							<input
+								class="search-box"
+								value="搜索公开素材、Agent、Skill..."
+								aria-label="搜索发现内容"
+							>
+							<div class="filters">
+								<select class="select-box">
+									<option>类型：全部</option>
+								</select>
+								<select class="select-box">
+									<option>分类：全部</option>
+								</select>
+								<select class="select-box">
+									<option>排序：热门</option>
+								</select>
+							</div>
+						</div>
+					</div>
 
-          <h3>热门推荐</h3>
-          <div class="discover-grid">
-            <article class="discover-card">
-              <span class="badge agent">Agent</span>
-              <h3>全栈开发 Agent</h3>
-              <p>包含项目结构、代码风格、测试和数据库规则。</p>
-              <p><span class="rating">4.8</span> · 下载 1.2k</p>
-              <button class="secondary-button">导入</button>
-            </article>
-            <article class="discover-card">
-              <span class="badge skill">Skill</span>
-              <h3>代码审查 Skill</h3>
-              <p>面向 PR 和 diff 的审查技能，强调风险和测试缺口。</p>
-              <p><span class="rating">4.6</span> · 下载 890</p>
-              <button class="secondary-button">导入</button>
-            </article>
-            <article class="discover-card">
-              <span class="badge prompt">Prompt</span>
-              <h3>Git 提交 Prompt</h3>
-              <p>根据变更生成中文约定式提交信息。</p>
-              <p><span class="rating">4.5</span> · 下载 2.1k</p>
-              <button class="secondary-button">导入</button>
-            </article>
-          </div>
+					<h3>热门推荐</h3>
+					<div class="discover-grid">
+						<article class="discover-card">
+							<span class="badge agent">Agent</span>
+							<h3>全栈开发 Agent</h3>
+							<p>包含项目结构、代码风格、测试和数据库规则。</p>
+							<p><span class="rating">4.8</span> · 下载 1.2k</p>
+							<button class="secondary-button">导入</button>
+						</article>
+						<article class="discover-card">
+							<span class="badge skill">Skill</span>
+							<h3>代码审查 Skill</h3>
+							<p>面向 PR 和 diff 的审查技能，强调风险和测试缺口。</p>
+							<p><span class="rating">4.6</span> · 下载 890</p>
+							<button class="secondary-button">导入</button>
+						</article>
+						<article class="discover-card">
+							<span class="badge prompt">Prompt</span>
+							<h3>Git 提交 Prompt</h3>
+							<p>根据变更生成中文约定式提交信息。</p>
+							<p><span class="rating">4.5</span> · 下载 2.1k</p>
+							<button class="secondary-button">导入</button>
+						</article>
+					</div>
 
-          <h3 style="margin-top: 22px">最新发布</h3>
-          <div class="discover-grid">
-            <article class="discover-card">
-              <span class="badge snippet">Snippet</span>
-              <h3>部署规范</h3>
-              <p>3 小时前发布，适合 CI/CD 约束。</p>
-              <button class="secondary-button">导入</button>
-            </article>
-            <article class="discover-card">
-              <span class="badge prompt">Prompt</span>
-              <h3>API 设计 Prompt</h3>
-              <p>5 小时前发布，用于生成接口契约和边界条件。</p>
-              <button class="secondary-button">导入</button>
-            </article>
-            <article class="discover-card">
-              <span class="badge skill">Skill</span>
-              <h3>英文翻译 Skill</h3>
-              <p>1 天前发布，支持自然简体中文翻译。</p>
-              <button class="secondary-button">导入</button>
-            </article>
-          </div>
-        </section>
+					<h3 style="margin-top: 22px">最新发布</h3>
+					<div class="discover-grid">
+						<article class="discover-card">
+							<span class="badge snippet">Snippet</span>
+							<h3>部署规范</h3>
+							<p>3 小时前发布，适合 CI/CD 约束。</p>
+							<button class="secondary-button">导入</button>
+						</article>
+						<article class="discover-card">
+							<span class="badge prompt">Prompt</span>
+							<h3>API 设计 Prompt</h3>
+							<p>5 小时前发布，用于生成接口契约和边界条件。</p>
+							<button class="secondary-button">导入</button>
+						</article>
+						<article class="discover-card">
+							<span class="badge skill">Skill</span>
+							<h3>英文翻译 Skill</h3>
+							<p>1 天前发布，支持自然简体中文翻译。</p>
+							<button class="secondary-button">导入</button>
+						</article>
+					</div>
+				</section>
 
-        <section class="page" id="settings">
-          <div class="page-header">
-            <div>
-              <h2>Settings 设置</h2>
-              <p>配置个人资料、偏好、工作空间管理，以及 MCP 双向同步连接。</p>
-            </div>
-            <button class="primary-button">添加 MCP 服务</button>
-          </div>
+				<section class="page" id="settings">
+					<div class="page-header">
+						<div>
+							<h2>Settings 设置</h2>
+							<p>配置个人资料、偏好、工作空间管理，以及 MCP 双向同步连接。</p>
+						</div>
+						<button class="primary-button">添加 MCP 服务</button>
+					</div>
 
-          <div class="wire-card settings-hero">
-            <div class="toolbar">
-              <div>
-                <h3 style="margin: 0">MCP 连接管理</h3>
-                <p style="margin: 6px 0 0; color: var(--muted)">支持 Pull、Push、Bidirectional 三种同步方向。</p>
-              </div>
-              <div class="filters">
-                <select class="select-box"><option>同步方向：全部</option></select>
-                <select class="select-box"><option>状态：全部</option></select>
-              </div>
-            </div>
-          </div>
+					<div class="wire-card settings-hero">
+						<div class="toolbar">
+							<div>
+								<h3 style="margin: 0">MCP 连接管理</h3>
+								<p style="margin: 6px 0 0; color: var(--muted)">
+									支持 Pull、Push、Bidirectional 三种同步方向。
+								</p>
+							</div>
+							<div class="filters">
+								<select class="select-box">
+									<option>同步方向：全部</option>
+								</select>
+								<select class="select-box">
+									<option>状态：全部</option>
+								</select>
+							</div>
+						</div>
+					</div>
 
-          <div class="settings-grid">
-            <article class="mcp-card">
-              <div class="mcp-status">
-                <h3>Cursor MCP</h3>
-                <span class="pill green"><span class="status-dot online"></span>已连接</span>
-              </div>
-              <p>端点：http://localhost:3001/mcp</p>
-              <p>同步方向：双向；上次同步：10 分钟前。</p>
-              <p><span class="pill">Snippet → Rules</span> <span class="pill">Prompt → Templates</span></p>
-              <div class="mini-actions">
-                <button class="mini-button">手动同步</button>
-                <button class="mini-button">编辑</button>
-                <button class="mini-button">断开</button>
-              </div>
-            </article>
-            <article class="mcp-card">
-              <div class="mcp-status">
-                <h3>opencode MCP</h3>
-                <span class="pill"><span class="status-dot"></span>未连接</span>
-              </div>
-              <p>端点：http://localhost:3002/mcp</p>
-              <p>同步方向：推送；上次同步：从未。</p>
-              <p><span class="pill">Snippet → AGENTS.md</span> <span class="pill">Skill → Skills</span></p>
-              <div class="mini-actions">
-                <button class="mini-button">手动同步</button>
-                <button class="mini-button">编辑</button>
-                <button class="mini-button">删除</button>
-              </div>
-            </article>
-            <article class="mcp-card">
-              <div class="mcp-status">
-                <h3>团队同步服务</h3>
-                <span class="pill danger"><span class="status-dot error"></span>错误</span>
-              </div>
-              <p>端点：https://team.example.com/mcp</p>
-              <p>同步方向：拉取；上次同步失败。</p>
-              <p><span class="pill">Agent → Agent Config</span></p>
-              <div class="mini-actions">
-                <button class="mini-button">查看日志</button>
-                <button class="mini-button">重试</button>
-                <button class="mini-button">编辑</button>
-              </div>
-            </article>
-          </div>
+					<div class="settings-grid">
+						<article class="mcp-card">
+							<div class="mcp-status">
+								<h3>Cursor MCP</h3>
+								<span class="pill green"><span class="status-dot online"></span>已连接</span>
+							</div>
+							<p>端点：http://localhost:3001/mcp</p>
+							<p>同步方向：双向；上次同步：10 分钟前。</p>
+							<p>
+								<span class="pill">Snippet → Rules</span>
+								<span class="pill">Prompt → Templates</span>
+							</p>
+							<div class="mini-actions">
+								<button class="mini-button">手动同步</button>
+								<button class="mini-button">编辑</button>
+								<button class="mini-button">断开</button>
+							</div>
+						</article>
+						<article class="mcp-card">
+							<div class="mcp-status">
+								<h3>opencode MCP</h3>
+								<span class="pill"><span class="status-dot"></span>未连接</span>
+							</div>
+							<p>端点：http://localhost:3002/mcp</p>
+							<p>同步方向：推送；上次同步：从未。</p>
+							<p>
+								<span class="pill">Snippet → AGENTS.md</span>
+								<span class="pill">Skill → Skills</span>
+							</p>
+							<div class="mini-actions">
+								<button class="mini-button">手动同步</button>
+								<button class="mini-button">编辑</button>
+								<button class="mini-button">删除</button>
+							</div>
+						</article>
+						<article class="mcp-card">
+							<div class="mcp-status">
+								<h3>团队同步服务</h3>
+								<span class="pill danger"><span class="status-dot error"></span>错误</span>
+							</div>
+							<p>端点：https://team.example.com/mcp</p>
+							<p>同步方向：拉取；上次同步失败。</p>
+							<p><span class="pill">Agent → Agent Config</span></p>
+							<div class="mini-actions">
+								<button class="mini-button">查看日志</button>
+								<button class="mini-button">重试</button>
+								<button class="mini-button">编辑</button>
+							</div>
+						</article>
+					</div>
 
-          <div class="wire-card content-panel" style="margin-top: 16px">
-            <div class="toolbar">
-              <h3 style="margin: 0">同步日志</h3>
-              <button class="secondary-button">刷新</button>
-            </div>
-            <div class="timeline">
-              <div class="timeline-item"><strong>10 分钟前</strong><span>Cursor MCP 双向同步成功：拉取 2 个 Prompt，推送 1 个 Snippet。</span></div>
-              <div class="timeline-item"><strong>1 小时前</strong><span>opencode MCP 未连接，跳过自动同步。</span></div>
-              <div class="timeline-item"><strong>昨天</strong><span>团队同步服务拉取失败：认证令牌已过期。</span></div>
-            </div>
-          </div>
-        </section>
-      </main>
-    </div>
+					<div class="wire-card content-panel" style="margin-top: 16px">
+						<div class="toolbar">
+							<h3 style="margin: 0">同步日志</h3>
+							<button class="secondary-button">刷新</button>
+						</div>
+						<div class="timeline">
+							<div class="timeline-item">
+								<strong>10 分钟前</strong
+								><span>Cursor MCP 双向同步成功：拉取 2 个 Prompt，推送 1 个 Snippet。</span>
+							</div>
+							<div class="timeline-item">
+								<strong>1 小时前</strong><span>opencode MCP 未连接，跳过自动同步。</span>
+							</div>
+							<div class="timeline-item">
+								<strong>昨天</strong><span>团队同步服务拉取失败：认证令牌已过期。</span>
+							</div>
+						</div>
+					</div>
+				</section>
+			</main>
+		</div>
 
-    <script>
-      const pageMeta = {
-        snippets: {
-          title: "Snippets 管理",
-          description: "AGENTS.md 片段的创建、分类、预览与导出。",
-        },
-        prompts: {
-          title: "Prompts 管理",
-          description: "提示词模板、变量占位符、测试运行和转换 Skill。",
-        },
-        skills: {
-          title: "Skills 管理",
-          description: "AI 技能定义、触发条件、关联 Prompt 与 Snippet。",
-        },
-        agents: {
-          title: "Agents 管理与编排",
-          description: "拖拽组合 Snippet、Prompt、Skill，导出完整 Agent 配置。",
-        },
-        workspace: {
-          title: "Workspace 工作空间",
-          description: "团队协作、成员权限、共享素材库和活动流。",
-        },
-        discover: {
-          title: "Discover 发现广场",
-          description: "浏览公开内容，搜索、收藏并导入到个人素材库。",
-        },
-        settings: {
-          title: "Settings 设置",
-          description: "个人偏好、工作空间管理和 MCP 双向同步配置。",
-        },
-      };
+		<script>
+		const pageMeta = {
+			snippets: {
+				title: "Snippets 管理",
+				description: "AGENTS.md 片段的创建、分类、预览与导出。",
+			},
+			prompts: {
+				title: "Prompts 管理",
+				description: "提示词模板、变量占位符、测试运行和转换 Skill。",
+			},
+			skills: {
+				title: "Skills 管理",
+				description: "AI 技能定义、触发条件、关联 Prompt 与 Snippet。",
+			},
+			agents: {
+				title: "Agents 管理与编排",
+				description: "拖拽组合 Snippet、Prompt、Skill，导出完整 Agent 配置。",
+			},
+			workspace: {
+				title: "Workspace 工作空间",
+				description: "团队协作、成员权限、共享素材库和活动流。",
+			},
+			discover: {
+				title: "Discover 发现广场",
+				description: "浏览公开内容，搜索、收藏并导入到个人素材库。",
+			},
+			settings: {
+				title: "Settings 设置",
+				description: "个人偏好、工作空间管理和 MCP 双向同步配置。",
+			},
+		};
 
-      const navButtons = document.querySelectorAll(".nav-button");
-      const pages = document.querySelectorAll(".page");
-      const topbarTitle = document.querySelector("#topbar-title");
-      const topbarDescription = document.querySelector("#topbar-description");
+		const navButtons = document.querySelectorAll(".nav-button");
+		const pages = document.querySelectorAll(".page");
+		const topbarTitle = document.querySelector("#topbar-title");
+		const topbarDescription = document.querySelector("#topbar-description");
 
-      const activatePage = (pageId) => {
-        navButtons.forEach((button) => {
-          button.classList.toggle("active", button.dataset.page === pageId);
-        });
+		const activatePage = (pageId) => {
+			navButtons.forEach((button) => {
+				button.classList.toggle("active", button.dataset.page === pageId);
+			});
 
-        pages.forEach((page) => {
-          page.classList.toggle("active", page.id === pageId);
-        });
+			pages.forEach((page) => {
+				page.classList.toggle("active", page.id === pageId);
+			});
 
-        topbarTitle.textContent = pageMeta[pageId].title;
-        topbarDescription.textContent = pageMeta[pageId].description;
-      };
+			topbarTitle.textContent = pageMeta[pageId].title;
+			topbarDescription.textContent = pageMeta[pageId].description;
+		};
 
-      navButtons.forEach((button) => {
-        button.addEventListener("click", () => activatePage(button.dataset.page));
-      });
-    </script>
-  </body>
+		navButtons.forEach((button) => {
+			button.addEventListener("click", () => activatePage(button.dataset.page));
+		});
+		</script>
+	</body>
 </html>

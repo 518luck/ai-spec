@@ -2,6 +2,7 @@
 	"editor.defaultFormatter": "biomejs.biome", // 所有文件（含 SVG）的默认格式化器设为 Biome
 	"editor.formatOnSave": true, // 保存时自动触发格式化器（Biome 按 biome.jsonc 规则格式化代码 + SVG）
 	"editor.codeActionsOnSave": {
+		"source.fixAll.biome": "explicit", // 保存时自动修复 lint 问题（如 let→const、==→===、删未用变量），类比 ESLint 时代的 source.fixAll.eslint
 		"source.organizeImports.biome": "explicit" // 保存时让 Biome 整理 import 顺序（用 Biome 的排序规则，不是 VSCode 默认的，避免冲突）
 	},
 	"code-runner.executorMap": {
