@@ -91,7 +91,7 @@ export function KeysTable({
                   </code>
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">
+                  <Badge shape="square" variant="secondary">
                     {scopesToName(token.scopes?.split(" ") ?? []).name}
                   </Badge>
                 </TableCell>
