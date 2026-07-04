@@ -24,5 +24,8 @@
 		"titleBar.activeForeground": "#F9FAFB", // 窗口标题栏文字（当前窗口）
 		"titleBar.inactiveBackground": "#0F172A", // 窗口标题栏背景（非当前窗口，更深）
 		"titleBar.inactiveForeground": "#9CA3AF" // 窗口标题栏文字（非当前窗口，灰色）
+	},
+	"[jsonc]": {
+		"editor.defaultFormatter": "vscode.json-language-features"
 	}
 }
