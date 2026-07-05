@@ -81,6 +81,17 @@
 			"formatter": {
 				"enabled": false
 			} // 不格式化
+		},
+		{
+			// global.css：Tailwind v4 的 @import 与 biome 的 CSS 规范冲突
+			"includes": ["**/src/app/styles/global.css"],
+			"linter": {
+				"rules": {
+					"correctness": {
+						"noInvalidPositionAtImportRule": "off"
+					}
+				}
+			}
 		}
 	]
 }
