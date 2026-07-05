@@ -6,7 +6,7 @@ import {
 	RESOURCE_KEYS,
 	RESOURCES,
 	type ResourceKey,
-} from "@/shared/lib/ohs/local/appservice/rbac/resources";
+} from "@/shared/lib/ohs/local/appservice/rbac/resource-ui";
 import {
 	getScopesForResource,
 	type Scope,

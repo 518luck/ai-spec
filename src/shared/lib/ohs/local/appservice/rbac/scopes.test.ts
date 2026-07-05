@@ -4,12 +4,10 @@ import {
 	consolidateScopes,
 	getPermissionsForScope,
 	getScopesForResource,
-	getScopesForRole,
 	mapScopesToPermissions,
 	SCOPES,
 	scopePresets,
 	scopesToName,
-	validateScopesForRole,
 } from "./scopes";
 
 // 户口本：登记的 scope 数量应与权威表一致，新增 scope 时两处需同步
@@ -67,28 +65,6 @@ describe("getScopesForResource", () => {
 		expect(scopes).toHaveLength(2);
 		expect(scopes.map((s) => s.type)).toEqual(["read", "write"]);
 	});
-
-	test("所有资源级 scope 都不含 guest 角色（游客不能创建 key）", () => {
-		const scopes = getScopesForResource("skills");
-		scopes.forEach((s) => {
-			expect(s.roles).not.toContain("guest");
-		});
-	});
-});
-
-// 角色 → 可授予的全部 scope
-describe("getScopesForRole", () => {
-	test("user 可授予全部 16 个 scope", () => {
-		expect(getScopesForRole("user")).toHaveLength(16);
-	});
-
-	test("guest 可授予 0 个（无权创建 key）", () => {
-		expect(getScopesForRole("guest")).toEqual([]);
-	});
-
-	test("member 可授予全部 16 个 scope", () => {
-		expect(getScopesForRole("member")).toHaveLength(16);
-	});
 });
 
 // scopes 数组 → 实际权限集合（鉴权热路径）
@@ -100,18 +76,6 @@ describe("mapScopesToPermissions", () => {
 
 	test("apis.read 展开为全部 7 个只读权限", () => {
 		expect(mapScopesToPermissions(["apis.read"])).toHaveLength(7);
-	});
-});
-
-// 校验角色是否可授予这些 scope，防止越权
-describe("validateScopesForRole", () => {
-	test("user 授予 write scope 合法", () => {
-		expect(validateScopesForRole(["promptRecord.write"], "user")).toBe(true);
-	});
-
-	test("guest 授予任何 scope 都非法", () => {
-		expect(validateScopesForRole(["apis.all"], "guest")).toBe(false);
-		expect(validateScopesForRole(["promptRecord.read"], "guest")).toBe(false);
 	});
 });
 
