@@ -5,6 +5,7 @@ export function Google({ className }: { className?: string }) {
 			height="24"
 			viewBox="0 0 24 24"
 			width="24"
+			aria-hidden="true"
 			className={className}
 		>
 			<path
