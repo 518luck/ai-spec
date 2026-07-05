@@ -81,17 +81,23 @@ export function InteractiveGridPattern({
 	// 接近高亮的影响半径也跟随缩放变化
 	const scaledProximity = proximity * grid.scale;
 
+	// 预生成行/格稳定 key，避免在 map 回调里直接用数组下标作 key（触发 noArrayIndexKey）
+	// 固定网格场景下这些 key 永不变化，等价于「行号/格子编号」字符串标识
+	const rowKeys = Array.from({ length: grid.rows }, (_, i) => `row-${i}`);
+	const cellKeys = Array.from({ length: grid.rows * grid.cols }, (_, i) => `cell-${i}`);
+
 	return (
 		<div
 			ref={containerRef}
 			className={cn("absolute inset-0 overflow-hidden bg-neutral-950", className)}
 			onMouseMove={handleMouseMove}
 			onMouseLeave={handleMouseLeave}
+			aria-hidden="true"
 		>
 			{/* 网格主体层 */}
 			<div className="absolute inset-0">
-				{Array.from({ length: grid.rows }).map((_, rowIndex) => (
-					<div key={rowIndex} className="flex">
+				{rowKeys.map((rowKey, rowIndex) => (
+					<div key={rowKey} className="flex">
 						{Array.from({ length: grid.cols }).map((_, colIndex) => {
 							// 用行列号计算出当前格子的唯一索引
 							// (0,0) ─────→ x增大
@@ -116,7 +122,8 @@ export function InteractiveGridPattern({
 
 							return (
 								<div
-									key={index}
+									key={cellKeys[index]}
+									aria-hidden="true"
 									className="shrink-0 border transition-all duration-1000 ease-out"
 									style={{
 										width: scaledCellSize,
