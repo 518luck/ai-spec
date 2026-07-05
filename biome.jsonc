@@ -8,7 +8,9 @@
 	},
 	// 文件处理
 	"files": {
-		"ignoreUnknown": true // 遇到不认识的文件类型不报错，跳过即可
+		"ignoreUnknown": true, // 遇到不认识的文件类型不报错，跳过即可
+		// includes 用「白名单 + 否定」：默认检查所有文件，但排除 docs（设计草图、demo HTML 等非业务代码）
+		"includes": ["**", "!docs"]
 	},
 	// 全局格式化规则（只保留和默认不同的项；缩进/换行/分号/引号等均用 Biome 默认）
 	"formatter": {
@@ -89,6 +91,26 @@
 				"rules": {
 					"correctness": {
 						"noInvalidPositionAtImportRule": "off"
+					}
+				}
+			}
+		},
+		{
+			// shadcn/ui 组件目录：第三方代码，a11y 模式（div+role、label 包裹等）由 shadcn 官方维护，
+			// 改动会被下次 npx shadcn add 覆盖；biome 的 a11y 规则与 shadcn 设计模式存在已知冲突（shadcn-ui/ui#7639）。
+			// 业务代码（src/pages/、src/widgets/、src/app/）仍受这些规则保护，仅在第三方组件目录豁免。
+			"includes": ["**/src/shared/ui/**"],
+			"linter": {
+				"rules": {
+					"a11y": {
+						"useSemanticElements": "off",
+						"useFocusableInteractive": "off",
+						"useAriaPropsForRole": "off",
+						"noLabelWithoutControl": "off",
+						"noStaticElementInteractions": "off"
+					},
+					"suspicious": {
+						"noArrayIndexKey": "off"
 					}
 				}
 			}
