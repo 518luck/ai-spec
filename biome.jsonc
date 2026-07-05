@@ -93,5 +93,18 @@
 				}
 			}
 		}
+		// {
+		// 	// 侧边栏拖拽手柄：用 div+role=separator 实现 splitter 模式（鼠标+键盘双模式），
+		// 	// biome 的 useSemanticElements 建议改用 <hr>，但 <hr> 的 pointer 事件被浏览器特殊处理会导致拖拽失效，
+		// 	// 这里维持 div 实现，关闭这一条不适用的规则。
+		// 	"includes": ["**/src/widgets/dual-sidebar/ui/sidebar-resize-handle.tsx"],
+		// 	"linter": {
+		// 		"rules": {
+		// 			"a11y": {
+		// 				"useSemanticElements": "off"
+		// 			}
+		// 		}
+		// 	}
+		// }
 	]
 }
