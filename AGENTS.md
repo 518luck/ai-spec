@@ -110,6 +110,7 @@ Prisma schema 命名、字段排列顺序、删除策略与旧表迁移规范，
 - 函数、变量和对象键使用 `camelCase`。
 - 新文件名必须使用 `kebab-case`（中划线分隔的小写），除非已有约定要求其他格式。
 - 使用描述性名称；避免在紧凑循环之外使用单字母名称。
+- 高阶函数（接收 handler/component 为主参数，包一层增强后再返回，注入额外上下文如 session、权限、路由、主题等）统一命名为 `withXxx`，例如 `withSession`、`withPermission`。
 
 ### 控制流与错误处理
 
