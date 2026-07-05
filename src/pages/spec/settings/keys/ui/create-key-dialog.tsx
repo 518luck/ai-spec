@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
 import { toast } from "sonner";
-
-import type { ScopePresetValue } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
-import { createTokenAction } from "@/shared/lib/ohs/local/appservice/token/create-token";
+import { createTokenAction } from "@/server/actions/token/create-token";
+import type { ScopePresetValue } from "@/server/rbac/scopes";
 import { tokenNameSchema } from "@/shared/lib/zod/schemas/token";
 import { Button } from "@/shared/ui/button";
 import {

@@ -1,4 +1,4 @@
-import { getS3StorageClient } from "@/shared/lib/infrastructure/storage";
+import { getS3StorageClient } from "@/server/infrastructure/storage";
 
 import type { DeleteUserAvatarData } from "../types";
 

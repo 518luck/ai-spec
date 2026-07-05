@@ -2,16 +2,16 @@
 
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod";
+import { actionClient } from "@/server/actions/safe-action";
+import { ActionError } from "@/server/actions/utils/action-error";
+import { sendEmail } from "@/server/infrastructure/email";
+import VerifyEmail from "@/server/infrastructure/email/templates/verify-email";
+import { ratelimit } from "@/server/infrastructure/redis/reatlimit";
+import { getIP } from "@/server/middleware/get-ip";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
 import { generateOTP } from "@/shared/lib/auth/utils";
-import { sendEmail } from "@/shared/lib/infrastructure/email";
-import VerifyEmail from "@/shared/lib/infrastructure/email/templates/verify-email";
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
-import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
-import { getIP } from "@/shared/lib/ohs/remote/adapter/get-ip";
 import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 

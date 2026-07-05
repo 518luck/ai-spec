@@ -1,11 +1,11 @@
 import "server-only";
 
+import { skipAuthThrottling } from "@/server/infrastructure/environment";
+import { enqueueEmailChange } from "@/server/infrastructure/queue";
+import { kvSet } from "@/server/infrastructure/redis/kv";
+import { hardDailyRatelimit } from "@/server/infrastructure/redis/reatlimit";
 import prisma from "@/shared/db";
 import { hashToken } from "@/shared/lib/auth/hash-token";
-import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
-import { enqueueEmailChange } from "@/shared/lib/infrastructure/queue";
-import { kvSet } from "@/shared/lib/infrastructure/redis/kv";
-import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { nanoid } from "@/shared/lib/nanoid";
 
 // 邮箱变更 token 有效期（毫秒），数据库过期与 Redis TTL 保持一致

@@ -1,5 +1,5 @@
+import { uploadUserAvatar } from "@/server/infrastructure/storage";
 import prisma from "@/shared/db";
-import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
 
 import type { SyncOauthAvatarData } from "../types";
 

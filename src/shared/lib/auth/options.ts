@@ -3,6 +3,9 @@ import type { NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+import { skipAuthThrottling } from "@/server/infrastructure/environment";
+import { enqueueAvatarSync } from "@/server/infrastructure/queue";
+import { ratelimit } from "@/server/infrastructure/redis/reatlimit";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import {
@@ -14,9 +17,6 @@ import {
 	hasReachedMaxInvalidLoginAttempts,
 	recordInvalidLoginAttempt,
 } from "@/shared/lib/auth/lock-account";
-import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
-import { enqueueAvatarSync } from "@/shared/lib/infrastructure/queue";
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
 import { validatePassword } from "@/shared/lib/utils";
 import { signInSchema } from "@/shared/lib/zod/schemas/auth";
 import { isProd } from "./constants";

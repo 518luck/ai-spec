@@ -1,6 +1,6 @@
 import { createMiddleware } from "next-safe-action";
+import { ActionError } from "@/server/actions/utils/action-error";
 import { auth } from "@/shared/lib/auth/auth";
-import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 
 /**
  * @function throwIfAuthenticated

@@ -2,17 +2,13 @@
 
 import type { JSX } from "react";
 
-import {
-	RESOURCE_KEYS,
-	RESOURCES,
-	type ResourceKey,
-} from "@/shared/lib/ohs/local/appservice/rbac/resource-ui";
+import { RESOURCE_KEYS, RESOURCES, type ResourceKey } from "@/server/rbac/resource-ui";
 import {
 	getScopesForResource,
 	type Scope,
 	type ScopePresetValue,
 	scopePresets,
-} from "@/shared/lib/ohs/local/appservice/rbac/scopes";
+} from "@/server/rbac/scopes";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Input } from "@/shared/ui/input";

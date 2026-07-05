@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-
+import { createLogger, serializeError } from "@/server/infrastructure/axiom/server";
+import { enqueueDeleteUserAvatar } from "@/server/infrastructure/queue";
+import { uploadUserAvatar } from "@/server/infrastructure/storage";
+import { AiSpecError } from "@/server/middleware/error";
+import { withSession } from "@/server/middleware/with-session";
 import prisma from "@/shared/db";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
-import { createLogger, serializeError } from "@/shared/lib/infrastructure/axiom/server";
-import { enqueueDeleteUserAvatar } from "@/shared/lib/infrastructure/queue";
-import { uploadUserAvatar } from "@/shared/lib/infrastructure/storage";
-import { AiSpecError } from "@/shared/lib/ohs/remote/adapter/error";
-import { withSession } from "@/shared/lib/ohs/remote/adapter/with-session";
 import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 
 // 用户资料更新路由的专用日志作用域，自动注入 module 字段

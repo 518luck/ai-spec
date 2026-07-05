@@ -5,12 +5,12 @@ import { signIn } from "next-auth/react";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, type SubmitEvent, useState } from "react";
 import { toast } from "sonner";
+import { checkLoginEmailAction } from "@/server/actions/auth/check-login-email";
 import {
 	AUTH_FIELD_PASSWORD,
 	AUTH_PROVIDER_EMAIL,
 	AUTH_REDIRECT_HOME,
 } from "@/shared/lib/auth/constants";
-import { checkLoginEmailAction } from "@/shared/lib/ohs/local/appservice/auth/check-login-email";
 import { Button } from "@/shared/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Input } from "@/shared/ui/input";

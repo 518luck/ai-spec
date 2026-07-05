@@ -1,10 +1,9 @@
 "use server";
 
 import { flattenValidationErrors } from "next-safe-action";
-
+import { authUserActionClient } from "@/server/actions/safe-action";
+import { ActionError } from "@/server/actions/utils/action-error";
 import prisma from "@/shared/db";
-import { authUserActionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 import { updateTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 
 // 更新 API 密钥：仅登录用户可改归属自己的令牌；可改 name/description/scopes，密钥本身不可改

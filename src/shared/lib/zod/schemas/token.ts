@@ -1,6 +1,6 @@
 import * as z from "zod/v4";
 
-import { SCOPES } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
+import { SCOPES } from "@/server/rbac/scopes";
 
 // name：令牌显示名称，1-50 字符，必填；导出供前端提交前用同一份规则做本地预校验
 export const tokenNameSchema = z

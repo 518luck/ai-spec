@@ -4,7 +4,7 @@ import dayjs from "dayjs";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
-import { scopesToName } from "@/shared/lib/ohs/local/appservice/rbac/scopes";
+import { scopesToName } from "@/server/rbac/scopes";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";

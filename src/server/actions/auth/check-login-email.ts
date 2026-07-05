@@ -2,11 +2,11 @@
 
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod/v4";
+import { actionClient } from "@/server/actions/safe-action";
+import { skipAuthThrottling } from "@/server/infrastructure/environment";
+import { ratelimit } from "@/server/infrastructure/redis/reatlimit";
+import { getIP } from "@/server/middleware/get-ip";
 import prisma from "@/shared/db";
-import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
-import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { getIP } from "@/shared/lib/ohs/remote/adapter/get-ip";
 import { emailSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 

@@ -6,7 +6,7 @@
 import {
   createLogger,
   withAxiomBodyLog,
-} from "@/shared/lib/infrastructure/axiom/server";
+} from "@/server/infrastructure/axiom/server";
 
 // 业务日志
 const log = createLogger("UserService");

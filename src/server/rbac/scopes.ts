@@ -3,7 +3,7 @@
 // scope 来源：从 actions.ts 的 API_KEY_SCOPES 派生（个人资源 read/write），
 // 外加两个通配 scope（apis.read / apis.all）做跨资源打包授权。
 // 团队专属 action 因 apiKeyGrantable=false 不会出现在 scope 里。
-import type { ResourceKey } from "@/shared/lib/ohs/local/appservice/rbac/resource-ui";
+import type { ResourceKey } from "@/server/rbac/resource-ui";
 import { API_KEY_SCOPES } from "./actions";
 
 // 所有合法 scope 字符串：个人资源 action（派生）+ 两个通配打包权限

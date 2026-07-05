@@ -1,11 +1,10 @@
 "use server";
 
 import { flattenValidationErrors } from "next-safe-action";
-
+import { authUserActionClient } from "@/server/actions/safe-action";
 import prisma from "@/shared/db";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { nanoid } from "@/shared/lib/nanoid";
-import { authUserActionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
 import { createTokenDtoSchema, createTokenVoSchema } from "@/shared/lib/zod/schemas/token";
 
 // API Key 固定前缀，便于在列表中识别本平台签发的密钥

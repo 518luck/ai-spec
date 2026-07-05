@@ -7,7 +7,7 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { deleteTokenAction } from "@/shared/lib/ohs/local/appservice/token/delete-token";
+import { deleteTokenAction } from "@/server/actions/token/delete-token";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import {
 	DropdownMenu,

@@ -3,11 +3,11 @@
 import { flattenValidationErrors } from "next-safe-action";
 import { v4 as uuidv4 } from "uuid";
 import * as z from "zod/v4";
+import { actionClient } from "@/server/actions/safe-action";
+import { ActionError } from "@/server/actions/utils/action-error";
+import { skipAuthThrottling } from "@/server/infrastructure/environment";
+import { hardDailyRatelimit } from "@/server/infrastructure/redis/reatlimit";
 import prisma from "@/shared/db";
-import { skipAuthThrottling } from "@/shared/lib/infrastructure/environment";
-import { hardDailyRatelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
-import { actionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 import { hashPassword } from "@/shared/lib/utils";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";

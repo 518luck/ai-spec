@@ -57,7 +57,7 @@ key 格式：`模块:动作:标识符`，模块和动作之间使用冒号分隔
 ### 使用方式
 
 ```ts
-import { ratelimit } from "@/shared/lib/infrastructure/redis/reatlimit";
+import { ratelimit } from "@/server/infrastructure/redis/reatlimit";
 
 // 每次消耗 1 积分，1 分钟窗口（默认值）
 await ratelimit({ key: "action:identifier" });

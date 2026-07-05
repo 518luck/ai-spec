@@ -12,7 +12,7 @@ import {
 	transformRouteHandlerSuccessResult, // 辅助函数，把 handler 的结果转成日志消息和报告对象
 } from "@axiomhq/nextjs"; // 针对 Next.js 场景做的一层官方适配 负责“在 Next.js 这个框架里，什么时候记、记什么、怎么拿到请求上下文”
 
-import { getSearchParams } from "../../utils";
+import { getSearchParams } from "@/shared/lib/utils";
 import { axiomClient } from "./axiom";
 import { LocalFileTransport } from "./local-file-transport";
 

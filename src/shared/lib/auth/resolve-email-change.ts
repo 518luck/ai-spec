@@ -1,7 +1,7 @@
 import "server-only";
 
+import { kvGet } from "@/server/infrastructure/redis/kv";
 import prisma from "@/shared/db";
-import { kvGet } from "@/shared/lib/infrastructure/redis/kv";
 import { hashToken } from "./hash-token";
 
 // 邮箱变更上下文：与 request-email-change 写入 Redis 的结构保持一致

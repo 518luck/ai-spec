@@ -1,6 +1,6 @@
+import { sendEmail } from "@/server/infrastructure/email";
+import EmailChangeTemplate from "@/server/infrastructure/email/templates/email-change";
 import { appConfig } from "@/shared/configs/app.config";
-import { sendEmail } from "@/shared/lib/infrastructure/email";
-import EmailChangeTemplate from "@/shared/lib/infrastructure/email/templates/email-change";
 
 import type { EmailChangeData } from "../types";
 

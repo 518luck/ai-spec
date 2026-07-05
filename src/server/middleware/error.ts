@@ -1,8 +1,8 @@
 import { after, NextResponse } from "next/server";
 import { ZodError } from "zod/v4";
 import { fromZodError } from "zod-validation-error";
+import { createLogger, serializeError } from "@/server/infrastructure/axiom/server";
 import { Prisma } from "@/shared/db/generator/client";
-import { createLogger, serializeError } from "@/shared/lib/infrastructure/axiom/server";
 import type { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // 错误归一化专用 logger，自动带 module: "ai-spec-error"

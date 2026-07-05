@@ -1,6 +1,6 @@
+import { sendEmail } from "@/server/infrastructure/email";
+import EmailChangedNoticeTemplate from "@/server/infrastructure/email/templates/email-changed-notice";
 import { appConfig } from "@/shared/configs/app.config";
-import { sendEmail } from "@/shared/lib/infrastructure/email";
-import EmailChangedNoticeTemplate from "@/shared/lib/infrastructure/email/templates/email-changed-notice";
 
 import type { EmailChangedNoticeData } from "../types";
 

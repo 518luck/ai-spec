@@ -1,10 +1,9 @@
 "use server";
 
 import { flattenValidationErrors } from "next-safe-action";
-
+import { authUserActionClient } from "@/server/actions/safe-action";
+import { ActionError } from "@/server/actions/utils/action-error";
 import prisma from "@/shared/db";
-import { authUserActionClient } from "@/shared/lib/ohs/local/appservice/safe-action";
-import { ActionError } from "@/shared/lib/ohs/local/appservice/utils/action-error";
 import { deleteTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 
 // 删除 API 密钥：仅登录用户可删除归属自己的令牌；按 id 删除，校验归属防止越权删别人的

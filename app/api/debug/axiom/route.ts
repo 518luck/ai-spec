@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { logger } from "@/shared/lib/infrastructure/axiom/server";
+import { logger } from "@/server/infrastructure/axiom/server";
 
 export async function GET() {
 	const marker = `axiom-test-${Date.now()}`;

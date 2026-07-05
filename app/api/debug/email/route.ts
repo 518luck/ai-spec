@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { sendBatchEmail, sendEmail } from "@/shared/lib/infrastructure/email";
+import { sendBatchEmail, sendEmail } from "@/server/infrastructure/email";
 
 export async function GET(request: NextRequest) {
 	const { searchParams } = new URL(request.url);

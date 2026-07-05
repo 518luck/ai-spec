@@ -1,10 +1,10 @@
 import { redirect } from "next/navigation";
 import type { JSX } from "react";
+import { enqueueEmailChangedNotice } from "@/server/infrastructure/queue";
+import { kvDel } from "@/server/infrastructure/redis/kv";
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { resolveEmailChangeToken } from "@/shared/lib/auth/resolve-email-change";
-import { enqueueEmailChangedNotice } from "@/shared/lib/infrastructure/queue";
-import { kvDel } from "@/shared/lib/infrastructure/redis/kv";
 import { ConfirmEmailChangeClient } from "./confirm-client";
 import { StatusMessage } from "./status-message";
 
