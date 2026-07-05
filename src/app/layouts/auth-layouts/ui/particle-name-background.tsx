@@ -201,11 +201,13 @@ export function ParticleNameBackground({
 				const glowAlpha = particle.alpha * revealProgress * 0.15;
 				const coreAlpha = particle.alpha * revealProgress;
 
+				// 外层光晕用配置的 glowColor（rgba 格式），替换末尾透明度为当前 glowAlpha
 				ctx.beginPath();
-				ctx.fillStyle = `hsla(${particle.hue}, 100%, 70%, ${glowAlpha})`;
+				ctx.fillStyle = glowColor.replace(/[\d.]+\)$/, `${glowAlpha})`);
 				ctx.arc(particle.x, particle.y, particle.size * 3, 0, Math.PI * 2);
 				ctx.fill();
 
+				// 核心粒子保留 hue 彩色，让粒子云仍有色相变化
 				ctx.beginPath();
 				ctx.fillStyle = `hsla(${particle.hue}, 100%, ${58 - revealProgress * 6}%, ${coreAlpha})`;
 				ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
@@ -248,6 +250,7 @@ export function ParticleNameBackground({
 	}, [
 		fontFamily,
 		fontWeight,
+		glowColor,
 		baseHue,
 		hueRange,
 		interactionRadius,
