@@ -11,168 +11,38 @@ export const SCOPES = [...API_KEY_SCOPES, "apis.read", "apis.all"] as const;
 
 export type Scope = (typeof SCOPES)[number];
 
-// scope 的权威解释表：每个资源级 scope 映射到实际放行的权限及所属资源
-// 规律：write 的 permissions 隐含同资源 read；通配 scope 无 resource/type
+// scope 的权威解释表：每个资源级 scope 映射到所属资源与读写类型
 type ResourceScopeEntry = {
 	scope: Scope;
-	permissions: readonly string[];
 	type?: "read" | "write";
 	resource?: ResourceKey;
 };
 
 export const RESOURCE_SCOPES: readonly ResourceScopeEntry[] = [
 	// ---------- 提示词-收录 ----------
-	{
-		scope: "promptRecord.read",
-		permissions: ["promptRecord.read"],
-		type: "read",
-		resource: "promptRecord",
-	},
-	{
-		scope: "promptRecord.write",
-		permissions: ["promptRecord.write", "promptRecord.read"],
-		type: "write",
-		resource: "promptRecord",
-	},
+	{ scope: "promptRecord.read", type: "read", resource: "promptRecord" },
+	{ scope: "promptRecord.write", type: "write", resource: "promptRecord" },
 	// ---------- 提示词-草稿 ----------
-	{
-		scope: "promptDraft.read",
-		permissions: ["promptDraft.read"],
-		type: "read",
-		resource: "promptDraft",
-	},
-	{
-		scope: "promptDraft.write",
-		permissions: ["promptDraft.write", "promptDraft.read"],
-		type: "write",
-		resource: "promptDraft",
-	},
+	{ scope: "promptDraft.read", type: "read", resource: "promptDraft" },
+	{ scope: "promptDraft.write", type: "write", resource: "promptDraft" },
 	// ---------- 规约库 ----------
-	{
-		scope: "rules.read",
-		permissions: ["rules.read"],
-		type: "read",
-		resource: "rules",
-	},
-	{
-		scope: "rules.write",
-		permissions: ["rules.write", "rules.read"],
-		type: "write",
-		resource: "rules",
-	},
+	{ scope: "rules.read", type: "read", resource: "rules" },
+	{ scope: "rules.write", type: "write", resource: "rules" },
 	// ---------- AGENTS.md ----------
-	{
-		scope: "agentMD.read",
-		permissions: ["agentMD.read"],
-		type: "read",
-		resource: "agentMD",
-	},
-	{
-		scope: "agentMD.write",
-		permissions: ["agentMD.write", "agentMD.read"],
-		type: "write",
-		resource: "agentMD",
-	},
+	{ scope: "agentMD.read", type: "read", resource: "agentMD" },
+	{ scope: "agentMD.write", type: "write", resource: "agentMD" },
 	// ---------- Skills ----------
-	{
-		scope: "skills.read",
-		permissions: ["skills.read"],
-		type: "read",
-		resource: "skills",
-	},
-	{
-		scope: "skills.write",
-		permissions: ["skills.write", "skills.read"],
-		type: "write",
-		resource: "skills",
-	},
+	{ scope: "skills.read", type: "read", resource: "skills" },
+	{ scope: "skills.write", type: "write", resource: "skills" },
 	// ---------- 智能体 ----------
-	{
-		scope: "agents.read",
-		permissions: ["agents.read"],
-		type: "read",
-		resource: "agents",
-	},
-	{
-		scope: "agents.write",
-		permissions: ["agents.write", "agents.read"],
-		type: "write",
-		resource: "agents",
-	},
+	{ scope: "agents.read", type: "read", resource: "agents" },
+	{ scope: "agents.write", type: "write", resource: "agents" },
 	// ---------- Plugins ----------
-	{
-		scope: "plugins.read",
-		permissions: ["plugins.read"],
-		type: "read",
-		resource: "plugins",
-	},
-	{
-		scope: "plugins.write",
-		permissions: ["plugins.write", "plugins.read"],
-		type: "write",
-		resource: "plugins",
-	},
-	// ---------- 通配 scope：跨资源的打包权限（无 resource/type）----------
-	{
-		scope: "apis.read",
-		permissions: [
-			"promptRecord.read",
-			"promptDraft.read",
-			"rules.read",
-			"agentMD.read",
-			"skills.read",
-			"agents.read",
-			"plugins.read",
-		],
-	},
-	{
-		scope: "apis.all",
-		permissions: [
-			"promptRecord.read",
-			"promptRecord.write",
-			"promptDraft.read",
-			"promptDraft.write",
-			"rules.read",
-			"rules.write",
-			"agentMD.read",
-			"agentMD.write",
-			"skills.read",
-			"skills.write",
-			"agents.read",
-			"agents.write",
-			"plugins.read",
-			"plugins.write",
-		],
-	},
+	{ scope: "plugins.read", type: "read", resource: "plugins" },
+	{ scope: "plugins.write", type: "write", resource: "plugins" },
 ];
 
-// 单条 scope 展开为实际放行权限；未知 scope 返回空
-export const getPermissionsForScope = (scope: Scope): readonly string[] =>
-	RESOURCE_SCOPES.find((item) => item.scope === scope)?.permissions ?? [];
-
-// 取某资源的全部资源级 scope，供前端渲染「资源 × 读/写」勾选表
-export const getScopesForResource = (
-	resource: ResourceKey,
-): readonly {
-	scope: Scope;
-	type: "read" | "write";
-}[] =>
-	RESOURCE_SCOPES.filter(
-		(item): item is ResourceScopeEntry & { type: "read" | "write" } =>
-			item.resource === resource && item.type !== undefined,
-	).map((item) => ({
-		scope: item.scope,
-		type: item.type,
-	}));
-
-// 把 token 的 scopes 展开成实际权限集合（鉴权热路径用）
-export const mapScopesToPermissions = (scopes: readonly Scope[]): string[] => {
-	const permissions: string[] = [];
-	for (const scope of scopes) {
-		permissions.push(...getPermissionsForScope(scope));
-	}
-	return permissions;
-};
+// —— 以下为前端 UI 专用：API Key 弹窗渲染、列表展示、勾选回填 ——
 
 // 前端「全部 / 只读 / 限制」三档预设：展示元数据 + 对应的通配 scope
 // 「限制」无固定 scope（取决于用户勾选），其 scopes 留空，由调用方按勾选生成
@@ -199,6 +69,21 @@ export const scopePresets = [
 
 // 预设 value 的字面量类型，供弹窗等消费方约束选项
 export type ScopePresetValue = (typeof scopePresets)[number]["value"];
+
+// 取某资源的全部资源级 scope，供前端渲染「资源 × 读/写」勾选表
+export const getScopesForResource = (
+	resource: ResourceKey,
+): readonly {
+	scope: Scope;
+	type: "read" | "write";
+}[] =>
+	RESOURCE_SCOPES.filter(
+		(item): item is ResourceScopeEntry & { type: "read" | "write" } =>
+			item.resource === resource && item.type !== undefined,
+	).map((item) => ({
+		scope: item.scope,
+		type: item.type,
+	}));
 
 // 从 scopes 反推所属预设（编辑已有 key 时高亮按钮用）
 export const scopesToName = (scopes: readonly string[]): { name: string; description: string } => {

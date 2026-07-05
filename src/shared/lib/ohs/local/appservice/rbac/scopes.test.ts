@@ -2,9 +2,7 @@ import { describe, expect, test } from "vitest";
 
 import {
 	consolidateScopes,
-	getPermissionsForScope,
 	getScopesForResource,
-	mapScopesToPermissions,
 	SCOPES,
 	scopePresets,
 	scopesToName,
@@ -35,47 +33,12 @@ describe("scopePresets", () => {
 	});
 });
 
-// 单条 scope → 实际放行权限；核心规律是「写隐含读」
-describe("getPermissionsForScope", () => {
-	test("write 隐含同资源 read", () => {
-		expect(getPermissionsForScope("promptRecord.write")).toEqual([
-			"promptRecord.write",
-			"promptRecord.read",
-		]);
-	});
-
-	test("read 仅含自身", () => {
-		expect(getPermissionsForScope("skills.read")).toEqual(["skills.read"]);
-	});
-
-	test("apis.all 展开为全部 14 个权限", () => {
-		expect(getPermissionsForScope("apis.all").length).toBe(14);
-	});
-
-	test("未知 scope 返回空数组，不抛错", () => {
-		// @ts-expect-error 故意传非法值，测试运行时容错
-		expect(getPermissionsForScope("unknown.read")).toEqual([]);
-	});
-});
-
 // 资源 → 该资源的 read/write scope 列表，供前端渲染勾选表
 describe("getScopesForResource", () => {
 	test("每个资源恰好有 read、write 两个 scope", () => {
 		const scopes = getScopesForResource("skills");
 		expect(scopes).toHaveLength(2);
 		expect(scopes.map((s) => s.type)).toEqual(["read", "write"]);
-	});
-});
-
-// scopes 数组 → 实际权限集合（鉴权热路径）
-describe("mapScopesToPermissions", () => {
-	test("多个 scope 合并展开，去重后保留全部", () => {
-		const result = mapScopesToPermissions(["promptRecord.write", "skills.read"]);
-		expect(result).toEqual(["promptRecord.write", "promptRecord.read", "skills.read"]);
-	});
-
-	test("apis.read 展开为全部 7 个只读权限", () => {
-		expect(mapScopesToPermissions(["apis.read"])).toHaveLength(7);
 	});
 });
 
