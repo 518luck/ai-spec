@@ -80,6 +80,7 @@ export function SidebarResizeHandle(): JSX.Element {
 	return (
 		// 用 div + role=separator 实现 splitter：鼠标 pointer 拖拽 + 键盘 ←→ 双模式。
 		// 不用 <hr> 是因为浏览器对 <hr> 的 pointer 事件有特殊处理，setPointerCapture 会失效导致拖不动。
+		// biome-ignore lint/a11y/useSemanticElements: W3C splitter 模式要求 role=separator(ARIA 1.1 focusable widget),<hr> 无法满足拖拽+键盘+aria-valuenow
 		<div
 			role="separator"
 			tabIndex={0}
