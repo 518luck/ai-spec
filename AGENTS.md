@@ -102,7 +102,8 @@ Prisma schema 命名、字段排列顺序、删除策略与旧表迁移规范，
 ### Lint
 
 - Lint：`pnpm run lint`
-- 绝不使用 `eslint-disable` 抑制 lint 错误；修复根因。
+- 绝不使用 `biome-ignore` 抑制 lint 错误；修复根因。
+- 例外：若确认是 biome 规则误报（如与 W3C/浏览器标准冲突），可用行内 `// biome-ignore lint/...: <具体理由>` 抑制，理由必须写明依据。
 
 ### 命名
 
