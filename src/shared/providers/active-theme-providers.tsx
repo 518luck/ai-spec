@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+
+import { setCookie } from "@/shared/lib/cookie/client-cookie";
 import { DEFAULT_THEME } from "../configs/theme.config";
 
 const COOKIE_NAME = "ai-spec.active-theme";
@@ -8,8 +10,11 @@ const COOKIE_NAME = "ai-spec.active-theme";
 // 设置 cookie
 const setThemeCookie = (theme: string) => {
 	if (typeof window === "undefined") return;
-
-	document.cookie = `${COOKIE_NAME}=${theme}; path=/; max-age=31536000; SameSite=Lax; ${window.location.protocol === "https:" ? "Secure;" : ""}`;
+	setCookie(COOKIE_NAME, theme, {
+		path: "/",
+		maxAge: 31536000,
+		sameSite: "lax",
+	});
 };
 
 type ThemeContextType = {

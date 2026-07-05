@@ -6,6 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { setCookie } from "@/shared/lib/cookie/client-cookie";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -94,7 +95,10 @@ function SidebarProvider({
 			}
 
 			// 将桌面端展开状态写入 Cookie，供后续页面加载时恢复用户偏好。
-			document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+			setCookie(SIDEBAR_COOKIE_NAME, String(openState), {
+				path: "/",
+				maxAge: SIDEBAR_COOKIE_MAX_AGE,
+			});
 		},
 		[setOpenProp, open],
 	);

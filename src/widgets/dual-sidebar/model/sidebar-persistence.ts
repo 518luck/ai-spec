@@ -1,9 +1,9 @@
+import { setCookie } from "@/shared/lib/cookie/client-cookie";
+
 import { SIDEBAR_COLLAPSED_COOKIE, SIDEBAR_WIDTH_COOKIE } from "./sidebar-config";
 
-// cookie 写入：1 年有效期、同源、SameSite=Lax
-const writeCookie = (name: string, value: string): void => {
-	document.cookie = `${name}=${value};path=/;max-age=31536000;samesite=lax`;
-};
+// cookie 写入选项：1 年有效期、同源、SameSite=Lax
+const COOKIE_OPTIONS = { path: "/", maxAge: 31536000, sameSite: "lax" } as const;
 
 // 宽度写入节流句柄：拖拽过程高频调用，避免每次 pointermove 都写 cookie
 let widthFlushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -14,12 +14,12 @@ export const saveSidebarWidth = (width: number): void => {
 		clearTimeout(widthFlushTimer);
 	}
 	widthFlushTimer = setTimeout(() => {
-		writeCookie(SIDEBAR_WIDTH_COOKIE, String(width));
+		setCookie(SIDEBAR_WIDTH_COOKIE, String(width), COOKIE_OPTIONS);
 		widthFlushTimer = null;
 	}, 150);
 };
 
 // 持久化折叠状态（立即写入），折叠是离散切换无需节流
 export const saveSidebarCollapsed = (collapsed: boolean): void => {
-	writeCookie(SIDEBAR_COLLAPSED_COOKIE, String(collapsed));
+	setCookie(SIDEBAR_COLLAPSED_COOKIE, String(collapsed), COOKIE_OPTIONS);
 };
