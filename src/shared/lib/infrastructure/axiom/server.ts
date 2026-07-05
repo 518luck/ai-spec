@@ -16,26 +16,34 @@ import { getSearchParams } from "../../utils";
 import { axiomClient } from "./axiom";
 import { LocalFileTransport } from "./local-file-transport";
 
-const isAxiomEnabled =
-	process.env.IS_AXIOM_ENABLED === "true" &&
-	!!process.env.AXIOM_DATASET &&
-	!!process.env.AXIOM_TOKEN;
+// 先取出环境变量到局部变量，让 TS 能在条件分支里收窄类型，避免用 ! 非空断言
+const axiomDataset = process.env.AXIOM_DATASET;
+const axiomToken = process.env.AXIOM_TOKEN;
+const isAxiomEnabled = process.env.IS_AXIOM_ENABLED === "true" && !!axiomDataset && !!axiomToken;
 // 开发环境额外挂本地文件 transport，把日志落盘到 logs/server.log 方便翻阅排查
 const isDev = process.env.NODE_ENV !== "production";
 
 // transports 组合：Axiom(或控制台回退) + 开发环境本地文件；各通道独立、互不影响
-const transports: Transport[] = isAxiomEnabled
-	? [
-			new AxiomJSTransport({
-				axiom: axiomClient,
-				dataset: process.env.AXIOM_DATASET!,
-			}),
-		]
-	: [new ConsoleTransport()];
+// 进 ? 分支时 isAxiomEnabled 已保证 axiomDataset 非空，TS 也能收窄，无需 !
+const transports: Transport[] =
+	isAxiomEnabled && axiomDataset
+		? [
+				new AxiomJSTransport({
+					axiom: axiomClient,
+					dataset: axiomDataset,
+				}),
+			]
+		: [new ConsoleTransport()];
 if (isDev) transports.push(new LocalFileTransport());
 
+// transports 至少有一个元素（条件分支两边都给了初始 transport），取出首项后显式判空避免 !
+const firstTransport = transports[0];
+if (!firstTransport) {
+	throw new Error("transports 不能为空");
+}
+
 export const logger = new Logger({
-	transports: [transports[0]!, ...transports.slice(1)],
+	transports: [firstTransport, ...transports.slice(1)],
 	formatters: nextJsFormatters, // 程序格式化程序`
 });
 
