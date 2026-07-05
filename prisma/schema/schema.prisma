@@ -26,6 +26,9 @@ model User {
   invalidLoginAttempts Int       @default(0) // invalid 无效的  attempts 次数( 输错次数,成功后就清零)
   lockedAt             DateTime? // locked 锁定的 ( 这个账号是在什么时候被锁定的)
 
+  // 个人空间套餐档位，控制个人额度与付费功能；不进 session，每次实时查库
+  plan UserPlan @default(free)
+
   accounts Account[]
   sessions Session[]
   tokens   Token[]
@@ -36,6 +39,17 @@ model User {
   promptRecordVersions PromptRecordVersion[] @relation("VersionEditor")
   promptDrafts         PromptDraft[]         @relation("PromptDraftOwner")
   promptFavorites      PromptFavorite[]
+
+  // 团队反向关系：该用户加入的所有团队，创建者身份由其中 role=owner 的行表达
+  memberships TeamMember[]
+
+  @@schema("auth")
+}
+
+// 个人空间套餐枚举：free=免费，pro=付费个人版
+enum UserPlan {
+  free
+  pro
 
   @@schema("auth")
 }
@@ -48,7 +62,7 @@ model Account {
   provider                 String // 登录提供商，例如 Google、GitHub
   providerAccountId        String // 该提供商中的账户 ID
   refresh_token            String? @db.Text // 刷新 access token 用的令牌 是“专门用来续期的”
-  refresh_token_expires_in Int? // refresh token 的剩余有效期/过期时长   
+  refresh_token_expires_in Int? // refresh token 的剩余有效期/过期时长
   access_token             String? @db.Text // 当前 access token   是“直接拿来用的”
   expires_at               Int? // access token 过期时间（通常是时间戳）
   token_type               String? // token 类型，例如 Bearer
@@ -71,5 +85,71 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@schema("auth")
+}
+
+// 团队实体：多人协作的工作空间，承载团队级资源与额度
+model Team {
+  // ① 主键
+  id String @id @default(cuid()) // 团队主键
+
+  // ② 业务字段
+  name        String // 团队名称
+  slug        String?  @unique // URL 友好标识，用于团队专属页路径
+  description String? // 团队描述，可选
+  plan        TeamPlan @default(free) // 团队套餐档位，控制团队空间额度与付费功能
+
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 创建时间
+  updated_at DateTime @updatedAt // 更新时间
+
+  // ④ 关联关系
+  memberships TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
+
+  // ⑤ 索引
+  @@schema("auth") // 归属 auth 域，与 User 同库
+}
+
+// 团队成员关系：每对「用户×团队」一行，承载该用户在此团队内的角色
+model TeamMember {
+  // ① 主键
+  id String @id @default(cuid()) // 成员关系主键
+
+  // ② 业务字段
+  role TeamRole @default(member) // 该用户在此团队内的角色
+
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 加入团队时间
+
+  // ④ 外键列
+  team_id String // 所属团队 id
+  user_id String // 成员用户 id
+
+  // ⑤ 关联关系
+  team Team @relation(fields: [team_id], references: [id], onDelete: Cascade) // 所属团队；团队删除时级联删除其成员关系
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade) // 成员用户；用户删除时级联删除其所有成员关系
+
+  // ⑥ 索引
+  @@unique([team_id, user_id]) // 同一用户在同一团队只能有一条记录，防止角色矛盾
+  @@index([user_id]) // 按用户查询其加入的全部团队
+  @@schema("auth") // 归属 auth 域
+}
+
+// 团队套餐枚举：free=免费团队，team=付费团队版，enterprise=企业版
+enum TeamPlan {
+  free
+  team
+  enterprise
+
+  @@schema("auth")
+}
+
+// 团队角色枚举：owner=创建者（不可移除），admin=管理员，member=普通成员，viewer=只读
+enum TeamRole {
+  owner
+  admin
+  member
+  viewer
+
   @@schema("auth")
 }
