@@ -26,6 +26,6 @@
 		"titleBar.inactiveForeground": "#9CA3AF" // 窗口标题栏文字（非当前窗口，灰色）
 	},
 	"[jsonc]": {
-		"editor.defaultFormatter": "vscode.json-language-features"
+		"editor.defaultFormatter": "biomejs.biome"
 	}
 }
