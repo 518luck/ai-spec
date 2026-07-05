@@ -78,13 +78,15 @@ export function ThemePreferencePreview({
 	};
 
 	return (
-		<section
+		<button
+			type="button"
 			className={cn(
-				"cursor-pointer rounded-lg shadow-xs transition",
+				"block w-full cursor-pointer rounded-lg border p-0 text-left shadow-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
 				isCurrentMode
-					? "border border-primary/50 bg-primary/5 text-card-foreground"
-					: "border bg-card text-card-foreground",
+					? "border-primary/50 bg-primary/5 text-card-foreground"
+					: "bg-card text-card-foreground",
 			)}
+			aria-label={`切换到${title}模式`}
 			onClick={handleCardClick}
 		>
 			<div
@@ -117,6 +119,9 @@ export function ThemePreferencePreview({
 					onClick={(e) => {
 						e.stopPropagation();
 					}}
+					onKeyDown={(e) => {
+						e.stopPropagation();
+					}}
 				>
 					{THEMES.map((themeDisc) => (
 						<ThemeDiscOption
@@ -130,7 +135,7 @@ export function ThemePreferencePreview({
 					))}
 				</div>
 			</div>
-		</section>
+		</button>
 	);
 }
 
