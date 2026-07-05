@@ -85,12 +85,13 @@ function NotFoundPage() {
 
 	return (
 		<main className="relative flex min-h-svh w-full flex-col items-center justify-center overflow-hidden bg-background">
-			{/* 故障文字容器：点击触发一次故障爆发 */}
+			{/* 故障文字容器：点击触发一次故障爆发；纯装饰性交互，对屏幕阅读器隐藏 */}
 			<div
 				ref={containerRef}
 				className="relative flex cursor-pointer items-center justify-center"
 				onClick={trigger}
 				role="presentation"
+				aria-hidden="true"
 			>
 				<FaultLayer label="404" />
 				<FaultLayer label="404" />

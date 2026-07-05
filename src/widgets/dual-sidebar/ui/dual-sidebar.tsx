@@ -119,16 +119,10 @@ export function DualSidebar({ className, ...props }: DualSidebarProps): JSX.Elem
 					data-slot="dual-sidebar-resource-nav"
 					className="flex flex-col items-center gap-2 text-muted-foreground"
 				>
-					<div
-						aria-label="活动入口占位"
-						className="flex size-9 items-center justify-center rounded-md"
-					>
+					<div aria-hidden="true" className="flex size-9 items-center justify-center rounded-md">
 						<Icons.gift className="size-5" />
 					</div>
-					<div
-						aria-label="文档帮助入口占位"
-						className="flex size-9 items-center justify-center rounded-md"
-					>
+					<div aria-hidden="true" className="flex size-9 items-center justify-center rounded-md">
 						<Icons.helpCircle className="size-5" />
 					</div>
 					<UserAvatarPopover />
@@ -311,7 +305,7 @@ function NavAreasPanel({
 																			>
 																				{collapsed ? (
 																					<span
-																						aria-label={subItem.name}
+																						aria-hidden="true"
 																						className="size-1.5 rounded-full bg-current opacity-60"
 																					/>
 																				) : (
