@@ -2,7 +2,7 @@ import type { NextRequest } from "next/server";
 import type { Session } from "next-auth";
 import type { RateLimiterRes } from "rate-limiter-flexible";
 import { withAxiom } from "@/server/infrastructure/axiom/server";
-import { AiSpecError, toErrorResponse } from "@/server/middleware/error";
+import { AiSpecError, toErrorResponse } from "@/server/errors/http-error";
 import { getSearchParams } from "@/shared/lib/utils";
 import { RATE_LIMIT_MAX_POINTS, resolveContext } from "./resolve-context";
 

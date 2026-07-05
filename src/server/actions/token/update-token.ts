@@ -2,7 +2,7 @@
 
 import { flattenValidationErrors } from "next-safe-action";
 import { authUserActionClient } from "@/server/actions/safe-action";
-import { ActionError } from "@/server/actions/utils/action-error";
+import { ActionError } from "@/server/errors/action-error";
 import prisma from "@/shared/db";
 import { updateTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 

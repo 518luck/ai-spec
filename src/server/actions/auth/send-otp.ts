@@ -3,11 +3,11 @@
 import { flattenValidationErrors } from "next-safe-action";
 import * as z from "zod";
 import { actionClient } from "@/server/actions/safe-action";
-import { ActionError } from "@/server/actions/utils/action-error";
+import { ActionError } from "@/server/errors/action-error";
 import { sendEmail } from "@/server/infrastructure/email";
 import VerifyEmail from "@/server/infrastructure/email/templates/verify-email";
 import { ratelimit } from "@/server/infrastructure/redis/reatlimit";
-import { getIP } from "@/server/middleware/get-ip";
+import { getIP } from "@/server/utils/get-ip";
 import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";

@@ -4,7 +4,7 @@ import { flattenValidationErrors } from "next-safe-action";
 import { v4 as uuidv4 } from "uuid";
 import * as z from "zod/v4";
 import { actionClient } from "@/server/actions/safe-action";
-import { ActionError } from "@/server/actions/utils/action-error";
+import { ActionError } from "@/server/errors/action-error";
 import { skipAuthThrottling } from "@/server/infrastructure/environment";
 import { hardDailyRatelimit } from "@/server/infrastructure/redis/reatlimit";
 import prisma from "@/shared/db";

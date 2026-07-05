@@ -5,7 +5,7 @@ import * as z from "zod/v4";
 import { actionClient } from "@/server/actions/safe-action";
 import { skipAuthThrottling } from "@/server/infrastructure/environment";
 import { ratelimit } from "@/server/infrastructure/redis/reatlimit";
-import { getIP } from "@/server/middleware/get-ip";
+import { getIP } from "@/server/utils/get-ip";
 import prisma from "@/shared/db";
 import { emailSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";

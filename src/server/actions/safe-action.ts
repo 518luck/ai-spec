@@ -1,6 +1,6 @@
 import { after } from "next/server";
 import { createSafeActionClient } from "next-safe-action";
-import { ActionError } from "@/server/actions/utils/action-error";
+import { ActionError } from "@/server/errors/action-error";
 import { createLogger, serializeError } from "@/server/infrastructure/axiom/server";
 import { auth } from "@/shared/lib/auth/auth";
 
