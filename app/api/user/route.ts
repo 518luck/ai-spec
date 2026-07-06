@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
+import { AiSpecError } from "@/server/errors/http-error";
 import { createLogger, serializeError } from "@/server/infrastructure/axiom/server";
 import { enqueueDeleteUserAvatar } from "@/server/infrastructure/queue";
 import { uploadUserAvatar } from "@/server/infrastructure/storage";
-import { AiSpecError } from "@/server/errors/http-error";
 import { withSession } from "@/server/middleware/with-session";
 import prisma from "@/shared/db";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";

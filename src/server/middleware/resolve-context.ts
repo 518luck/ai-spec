@@ -6,8 +6,8 @@
 import type { NextRequest } from "next/server";
 import type { Session } from "next-auth";
 import type { RateLimiterRes } from "rate-limiter-flexible";
-import { apiKeyRatelimit } from "@/server/infrastructure/redis/reatlimit";
 import { AiSpecError } from "@/server/errors/http-error";
+import { apiKeyRatelimit } from "@/server/infrastructure/redis/reatlimit";
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { hashToken } from "@/shared/lib/auth/hash-token";
