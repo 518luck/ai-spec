@@ -3,6 +3,7 @@
 import { flattenValidationErrors } from "next-safe-action";
 import { authUserActionClient } from "@/server/actions/safe-action";
 import { ActionError } from "@/server/errors/action-error";
+import { tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
 import { updateTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 
@@ -16,10 +17,10 @@ export const updateTokenAction = authUserActionClient
 		const { id, name, description, scopes } = parsedInput;
 		const userId = ctx.user.id;
 
-		// 先查确认令牌存在且属于当前用户，不存在则报 NOT_FOUND
+		// 先查确认令牌存在且属于当前用户，并取出 hashed_key 供缓存清理使用
 		const token = await prisma.token.findUnique({
 			where: { id },
-			select: { user_id: true },
+			select: { user_id: true, hashed_key: true },
 		});
 		if (!token) {
 			throw new ActionError({ code: "NOT_FOUND", message: "令牌不存在" });
@@ -38,4 +39,6 @@ export const updateTokenAction = authUserActionClient
 				scopes: scopes.length > 0 ? scopes.join(" ") : null,
 			},
 		});
+		// scopes 可能变化，清缓存让下次请求重新拉取最新值
+		await tokenCache.delete(token.hashed_key);
 	});

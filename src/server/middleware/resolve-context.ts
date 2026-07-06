@@ -8,6 +8,7 @@ import type { Session } from "next-auth";
 import type { RateLimiterRes } from "rate-limiter-flexible";
 import { AiSpecError } from "@/server/errors/http-error";
 import { apiKeyRatelimit } from "@/server/infrastructure/redis/reatlimit";
+import { type TokenCacheItem, tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { hashToken } from "@/shared/lib/auth/hash-token";
@@ -64,11 +65,30 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 };
 
 // 通过 API Key 解析出未过期的 Token 及其关联用户
-const resolveApiKeyToken = async (rawKey: string) => {
+// 走 cache-aside：先查 Redis 缓存（命中即跳过数据库往返），未命中再查库并回填缓存
+const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 	const hashedKey = await hashToken(rawKey);
+
+	// 1. 先查缓存：命中则零数据库往返
+	const cached = await tokenCache.get(hashedKey);
+	if (cached) {
+		// 缓存里也要走过期校验：token 可能已过期但缓存还没失效
+		if (cached.expires && new Date(cached.expires) < new Date()) {
+			// 顺手清理过期项，避免后续请求继续命中过期缓存
+			await tokenCache.delete(hashedKey);
+			throw new Error("API Key 已过期");
+		}
+		return cached;
+	}
+
+	// 2. 缓存未命中 → 查数据库
 	const token = await prisma.token.findFirst({
 		where: { hashed_key: hashedKey },
-		include: {
+		select: {
+			id: true,
+			user_id: true,
+			scopes: true,
+			expires: true,
 			user: { select: { id: true, name: true, email: true, image: true } },
 		},
 	});
@@ -80,7 +100,17 @@ const resolveApiKeyToken = async (rawKey: string) => {
 		throw new Error("API Key 已过期");
 	}
 
-	return token;
+	// 3. 回填缓存：把 Date 统一转成 ISO 字符串以保持 JSON 兼容
+	const cacheItem: TokenCacheItem = {
+		id: token.id,
+		user_id: token.user_id,
+		scopes: token.scopes,
+		expires: token.expires?.toISOString() ?? null,
+		user: token.user,
+	};
+	await tokenCache.set(hashedKey, cacheItem);
+
+	return cacheItem;
 };
 
 // 把 User 记录构造为与 cookies 分支同构的 Session
