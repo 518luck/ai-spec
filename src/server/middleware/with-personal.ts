@@ -7,7 +7,7 @@
 import type { NextRequest } from "next/server";
 import type { Session } from "next-auth";
 import { toErrorResponse } from "@/server/errors/http-error";
-import { withAxiom } from "@/server/infrastructure/axiom/server";
+import { withAxiomBodyLog } from "@/server/infrastructure/axiom/server";
 import type { Action } from "@/server/rbac/actions";
 import type { UserPlan } from "@/shared/db/generator/client";
 import { getSearchParams } from "@/shared/lib/utils";
@@ -40,7 +40,7 @@ export const withPersonal = (
 	handler: PersonalHandler,
 	{ plans, permissions }: PersonalOptions = {},
 ) =>
-	withAxiom(async (req: NextRequest, ctx: RouteContext) => {
+	withAxiomBodyLog(async (req: NextRequest, ctx: RouteContext) => {
 		// 后续步骤填充的中间值，统一在此提前声明，保持异步逻辑线性
 		let session: Session | null = null;
 		let searchParams: Record<string, string> = {};

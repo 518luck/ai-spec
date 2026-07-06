@@ -12,6 +12,7 @@ import {
 	transformRouteHandlerSuccessResult, // 辅助函数，把 handler 的结果转成日志消息和报告对象
 } from "@axiomhq/nextjs"; // 针对 Next.js 场景做的一层官方适配 负责“在 Next.js 这个框架里，什么时候记、记什么、怎么拿到请求上下文”
 
+import type { NextRequest } from "next/server";
 import { getSearchParams } from "@/shared/lib/utils";
 import { axiomClient } from "./axiom";
 import { LocalFileTransport } from "./local-file-transport";
@@ -80,35 +81,46 @@ export const serializeError = (e: Error): Record<string, unknown> => {
 	return obj;
 };
 
-//调用 createAxiomRouteHandler(...)   生成一个包装器   这个包装器在 route handler 成功执行后会触发 onSuccess
-export const withAxiomBodyLog = createAxiomRouteHandler(logger, {
-	// 当被包装的 route handler 成功返回时，执行这里的日志逻辑。
-	onSuccess: async (data) => {
-		// 先把成功结果整理成日志消息和报告对象
-		//   - 从本次成功请求的数据里
-		//  - 提取出一条日志消息 message
-		//  - 和一份日志详情对象 report
-		const [message, report] = transformRouteHandlerSuccessResult(data);
+// 带 body 日志的 route handler 包装器：在库的 onSuccess 读 body 前，
+// 先把 clone 过的 req 喂给业务 handler，保留原 req 的 body stream 供 onSuccess 消费，
+// 避免 stream 二次读取被 onSuccess 的 catch 静默吞掉
+export const withAxiomBodyLog = <TReq extends NextRequest = NextRequest>(
+	handler: (
+		req: TReq,
+		ctx: { params: Promise<Record<string, string | string[]>> },
+	) => Promise<Response> | Response,
+) =>
+	createAxiomRouteHandler(logger, {
+		// 当被包装的 route handler 成功返回时，执行这里的日志逻辑。
+		onSuccess: async (data) => {
+			// 先把成功结果整理成日志消息和报告对象
+			//   - 从本次成功请求的数据里
+			//  - 提取出一条日志消息 message
+			//  - 和一份日志详情对象 report
+			const [message, report] = transformRouteHandlerSuccessResult(data);
 
-		// 如果请求方法是 POST / PATCH / PUT，就尝试把请求体 body 也记录到日志里。
-		if (["POST", "PATCH", "PUT"].includes(data.req.method)) {
-			try {
-				// 从请求对象中读取 JSON 格式的请求体，然后存到日志报告的 body 字段里。
-				report.body = await data.req.json();
-			} catch {
-				// Body可能是空的，无效的JSON
-				// 静默跳过添加Body到报告
+			// 如果请求方法是 POST / PATCH / PUT，就尝试把请求体 body 也记录到日志里。
+			if (["POST", "PATCH", "PUT"].includes(data.req.method)) {
+				try {
+					// 原 req 的 body stream 未被业务 handler 消费，留给日志层读取
+					report.body = await data.req.json();
+				} catch {
+					// Body可能是空的，无效的JSON
+					// 静默跳过添加Body到报告
+				}
 			}
-		}
 
-		// 获取请求参数对象
-		report.searchParams = getSearchParams(data.req.url);
-		// 参数1：日志级别   参数2：日志消息    参数3：日志详情
-		logger.log(getLogLevelFromStatusCode(data.res.status), message, report);
-		// 刷新日志缓冲区，确保日志立即发送
-		await logger.flush();
-	},
-});
+			// 获取请求参数对象
+			report.searchParams = getSearchParams(data.req.url);
+			// 参数1：日志级别   参数2：日志消息    参数3：日志详情
+			logger.log(getLogLevelFromStatusCode(data.res.status), message, report);
+			// 刷新日志缓冲区，确保日志立即发送
+			await logger.flush();
+		},
+	})<TReq>((req, ctx) => {
+		// 业务 handler 拿 clone 过的 req，原 req 的 body stream 完整保留给 onSuccess
+		return handler(req.clone() as TReq, ctx);
+	});
 
 export const withAxiom = createAxiomRouteHandler(logger);
 
