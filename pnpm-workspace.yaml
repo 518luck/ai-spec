@@ -1,6 +1,6 @@
 allowBuilds:
   "@prisma/engines": true
-  dprint: set this to true or false
+  dprint: true
   esbuild: true
   msgpackr-extract: false
   msw: true
