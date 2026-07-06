@@ -1,7 +1,6 @@
 "use client";
 
 import copy from "copy-to-clipboard";
-import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
@@ -19,6 +18,7 @@ import {
 	DialogTitle,
 } from "@/shared/ui/dialog";
 import { Icons } from "@/shared/ui/icons";
+import { computeExpires } from "../config/constants";
 import {
 	buildScopes,
 	createEmptyMatrix,
@@ -70,22 +70,6 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 		onOpenChange(next);
 	};
 
-	// 把弹窗选的过期预设/日期换算成后端接受的 ISO 字符串；null 表示永不过期
-	const computeExpires = (): string | null => {
-		switch (expiryPreset) {
-			case "never":
-				return null;
-			case "7d":
-				return dayjs().add(7, "day").toISOString();
-			case "30d":
-				return dayjs().add(30, "day").toISOString();
-			case "90d":
-				return dayjs().add(90, "day").toISOString();
-			case "custom":
-				return expiryDate ? expiryDate.toISOString() : null;
-		}
-	};
-
 	// 提交创建：名称用与后端同一份 schema 预校验；限制权限下至少勾选一个资源；自定义过期必须选日期
 	const handleCreate = (): void => {
 		const parsed = tokenNameSchema.safeParse(name);
@@ -102,7 +86,12 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 			toast.error("请选择过期日期");
 			return;
 		}
-		void executeAsync({ name: parsed.data, description, scopes, expires: computeExpires() });
+		void executeAsync({
+			name: parsed.data,
+			description,
+			scopes,
+			expires: computeExpires(expiryPreset, expiryDate),
+		});
 	};
 
 	// 复制明文密钥到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
