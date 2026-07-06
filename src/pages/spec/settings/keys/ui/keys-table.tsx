@@ -19,6 +19,7 @@ type TokenItem = {
 	partial_key: string;
 	scopes: string | null;
 	last_used: Date | null;
+	expires: Date | null;
 };
 
 type KeysTableProps = {
@@ -90,6 +91,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 										partialKey={token.partial_key}
 										description={token.description}
 										scopes={token.scopes}
+										expires={token.expires}
 									/>
 								</TableCell>
 							</TableRow>

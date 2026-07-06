@@ -38,6 +38,8 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 				scopes: true,
 				// 最后使用时间，null 表示从未调用
 				last_used: true,
+				// 过期时间，null 表示永不过期；编辑弹窗回填用
+				expires: true,
 			},
 		}),
 		prisma.token.count({ where: { user_id: userId } }),

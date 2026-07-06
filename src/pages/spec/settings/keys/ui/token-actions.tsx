@@ -24,6 +24,7 @@ type TokenActionsProps = {
 	partialKey: string;
 	description: string | null;
 	scopes: string | null;
+	expires: Date | null;
 };
 
 // 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
@@ -33,6 +34,7 @@ export function TokenActions({
 	partialKey,
 	description,
 	scopes,
+	expires,
 }: TokenActionsProps): JSX.Element {
 	const router = useRouter();
 	// 确认弹窗的开关状态；点「删除」菜单项时打开
@@ -113,7 +115,7 @@ export function TokenActions({
 			<EditKeyDialog
 				open={editOpen}
 				onOpenChange={setEditOpen}
-				token={{ id, name, description, scopes }}
+				token={{ id, name, description, scopes, expires }}
 			/>
 		</>
 	);

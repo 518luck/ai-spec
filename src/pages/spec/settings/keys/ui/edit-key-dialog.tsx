@@ -1,5 +1,6 @@
 "use client";
 
+import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
@@ -19,6 +20,7 @@ import {
 import {
 	buildMatrixFromScopes,
 	buildScopes,
+	type ExpiryPresetValue,
 	KeyForm,
 	type PermissionMatrix,
 	scopesToPreset,
@@ -30,6 +32,7 @@ type EditableToken = {
 	name: string;
 	description: string | null;
 	scopes: string | null;
+	expires: Date | null;
 };
 
 type EditKeyDialogProps = {
@@ -38,18 +41,26 @@ type EditKeyDialogProps = {
 	token: EditableToken;
 };
 
-// 编辑 API 密钥弹窗：仅可改名称、描述、权限；密钥本身不可改，因此无明文展示视图
+// 由令牌的 expires 字段反推过期预设：null=永不过期，有值则统一归为 custom（编辑时无法还原当初是否为 7d/30d/90d，按具体日期展示最准确）
+const deriveExpiryPreset = (expires: Date | null): ExpiryPresetValue =>
+	expires ? "custom" : "never";
+
+// 编辑 API 密钥弹窗：可改名称、描述、权限、过期时间；密钥本身不可改，因此无明文展示视图
 export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps): JSX.Element {
 	const router = useRouter();
 	// 由 token 现有值派生表单初值：scopes 字符串拆分为数组后反推预设与勾选矩阵
 	const initialScopes = token.scopes ? token.scopes.split(" ") : [];
 	const initialPermission = scopesToPreset(initialScopes);
 	const initialMatrix = buildMatrixFromScopes(initialScopes);
+	const initialExpiryPreset = deriveExpiryPreset(token.expires);
 
 	const [name, setName] = useState(token.name);
 	const [description, setDescription] = useState(token.description ?? "");
 	const [permission, setPermission] = useState<ScopePresetValue>(initialPermission);
 	const [matrix, setMatrix] = useState<PermissionMatrix>(initialMatrix);
+	const [expiryPreset, setExpiryPreset] = useState<ExpiryPresetValue>(initialExpiryPreset);
+	// 已存在的过期时间作为日期选择器初值；永不过期为 undefined
+	const [expiryDate, setExpiryDate] = useState<Date | undefined>(token.expires ?? undefined);
 
 	const { executeAsync, isPending } = useAction(updateTokenAction, {
 		onSuccess: () => {
@@ -69,11 +80,29 @@ export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps)
 			setDescription(token.description ?? "");
 			setPermission(initialPermission);
 			setMatrix(initialMatrix);
+			setExpiryPreset(initialExpiryPreset);
+			setExpiryDate(token.expires ?? undefined);
 		}
 		onOpenChange(next);
 	};
 
-	// 提交保存：名称用与后端同一份 schema 预校验；限制权限下至少勾选一个资源
+	// 把弹窗选的过期预设/日期换算成后端接受的 ISO 字符串；null 表示永不过期
+	const computeExpires = (): string | null => {
+		switch (expiryPreset) {
+			case "never":
+				return null;
+			case "7d":
+				return dayjs().add(7, "day").toISOString();
+			case "30d":
+				return dayjs().add(30, "day").toISOString();
+			case "90d":
+				return dayjs().add(90, "day").toISOString();
+			case "custom":
+				return expiryDate ? expiryDate.toISOString() : null;
+		}
+	};
+
+	// 提交保存：名称用与后端同一份 schema 预校验；限制权限下至少勾选一个资源；自定义过期必须选日期
 	const handleSave = (): void => {
 		const parsed = tokenNameSchema.safeParse(name);
 		if (!parsed.success) {
@@ -85,7 +114,17 @@ export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps)
 			toast.error("请至少选择一个资源");
 			return;
 		}
-		void executeAsync({ id: token.id, name: parsed.data, description, scopes });
+		if (expiryPreset === "custom" && !expiryDate) {
+			toast.error("请选择过期日期");
+			return;
+		}
+		void executeAsync({
+			id: token.id,
+			name: parsed.data,
+			description,
+			scopes,
+			expires: computeExpires(),
+		});
 	};
 
 	return (
@@ -94,7 +133,7 @@ export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps)
 				<DialogHeader>
 					<DialogTitle className="text-lg">编辑 API 密钥</DialogTitle>
 					<DialogDescription className="text-sm leading-6">
-						修改密钥名称、描述与权限。
+						修改密钥名称、描述、权限与过期时间。
 					</DialogDescription>
 				</DialogHeader>
 
@@ -103,16 +142,14 @@ export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps)
 					description={description}
 					permission={permission}
 					matrix={matrix}
-					// 编辑弹窗本次不支持改过期时间：隐藏过期区块，相关 props 传占位值仅满足类型
-					showExpiry={false}
-					expiryPreset="never"
-					expiryDate={undefined}
-					onExpiryPresetChange={() => {}}
-					onExpiryDateChange={() => {}}
+					expiryPreset={expiryPreset}
+					expiryDate={expiryDate}
 					onNameChange={setName}
 					onDescriptionChange={setDescription}
 					onPermissionChange={setPermission}
 					onMatrixChange={setMatrix}
+					onExpiryPresetChange={setExpiryPreset}
+					onExpiryDateChange={setExpiryDate}
 				/>
 
 				<DialogFooter>
