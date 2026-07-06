@@ -36,9 +36,7 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 				partial_key: true,
 				// scopes 为空格分隔的权限串，split 后交给 scopesToName 反查展示标签
 				scopes: true,
-				// 最后使用时间，null 表示从未调用
-				last_used: true,
-				// 过期时间，null 表示永不过期；编辑弹窗回填用
+				// 过期时间，null 表示永不过期；列表展示剩余时间 + 编辑弹窗回填都用
 				expires: true,
 			},
 		}),

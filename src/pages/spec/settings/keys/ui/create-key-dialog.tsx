@@ -18,7 +18,7 @@ import {
 	DialogTitle,
 } from "@/shared/ui/dialog";
 import { Icons } from "@/shared/ui/icons";
-import { computeExpires } from "../config/constants";
+import { computeExpires } from "../lib/expires";
 import {
 	buildScopes,
 	createEmptyMatrix,

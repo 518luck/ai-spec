@@ -16,7 +16,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/shared/ui/dialog";
-import { computeExpires } from "../config/constants";
+import { computeExpires } from "../lib/expires";
 import {
 	buildMatrixFromScopes,
 	buildScopes,

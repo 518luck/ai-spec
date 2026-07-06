@@ -1,6 +1,5 @@
 "use client";
 
-import dayjs from "dayjs";
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
@@ -9,6 +8,7 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { PAGE_SIZE } from "../config/constants";
+import { formatExpires } from "../lib/expires";
 import { TokenActions } from "./token-actions";
 
 // 单条密钥的展示字段（由服务端按页查询后传入，客户端只负责渲染）
@@ -18,7 +18,6 @@ type TokenItem = {
 	description: string | null;
 	partial_key: string;
 	scopes: string | null;
-	last_used: Date | null;
 	expires: Date | null;
 };
 
@@ -60,7 +59,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 							<TableHead className="w-48">描述</TableHead>
 							<TableHead className="w-40">密钥</TableHead>
 							<TableHead className="w-20 pl-3">权限</TableHead>
-							<TableHead className="w-28">最后使用</TableHead>
+							<TableHead className="w-28">剩余时间</TableHead>
 							<TableHead className="w-16 pr-4">操作</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -82,7 +81,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 									</Badge>
 								</TableCell>
 								<TableCell className="text-muted-foreground">
-									{token.last_used ? dayjs(token.last_used).format("YYYY/MM/DD") : "—"}
+									{formatExpires(token.expires)}
 								</TableCell>
 								<TableCell className="pr-4">
 									<TokenActions
