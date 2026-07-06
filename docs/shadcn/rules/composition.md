@@ -44,13 +44,13 @@
 
 这适用于所有基于 group 的组件：
 
-| Item | Group |
-|------|-------|
-| `SelectItem`, `SelectLabel` | `SelectGroup` |
+| Item                                                       | Group               |
+| ---------------------------------------------------------- | ------------------- |
+| `SelectItem`, `SelectLabel`                                | `SelectGroup`       |
 | `DropdownMenuItem`, `DropdownMenuLabel`, `DropdownMenuSub` | `DropdownMenuGroup` |
-| `MenubarItem` | `MenubarGroup` |
-| `ContextMenuItem` | `ContextMenuGroup` |
-| `CommandItem` | `CommandGroup` |
+| `MenubarItem`                                              | `MenubarGroup`      |
+| `ContextMenuItem`                                          | `ContextMenuGroup`  |
+| `CommandItem`                                              | `CommandGroup`      |
 
 ---
 
@@ -98,14 +98,14 @@ toast("File deleted.", {
 
 ## 在 overlay 组件之间选择
 
-| 使用场景 | 组件 |
-|----------|-----------|
-| 需要输入的专注任务 | `Dialog` |
-| 破坏性操作确认 | `AlertDialog` |
-| 包含详情或过滤器的侧边面板 | `Sheet` |
-| 移动优先的底部面板 | `Drawer` |
-| Hover 时显示快速信息 | `HoverCard` |
-| 点击时显示小型上下文内容 | `Popover` |
+| 使用场景                   | 组件          |
+| -------------------------- | ------------- |
+| 需要输入的专注任务         | `Dialog`      |
+| 破坏性操作确认             | `AlertDialog` |
+| 包含详情或过滤器的侧边面板 | `Sheet`       |
+| 移动优先的底部面板         | `Drawer`      |
+| Hover 时显示快速信息       | `HoverCard`   |
+| 点击时显示小型上下文内容   | `Popover`     |
 
 ---
 
@@ -188,8 +188,8 @@ toast("File deleted.", {
 
 ## 使用现有组件而不是自定义标记
 
-| 替代对象 | 使用 |
-|---|---|
-| `<hr>` 或 `<div className="border-t">` | `<Separator />` |
-| 带样式 div 的 `<div className="animate-pulse">` | `<Skeleton className="h-4 w-3/4" />` |
-| `<span className="rounded-full bg-green-100 ...">` | `<Badge variant="secondary">` |
+| 替代对象                                           | 使用                                 |
+| -------------------------------------------------- | ------------------------------------ |
+| `<hr>` 或 `<div className="border-t">`             | `<Separator />`                      |
+| 带样式 div 的 `<div className="animate-pulse">`    | `<Skeleton className="h-4 w-3/4" />` |
+| `<span className="rounded-full bg-green-100 ...">` | `<Badge variant="secondary">`        |

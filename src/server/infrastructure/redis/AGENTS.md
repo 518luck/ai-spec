@@ -16,10 +16,10 @@ redis/
 
 `clients.ts` 按重试策略（而非用途）提供两个 getter，区分「请求链路」与「后台消费」：
 
-| getter | maxRetriesPerRequest | 用途 |
-| --- | --- | --- |
-| `getAppRedis()` | 20（默认，fail-fast） | 限流、KV、BullMQ **生产者**（HTTP 请求内 `queue.add`）；Redis 故障时快速报错，不挂住请求 |
-| `getWorkerRedis()` | null（无限重试） | 仅 BullMQ **Worker**（阻塞取任务）；Redis 恢复后自动重连 |
+| getter             | maxRetriesPerRequest  | 用途                                                                                     |
+| ------------------ | --------------------- | ---------------------------------------------------------------------------------------- |
+| `getAppRedis()`    | 20（默认，fail-fast） | 限流、KV、BullMQ **生产者**（HTTP 请求内 `queue.add`）；Redis 故障时快速报错，不挂住请求 |
+| `getWorkerRedis()` | null（无限重试）      | 仅 BullMQ **Worker**（阻塞取任务）；Redis 恢复后自动重连                                 |
 
 > ⚠️ 划分依据是**重试性格**：HTTP 链路要快速失败，Worker 要无限重试。`getAppRedis()` 一条连接被限流 / KV / 队列生产者共用，符合 BullMQ「多个 Queue 共用一条连接」的官方写法；Worker 内部会自行 `.duplicate()` 出阻塞连接。
 

@@ -1,0 +1,8 @@
+{
+	// Dprint 配置：本项目只用它格式化 Markdown（TS/CSS/JSON 仍由 Biome 处理）
+	"markdown": {},
+	"includes": ["**/*.md"],
+	"excludes": ["**/node_modules/**", "**/dist/**", "**/.next/**"],
+	"lineWidth": 100,
+	"plugins": ["https://plugins.dprint.dev/markdown-0.22.1.wasm"]
+}

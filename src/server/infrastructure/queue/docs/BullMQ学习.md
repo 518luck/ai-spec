@@ -68,5 +68,4 @@ new Queue("avatar-sync", {
 ```
 
 ```
-
 ```

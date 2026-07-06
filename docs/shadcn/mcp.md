@@ -13,13 +13,13 @@ shadcn mcp init   # write config for your editor
 
 编辑器配置文件：
 
-| 编辑器 | 配置文件 |
-|--------|------------|
-| Claude Code | `.mcp.json` |
-| Cursor | `.cursor/mcp.json` |
-| VS Code | `.vscode/mcp.json` |
-| OpenCode | `opencode.json` |
-| Codex | `~/.codex/config.toml`（手动） |
+| 编辑器      | 配置文件                       |
+| ----------- | ------------------------------ |
+| Claude Code | `.mcp.json`                    |
+| Cursor      | `.cursor/mcp.json`             |
+| VS Code     | `.vscode/mcp.json`             |
+| OpenCode    | `opencode.json`                |
+| Codex       | `~/.codex/config.toml`（手动） |
 
 ---
 

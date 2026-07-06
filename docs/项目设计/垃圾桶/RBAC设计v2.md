@@ -7,9 +7,9 @@
 
 ### 修订记录
 
-| 版本 | 变更 |
-|---|---|
-| v2.0 | 初版：基于 Dub 模式，三类资源（A/B/C）+ 两道闸门 + Prompt 样板 |
+| 版本         | 变更                                                                                                                                                                                                          |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| v2.0         | 初版：基于 Dub 模式，三类资源（A/B/C）+ 两道闸门 + Prompt 样板                                                                                                                                                |
 | v2.1（本版） | **修正与 Dub 的关键差异**：① 新增"游客"为独立用户形态；② 明确"团队 = 工作空间"（非嵌套）；③ 新增"第零道闸"处理游客只读访问；④ 新增 §4.4"分享到团队"动作；⑤ 命名从 `Workspace` 统一改为 `Team`，更贴近产品语义 |
 
 ---
@@ -37,54 +37,54 @@
 
 ### 1.1 三态用户
 
-| 形态 | 判定条件 | 可访问区域 | 数据归属 |
-|---|---|---|---|
-| **游客** | `withSession` 失败 | discover 广场 + public 资源 + 部分设置（只读） | 无（无 `userId`） |
-| **个人用户** | 已登录 + `teamMemberships = []` | 个人空间 + discover + 设置 | `ownerId = userId, teamId = null` |
-| **团队成员** | 已登录 + `teamMemberships.length > 0` | 个人空间 + 团队空间 + discover + 设置 | 个人资源 + 团队资源 |
+| 形态         | 判定条件                              | 可访问区域                                     | 数据归属                          |
+| ------------ | ------------------------------------- | ---------------------------------------------- | --------------------------------- |
+| **游客**     | `withSession` 失败                    | discover 广场 + public 资源 + 部分设置（只读） | 无（无 `userId`）                 |
+| **个人用户** | 已登录 + `teamMemberships = []`       | 个人空间 + discover + 设置                     | `ownerId = userId, teamId = null` |
+| **团队成员** | 已登录 + `teamMemberships.length > 0` | 个人空间 + 团队空间 + discover + 设置          | 个人资源 + 团队资源               |
 
 ### 1.2 三道闸门流程
 
 ```
-                    请求进来
-                       │
-                       ▼
-       ┌──────── 第零道闸 withOptionalSession ─────────┐
-       │  解 cookie/api-key，尝试拿 session            │
-       │  ┌─ 拿不到 → ctx.user = null（游客模式）       │
-       │  └─ 拿到   → ctx.user = session.user           │
-       └───────────────────┬───────────────────────────┘
-                           ▼
-              ┌── 路由性质判断 ──┐
-              │                  │
-       public/anon 路由        受保护路由（team/* 等）
-              │                  │
-              ▼                  ▼
-       只允许读 +         ┌─ 第一道闸 withTeam ──┐
-       ctx.user=null      │  ctx.user 必须存在    │
-       时禁写             │  → 否则 401           │
-                          │  查 TeamMember：     │
-                          │  where: {userId, teamId} │
-                          │  → 不存在 404         │
-                          │  → role 不够 403      │
-                          └──────────┬────────────┘
-                                     ▼
-                          ┌─ 第二道闸 getXxxForTeam ─┐
-                          │  WHERE teamId = ?         │
-                          │  纯取数，不再判权限        │
-                          └───────────────────────────┘
+             请求进来
+                │
+                ▼
+┌──────── 第零道闸 withOptionalSession ─────────┐
+│  解 cookie/api-key，尝试拿 session            │
+│  ┌─ 拿不到 → ctx.user = null（游客模式）       │
+│  └─ 拿到   → ctx.user = session.user           │
+└───────────────────┬───────────────────────────┘
+                    ▼
+       ┌── 路由性质判断 ──┐
+       │                  │
+public/anon 路由        受保护路由（team/* 等）
+       │                  │
+       ▼                  ▼
+只允许读 +         ┌─ 第一道闸 withTeam ──┐
+ctx.user=null      │  ctx.user 必须存在    │
+时禁写             │  → 否则 401           │
+                   │  查 TeamMember：     │
+                   │  where: {userId, teamId} │
+                   │  → 不存在 404         │
+                   │  → role 不够 403      │
+                   └──────────┬────────────┘
+                              ▼
+                   ┌─ 第二道闸 getXxxForTeam ─┐
+                   │  WHERE teamId = ?         │
+                   │  纯取数，不再判权限        │
+                   └───────────────────────────┘
 ```
 
 ### 1.3 与 Dub 模式的差异（关键）
 
-| 维度 | Dub | ai-spec（本设计） |
-|---|---|---|
-| 用户形态 | 登录用户 + 工作空间成员（无游客） | **三态：游客 / 个人 / 团队成员** |
-| 闸门数量 | 两道 | **三道**（多一个游客判定） |
-| 资源归属 | 一切资源都属于某个 workspace | **双态：个人资源（ownerId）+ 团队资源（teamId）** |
-| 资源跨态转换 | 不存在（资源永远在 workspace 内） | **显式"分享到团队"动作**（§4.4） |
-| 工作空间嵌套 | 扁平 workspace + project | 同 Dub：**Team + TeamProject 两层扁平**（不嵌套） |
-| 团队命名 | UI 叫 workspace | UI 叫"**团队**"（用户也可叫公司/部门，名字任意） |
+| 维度         | Dub                               | ai-spec（本设计）                                 |
+| ------------ | --------------------------------- | ------------------------------------------------- |
+| 用户形态     | 登录用户 + 工作空间成员（无游客） | **三态：游客 / 个人 / 团队成员**                  |
+| 闸门数量     | 两道                              | **三道**（多一个游客判定）                        |
+| 资源归属     | 一切资源都属于某个 workspace      | **双态：个人资源（ownerId）+ 团队资源（teamId）** |
+| 资源跨态转换 | 不存在（资源永远在 workspace 内） | **显式"分享到团队"动作**（§4.4）                  |
+| 工作空间嵌套 | 扁平 workspace + project          | 同 Dub：**Team + TeamProject 两层扁平**（不嵌套） |
+| 团队命名     | UI 叫 workspace                   | UI 叫"**团队**"（用户也可叫公司/部门，名字任意）  |
 
 ---
 
@@ -94,28 +94,28 @@
 
 > 第一道闸（`withTeam`）通过后，第二道闸用 `WHERE teamId = ?` 直接取数。
 
-| 资源 | 关键字段 | 说明 | 本轮 |
-|---|---|---|---|
-| `Team` | id, slug, name, ownerId | **团队本身**（= Dub 的 Workspace） | ✅ |
-| `TeamMember` | id, teamId, userId, role | **第一道闸要查的表** | ✅ |
-| `TeamProject` | id, teamId, name | 项目归属于团队（"UI 部门"、"动画部门" 都是 TeamProject） | ✅ |
-| `SharedAsset` | id, teamId, type, content | 团队级共享资产 | ⏸ 下轮 |
-| `ActivityLog` | id, teamId, userId, action, ts | 审计日志 | ⏸ |
-| `ApiKeyCredential` | id, teamId, hashedKey | 团队级 API Key | ⏸ |
-| `McpConnection` | id, teamId, ... | MCP 连接配置 | ⏸ |
-| `Favorite` | id, userId, assetId | 收藏 | ⏸ |
-| `Tag` / `Category` | id, teamId, name | 团队内分类体系 | ⏸ |
+| 资源               | 关键字段                       | 说明                                                     | 本轮   |
+| ------------------ | ------------------------------ | -------------------------------------------------------- | ------ |
+| `Team`             | id, slug, name, ownerId        | **团队本身**（= Dub 的 Workspace）                       | ✅     |
+| `TeamMember`       | id, teamId, userId, role       | **第一道闸要查的表**                                     | ✅     |
+| `TeamProject`      | id, teamId, name               | 项目归属于团队（"UI 部门"、"动画部门" 都是 TeamProject） | ✅     |
+| `SharedAsset`      | id, teamId, type, content      | 团队级共享资产                                           | ⏸ 下轮 |
+| `ActivityLog`      | id, teamId, userId, action, ts | 审计日志                                                 | ⏸      |
+| `ApiKeyCredential` | id, teamId, hashedKey          | 团队级 API Key                                           | ⏸      |
+| `McpConnection`    | id, teamId, ...                | MCP 连接配置                                             | ⏸      |
+| `Favorite`         | id, userId, assetId            | 收藏                                                     | ⏸      |
+| `Tag` / `Category` | id, teamId, name               | 团队内分类体系                                           | ⏸      |
 
 ### 2.2 B 类：双态资源（个人 / 团队 + 可选公开）
 
-| 资源 | 个人态 | 团队态 | 公开态（discover） | 本轮 |
-|---|---|---|---|---|
-| **Prompt** | `ownerId = userId, teamId = null` | `ownerId = null, teamId = ?` | 任意态 + `visibility=PUBLIC` 都可上广场 | ✅ 样板 |
-| RuleSpec | 同上 | 同上 | 同上 | ⏸ 下轮 |
-| AgentsDocument | 同上 | 同上 | 同上 | ⏸ |
-| Skill | 同上 | 同上 | 同上 | ⏸ |
-| Agent | 同上 | 同上 | 同上 | ⏸ |
-| Plugin | 同上 | 同上 | 同上 | ⏸ |
+| 资源           | 个人态                            | 团队态                       | 公开态（discover）                      | 本轮    |
+| -------------- | --------------------------------- | ---------------------------- | --------------------------------------- | ------- |
+| **Prompt**     | `ownerId = userId, teamId = null` | `ownerId = null, teamId = ?` | 任意态 + `visibility=PUBLIC` 都可上广场 | ✅ 样板 |
+| RuleSpec       | 同上                              | 同上                         | 同上                                    | ⏸ 下轮  |
+| AgentsDocument | 同上                              | 同上                         | 同上                                    | ⏸       |
+| Skill          | 同上                              | 同上                         | 同上                                    | ⏸       |
+| Agent          | 同上                              | 同上                         | 同上                                    | ⏸       |
+| Plugin         | 同上                              | 同上                         | 同上                                    | ⏸       |
 
 **B 类资源的标准字段：**
 
@@ -142,39 +142,40 @@ id, ownerId, teamId, projectId, visibility, ...
 ### 3.1 用户形态与角色定义
 
 > **两层概念，不要混淆**：
+>
 > - **形态**（form）：游客 / 个人 / 团队成员 —— 描述"你当前登录状态"
 > - **角色**（role）：OWNER / ADMIN / EDITOR / VIEWER —— 描述"你在某个团队里担任什么"
 
-| 形态 | 角色 | 说明 |
-|---|---|---|
-| 游客 | — | 无角色；只能读，不能写 |
-| 个人用户 | — | 无角色（没加入任何团队）；能读写自己的个人资源 |
-| 团队成员 | `OWNER` | 团队创建者；唯一能删团队 / 转让所有权 |
-| 团队成员 | `ADMIN` | 管成员、管团队设置；不能动 OWNER |
-| 团队成员 | `EDITOR` | 读写团队内所有资源；不能管成员 / 设置 |
-| 团队成员 | `VIEWER` | 只读 |
+| 形态     | 角色     | 说明                                           |
+| -------- | -------- | ---------------------------------------------- |
+| 游客     | —        | 无角色；只能读，不能写                         |
+| 个人用户 | —        | 无角色（没加入任何团队）；能读写自己的个人资源 |
+| 团队成员 | `OWNER`  | 团队创建者；唯一能删团队 / 转让所有权          |
+| 团队成员 | `ADMIN`  | 管成员、管团队设置；不能动 OWNER               |
+| 团队成员 | `EDITOR` | 读写团队内所有资源；不能管成员 / 设置          |
+| 团队成员 | `VIEWER` | 只读                                           |
 
 > **关键**：`role` 字段挂在 `TeamMember.role` 上，**不是 `User.role`**。同一人在 A 团队是 OWNER，在 B 团队可以是 VIEWER。
 
 ### 3.2 权限矩阵（含游客列）
 
-| Action | 游客 | 个人 | OWNER | ADMIN | EDITOR | VIEWER |
-|---|---|---|---|---|---|---|
-| `discover.read` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `personal.demo.read`（游客看的"个人空间"） | ✅（只读 public 聚合） | — | — | — | — | — |
-| `personal.*.read` | ❌ | ✅（仅自己） | ✅ | ✅ | ✅ | ✅ |
-| `personal.*.write` | ❌ | ✅（仅自己） | ✅ | ✅ | ✅ | ❌ |
-| `team.*.read` | ❌ | ❌ | ✅ | ✅ | ✅ | ✅ |
-| `team.*.write` | ❌ | ❌ | ✅ | ✅ | ✅ | ❌ |
-| `team.delete` | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| `team.transfer` | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
-| `member.invite` | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `member.remove` | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `member.updateRole` | ❌ | ❌ | ✅ | ✅（仅更低） | ❌ | ❌ |
-| `team.settings` | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `apiKey.manage` | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| `settings.preferences.read` | ✅（部分） | ✅ | ✅ | ✅ | ✅ | ✅ |
-| `settings.preferences.write` | ❌ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Action                                     | 游客                   | 个人         | OWNER | ADMIN        | EDITOR | VIEWER |
+| ------------------------------------------ | ---------------------- | ------------ | ----- | ------------ | ------ | ------ |
+| `discover.read`                            | ✅                     | ✅           | ✅    | ✅           | ✅     | ✅     |
+| `personal.demo.read`（游客看的"个人空间"） | ✅（只读 public 聚合） | —            | —     | —            | —      | —      |
+| `personal.*.read`                          | ❌                     | ✅（仅自己） | ✅    | ✅           | ✅     | ✅     |
+| `personal.*.write`                         | ❌                     | ✅（仅自己） | ✅    | ✅           | ✅     | ❌     |
+| `team.*.read`                              | ❌                     | ❌           | ✅    | ✅           | ✅     | ✅     |
+| `team.*.write`                             | ❌                     | ❌           | ✅    | ✅           | ✅     | ❌     |
+| `team.delete`                              | ❌                     | ❌           | ✅    | ❌           | ❌     | ❌     |
+| `team.transfer`                            | ❌                     | ❌           | ✅    | ❌           | ❌     | ❌     |
+| `member.invite`                            | ❌                     | ❌           | ✅    | ✅           | ❌     | ❌     |
+| `member.remove`                            | ❌                     | ❌           | ✅    | ✅           | ❌     | ❌     |
+| `member.updateRole`                        | ❌                     | ❌           | ✅    | ✅（仅更低） | ❌     | ❌     |
+| `team.settings`                            | ❌                     | ❌           | ✅    | ✅           | ❌     | ❌     |
+| `apiKey.manage`                            | ❌                     | ❌           | ✅    | ✅           | ❌     | ❌     |
+| `settings.preferences.read`                | ✅（部分）             | ✅           | ✅    | ✅           | ✅     | ✅     |
+| `settings.preferences.write`               | ❌                     | ✅           | ✅    | ✅           | ✅     | ✅     |
 
 **判定方式**：参考 Dub，把矩阵编码成纯函数 `can(user, action, ctx?)`，不查库（角色信息已在第一道闸拿到）。
 
@@ -228,12 +229,12 @@ withTeam(handler, { requiredRole?, paramKey? })
 
 **与 Dub 的对应**：
 
-| ai-spec（本设计） | Dub | 说明 |
-|---|---|---|
-| `withTeam` | `withWorkspace` | 第一道闸 |
-| `withSession`（已有） | `getSession` | 取登录态 |
-| `TeamMember` 表 | `ProjectUser` 表 | 成员关系 |
-| `not_found` 错误 | `not_found` 错误 | 不暴露存在性 |
+| ai-spec（本设计）     | Dub              | 说明         |
+| --------------------- | ---------------- | ------------ |
+| `withTeam`            | `withWorkspace`  | 第一道闸     |
+| `withSession`（已有） | `getSession`     | 取登录态     |
+| `TeamMember` 表       | `ProjectUser` 表 | 成员关系     |
+| `not_found` 错误      | `not_found` 错误 | 不暴露存在性 |
 
 ### 4.2 第二道闸：`getXxxForTeam` 命名约定
 
@@ -445,28 +446,28 @@ model User {
 
 ### 5.3 关键设计点说明
 
-| 设计点 | 理由 |
-|---|---|
-| 表名用 `Team` 而非 `Workspace` | 产品语义就是"团队"；用户在 UI 上看到的是"团队"二字；字段名 `teamId` 比 `workspaceId` 更贴近产品 |
-| `@@unique([teamId, userId])` | 防止同一人在同一团队有多条成员记录 |
-| `@@check(...)` 约束 | 保证双态字段互斥（PostgreSQL 支持，SQLite 不支持） |
-| `onDelete: Cascade` | 删团队时连带清理数据，避免孤儿记录 |
-| 用 `enum` 而不是 `string` | 防止脏数据；代价是改值需要 migration |
-| `TeamProject.prompts` 用 `SetNull` | 删项目时 Prompt 不消失，只是变成"未归类" |
-| 多 schema（`@@schema("team")`） | 沿用项目现有约定（已有 `auth`、`token` 两个 schema） |
+| 设计点                             | 理由                                                                                            |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- |
+| 表名用 `Team` 而非 `Workspace`     | 产品语义就是"团队"；用户在 UI 上看到的是"团队"二字；字段名 `teamId` 比 `workspaceId` 更贴近产品 |
+| `@@unique([teamId, userId])`       | 防止同一人在同一团队有多条成员记录                                                              |
+| `@@check(...)` 约束                | 保证双态字段互斥（PostgreSQL 支持，SQLite 不支持）                                              |
+| `onDelete: Cascade`                | 删团队时连带清理数据，避免孤儿记录                                                              |
+| 用 `enum` 而不是 `string`          | 防止脏数据；代价是改值需要 migration                                                            |
+| `TeamProject.prompts` 用 `SetNull` | 删项目时 Prompt 不消失，只是变成"未归类"                                                        |
+| 多 schema（`@@schema("team")`）    | 沿用项目现有约定（已有 `auth`、`token` 两个 schema）                                            |
 
 ---
 
 ## 6. 从现状到目标的迁移路径
 
-| 步骤 | 动作 | 涉及文件 |
-|---|---|---|
-| 1 | 新建 `prisma/schema/team.prisma`（Team + TeamMember + TeamProject + Prompt 四张表） | 新增 |
-| 2 | 在 `schema.prisma` 的 User 模型加反向关系字段 | `schema.prisma:17-34` |
-| 3 | `prisma migrate dev --name add_team_schema` | 命令 |
-| 4 | 新建 `src/shared/lib/auth/with-optional-session.ts`（第零道闸） | 新增 |
-| 5 | 新建 `src/shared/lib/auth/with-team.ts`（第一道闸），内部调 `withSession` | 新增（参考 `with-session.ts:111`） |
-| 6 | 新建 `src/shared/lib/api/rbac-v2/`，放 `roles.ts`（TeamRole enum）+ `can.ts`（权限判定函数）+ `forms.ts`（三态判定） | 新增；旧的 `rbac/` 保留不动 |
+| 步骤 | 动作                                                                                                                 | 涉及文件                           |
+| ---- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| 1    | 新建 `prisma/schema/team.prisma`（Team + TeamMember + TeamProject + Prompt 四张表）                                  | 新增                               |
+| 2    | 在 `schema.prisma` 的 User 模型加反向关系字段                                                                        | `schema.prisma:17-34`              |
+| 3    | `prisma migrate dev --name add_team_schema`                                                                          | 命令                               |
+| 4    | 新建 `src/shared/lib/auth/with-optional-session.ts`（第零道闸）                                                      | 新增                               |
+| 5    | 新建 `src/shared/lib/auth/with-team.ts`（第一道闸），内部调 `withSession`                                            | 新增（参考 `with-session.ts:111`） |
+| 6    | 新建 `src/shared/lib/api/rbac-v2/`，放 `roles.ts`（TeamRole enum）+ `can.ts`（权限判定函数）+ `forms.ts`（三态判定） | 新增；旧的 `rbac/` 保留不动        |
 
 ---
 
@@ -514,20 +515,20 @@ model User {
 
 > 便于学习时对照查看 Dub 的真实实现。
 
-| 概念 | ai-spec 本设计 | Dub 真实代码 |
-|---|---|---|
-| 第零道闸（游客判定） | `withOptionalSession`（新建） | ——（Dub 无游客概念） |
-| 第一道闸（成员判定） | `withTeam`（新建） | `apps/web/lib/auth/workspace.ts:387-452` |
-| 第一道闸内部：查成员表 | `TeamMember.findFirst({ where: { userId, teamId } })` | 同上，`include: { users: { where: { userId } } }` |
-| 第一道闸失败响应 | `not_found` | `not_found`（不暴露存在性） |
-| 第二道闸命名约定 | `getXxxForTeam` | `apps/web/lib/api/links/get-links-for-workspace.ts:91` |
-| 第二道闸过滤条件 | `WHERE teamId = ?` | `where: { projectId }` |
-| 成员关系表 | `TeamMember` | `ProjectUser` |
-| 团队/工作空间表 | `Team` | `Project`（Dub 的 Project 即工作空间） |
-| 角色 enum | `TeamRole`（OWNER/ADMIN/EDITOR/VIEWER） | `ProjectRole` |
-| 资源双态支持 | ✅ 个人（ownerId） + 团队（teamId） | ❌ 所有资源都在 workspace 内 |
-| 跨态转换 | §4.4"分享到团队"动作 | ——（不存在） |
-| 游客访问 | ✅ discover + 部分 personal | ❌ 全部需要登录 |
+| 概念                   | ai-spec 本设计                                        | Dub 真实代码                                           |
+| ---------------------- | ----------------------------------------------------- | ------------------------------------------------------ |
+| 第零道闸（游客判定）   | `withOptionalSession`（新建）                         | ——（Dub 无游客概念）                                   |
+| 第一道闸（成员判定）   | `withTeam`（新建）                                    | `apps/web/lib/auth/workspace.ts:387-452`               |
+| 第一道闸内部：查成员表 | `TeamMember.findFirst({ where: { userId, teamId } })` | 同上，`include: { users: { where: { userId } } }`      |
+| 第一道闸失败响应       | `not_found`                                           | `not_found`（不暴露存在性）                            |
+| 第二道闸命名约定       | `getXxxForTeam`                                       | `apps/web/lib/api/links/get-links-for-workspace.ts:91` |
+| 第二道闸过滤条件       | `WHERE teamId = ?`                                    | `where: { projectId }`                                 |
+| 成员关系表             | `TeamMember`                                          | `ProjectUser`                                          |
+| 团队/工作空间表        | `Team`                                                | `Project`（Dub 的 Project 即工作空间）                 |
+| 角色 enum              | `TeamRole`（OWNER/ADMIN/EDITOR/VIEWER）               | `ProjectRole`                                          |
+| 资源双态支持           | ✅ 个人（ownerId） + 团队（teamId）                   | ❌ 所有资源都在 workspace 内                           |
+| 跨态转换               | §4.4"分享到团队"动作                                  | ——（不存在）                                           |
+| 游客访问               | ✅ discover + 部分 personal                           | ❌ 全部需要登录                                        |
 
 ---
 
@@ -535,18 +536,18 @@ model User {
 
 > 解释为什么 v1 必须替换而不是演进。
 
-| 维度 | v1（旧） | v2（本设计） |
-|---|---|---|
-| 模型类型 | 全局角色 + 资源 action 二元组 | 三态用户 + 团队级角色 + 三道闸门 |
-| 多租户 | 无租户概念 | Team 为核心边界 |
-| 用户形态 | 仅"登录用户" | **游客 / 个人 / 团队成员** 三态 |
-| 角色归属 | `User.role`（一身一个） | `TeamMember.role`（每团队一个） |
-| 权限判定时机 | 每次操作都查矩阵 | 只在第一道闸查一次 |
-| 资源清单 | prompt/agent/tutorial/folder/testSession/user（6 个） | Team/TeamProject/Prompt/RuleSpec/AgentsDocument/Skill/Agent/Plugin/...（16+ 个） |
-| 接线状态 | 零引用，从未生效 | —— |
-| 数据隔离方式 | 未明确 | `WHERE teamId = ?` 强制过滤 |
-| 双态支持 | 无 | 个人（ownerId）+ 团队（teamId） |
-| 跨态转换 | 无 | §4.4"分享到团队"动作 |
+| 维度         | v1（旧）                                              | v2（本设计）                                                                     |
+| ------------ | ----------------------------------------------------- | -------------------------------------------------------------------------------- |
+| 模型类型     | 全局角色 + 资源 action 二元组                         | 三态用户 + 团队级角色 + 三道闸门                                                 |
+| 多租户       | 无租户概念                                            | Team 为核心边界                                                                  |
+| 用户形态     | 仅"登录用户"                                          | **游客 / 个人 / 团队成员** 三态                                                  |
+| 角色归属     | `User.role`（一身一个）                               | `TeamMember.role`（每团队一个）                                                  |
+| 权限判定时机 | 每次操作都查矩阵                                      | 只在第一道闸查一次                                                               |
+| 资源清单     | prompt/agent/tutorial/folder/testSession/user（6 个） | Team/TeamProject/Prompt/RuleSpec/AgentsDocument/Skill/Agent/Plugin/...（16+ 个） |
+| 接线状态     | 零引用，从未生效                                      | ——                                                                               |
+| 数据隔离方式 | 未明确                                                | `WHERE teamId = ?` 强制过滤                                                      |
+| 双态支持     | 无                                                    | 个人（ownerId）+ 团队（teamId）                                                  |
+| 跨态转换     | 无                                                    | §4.4"分享到团队"动作                                                             |
 
 **v1 目录处置**：保留不动，不删除（git history 可找回，但保留可作为对照）。
 

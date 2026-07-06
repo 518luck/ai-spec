@@ -31,5 +31,10 @@
 	},
 	"[prisma]": {
 		"editor.defaultFormatter": "Prisma.prisma-insider"
+	},
+	// Markdown 用 dprint 格式化（Biome 不支持 md）；保存时自动触发
+	"[markdown]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.formatOnSave": true
 	}
 }

@@ -8,7 +8,7 @@
 - 优先使用内置 variants
 - className 只用于布局
 - 不使用 space-x-* / space-y-*
-- 宽高相等时优先使用 size-*，而不是 w-* h-*
+- 宽高相等时优先使用 size-_，而不是 w-_ h-*
 - 优先使用 truncate 简写
 - 不手动使用 dark: 颜色覆盖
 - 使用 cn() 处理条件 class
@@ -99,6 +99,7 @@
 ```
 
 自定义组件外观时，优先按以下顺序选择做法：
+
 1. **内置 variants** — `variant="outline"`、`variant="destructive"` 等。
 2. **语义化颜色 tokens** — `bg-primary`、`text-muted-foreground`。
 3. **CSS 变量** — 在全局 CSS 文件中定义自定义颜色（见 [customization.md](../customization.md)）。
@@ -119,7 +120,7 @@
 
 ---
 
-## 宽高相等时优先使用 size-*，而不是 w-* h-*
+## 宽高相等时优先使用 size-_，而不是 w-_ h-*
 
 使用 `size-10`，不要使用 `w-10 h-10`。适用于图标、avatar、skeleton 等。
 

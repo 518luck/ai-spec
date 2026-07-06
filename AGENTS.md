@@ -7,7 +7,6 @@
 ## 项目结构
 
 ```
-
 ├── app/                   # Next.js App Router 路由层；除 app/api 外应保持薄层，业务实现委托给 src/
 │   ├── api/               # 后端入口（API 端点及服务端处理逻辑均在此）
 │   └── spec/
@@ -26,7 +25,7 @@
 
 | 命令                       | 说明                             |
 | -------------------------- | -------------------------------- |
-| `pnpm run prisma:validate` | 验证 schema 语法     |
+| `pnpm run prisma:validate` | 验证 schema 语法                 |
 | `pnpm run prisma:generate` | 生成 Prisma Client 代码          |
 | `pnpm run prisma:migrate`  | 创建并应用数据库迁移（开发环境） |
 

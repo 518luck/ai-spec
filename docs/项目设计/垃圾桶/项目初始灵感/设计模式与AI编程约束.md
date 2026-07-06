@@ -26,14 +26,14 @@
 
 只需要写**判断条件**，不需要提设计模式的名字：
 
-| 场景 | 方案 | 示例 |
-|------|------|------|
-| 组件内部状态 | useState | 按钮展开/收起 |
-| 跨组件共享状态（单步骤） | context 定义在当前组件文件内 | login-form.tsx |
-| 跨组件共享状态（多步骤/跨页面） | 独立 context 文件 | register/context.tsx |
-| 跨页面共享状态 | URL 参数或 Zustand | — |
-| 服务端数据 | SWR / React Query | lib/swr/ 下的 hooks |
-| 表单提交 | Server Actions | lib/actions/ |
+| 场景                            | 方案                         | 示例                 |
+| ------------------------------- | ---------------------------- | -------------------- |
+| 组件内部状态                    | useState                     | 按钮展开/收起        |
+| 跨组件共享状态（单步骤）        | context 定义在当前组件文件内 | login-form.tsx       |
+| 跨组件共享状态（多步骤/跨页面） | 独立 context 文件            | register/context.tsx |
+| 跨页面共享状态                  | URL 参数或 Zustand           | —                    |
+| 服务端数据                      | SWR / React Query            | lib/swr/ 下的 hooks  |
+| 表单提交                        | Server Actions               | lib/actions/         |
 
 ### 2.2 Context 放置规则（示例）
 

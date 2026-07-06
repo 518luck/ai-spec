@@ -25,20 +25,20 @@ npx shadcn@latest init [components...] [options]
 
 在现有项目中初始化 shadcn/ui，或创建新项目（当提供 `--name` 时）。可选地在同一步安装组件。
 
-| Flag | 简写 | 描述 | 默认值 |
-| ----------------------- | ----- | --------------------------------------------------------- | ------- |
-| `--template <template>` | `-t` | Template（next、start、vite、next-monorepo、react-router） | — |
-| `--preset [name]` | `-p` | Preset 配置（命名形式、code 或 URL） | — |
-| `--yes` | `-y` | 跳过确认提示 | `true` |
-| `--defaults` | `-d` | 使用默认值（`--template=next --preset=base-nova`） | `false` |
-| `--force` | `-f` | 强制覆盖现有配置 | `false` |
-| `--cwd <cwd>` | `-c` | 工作目录 | current |
-| `--name <name>` | `-n` | 新项目名称 | — |
-| `--silent` | `-s` | 静默输出 | `false` |
-| `--rtl` | | 启用 RTL 支持 | — |
-| `--reinstall` | | 重新安装现有 UI 组件 | `false` |
-| `--monorepo` | | 搭建 monorepo 项目 | — |
-| `--no-monorepo` | | 跳过 monorepo 提示 | — |
+| Flag                    | 简写 | 描述                                                       | 默认值  |
+| ----------------------- | ---- | ---------------------------------------------------------- | ------- |
+| `--template <template>` | `-t` | Template（next、start、vite、next-monorepo、react-router） | —       |
+| `--preset [name]`       | `-p` | Preset 配置（命名形式、code 或 URL）                       | —       |
+| `--yes`                 | `-y` | 跳过确认提示                                               | `true`  |
+| `--defaults`            | `-d` | 使用默认值（`--template=next --preset=base-nova`）         | `false` |
+| `--force`               | `-f` | 强制覆盖现有配置                                           | `false` |
+| `--cwd <cwd>`           | `-c` | 工作目录                                                   | current |
+| `--name <name>`         | `-n` | 新项目名称                                                 | —       |
+| `--silent`              | `-s` | 静默输出                                                   | `false` |
+| `--rtl`                 |      | 启用 RTL 支持                                              | —       |
+| `--reinstall`           |      | 重新安装现有 UI 组件                                       | `false` |
+| `--monorepo`            |      | 搭建 monorepo 项目                                         | —       |
+| `--no-monorepo`         |      | 跳过 monorepo 提示                                         | —       |
 
 `npx shadcn@latest create` 是 `npx shadcn@latest init` 的别名。
 
@@ -50,12 +50,12 @@ npx shadcn@latest apply [preset] [options]
 
 将 preset 应用到现有项目，覆盖由 preset 驱动的配置、字体、CSS 变量和检测到的 UI 组件。
 
-| Flag | 简写 | 描述 | 默认值 |
-| ------------------- | ----- | ------------------------------------------ | ------- |
-| `--preset <preset>` | — | Preset 配置（命名形式、code 或 URL） | — |
-| `--yes` | `-y` | 跳过确认提示 | `false` |
-| `--cwd <cwd>` | `-c` | 工作目录 | current |
-| `--silent` | `-s` | 静默输出 | `false` |
+| Flag                | 简写 | 描述                                 | 默认值  |
+| ------------------- | ---- | ------------------------------------ | ------- |
+| `--preset <preset>` | —    | Preset 配置（命名形式、code 或 URL） | —       |
+| `--yes`             | `-y` | 跳过确认提示                         | `false` |
+| `--cwd <cwd>`       | `-c` | 工作目录                             | current |
+| `--silent`          | `-s` | 静默输出                             | `false` |
 
 `[preset]` 是 `--preset <preset>` 的简写。如果两者都提供，它们必须匹配。
 如果未提供 preset，CLI 会提示打开 `ui.shadcn.com/create` 上的自定义 preset builder。
@@ -70,17 +70,17 @@ npx shadcn@latest add [components...] [options]
 
 接受组件名称、带注册表前缀的名称（`@magicui/shimmer-button`）、URL 或本地路径。
 
-| Flag | 简写 | 描述 | 默认值 |
-| --------------- | ----- | -------------------------------------------------------------------------------------------------------------------- | ------- |
-| `--yes` | `-y` | 跳过确认提示 | `false` |
-| `--overwrite` | `-o` | 覆盖现有文件 | `false` |
-| `--cwd <cwd>` | `-c` | 工作目录 | current |
-| `--all` | `-a` | 添加所有可用组件 | `false` |
-| `--path <path>` | `-p` | 组件目标路径 | — |
-| `--silent` | `-s` | 静默输出 | `false` |
-| `--dry-run` | | 预览所有变更但不写入文件 | `false` |
-| `--diff [path]` | | 显示 diff。不带 path 时显示前 5 个文件；带 path 时只显示该文件（隐含 `--dry-run`） | — |
-| `--view [path]` | | 显示文件内容。不带 path 时显示前 5 个文件；带 path 时只显示该文件（隐含 `--dry-run`） | — |
+| Flag            | 简写 | 描述                                                                                  | 默认值  |
+| --------------- | ---- | ------------------------------------------------------------------------------------- | ------- |
+| `--yes`         | `-y` | 跳过确认提示                                                                          | `false` |
+| `--overwrite`   | `-o` | 覆盖现有文件                                                                          | `false` |
+| `--cwd <cwd>`   | `-c` | 工作目录                                                                              | current |
+| `--all`         | `-a` | 添加所有可用组件                                                                      | `false` |
+| `--path <path>` | `-p` | 组件目标路径                                                                          | —       |
+| `--silent`      | `-s` | 静默输出                                                                              | `false` |
+| `--dry-run`     |      | 预览所有变更但不写入文件                                                              | `false` |
+| `--diff [path]` |      | 显示 diff。不带 path 时显示前 5 个文件；带 path 时只显示该文件（隐含 `--dry-run`）    | —       |
+| `--view [path]` |      | 显示文件内容。不带 path 时显示前 5 个文件；带 path 时只显示该文件（隐含 `--dry-run`） | —       |
 
 #### Dry-Run 模式
 
@@ -131,12 +131,12 @@ npx shadcn@latest search <registries...> [options]
 
 跨注册表模糊搜索。也可写作别名 `npx shadcn@latest list`。不带 `-q` 时列出所有 items。
 
-| Flag | 简写 | 描述 | 默认值 |
-| ------------------- | ----- | ---------------------- | ------- |
-| `--query <query>` | `-q` | 搜索查询 | — |
-| `--limit <number>` | `-l` | 每个注册表的最大 items 数 | `100` |
-| `--offset <number>` | `-o` | 跳过的 items 数 | `0` |
-| `--cwd <cwd>` | `-c` | 工作目录 | current |
+| Flag                | 简写 | 描述                      | 默认值  |
+| ------------------- | ---- | ------------------------- | ------- |
+| `--query <query>`   | `-q` | 搜索查询                  | —       |
+| `--limit <number>`  | `-l` | 每个注册表的最大 items 数 | `100`   |
+| `--offset <number>` | `-o` | 跳过的 items 数           | `0`     |
+| `--cwd <cwd>`       | `-c` | 工作目录                  | current |
 
 ### `view` — 查看 item 详情
 
@@ -182,43 +182,43 @@ npx shadcn@latest info [options]
 
 显示项目信息和 `components.json` 配置。应先运行此命令，以发现项目的 framework、aliases、Tailwind 版本和解析后路径。
 
-| Flag | 简写 | 描述 | 默认值 |
-| ------------- | ----- | ----------------- | ------- |
+| Flag          | 简写 | 描述     | 默认值  |
+| ------------- | ---- | -------- | ------- |
 | `--cwd <cwd>` | `-c` | 工作目录 | current |
 
 **Project Info 字段：**
 
-| 字段 | 类型 | 含义 |
-| -------------------- | --------- | ------------------------------------------------------------------ |
-| `framework` | `string` | 检测到的 framework（`next`、`vite`、`react-router`、`start` 等） |
-| `frameworkVersion` | `string` | Framework 版本（例如 `15.2.4`） |
-| `isSrcDir` | `boolean` | 项目是否使用 `src/` 目录 |
-| `isRSC` | `boolean` | 是否启用 React Server Components |
-| `isTsx` | `boolean` | 项目是否使用 TypeScript |
-| `tailwindVersion` | `string` | `"v3"` 或 `"v4"` |
-| `tailwindConfigFile` | `string` | Tailwind 配置文件路径 |
-| `tailwindCssFile` | `string` | 全局 CSS 文件路径 |
-| `aliasPrefix` | `string` | 导入 alias 前缀（例如 `@`、`~`、`@/`） |
-| `packageManager` | `string` | 检测到的包管理器（`npm`、`pnpm`、`yarn`、`bun`） |
+| 字段                 | 类型      | 含义                                                             |
+| -------------------- | --------- | ---------------------------------------------------------------- |
+| `framework`          | `string`  | 检测到的 framework（`next`、`vite`、`react-router`、`start` 等） |
+| `frameworkVersion`   | `string`  | Framework 版本（例如 `15.2.4`）                                  |
+| `isSrcDir`           | `boolean` | 项目是否使用 `src/` 目录                                         |
+| `isRSC`              | `boolean` | 是否启用 React Server Components                                 |
+| `isTsx`              | `boolean` | 项目是否使用 TypeScript                                          |
+| `tailwindVersion`    | `string`  | `"v3"` 或 `"v4"`                                                 |
+| `tailwindConfigFile` | `string`  | Tailwind 配置文件路径                                            |
+| `tailwindCssFile`    | `string`  | 全局 CSS 文件路径                                                |
+| `aliasPrefix`        | `string`  | 导入 alias 前缀（例如 `@`、`~`、`@/`）                           |
+| `packageManager`     | `string`  | 检测到的包管理器（`npm`、`pnpm`、`yarn`、`bun`）                 |
 
 **Components.json 字段：**
 
-| 字段 | 类型 | 含义 |
-| -------------------- | --------- | ------------------------------------------------------------------------------------------ |
-| `base` | `string` | Primitive 库（`radix` 或 `base`），决定组件 API 和可用 props |
-| `style` | `string` | 视觉风格（例如 `nova`、`vega`） |
-| `rsc` | `boolean` | 配置中的 RSC flag |
-| `tsx` | `boolean` | TypeScript flag |
-| `tailwind.config` | `string` | Tailwind 配置路径 |
-| `tailwind.css` | `string` | 全局 CSS 路径，自定义 CSS 变量应写在这里 |
-| `iconLibrary` | `string` | 图标库，决定图标导入包（例如 `lucide-react`、`@tabler/icons-react`） |
-| `aliases.components` | `string` | 组件导入 alias（例如 `@/components`） |
-| `aliases.utils` | `string` | Utils 导入 alias（例如 `@/lib/utils`） |
-| `aliases.ui` | `string` | UI 组件 alias（例如 `@/components/ui`） |
-| `aliases.lib` | `string` | Lib alias（例如 `@/lib`） |
-| `aliases.hooks` | `string` | Hooks alias（例如 `@/hooks`） |
-| `resolvedPaths` | `object` | 每个 alias 对应的绝对文件系统路径 |
-| `registries` | `object` | 已配置的自定义注册表 |
+| 字段                 | 类型      | 含义                                                                 |
+| -------------------- | --------- | -------------------------------------------------------------------- |
+| `base`               | `string`  | Primitive 库（`radix` 或 `base`），决定组件 API 和可用 props         |
+| `style`              | `string`  | 视觉风格（例如 `nova`、`vega`）                                      |
+| `rsc`                | `boolean` | 配置中的 RSC flag                                                    |
+| `tsx`                | `boolean` | TypeScript flag                                                      |
+| `tailwind.config`    | `string`  | Tailwind 配置路径                                                    |
+| `tailwind.css`       | `string`  | 全局 CSS 路径，自定义 CSS 变量应写在这里                             |
+| `iconLibrary`        | `string`  | 图标库，决定图标导入包（例如 `lucide-react`、`@tabler/icons-react`） |
+| `aliases.components` | `string`  | 组件导入 alias（例如 `@/components`）                                |
+| `aliases.utils`      | `string`  | Utils 导入 alias（例如 `@/lib/utils`）                               |
+| `aliases.ui`         | `string`  | UI 组件 alias（例如 `@/components/ui`）                              |
+| `aliases.lib`        | `string`  | Lib alias（例如 `@/lib`）                                            |
+| `aliases.hooks`      | `string`  | Hooks alias（例如 `@/hooks`）                                        |
+| `resolvedPaths`      | `object`  | 每个 alias 对应的绝对文件系统路径                                    |
+| `registries`         | `object`  | 已配置的自定义注册表                                                 |
 
 **Links 字段：**
 
@@ -232,23 +232,23 @@ npx shadcn@latest build [registry] [options]
 
 将 `registry.json` 构建为单独的 JSON 文件以便分发。默认输入：`./registry.json`，默认输出：`./public/r`。
 
-| Flag | 简写 | 描述 | 默认值 |
-| ----------------- | ----- | ----------------- | ------------ |
+| Flag              | 简写 | 描述     | 默认值       |
+| ----------------- | ---- | -------- | ------------ |
 | `--output <path>` | `-o` | 输出目录 | `./public/r` |
-| `--cwd <cwd>` | `-c` | 工作目录 | current |
+| `--cwd <cwd>`     | `-c` | 工作目录 | current      |
 
 ---
 
 ## Templates
 
-| 值 | Framework | Monorepo 支持 |
-| -------------- | -------------- | ---------------- |
-| `next` | Next.js | 是 |
-| `vite` | Vite | 是 |
-| `start` | TanStack Start | 是 |
-| `react-router` | React Router | 是 |
-| `astro` | Astro | 是 |
-| `laravel` | Laravel | 否 |
+| 值             | Framework      | Monorepo 支持 |
+| -------------- | -------------- | ------------- |
+| `next`         | Next.js        | 是            |
+| `vite`         | Vite           | 是            |
+| `start`        | TanStack Start | 是            |
+| `react-router` | React Router   | 是            |
+| `astro`        | Astro          | 是            |
+| `laravel`      | Laravel        | 否            |
 
 所有 templates 都支持通过 `--monorepo` flag 搭建 monorepo。传入该 flag 时，CLI 使用 monorepo 专用 template 目录（例如 `next-monorepo`、`vite-monorepo`）。当既未传入 `--monorepo` 也未传入 `--no-monorepo` 时，CLI 会以交互方式提示。Laravel 不支持 monorepo 搭建。
 

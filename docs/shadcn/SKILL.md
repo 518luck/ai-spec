@@ -121,21 +121,21 @@ allowed-tools: Bash(npx shadcn@latest *), Bash(pnpm dlx shadcn@latest *), Bash(b
 
 ## 组件选择
 
-| 需求 | 使用 |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
-| 按钮/操作 | 使用合适 variant 的 `Button` |
-| 表单输入 | `Input`, `Select`, `Combobox`, `Switch`, `Checkbox`, `RadioGroup`, `Textarea`, `InputOTP`, `Slider` |
-| 在 2-5 个选项之间切换 | `ToggleGroup` + `ToggleGroupItem` |
-| 数据展示 | `Table`, `Card`, `Badge`, `Avatar` |
-| 导航 | `Sidebar`, `NavigationMenu`, `Breadcrumb`, `Tabs`, `Pagination` |
-| Overlay | `Dialog`（modal）, `Sheet`（侧边面板）, `Drawer`（底部抽屉）, `AlertDialog`（确认） |
-| 反馈 | `sonner`（toast）, `Alert`, `Progress`, `Skeleton`, `Spinner` |
-| 命令面板 | `Dialog` 内的 `Command` |
-| 图表 | `Chart`（封装 Recharts） |
-| 布局 | `Card`, `Separator`, `Resizable`, `ScrollArea`, `Accordion`, `Collapsible` |
-| 空状态 | `Empty` |
-| 菜单 | `DropdownMenu`, `ContextMenu`, `Menubar` |
-| Tooltip/信息提示 | `Tooltip`, `HoverCard`, `Popover` |
+| 需求                  | 使用                                                                                                |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
+| 按钮/操作             | 使用合适 variant 的 `Button`                                                                        |
+| 表单输入              | `Input`, `Select`, `Combobox`, `Switch`, `Checkbox`, `RadioGroup`, `Textarea`, `InputOTP`, `Slider` |
+| 在 2-5 个选项之间切换 | `ToggleGroup` + `ToggleGroupItem`                                                                   |
+| 数据展示              | `Table`, `Card`, `Badge`, `Avatar`                                                                  |
+| 导航                  | `Sidebar`, `NavigationMenu`, `Breadcrumb`, `Tabs`, `Pagination`                                     |
+| Overlay               | `Dialog`（modal）, `Sheet`（侧边面板）, `Drawer`（底部抽屉）, `AlertDialog`（确认）                 |
+| 反馈                  | `sonner`（toast）, `Alert`, `Progress`, `Skeleton`, `Spinner`                                       |
+| 命令面板              | `Dialog` 内的 `Command`                                                                             |
+| 图表                  | `Chart`（封装 Recharts）                                                                            |
+| 布局                  | `Card`, `Separator`, `Resizable`, `ScrollArea`, `Accordion`, `Collapsible`                          |
+| 空状态                | `Empty`                                                                                             |
+| 菜单                  | `DropdownMenu`, `ContextMenu`, `Menubar`                                                            |
+| Tooltip/信息提示      | `Tooltip`, `HoverCard`, `Popover`                                                                   |
 
 ## 关键字段
 

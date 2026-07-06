@@ -22,7 +22,7 @@
 
 ### `@custom-variant`
 
-这是 Tailwind 提供的语法。  
+这是 Tailwind 提供的语法。\
 作用是：自定义一个变体（variant）。
 
 Tailwind 里的变体你应该见过很多：
@@ -145,7 +145,7 @@ Tailwind 官方更常见的示例是：
 
 相关官方文档：
 
-- Tailwind Dark Mode  
+- Tailwind Dark Mode\
   https://tailwindcss.com/docs/dark-mode
-- Tailwind Adding custom variants  
+- Tailwind Adding custom variants\
   https://tailwindcss.com/docs/adding-custom-styles

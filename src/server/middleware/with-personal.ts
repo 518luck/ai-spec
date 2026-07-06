@@ -1,8 +1,9 @@
-// 个人空间接口高阶函数：在统一鉴权之上叠加套餐与权限点校验
+// 个人空间接口高阶函数：在统一身份解析（cookies session / API Key）之上叠加套餐与权限点校验
 //
-// 与 withSession 的区别：withSession 只解决"你是谁"，
-// withPersonal 进一步约束"你的套餐 / 权限点是否允许访问该接口"。
-// 套档（UserPlan）不入 session，需实时查库；权限点来自 RBAC action 清单。
+// 个人空间同时服务三类接入：网页登录（cookies）、SDK / MCP（Bearer API Key），
+// 身份统一由 resolveContext 解析。与 withSession 的差异在于：
+// withSession 只解决"你是谁"，withPersonal 进一步约束"你的套餐 / 权限点是否允许访问该接口"。
+// 套餐（UserPlan）不入 session，需实时查库；权限点来自 RBAC action 清单。
 import type { NextRequest } from "next/server";
 import type { Session } from "next-auth";
 import { toErrorResponse } from "@/server/errors/http-error";
@@ -34,7 +35,7 @@ type PersonalOptions = {
 	permissions?: readonly Action[];
 };
 
-// 高阶函数：把业务 handler 转换为带套餐、权限点与错误封装的 Next.js route handler
+// 高阶函数：把业务 handler 转换为带身份解析、套餐与权限点校验的 Next.js route handler
 export const withPersonal = (
 	handler: PersonalHandler,
 	{ plans, permissions }: PersonalOptions = {},
@@ -43,10 +44,11 @@ export const withPersonal = (
 		// 后续步骤填充的中间值，统一在此提前声明，保持异步逻辑线性
 		let session: Session | null = null;
 		let searchParams: Record<string, string> = {};
-		let userPlan: UserPlan | null = null;
-		let grantedPermissions: readonly Action[] = [];
+		const userPlan: UserPlan | null = null;
+		const grantedPermissions: readonly Action[] = [];
 
 		try {
+			// 统一身份解析：cookies session 或 API Key（含限流），结果进 session
 			const resolved = await resolveContext(req);
 			session = resolved.session;
 			searchParams = getSearchParams(req.url);

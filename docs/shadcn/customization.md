@@ -27,21 +27,21 @@
 
 每种颜色都遵循 `name` / `name-foreground` 约定。基础变量用于背景，`-foreground` 用于该背景上的文本/图标。
 
-| 变量 | 用途 |
-| -------------------------------------------- | -------------------------------- |
-| `--background` / `--foreground` | 页面背景和默认文本 |
-| `--card` / `--card-foreground` | Card 表面 |
-| `--primary` / `--primary-foreground` | 主要按钮和操作 |
-| `--secondary` / `--secondary-foreground` | 次要操作 |
-| `--muted` / `--muted-foreground` | 弱化/禁用状态 |
-| `--accent` / `--accent-foreground` | Hover 和强调状态 |
-| `--destructive` / `--destructive-foreground` | 错误和破坏性操作 |
-| `--border` | 默认边框颜色 |
-| `--input` | 表单输入边框 |
-| `--ring` | Focus ring 颜色 |
-| `--chart-1` 到 `--chart-5` | 图表/数据可视化 |
-| `--sidebar-*` | Sidebar 专用颜色 |
-| `--surface` / `--surface-foreground` | 次级表面 |
+| 变量                                         | 用途               |
+| -------------------------------------------- | ------------------ |
+| `--background` / `--foreground`              | 页面背景和默认文本 |
+| `--card` / `--card-foreground`               | Card 表面          |
+| `--primary` / `--primary-foreground`         | 主要按钮和操作     |
+| `--secondary` / `--secondary-foreground`     | 次要操作           |
+| `--muted` / `--muted-foreground`             | 弱化/禁用状态      |
+| `--accent` / `--accent-foreground`           | Hover 和强调状态   |
+| `--destructive` / `--destructive-foreground` | 错误和破坏性操作   |
+| `--border`                                   | 默认边框颜色       |
+| `--input`                                    | 表单输入边框       |
+| `--ring`                                     | Focus ring 颜色    |
+| `--chart-1` 到 `--chart-5`                   | 图表/数据可视化    |
+| `--sidebar-*`                                | Sidebar 专用颜色   |
+| `--surface` / `--surface-foreground`         | 次级表面           |
 
 颜色使用 OKLCH：`--primary: oklch(0.205 0 0)`，其中值分别表示 lightness（0-1）、chroma（0 = gray）和 hue（0-360）。
 
