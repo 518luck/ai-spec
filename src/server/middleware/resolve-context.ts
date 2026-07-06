@@ -13,10 +13,12 @@ import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 
-// 认证解析结果：身份 session 与（API Key 分支独有的）限流信息
+// 认证解析结果：身份 session 与（API Key 分支独有的）限流信息、权限范围
 type ResolveResult = {
 	session: Session;
 	rateInfo: RateLimiterRes | null;
+	// API Key 接入时为该 Key 的 scope 数组；cookies 接入时为 null（不走 scope 校验，靠 owner_id 隔离）
+	scopes: string[] | null;
 };
 
 // API Key 限流窗口上限，对应 apiKeyLimiter 的 points
@@ -53,7 +55,12 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 			});
 		}
 
-		return { session: buildSessionFromUser(token.user), rateInfo: res };
+		// scopes 为空格分隔字符串，split 成数组供下游 withPersonal 做权限校验；空/ null 视为无 scope
+		return {
+			session: buildSessionFromUser(token.user),
+			rateInfo: res,
+			scopes: token.scopes ? token.scopes.split(" ") : [],
+		};
 	}
 
 	// 未携带 API Key，走 web 端 cookies session 分支
@@ -61,7 +68,8 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 	if (!cookieSession) {
 		throw new Error("未登录");
 	}
-	return { session: cookieSession, rateInfo: null };
+	// cookies 接入不走 scope 校验：浏览器用户的权限由 owner_id 数据隔离兜底
+	return { session: cookieSession, rateInfo: null, scopes: null };
 };
 
 // 通过 API Key 解析出未过期的 Token 及其关联用户

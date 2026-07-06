@@ -6,7 +6,7 @@
 // 套餐（UserPlan）不入 session，需实时查库；权限点来自 RBAC action 清单。
 import type { NextRequest } from "next/server";
 import type { Session } from "next-auth";
-import { toErrorResponse } from "@/server/errors/http-error";
+import { AiSpecError, toErrorResponse } from "@/server/errors/http-error";
 import { withAxiomBodyLog } from "@/server/infrastructure/axiom/server";
 import type { Action } from "@/server/rbac/actions";
 import type { UserPlan } from "@/shared/db/generator/client";
@@ -36,16 +36,13 @@ type PersonalOptions = {
 };
 
 // 高阶函数：把业务 handler 转换为带身份解析、套餐与权限点校验的 Next.js route handler
-export const withPersonal = (
-	handler: PersonalHandler,
-	{ plans, permissions }: PersonalOptions = {},
-) =>
+// plans 暂未消费（待订单系统落地），permissions 已实现：仅对 API Key 接入做 scope 收紧校验
+// TODO: 套餐校验——根据 plans 配置，比对实时查库得到的 userPlan（待订单系统落地）
+export const withPersonal = (handler: PersonalHandler, { permissions }: PersonalOptions = {}) =>
 	withAxiomBodyLog(async (req: NextRequest, ctx: RouteContext) => {
 		// 后续步骤填充的中间值，统一在此提前声明，保持异步逻辑线性
 		let session: Session | null = null;
 		let searchParams: Record<string, string> = {};
-		const userPlan: UserPlan | null = null;
-		const grantedPermissions: readonly Action[] = [];
 
 		try {
 			// 统一身份解析：cookies session 或 API Key（含限流），结果进 session
@@ -53,8 +50,21 @@ export const withPersonal = (
 			session = resolved.session;
 			searchParams = getSearchParams(req.url);
 
-			// TODO: 套餐校验——根据 plans 配置，比对实时查库得到的 userPlan
-			// TODO: 权限点校验——根据 permissions 配置，比对 grantedPermissions
+			// 权限校验：仅 API Key 接入（scopes 非 null）时收紧。
+			// cookies 接入 scopes 为 null，跳过校验——浏览器用户权限由 owner_id 数据隔离兜底。
+			// API Key 的 scope 只能收紧（限制钥匙能做什么），不能放宽超过浏览器登录的基线。
+			const { scopes } = resolved;
+			if (permissions && scopes) {
+				const missing = permissions.filter((p) => !scopes.includes(p));
+				if (missing.length > 0) {
+					throw new AiSpecError({
+						code: "FORBIDDEN",
+						message: "当前 API Key 权限不足，缺少所需 scope",
+					});
+				}
+			}
+
+			// TODO: 套餐校验——根据 plans 配置，比对实时查库得到的 userPlan（待订单系统落地）
 
 			const response = await handler({
 				req,
