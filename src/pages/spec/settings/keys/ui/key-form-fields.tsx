@@ -1,5 +1,6 @@
 "use client";
 
+import dayjs from "dayjs";
 import type { JSX } from "react";
 
 import { RESOURCE_KEYS, RESOURCES, type ResourceKey } from "@/server/rbac/resource-ui";
@@ -10,6 +11,7 @@ import {
 	scopePresets,
 } from "@/server/rbac/scopes";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
+import { DatePicker } from "@/shared/ui/date-picker";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -24,6 +26,18 @@ const RESOURCE_SCOPES = [
 	{ value: "read", label: "Read" },
 	{ value: "write", label: "Write" },
 ] as const;
+
+// 过期时间预设：永不过期 / 固定天数 / 自定义；custom 时展开日期选择器
+const expiryPresets = [
+	{ value: "never", label: "永不过期" },
+	{ value: "7d", label: "7 天" },
+	{ value: "30d", label: "30 天" },
+	{ value: "90d", label: "90 天" },
+	{ value: "custom", label: "自定义" },
+] as const;
+
+// 过期预设值类型，供弹窗层持有状态用
+export type ExpiryPresetValue = (typeof expiryPresets)[number]["value"];
 
 // 权限勾选矩阵：每个资源对应一个 scope 值（""/read/write），仅「限制」权限下使用
 export type PermissionMatrix = Record<ResourceKey, string>;
@@ -78,10 +92,16 @@ type KeyFormProps = {
 	description: string;
 	permission: ScopePresetValue;
 	matrix: PermissionMatrix;
+	expiryPreset: ExpiryPresetValue;
+	expiryDate: Date | undefined;
+	// 是否渲染过期时间区块；创建弹窗传 true（默认），编辑弹窗暂不支持改过期传 false
+	showExpiry?: boolean;
 	onNameChange: (value: string) => void;
 	onDescriptionChange: (value: string) => void;
 	onPermissionChange: (value: ScopePresetValue) => void;
 	onMatrixChange: (next: PermissionMatrix) => void;
+	onExpiryPresetChange: (value: ExpiryPresetValue) => void;
+	onExpiryDateChange: (date: Date | undefined) => void;
 };
 
 // 密钥表单：名称 + 描述 + 权限 Tab + 限制权限下的资源勾选矩阵，创建与编辑弹窗共用
@@ -91,10 +111,15 @@ export function KeyForm({
 	description,
 	permission,
 	matrix,
+	expiryPreset,
+	expiryDate,
+	showExpiry = true,
 	onNameChange,
 	onDescriptionChange,
 	onPermissionChange,
 	onMatrixChange,
+	onExpiryPresetChange,
+	onExpiryDateChange,
 }: KeyFormProps): JSX.Element {
 	const permissionHint = scopePresets.find((item) => item.value === permission)?.description ?? "";
 
@@ -126,6 +151,40 @@ export function KeyForm({
 					/>
 				</div>
 
+				{showExpiry && (
+					<div className="flex flex-col gap-2">
+						<Label>过期时间</Label>
+						<Tabs
+							value={expiryPreset}
+							onValueChange={(value) => onExpiryPresetChange(value as ExpiryPresetValue)}
+						>
+							<TabsList className="w-full border border-border bg-transparent">
+								{expiryPresets.map((item) => (
+									<TabsTrigger key={item.value} value={item.value}>
+										{item.label}
+									</TabsTrigger>
+								))}
+							</TabsList>
+						</Tabs>
+
+						{/* 自定义过期时间下展开日期选择器，紧贴过期 tab 下方 */}
+						<AnimatedSizeContainer
+							height
+							className="w-full"
+							transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+						>
+							{expiryPreset === "custom" && (
+								<DatePicker
+									value={expiryDate}
+									onChange={onExpiryDateChange}
+									// 只允许选今天之后的日期，避免创建出已过期的密钥
+									minDate={dayjs().add(1, "day").toDate()}
+								/>
+							)}
+						</AnimatedSizeContainer>
+					</div>
+				)}
+
 				<div className="flex flex-col gap-2">
 					<Label>权限</Label>
 					{/* 权限以 tab 形式选择，选中即对应权限，联动下方范围说明与资源勾选 */}
@@ -142,50 +201,55 @@ export function KeyForm({
 						</TabsList>
 					</Tabs>
 					<p className="text-muted-foreground text-sm">{permissionHint}</p>
+
+					{/* 限制权限下展开资源勾选矩阵，紧贴权限 tab 下方 */}
+					<AnimatedSizeContainer
+						height
+						className="w-full"
+						transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+					>
+						{permission === "restricted" && (
+							<div className="flex flex-col gap-2">
+								{/* 滚动区域：用 ScrollArea 替代原生 overflow-y-auto，呈现自定义滚动条 */}
+								<ScrollArea className="max-h-70 rounded-md">
+									<div className="flex w-full flex-col divide-y">
+										{RESOURCES.map((resource) => (
+											<div
+												key={resource.key}
+												className="flex items-center justify-between px-3 py-3"
+											>
+												<div className="flex shrink-0 items-center gap-1.5">
+													<span className="whitespace-nowrap font-medium text-sm">
+														{resource.name}
+													</span>
+													<HelpTooltip content={resource.description} />
+												</div>
+												<RadioGroup
+													value={matrix[resource.key]}
+													onValueChange={(scopeValue) =>
+														handleResourceScopeChange(resource.key, scopeValue as string)
+													}
+													className="flex w-auto shrink-0 gap-3"
+												>
+													{RESOURCE_SCOPES.map((scope) => (
+														<Label
+															key={scope.value}
+															className="flex cursor-pointer items-center gap-1.5 font-normal text-sm"
+														>
+															<RadioGroupItem value={scope.value} />
+															{scope.label}
+														</Label>
+													))}
+												</RadioGroup>
+											</div>
+										))}
+									</div>
+								</ScrollArea>
+							</div>
+						)}
+					</AnimatedSizeContainer>
 				</div>
 			</div>
-
-			{/* 限制权限下展开资源勾选矩阵，用 tween 线性过渡避免 spring 弹簧的过冲抖动 */}
-			<AnimatedSizeContainer
-				height
-				className="w-full"
-				transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
-			>
-				{permission === "restricted" && (
-					<div className="flex flex-col gap-2">
-						{/* 滚动区域：用 ScrollArea 替代原生 overflow-y-auto，呈现自定义滚动条 */}
-						<ScrollArea className="max-h-70 rounded-md">
-							<div className="flex w-full flex-col divide-y">
-								{RESOURCES.map((resource) => (
-									<div key={resource.key} className="flex items-center justify-between px-3 py-3">
-										<div className="flex shrink-0 items-center gap-1.5">
-											<span className="whitespace-nowrap font-medium text-sm">{resource.name}</span>
-											<HelpTooltip content={resource.description} />
-										</div>
-										<RadioGroup
-											value={matrix[resource.key]}
-											onValueChange={(scopeValue) =>
-												handleResourceScopeChange(resource.key, scopeValue as string)
-											}
-											className="flex w-auto shrink-0 gap-3"
-										>
-											{RESOURCE_SCOPES.map((scope) => (
-												<Label
-													key={scope.value}
-													className="flex cursor-pointer items-center gap-1.5 font-normal text-sm"
-												>
-													<RadioGroupItem value={scope.value} />
-													{scope.label}
-												</Label>
-											))}
-										</RadioGroup>
-									</div>
-								))}
-							</div>
-						</ScrollArea>
-					</div>
-				)}
-			</AnimatedSizeContainer>
 		</div>
 	);
 }

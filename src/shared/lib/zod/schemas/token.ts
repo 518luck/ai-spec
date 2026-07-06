@@ -25,11 +25,15 @@ const tokenScopesSchema = z.array(z.enum(SCOPES)).default([]);
 // partial_key 脱敏片段：固定「前缀 + 圆点 + 尾部明文」结构，限制长度防止误把完整密钥塞进来
 const partialKeySchema = z.string().min(1).max(64);
 
+// 过期时间：接收 ISO 字符串，null/省略表示永不过期
+const tokenExpiresSchema = z.iso.datetime().nullable().optional();
+
 // 创建 API 令牌的请求入参 schema（Dto 入：前端传入待校验数据）
 export const createTokenDtoSchema = z.object({
 	name: tokenNameSchema,
 	description: tokenDescriptionSchema,
 	scopes: tokenScopesSchema,
+	expires: tokenExpiresSchema,
 });
 
 // 创建令牌入参类型（供 Server Action / 路由处理器使用）

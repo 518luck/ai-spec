@@ -103,6 +103,12 @@ export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps)
 					description={description}
 					permission={permission}
 					matrix={matrix}
+					// 编辑弹窗本次不支持改过期时间：隐藏过期区块，相关 props 传占位值仅满足类型
+					showExpiry={false}
+					expiryPreset="never"
+					expiryDate={undefined}
+					onExpiryPresetChange={() => {}}
+					onExpiryDateChange={() => {}}
 					onNameChange={setName}
 					onDescriptionChange={setDescription}
 					onPermissionChange={setPermission}

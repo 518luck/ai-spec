@@ -6,6 +6,7 @@ import {
 	IconBrandMetabrainz,
 	IconBrandTeams,
 	IconBrightness,
+	IconCalendar,
 	IconCamera,
 	IconCompass,
 	IconCopy,
@@ -91,6 +92,7 @@ export const Icons = {
 	upload: IconUpload,
 
 	copy: IconCopy,
+	calendar: IconCalendar,
 	eye: IconEye,
 	eyeOff: IconEyeOff,
 

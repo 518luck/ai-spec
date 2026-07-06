@@ -1,6 +1,7 @@
 "use client";
 
 import copy from "copy-to-clipboard";
+import dayjs from "dayjs";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
@@ -18,7 +19,13 @@ import {
 	DialogTitle,
 } from "@/shared/ui/dialog";
 import { Icons } from "@/shared/ui/icons";
-import { buildScopes, createEmptyMatrix, KeyForm, type PermissionMatrix } from "./key-form-fields";
+import {
+	buildScopes,
+	createEmptyMatrix,
+	type ExpiryPresetValue,
+	KeyForm,
+	type PermissionMatrix,
+} from "./key-form-fields";
 
 type CreateKeyDialogProps = {
 	open: boolean;
@@ -32,6 +39,8 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 	const [description, setDescription] = useState("");
 	const [permission, setPermission] = useState<ScopePresetValue>("all_access");
 	const [matrix, setMatrix] = useState<PermissionMatrix>(createEmptyMatrix);
+	const [expiryPreset, setExpiryPreset] = useState<ExpiryPresetValue>("never");
+	const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
 	// 创建成功后返回的一次性明文密钥；存在即进入展示态
 	const [createdKey, setCreatedKey] = useState<string | null>(null);
 
@@ -54,12 +63,30 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 			setDescription("");
 			setPermission("all_access");
 			setMatrix(createEmptyMatrix());
+			setExpiryPreset("never");
+			setExpiryDate(undefined);
 			setCreatedKey(null);
 		}
 		onOpenChange(next);
 	};
 
-	// 提交创建：名称用与后端同一份 schema 预校验；限制权限下至少勾选一个资源
+	// 把弹窗选的过期预设/日期换算成后端接受的 ISO 字符串；null 表示永不过期
+	const computeExpires = (): string | null => {
+		switch (expiryPreset) {
+			case "never":
+				return null;
+			case "7d":
+				return dayjs().add(7, "day").toISOString();
+			case "30d":
+				return dayjs().add(30, "day").toISOString();
+			case "90d":
+				return dayjs().add(90, "day").toISOString();
+			case "custom":
+				return expiryDate ? expiryDate.toISOString() : null;
+		}
+	};
+
+	// 提交创建：名称用与后端同一份 schema 预校验；限制权限下至少勾选一个资源；自定义过期必须选日期
 	const handleCreate = (): void => {
 		const parsed = tokenNameSchema.safeParse(name);
 		if (!parsed.success) {
@@ -71,7 +98,11 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 			toast.error("请至少选择一个资源");
 			return;
 		}
-		void executeAsync({ name: parsed.data, description, scopes });
+		if (expiryPreset === "custom" && !expiryDate) {
+			toast.error("请选择过期日期");
+			return;
+		}
+		void executeAsync({ name: parsed.data, description, scopes, expires: computeExpires() });
 	};
 
 	// 复制明文密钥到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
@@ -104,10 +135,14 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 							description={description}
 							permission={permission}
 							matrix={matrix}
+							expiryPreset={expiryPreset}
+							expiryDate={expiryDate}
 							onNameChange={setName}
 							onDescriptionChange={setDescription}
 							onPermissionChange={setPermission}
 							onMatrixChange={setMatrix}
+							onExpiryPresetChange={setExpiryPreset}
+							onExpiryDateChange={setExpiryDate}
 						/>
 
 						<DialogFooter>
