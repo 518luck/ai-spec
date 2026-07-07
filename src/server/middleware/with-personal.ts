@@ -9,6 +9,7 @@ import type { Session } from "next-auth";
 import { AiSpecError, toErrorResponse } from "@/server/errors/http-error";
 import { withAxiomBodyLog } from "@/server/infrastructure/axiom/server";
 import type { Action } from "@/server/rbac/actions";
+import { formatScope } from "@/server/rbac/scopes";
 import type { UserPlan } from "@/shared/db/generator/client";
 import { getSearchParams } from "@/shared/lib/utils";
 import { resolveContext } from "./resolve-context";
@@ -57,9 +58,11 @@ export const withPersonal = (handler: PersonalHandler, { permissions }: Personal
 			if (permissions && scopes) {
 				const missing = permissions.filter((p) => !scopes.includes(p));
 				if (missing.length > 0) {
+					// 翻译成「中文名(scope 字符串)」格式，让调用方既看懂权限含义又能对照配置
+					const missingLabel = missing.map((s) => formatScope(s)).join("、");
 					throw new AiSpecError({
 						code: "FORBIDDEN",
-						message: "当前 API Key 权限不足，缺少所需 scope",
+						message: `当前 API Key 权限不足，缺少所需 scope：${missingLabel}`,
 					});
 				}
 			}

@@ -4,6 +4,7 @@
 // 外加两个通配 scope（apis.read / apis.all）做跨资源打包授权。
 // 团队专属 action 因 apiKeyGrantable=false 不会出现在 scope 里。
 import type { ResourceKey } from "@/server/rbac/resource-ui";
+import { RESOURCES } from "@/server/rbac/resource-ui";
 import { API_KEY_SCOPES } from "./actions";
 
 // 所有合法 scope 字符串：个人资源 action（派生）+ 两个通配打包权限
@@ -120,4 +121,30 @@ export const consolidateScopes = (scopes: readonly Scope[]): Scope[] => {
 		}
 	}
 	return [...consolidated];
+};
+
+// 通配 scope 的中文描述（跨资源打包授权，不属任何具体资源）
+const WILDCARD_SCOPE_LABELS: Record<string, string> = {
+	"apis.all": "全部资源 读写",
+	"apis.read": "全部资源 只读",
+};
+
+// 把单个 scope 翻译成「中文名(scope 字符串)」格式，供错误信息等面向人类的场景使用
+// 资源级 scope 查 RESOURCES 拿中文名 + 按 type 加「读取/写入」后缀；通配 scope 用固定描述；未知原样返回
+export const formatScope = (scope: string): string => {
+	// 通配 scope：apis.all / apis.read
+	if (WILDCARD_SCOPE_LABELS[scope]) {
+		return `${WILDCARD_SCOPE_LABELS[scope]}(${scope})`;
+	}
+
+	// 资源级 scope：从 RESOURCE_SCOPES 找到 resource + type，再查 RESOURCES 拿中文名
+	const entry = RESOURCE_SCOPES.find((item) => item.scope === scope);
+	if (entry?.resource && entry.type) {
+		const resourceName = RESOURCES.find((r) => r.key === entry.resource)?.name ?? entry.resource;
+		const typeLabel = entry.type === "write" ? "写入" : "读取";
+		return `${resourceName} ${typeLabel}(${scope})`;
+	}
+
+	// 未知 scope（理论上不会出现，兜底）：原样返回
+	return scope;
 };
