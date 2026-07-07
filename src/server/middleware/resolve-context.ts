@@ -66,7 +66,7 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 	// 未携带 API Key，走 web 端 cookies session 分支
 	const cookieSession = await auth();
 	if (!cookieSession) {
-		throw new Error("未登录");
+		throw new AiSpecError({ code: "UNAUTHORIZED", message: "未登录" });
 	}
 	// cookies 接入不走 scope 校验：浏览器用户的权限由 owner_id 数据隔离兜底
 	return { session: cookieSession, rateInfo: null, scopes: null };
@@ -84,7 +84,7 @@ const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 		if (cached.expires && new Date(cached.expires) < new Date()) {
 			// 顺手清理过期项，避免后续请求继续命中过期缓存
 			await tokenCache.delete(hashedKey);
-			throw new Error("API Key 已过期");
+			throw new AiSpecError({ code: "UNAUTHORIZED", message: "API Key 已过期" });
 		}
 		return cached;
 	}
@@ -102,10 +102,10 @@ const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 	});
 
 	if (!token) {
-		throw new Error("无效的 API Key");
+		throw new AiSpecError({ code: "UNAUTHORIZED", message: "无效的 API Key" });
 	}
 	if (token.expires && token.expires < new Date()) {
-		throw new Error("API Key 已过期");
+		throw new AiSpecError({ code: "UNAUTHORIZED", message: "API Key 已过期" });
 	}
 
 	// 3. 回填缓存：把 Date 统一转成 ISO 字符串以保持 JSON 兼容
