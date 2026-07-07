@@ -1,8 +1,8 @@
 "use client";
 
 import dayjs from "dayjs";
-import { zhCN } from "react-day-picker/locale";
 import type { JSX } from "react";
+import { zhCN } from "react-day-picker/locale";
 
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";

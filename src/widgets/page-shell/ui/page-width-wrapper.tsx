@@ -9,7 +9,7 @@ export function PageWidthWrapper({
 	children: ReactNode;
 }) {
 	return (
-		<div className={cn("@container/page mx-auto w-full max-w-7xl px-3 lg:px-6", className)}>
+		<div className={cn("@container/page mx-auto w-full max-w-7xl px-3 pt-6 lg:px-6", className)}>
 			{children}
 		</div>
 	);
