@@ -51,3 +51,6 @@ next-env.d.ts
 
 .codex
 /src/shared/db/generator
+
+# ZCode 本地配置
+.zcode/
