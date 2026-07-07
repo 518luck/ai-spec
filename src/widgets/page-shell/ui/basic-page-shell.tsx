@@ -2,26 +2,26 @@ import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-type HeaderedPageShellProps = Omit<ComponentProps<"div">, "title"> & {
+type BasicPageShellProps = Omit<ComponentProps<"div">, "title"> & {
 	title?: ReactNode;
 };
 
-// 提供可选标题栏和可滚动正文区的页面内容外壳。
-export function HeaderedPageShell({
+// 提供可选标题栏和可滚动正文区的基础页面外壳。
+export function BasicPageShell({
 	title,
 	className,
 	children,
 	...props
-}: HeaderedPageShellProps): JSX.Element {
+}: BasicPageShellProps): JSX.Element {
 	return (
 		<div
-			data-slot="headered-page-shell"
+			data-slot="basic-page-shell"
 			className={cn("flex h-full min-h-0 flex-col", className)}
 			{...props}
 		>
 			{title ? (
 				<div
-					data-slot="headered-page-shell-header"
+					data-slot="basic-page-shell-header"
 					className="flex h-16 shrink-0 items-center border-b px-6"
 				>
 					{typeof title === "string" ? (
@@ -33,7 +33,7 @@ export function HeaderedPageShell({
 			) : null}
 
 			<div
-				data-slot="headered-page-shell-body"
+				data-slot="basic-page-shell-body"
 				className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto p-6"
 			>
 				{children}

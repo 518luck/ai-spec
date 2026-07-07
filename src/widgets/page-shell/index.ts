@@ -1,1 +1,1 @@
-export { HeaderedPageShell } from "./ui/headered-page-shell";
+export { BasicPageShell } from "./ui/basic-page-shell";
