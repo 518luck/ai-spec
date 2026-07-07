@@ -1,6 +1,7 @@
 import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
+import { PageWidthWrapper } from "./page-width-wrapper";
 
 type BasicPageShellProps = Omit<ComponentProps<"div">, "title"> & {
 	title?: ReactNode;
@@ -32,12 +33,7 @@ export function BasicPageShell({
 				</div>
 			) : null}
 
-			<div
-				data-slot="basic-page-shell-body"
-				className="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto p-6"
-			>
-				{children}
-			</div>
+			<PageWidthWrapper>{children}</PageWidthWrapper>
 		</div>
 	);
 }
