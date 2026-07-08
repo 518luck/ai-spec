@@ -10,7 +10,7 @@ export function PageWidthWrapper({
 }) {
 	return (
 		<div className={cn("@container/page mx-auto w-full max-w-7xl px-3 pt-6 lg:px-6", className)}>
-			{children}
+			<div className="rounded-lg border px-6 py-4">{children}</div>
 		</div>
 	);
 }
