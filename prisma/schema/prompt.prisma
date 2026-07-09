@@ -9,7 +9,7 @@ model PromptRecord {
   content          String     @db.Text // 提示词正文
   images           String[]   @default([]) // 图片 URL 列表，预留扩展
   visibility       Visibility @default(private) // 可见性：private=私有，public=公开广场
-  workspace_id     String? // 所属团队空间 ID，null=个人   todo:团队空间之后怎么处理?毕竟需要分开了就
+  team_id          String? // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属）
   source_record_id String? // fork 来源记录 ID，无 FK，允许悬空
   use_count        Int        @default(0) // 使用次数，驱动"常用"排序
   view_count       Int        @default(0) // 浏览次数
@@ -21,19 +21,23 @@ model PromptRecord {
   // ④ 外键列
   owner_id       String // 创建者 ID
   last_editor_id String? // 最近编辑人 ID（团队协作场景）
+  folder_id      String? // 所属文件夹 ID，null=未分类
 
   // ⑤ 关联关系
   owner        User                  @relation("PromptRecordOwner", fields: [owner_id], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删除收录）
   last_editor  User?                 @relation("PromptRecordEditor", fields: [last_editor_id], references: [id], onDelete: SetNull) // 最近编辑人（用户注销→仅清空记录）
+  folder       Folder?               @relation("FolderItems_PromptRecord", fields: [folder_id], references: [id], onDelete: SetNull) // 所属文件夹（文件夹删除→资源保留，folder_id 置空）
+  team         Team?                 @relation("TeamPromptRecords", fields: [team_id], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删除其空间内的收录；null=个人空间）
   versions     PromptRecordVersion[] // 版本历史
   tags         PromptRecordTag[] // 标签关联
   favorited_by PromptFavorite[] // 收藏记录
 
   // ⑥ 索引
   @@index([owner_id]) // 加速"我的收录"查询
-  @@index([workspace_id]) // 加速团队空间内查询
+  @@index([team_id]) // 加速团队空间内查询
   @@index([visibility]) // 加速公开广场筛选
   @@index([updated_at]) // 加速"最近"排序
+  @@index([folder_id]) // 加速"文件夹内资源"查询
   @@schema("prompt")
 }
 
@@ -80,13 +84,16 @@ model PromptDraft {
   updated_at DateTime @updatedAt
 
   // ④ 外键列
-  owner_id String
+  owner_id  String
+  folder_id String? // 所属文件夹 ID，null=未分类
 
   // ⑤ 关联关系
-  owner User @relation("PromptDraftOwner", fields: [owner_id], references: [id], onDelete: Cascade)
+  owner  User    @relation("PromptDraftOwner", fields: [owner_id], references: [id], onDelete: Cascade)
+  folder Folder? @relation("FolderItems_PromptDraft", fields: [folder_id], references: [id], onDelete: SetNull) // 所属文件夹（文件夹删除→资源保留，folder_id 置空）
 
   // ⑥ 索引
   @@index([owner_id])
+  @@index([folder_id]) // 加速"文件夹内草稿"查询
   @@schema("prompt")
 }
 

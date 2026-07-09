@@ -1,0 +1,75 @@
+// 文件夹域：组织个人/团队空间的各类资源
+//
+// 权限模型：文件夹 access_level 定团队默认 + FolderMember 做个体例外
+// - 个人文件夹(team_id=null)：仅 owner 可访问，access_level 不生效
+// - 团队文件夹(team_id=team_xxx)：团队成员的默认权限取文件夹 access_level
+//   可通过 FolderMember 对特定用户做例外调整：升级(editor)、降级(none=拉黑覆盖默认)
+// - owner 始终由 Folder.owner_id 标识，不通过 FolderMember 表表达
+
+// 文件夹：扁平结构（不嵌套），个人/团队双空间，权限支持细粒度调整
+model Folder {
+  // ① 主键
+  id String @id @default(cuid()) // 文件夹主键
+
+  // ② 业务字段
+  name         String // 文件夹名称
+  description  String? // 描述（可选）
+  icon         String? // 图标标识，预留 UI 展示（emoji 或图标名）
+  sort_order   Int              @default(0) // 同级排序，驱动拖拽排序
+  team_id      String? // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属，不决定权限）
+  access_level FolderMemberRole @default(viewer) // 团队成员对此文件夹的默认权限（仅团队文件夹生效；个人文件夹忽略此值）
+
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 创建时间
+  updated_at DateTime @updatedAt // 更新时间
+
+  // ④ 外键列
+  owner_id String // 创建者 ID（拥有最高权限，不受 FolderMember 影响）
+
+  // ⑤ 关联关系
+  owner          User           @relation("FolderOwner", fields: [owner_id], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文件夹）
+  team           Team?          @relation("TeamFolders", fields: [team_id], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其文件夹；null=个人空间）
+  members        FolderMember[] // 文件夹的例外成员列表（叠加在团队默认权限之上）
+  prompt_records PromptRecord[] @relation("FolderItems_PromptRecord") // 文件夹内的收录记录（多态：文件夹删除→SetNull，资源保留）
+  prompt_drafts  PromptDraft[]  @relation("FolderItems_PromptDraft") // 文件夹内的草稿（多态：文件夹删除→SetNull，资源保留）
+
+  // ⑥ 索引
+  @@index([owner_id]) // 加速"我的文件夹"查询
+  @@index([team_id]) // 加速团队空间内查询
+  @@schema("folder")
+}
+
+// 文件夹成员：对特定用户做权限例外调整，叠加在团队默认权限之上
+// 不在此表的团队成员 → 走团队默认角色；在此表的用户 → 以此表记录为准（none=显式拒绝）
+model FolderMember {
+  // ① 主键
+  id String @id @default(cuid()) // 成员关系主键
+
+  // ② 业务字段
+  role FolderMemberRole @default(viewer) // 该用户在此文件夹的角色
+
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 加入文件夹时间
+
+  // ④ 外键列
+  folder_id String // 所属文件夹 id
+  user_id   String // 成员用户 id
+
+  // ⑤ 关联关系
+  folder Folder @relation(fields: [folder_id], references: [id], onDelete: Cascade) // 所属文件夹（文件夹删除→级联删其成员记录）
+  user   User   @relation(fields: [user_id], references: [id], onDelete: Cascade) // 成员用户（用户删除→级联删除其文件夹成员关系）
+
+  // ⑥ 索引
+  @@unique([folder_id, user_id]) // 同一用户在同一文件夹只能有一条记录，防止角色矛盾
+  @@index([user_id]) // 按用户查询其有权限的全部文件夹
+  @@schema("folder")
+}
+
+// 文件夹成员角色：editor=可编辑文件夹内资源，viewer=只读，none=显式拒绝（拉黑，覆盖团队默认可见）
+enum FolderMemberRole {
+  editor // 可编辑文件夹内资源
+  viewer // 只读
+  none // 显式拒绝访问（覆盖团队默认的可见）
+
+  @@schema("folder")
+}

@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth", "token", "prompt", "shared"]
+  schemas  = ["auth", "token", "prompt", "folder", "shared"]
 }
 
 // 用户本人信息
@@ -39,6 +39,10 @@ model User {
   promptRecordVersions PromptRecordVersion[] @relation("VersionEditor")
   promptDrafts         PromptDraft[]         @relation("PromptDraftOwner")
   promptFavorites      PromptFavorite[]
+
+  // 文件夹反向关系
+  folders            Folder[]       @relation("FolderOwner") // 用户创建的全部文件夹
+  folder_memberships FolderMember[] // 用户被授予例外权限的文件夹列表
 
   // 团队反向关系：该用户加入的所有团队，创建者身份由其中 role=owner 的行表达
   memberships TeamMember[]
@@ -104,7 +108,9 @@ model Team {
   updated_at DateTime @updatedAt // 更新时间
 
   // ④ 关联关系
-  memberships TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
+  memberships    TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
+  folders        Folder[]       @relation("TeamFolders") // 团队空间下的全部文件夹
+  prompt_records PromptRecord[] @relation("TeamPromptRecords") // 团队空间内的全部收录记录
 
   // ⑤ 索引
   @@schema("auth") // 归属 auth 域，与 User 同库
