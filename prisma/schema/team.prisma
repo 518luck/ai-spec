@@ -1,0 +1,71 @@
+// 团队域：团队实体、成员关系、团队套餐与角色枚举
+//
+// 跨域引用：TeamMember.user_id 指向 auth.User，Prisma multiSchema 自动处理跨 schema 外键。
+
+// 团队：协作空间的主体，承载文件夹、收录记录等团队资源
+model Team {
+  // ① 主键
+  id String @id @default(cuid()) // 团队主键
+
+  // ② 业务字段
+  name String // 团队名称
+  slug String? @unique // URL 友好标识，用于团队专属页路径
+  description String? // 团队描述，可选
+  plan TeamPlan @default(free) // 团队套餐档位，控制团队空间额度与付费功能
+
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 创建时间
+  updated_at DateTime @updatedAt // 更新时间
+
+  // ④ 关联关系
+  memberships TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
+  folders Folder[] @relation("TeamFolders") // 团队空间下的全部文件夹
+  prompt_records PromptRecord[] @relation("TeamPromptRecords") // 团队空间内的全部收录记录
+
+  // ⑤ 索引
+  @@schema("team") // 归属 team 域
+}
+
+// 团队成员关系：每对「用户×团队」一行，承载该用户在此团队内的角色
+model TeamMember {
+  // ① 主键
+  id String @id @default(cuid()) // 成员关系主键
+
+  // ② 业务字段
+  role TeamRole @default(member) // 该用户在此团队内的角色
+
+  // ③ 时间戳
+  created_at DateTime @default(now()) // 加入团队时间
+
+  // ④ 外键列
+  team_id String // 所属团队 id
+  user_id String // 成员用户 id
+
+  // ⑤ 关联关系
+  team Team @relation(fields: [team_id], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其成员关系）
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade) // 成员用户（用户删除→级联删其所有成员关系）；跨域引用 auth.User
+
+  // ⑥ 索引
+  @@unique([team_id, user_id]) // 同一用户在同一团队只能有一条记录，防止角色矛盾
+  @@index([user_id]) // 按用户查询其加入的全部团队
+  @@schema("team") // 归属 team 域
+}
+
+// 团队套餐枚举：free=免费，team=团队付费版，enterprise=企业版
+enum TeamPlan {
+  free
+  team
+  enterprise
+
+  @@schema("team")
+}
+
+// 团队成员角色：owner=创建者（最高权限），admin=管理员，member=普通成员，viewer=只读
+enum TeamRole {
+  owner
+  admin
+  member
+  viewer
+
+  @@schema("team")
+}
