@@ -1,16 +1,20 @@
 "use client";
 
-import { type JSX, useMemo, useState } from "react";
+import { useCommandState } from "cmdk";
+import { type JSX, useState } from "react";
+
 import { cn } from "@/shared/lib/utils";
+import { Button } from "@/shared/ui/button";
 import {
-	Combobox,
-	ComboboxContent,
-	ComboboxEmpty,
-	ComboboxInput,
-	ComboboxItem,
-	ComboboxList,
-	ComboboxTrigger,
-} from "@/shared/ui/combobox";
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/shared/ui/command";
+import { Icons } from "@/shared/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 
 // 文件夹选项的形状：后端 action 接好后返回这个结构，父组件拼好传入
 export type FolderOption = {
@@ -34,8 +38,8 @@ type FolderComboboxProps = {
 	className?: string;
 };
 
-// 文件夹下拉选择框：基于 shadcn Combobox（base-ui）的 popup 模式封装
-// 支持选择 / 搜索过滤 / 可选创建新文件夹；数据源由父组件传入，组件不直接拉数据
+// 文件夹下拉选择框：用 Popover（定位稳定）+ Command（cmdk，自带搜索过滤/键盘导航）
+// 这是 shadcn 官方推荐的 combobox 模式，也是参考项目 dub 的实现方式
 export function FolderCombobox({
 	options,
 	value,
@@ -46,82 +50,111 @@ export function FolderCombobox({
 	onCreate,
 	className,
 }: FolderComboboxProps): JSX.Element {
-	const [searchValue, setSearchValue] = useState("");
+	const [open, setOpen] = useState(false);
 
-	// 当前选中的 option 对象（Combobox 的 value 接收对象，itemToStringValue 提取比对值）
-	const selectedOption = useMemo(
-		() => options.find((opt) => opt.value === value) ?? null,
-		[options, value],
-	);
+	const selectedOption = options.find((opt) => opt.value === value);
 
-	// 创建新文件夹：调 onCreate，成功后加进本地列表并自动选中
-	const handleCreate = async (): Promise<void> => {
-		if (!onCreate || !searchValue.trim()) return;
-		const created = await onCreate(searchValue.trim());
+	// 创建新文件夹：调 onCreate，成功后选中它并关闭弹层
+	const handleCreate = async (name: string): Promise<void> => {
+		if (!onCreate) return;
+		const created = await onCreate(name);
 		if (created) {
 			onChange(created.value);
-			setSearchValue("");
+			setOpen(false);
 		}
 	};
 
 	return (
-		<Combobox
-			items={options}
-			itemToStringValue={(opt) => opt.value}
-			value={selectedOption}
-			onValueChange={(opt) => onChange(opt?.value)}
-		>
-			<ComboboxTrigger
+		<Popover open={open} onOpenChange={setOpen}>
+			{/* 触发器：Button 样式，显示当前选中项或占位文案 */}
+			<PopoverTrigger
 				render={
-					<button
-						type="button"
-						className={cn(
-							"flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs transition-colors hover:bg-muted",
-							"text-muted-foreground data-[popup-open]:bg-muted",
-							className,
-						)}
+					<Button
+						variant="outline"
+						role="combobox"
+						aria-expanded={open}
+						className={cn("h-9 justify-between font-normal", className)}
 					/>
 				}
 			>
 				{selectedOption ? (
-					<span className="flex items-center gap-1.5 font-normal text-foreground">
+					<span className="flex items-center gap-1.5">
 						{selectedOption.icon && <span>{selectedOption.icon}</span>}
 						{selectedOption.label}
 					</span>
 				) : (
-					<span>{placeholder}</span>
+					placeholder
 				)}
-			</ComboboxTrigger>
+				<Icons.selector className="size-4 shrink-0 opacity-50" />
+			</PopoverTrigger>
 
-			<ComboboxContent>
-				<ComboboxInput
-					placeholder={searchPlaceholder}
-					value={searchValue}
-					onChange={(e) => setSearchValue(e.target.value)}
-					showClear
-				/>
-				<ComboboxList>
-					{(option: FolderOption) => (
-						<ComboboxItem key={option.value} value={option}>
-							{option.icon && <span>{option.icon}</span>}
-							{option.label}
-						</ComboboxItem>
-					)}
-				</ComboboxList>
-				<ComboboxEmpty>
-					{onCreate && searchValue.trim() ? (
-						<button
-							type="button"
-							onClick={handleCreate}
-							className="w-full text-left text-sm text-muted-foreground hover:text-foreground"
-						>
-							创建「{searchValue.trim()}」
-						</button>
-					) : (
-						emptyText
-					)}
-				</ComboboxEmpty>
-			</ComboboxContent>
-		</Combobox>
+			{/* 弹层：Popover 负责定位，Command 负责搜索过滤 + 键盘导航 */}
+			<PopoverContent className="w-(--anchor-width) p-0" align="start">
+				<Command>
+					{/* CommandInput：cmdk 自动管过滤（按 CommandItem 的 value 匹配输入） */}
+					<CommandInput placeholder={searchPlaceholder} />
+					<CommandList>
+						{onCreate ? (
+							<CommandEmpty>
+								<CreateButton onCreate={handleCreate} emptyText={emptyText} />
+							</CommandEmpty>
+						) : (
+							<CommandEmpty>{emptyText}</CommandEmpty>
+						)}
+						<CommandGroup>
+							{options.map((option) => (
+								<CommandItem
+									key={option.value}
+									value={option.label}
+									onSelect={() => {
+										onChange(option.value);
+										setOpen(false);
+									}}
+								>
+									{option.icon && <span>{option.icon}</span>}
+									{option.label}
+									<Icons.check
+										className={cn(
+											"ml-auto size-4",
+											value === option.value ? "opacity-100" : "opacity-0",
+										)}
+									/>
+								</CommandItem>
+							))}
+						</CommandGroup>
+					</CommandList>
+				</Command>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+/**
+ * 搜索无结果时的「创建 xxx」按钮。
+ * 拆成子组件是因为 cmdk 的 useCommandState 必须在 Command 上下文内调用，
+ * 而且它能拿到当前搜索词（CommandInput 的值）。
+ */
+function CreateButton({
+	onCreate,
+	emptyText,
+}: {
+	onCreate: (name: string) => Promise<void>;
+	emptyText: string;
+}): JSX.Element {
+	// useCommandState 读取 cmdk 内部状态：当前搜索词
+	const search = useCommandState((state) => state.search);
+
+	if (!search.trim()) {
+		return <span>{emptyText}</span>;
+	}
+
+	return (
+		<button
+			type="button"
+			onClick={() => onCreate(search)}
+			className="w-full text-left text-muted-foreground hover:text-foreground"
+		>
+			创建「{search}」
+		</button>
 	);
 }

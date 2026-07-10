@@ -9,6 +9,7 @@ import {
 	IconBrightness,
 	IconCalendar,
 	IconCamera,
+	IconCheck,
 	IconCompass,
 	IconCopy,
 	IconDots,
@@ -32,6 +33,7 @@ import {
 	IconPlug,
 	IconPlus,
 	IconRepeat,
+	IconSelector,
 	IconSettings,
 	IconShield,
 	IconSparkleHighlight,
@@ -100,6 +102,10 @@ export const Icons = {
 	calendar: IconCalendar,
 	eye: IconEye,
 	eyeOff: IconEyeOff,
+
+	// 表单/选择控件
+	check: IconCheck,
+	selector: IconSelector,
 
 	// 列表通用操作
 	plus: IconPlus,
