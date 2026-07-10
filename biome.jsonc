@@ -116,7 +116,7 @@
 				}
 			},
 			"formatter": {
-				"enabled": false // shadcn 官方用无分号 + 2 空格，项目用分号 + tab，保留官方原样避免每次被改写
+				"enabled": true // 打开：让 biome 自动格式化 shadcn 文件（class 排序 + 分号 + 缩进统一成项目风格）
 			},
 			"assist": {
 				"enabled": false // shadcn 官方 import 顺序和 biome 的 organizeImports 规则不同，保留原样避免每次被改写
