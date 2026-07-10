@@ -35,6 +35,7 @@
 				"useSortedClasses": {
 					// 自动排序 Tailwind class（布局→间距→颜色→排版），统一 className 顺序，减少 git diff 噪音
 					"level": "warn", // 违规只警告
+					"fix": "safe", // 该规则的 fix 默认是 unsafe（保存时不会应用）；降级为 safe 后，VS Code 的 source.fixAll.biome 保存时即可自动排序
 					"options": {
 						"attributes": ["class", "className"], // 检查这些属性里的 class 字符串
 						"functions": ["clsx", "cva", "twMerge"] // 也检查这些函数调用里的 class
