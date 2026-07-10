@@ -4,6 +4,7 @@ import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { EmptyState } from "@/widgets/empty-state";
 import { TitlePageShell } from "@/widgets/page-shell";
 import { PAGE_SIZE } from "../config/constants";
 import { CreateKeyButton } from "./create-key-button";
@@ -17,7 +18,7 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 	if (!userId) {
 		return (
 			<TitlePageShell title="API 密钥">
-				<EmptyState description="登录后即可管理你的 API 密钥" />
+				<EmptyState icon={Icons.key} description="登录后即可管理你的 API 密钥" />
 			</TitlePageShell>
 		);
 	}
@@ -46,7 +47,7 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 	return (
 		<TitlePageShell title={<KeysPageHeader />} fill>
 			{total === 0 ? (
-				<EmptyState description="还没有 API 密钥，创建一个开始接入吧" />
+				<EmptyState icon={Icons.key} description="还没有 API 密钥，创建一个开始接入吧" />
 			) : (
 				// 表格 + 分页交由客户端组件渲染（翻页按钮需要导航交互）
 				<KeysTable tokens={tokens} page={page} total={total} />
@@ -64,20 +65,6 @@ function KeysPageHeader(): JSX.Element {
 				<HelpTooltip content="生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。" />
 			</div>
 			<CreateKeyButton />
-		</div>
-	);
-}
-
-type EmptyStateProps = {
-	description: string;
-};
-
-// 列表为空或未登录时的占位提示
-function EmptyState({ description }: EmptyStateProps): JSX.Element {
-	return (
-		<div className="flex flex-1 flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
-			<Icons.key className="size-8 opacity-40" />
-			<p className="text-sm">{description}</p>
 		</div>
 	);
 }
