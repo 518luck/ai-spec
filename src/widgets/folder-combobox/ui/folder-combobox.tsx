@@ -79,7 +79,7 @@ export function FolderCombobox({
 			>
 				{selectedOption ? (
 					<span className="flex items-center gap-1.5">
-						{selectedOption.icon && <span>{selectedOption.icon}</span>}
+						<Icons.folderClosed className="size-4 text-muted-foreground" />
 						{selectedOption.label}
 					</span>
 				) : (
@@ -111,7 +111,7 @@ export function FolderCombobox({
 										setOpen(false);
 									}}
 								>
-									{option.icon && <span>{option.icon}</span>}
+									<Icons.folderClosed className="size-4 text-muted-foreground" />
 									{option.label}
 									<Icons.check
 										className={cn(

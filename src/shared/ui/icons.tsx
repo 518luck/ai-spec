@@ -48,6 +48,7 @@ import {
 import type { ComponentType, SVGProps } from "react";
 
 import { LogoIcon } from "@/shared/assets/icons/logo";
+import { FolderClosedIcon } from "@/shared/assets/icons/folder-closed";
 
 // 图标组件类型，兼容 tabler 图标和自定义 SVG 图标组件。
 export type Icon = TablerIcon | ComponentType<SVGProps<SVGSVGElement>>;
@@ -106,6 +107,7 @@ export const Icons = {
 	// 表单/选择控件
 	check: IconCheck,
 	selector: IconSelector,
+	folderClosed: FolderClosedIcon,
 
 	// 列表通用操作
 	plus: IconPlus,
