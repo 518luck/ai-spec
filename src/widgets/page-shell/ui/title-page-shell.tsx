@@ -33,7 +33,7 @@ export function TitlePageShell({
 				</div>
 			) : null}
 
-			<PageWidthWrapper>{children}</PageWidthWrapper>
+			<PageWidthWrapper border={false}>{children}</PageWidthWrapper>
 		</div>
 	);
 }
