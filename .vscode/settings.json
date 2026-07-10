@@ -14,29 +14,28 @@
 	"code-runner.runInTerminal": true, // 在终端里运行（能用 stdin，比输出面板更完整）
 	"code-runner.saveFileBeforeRun": true, // 运行前先保存（确保跑的是最新代码）
 	"code-runner.respectShebang": false, // 忽略文件顶部的 #!/usr/bin/env（统一用上面的 executorMap）
-	// "workbench.colorCustomizations": {
-	// 	// 自定义 VSCode 界面颜色（深灰主题）
-	// 	"activityBar.background": "#111827", // 左侧活动栏背景（最深）
-	// 	"activityBar.foreground": "#E5E7EB", // 活动栏图标颜色（最亮）
-	// 	"activityBar.inactiveForeground": "#9CA3AF", // 活动栏未选中图标（灰色）
-	// 	"statusBar.background": "#1F2937", // 底部状态栏背景
-	// 	"statusBar.foreground": "#F9FAFB", // 底部状态栏文字
-	// 	"titleBar.activeBackground": "#111827", // 窗口标题栏背景（当前窗口）
-	// 	"titleBar.activeForeground": "#F9FAFB", // 窗口标题栏文字（当前窗口）
-	// 	"titleBar.inactiveBackground": "#0F172A", // 窗口标题栏背景（非当前窗口，更深）
-	// 	"titleBar.inactiveForeground": "#9CA3AF" // 窗口标题栏文字（非当前窗口，灰色）
-	// },
 	"workbench.colorCustomizations": {
-		"activityBar.background": "#F5F3FF",
-		"activityBar.foreground": "#7C3AED",
-		"activityBar.inactiveForeground": "#C4B5FD",
-		"statusBar.background": "#FCE7F3",
-		"statusBar.foreground": "#9D174D",
-		"titleBar.activeBackground": "#FDF4FF", // ← 换成紫罗兰白
-		"titleBar.activeForeground": "#6B21A8",
-		"titleBar.inactiveBackground": "#F5F3FF",
-		"titleBar.inactiveForeground": "#C4B5FD"
+		"activityBar.background": "#1F2430", // Ayu Mirage 真实色值（带暖灰调）
+		"activityBar.foreground": "#707A8C", // 雾灰蓝
+		"activityBar.inactiveForeground": "#4E5666", // 暗灰
+		"statusBar.background": "#242936", // 编辑区同色，整体感强
+		"statusBar.foreground": "#959DAB", // 中灰
+		"titleBar.activeBackground": "#1F2430", // 暖深黑
+		"titleBar.activeForeground": "#959DAB", // 中灰
+		"titleBar.inactiveBackground": "#141821", // 极深暖黑
+		"titleBar.inactiveForeground": "#4E5666" // 暗灰
 	},
+	// "workbench.colorCustomizations": {
+	// 	"activityBar.background": "#F5F3FF",
+	// 	"activityBar.foreground": "#7C3AED",
+	// 	"activityBar.inactiveForeground": "#C4B5FD",
+	// 	"statusBar.background": "#FCE7F3",
+	// 	"statusBar.foreground": "#9D174D",
+	// 	"titleBar.activeBackground": "#FDF4FF", // ← 换成紫罗兰白
+	// 	"titleBar.activeForeground": "#6B21A8",
+	// 	"titleBar.inactiveBackground": "#F5F3FF",
+	// 	"titleBar.inactiveForeground": "#C4B5FD"
+	// },
 	"[jsonc]": {
 		"editor.defaultFormatter": "biomejs.biome"
 	},
