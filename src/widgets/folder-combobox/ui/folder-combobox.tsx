@@ -15,6 +15,7 @@ import {
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { FolderIcon } from "./folder-icon";
 
 // 文件夹选项的形状：后端 action 接好后返回这个结构，父组件拼好传入
 export type FolderOption = {
@@ -66,26 +67,24 @@ export function FolderCombobox({
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
-			{/* 触发器：Button 样式，显示当前选中项或占位文案 */}
+			{/* 触发器：ghost 按钮样式，融入标题栏；文件夹图标 + 文字 + 箭头都在按钮内 */}
 			<PopoverTrigger
 				render={
 					<Button
-						variant="outline"
+						variant="ghost"
 						role="combobox"
 						aria-expanded={open}
-						className={cn("h-9 justify-between font-normal", className)}
+						className={cn("h-8 gap-1.5 px-2 font-normal", className)}
 					/>
 				}
 			>
+				<FolderIcon />
 				{selectedOption ? (
-					<span className="flex items-center gap-1.5">
-						<Icons.folderClosed className="size-4 text-muted-foreground" />
-						{selectedOption.label}
-					</span>
+					<span>{selectedOption.label}</span>
 				) : (
-					placeholder
+					<span className="text-muted-foreground">{placeholder}</span>
 				)}
-				<Icons.selector className="size-4 shrink-0 opacity-50" />
+				<Icons.selector className="size-3.5 opacity-50" />
 			</PopoverTrigger>
 
 			{/* 弹层：Popover 负责定位，Command 负责搜索过滤 + 键盘导航 */}
@@ -111,7 +110,7 @@ export function FolderCombobox({
 										setOpen(false);
 									}}
 								>
-									<Icons.folderClosed className="size-4 text-muted-foreground" />
+									<FolderIcon />
 									{option.label}
 									<Icons.check
 										className={cn(
