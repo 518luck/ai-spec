@@ -15,6 +15,14 @@
 	body {
 		@apply bg-background text-foreground overscroll-none;
 	}
+	/* 所有可交互元素默认手指光标（button / role=button / select-item 等不再需要逐个加 cursor-pointer） */
+	button:not(:disabled),
+	[role="button"]:not(:disabled),
+	[role="combobox"]:not(:disabled),
+	[role="menuitem"]:not(:disabled),
+	[role="option"]:not(:disabled) {
+		cursor: pointer;
+	}
 }
 
 /* 选中旧视图快照伪元素。 */

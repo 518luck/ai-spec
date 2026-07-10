@@ -109,6 +109,7 @@ export function FolderCombobox({
 										onChange(option.value);
 										setOpen(false);
 									}}
+									className="not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
 								>
 									<FolderIcon />
 									{option.label}
