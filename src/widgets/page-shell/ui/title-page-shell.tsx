@@ -5,11 +5,14 @@ import { PageWidthWrapper } from "./page-width-wrapper";
 
 type TitlePageShellProps = Omit<ComponentProps<"div">, "title"> & {
 	title?: ReactNode;
+	/** 是否让内容区撑满父级剩余高度（表格等需要占满视口的场景），默认关闭 */
+	fill?: boolean;
 };
 
 // 提供可选标题栏和可滚动正文区的页面外壳。
 export function TitlePageShell({
 	title,
+	fill,
 	className,
 	children,
 	...props
@@ -33,7 +36,9 @@ export function TitlePageShell({
 				</div>
 			) : null}
 
-			<PageWidthWrapper border={false}>{children}</PageWidthWrapper>
+			<PageWidthWrapper border={false} fill={fill}>
+				{children}
+			</PageWidthWrapper>
 		</div>
 	);
 }

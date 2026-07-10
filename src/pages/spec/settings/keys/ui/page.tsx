@@ -44,7 +44,7 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 	]);
 
 	return (
-		<TitlePageShell title={<KeysPageHeader />}>
+		<TitlePageShell title={<KeysPageHeader />} fill>
 			{total === 0 ? (
 				<EmptyState description="还没有 API 密钥，创建一个开始接入吧" />
 			) : (

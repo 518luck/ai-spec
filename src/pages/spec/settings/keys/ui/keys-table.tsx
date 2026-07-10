@@ -53,7 +53,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 			{/* 表格区：flex-1 占据剩余高度；table 占满宽度保证行分隔线贯通，靠首末列 pl/pr 制造内容边距 */}
 			<div className="flex-1 overflow-auto">
 				<Table className="table-fixed">
-					<TableHeader>
+					<TableHeader className="bg-muted">
 						<TableRow>
 							<TableHead className="w-32 pl-4">名称</TableHead>
 							<TableHead className="w-48">描述</TableHead>
