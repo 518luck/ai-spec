@@ -8,10 +8,13 @@ function ScrollArea({
 	className,
 	children,
 	orientation = "vertical",
+	scrollbarClassName,
 	...props
 }: ScrollAreaPrimitive.Root.Props & {
 	/** 滚动方向：vertical（默认，竖向）或 horizontal（横向） */
 	orientation?: "vertical" | "horizontal";
+	/** 滚动条的自定义样式（如圆角内缩 margin） */
+	scrollbarClassName?: string;
 }) {
 	return (
 		<ScrollAreaPrimitive.Root
@@ -28,7 +31,7 @@ function ScrollArea({
 			>
 				{children}
 			</ScrollAreaPrimitive.Viewport>
-			<ScrollBar orientation={orientation} />
+			<ScrollBar orientation={orientation} className={scrollbarClassName} />
 			<ScrollAreaPrimitive.Corner />
 		</ScrollAreaPrimitive.Root>
 	);

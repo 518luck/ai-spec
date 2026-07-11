@@ -294,10 +294,10 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 
 					{/* 操作栏：快捷操作（椭圆胶囊）+ 更多操作 + 放大 */}
 					<div className="ml-auto flex items-center gap-2">
-						{/* 快捷操作工具栏：椭圆背景，max-w-74 自动触发横向滚动 */}
+						{/* 快捷操作工具栏：椭圆背景，max-w-76 自动触发横向滚动 */}
 						{activeToolbarItems.length > 0 && (
 							<div className="rounded-full p-0.5" style={{ backgroundColor: toolbarBgColor }}>
-								<ScrollArea orientation="horizontal" className="max-w-76">
+								<ScrollArea orientation="horizontal" className="max-w-76" scrollbarClassName="mx-2">
 									<div className="flex items-center gap-0.5">
 										{activeToolbarItems.map((item) => {
 											const isActive =
