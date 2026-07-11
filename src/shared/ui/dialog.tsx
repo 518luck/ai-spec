@@ -40,9 +40,12 @@ function DialogContent({
 	className,
 	children,
 	showCloseButton = true,
+	scrollable = true,
 	...props
 }: DialogPrimitive.Popup.Props & {
 	showCloseButton?: boolean;
+	/** 是否用 ScrollArea 包裹内容（默认开启）；内部自带滚动的组件（如 CodeMirror）应关闭，避免双重滚动冲突 */
+	scrollable?: boolean;
 }) {
 	return (
 		<DialogPortal>
@@ -55,8 +58,8 @@ function DialogContent({
 				)}
 				{...props}
 			>
-				{/* ScrollArea 包裹所有内容，让超长弹窗自动滚动；max-h-[inherit] 继承 DialogContent 的限高 */}
-				<ScrollArea className="max-h-[inherit]">{children}</ScrollArea>
+				{/* ScrollArea 包裹所有内容，让超长弹窗自动滚动；scrollable=false 时直接渲染 children（供 CodeMirror 等自带滚动的组件使用） */}
+				{scrollable ? <ScrollArea className="max-h-[inherit]">{children}</ScrollArea> : children}
 				{showCloseButton && (
 					<DialogPrimitive.Close
 						data-slot="dialog-close"
