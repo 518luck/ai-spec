@@ -88,20 +88,14 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			<DialogContent
 				showCloseButton={false}
 				scrollable={false}
-				className="flex aspect-square max-h-[85vh] flex-col gap-0 p-0 sm:max-w-lg"
+				className="flex aspect-square max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-lg"
 			>
-				{/* 顶部导航栏：标题 + 保存状态（点击遮罩即可关闭，无需额外关闭按钮） */}
-				<div className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-					<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
-					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
-				</div>
-
-				{/* 编辑器区域：占满剩余高度 */}
+				{/* 编辑器区域：占满整个弹窗（含导航栏下方区域），CodeMirror 内部 scroller 自行滚动 */}
 				<div className="min-h-0 flex-1 overflow-hidden">
 					<CodeMirror
 						value={content} // 编辑器内容（受控值，绑定 React state）
 						onChange={setContent} // 内容变化时同步到 state
-						extensions={extensions} // Markdown 语法支持（useMemo 缓存的扩展数组）
+						extensions={extensions} // Markdown 语法支持（含首行标题放大装饰）
 						placeholder="写下你的想法…" // 空内容时的占位文案
 						height="100%" // 编辑器内部滚动容器高度，设为 100% 由外层 div 的 flex-1 撑满
 						className="h-full text-sm" // h-full 让 CodeMirror 根元素也占满外层 div；text-sm 统一正文字号
@@ -111,6 +105,12 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 							highlightActiveLine: false, // 关闭当前行背景高亮（写笔记时变色会分散注意力）
 						}}
 					/>
+				</div>
+
+				{/* 顶部导航栏：浮在编辑器上方，半透明毛玻璃，滚动时文字从底下透出 */}
+				<div className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border border-b bg-linear-to-b from-popover to-popover/10 px-4 backdrop-blur-[1.5px]">
+					<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
+					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
 				</div>
 			</DialogContent>
 		</Dialog>
