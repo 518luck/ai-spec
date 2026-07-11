@@ -48,7 +48,7 @@ export function DraftCard({ id, name, content, updatedAt }: DraftCardProps): JSX
 			</div>
 
 			{/* 内容预览 */}
-			<p className="line-clamp-6 flex-1 whitespace-pre-wrap break-words font-mono text-muted-foreground text-xs leading-relaxed">
+			<p className="wrap-break-word line-clamp-6 flex-1 whitespace-pre-wrap font-mono text-muted-foreground text-xs leading-relaxed">
 				{preview || "（无内容）"}
 			</p>
 
