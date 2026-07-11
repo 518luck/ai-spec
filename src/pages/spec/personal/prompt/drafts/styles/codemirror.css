@@ -46,7 +46,18 @@
  * 编辑器第一行作为标题展示，字号放大、加粗，和导航栏标题视觉呼应
  */
 .cm-line.first-line-title {
-	font-size: 1.25rem;
-	font-weight: 600;
-	padding-top: 0.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding-top: 0.25rem;
+}
+
+/*
+ * 编辑器内容区内边距
+ *
+ * padding 加在 .cm-scroller 上而非外层 div，让顶部留白属于滚动区域内部：
+ * - 初始状态第一行不被导航栏遮住（留出 48px = h-12）
+ * - 滚动时文字能滑入导航栏半透明区域并透出来（不会被外层 overflow-hidden 裁掉）
+ */
+.cm-scroller {
+  padding-top: 48px;
 }
