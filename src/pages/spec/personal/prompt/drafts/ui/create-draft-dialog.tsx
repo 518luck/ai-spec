@@ -5,6 +5,7 @@ import { syntaxTree } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
+import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
@@ -74,6 +75,8 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [activeTools, setActiveTools] = useState<string[]>(["bold", "italic"]);
 	// 光标位置正在使用的格式 id 集合（用于高亮菜单项和胶囊按钮）
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+	// 弹窗是否放大：放大时占满更大尺寸，再点缩小回去
+	const [isExpanded, setIsExpanded] = useState(false);
 
 	// 编辑器视图设置：持久化到 cookie，和主题 cookie 统一管理方式
 	const [editorSettings, setEditorSettings] = useState(defaultEditorSettings);
@@ -224,7 +227,22 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			<DialogContent
 				showCloseButton={false}
 				scrollable={false}
-				className="flex aspect-square max-h-[85vh] flex-col overflow-hidden p-0 sm:max-w-lg"
+				render={
+					<motion.div
+						layout
+						transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
+						className="flex flex-col overflow-hidden p-0"
+						style={{
+							maxHeight: "85vh",
+							maxWidth: "calc(100% - 2rem)",
+						}}
+						initial={true}
+						animate={{
+							width: isExpanded ? "73rem" : "32rem",
+							height: isExpanded ? "40rem" : "32rem",
+						}}
+					/>
+				}
 			>
 				{/* 编辑器区域：占满整个弹窗（含导航栏下方区域），CodeMirror 内部 scroller 自行滚动 */}
 				<div className="min-h-0 flex-1 overflow-hidden">
@@ -364,8 +382,17 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 							</DropdownMenuContent>
 						</DropdownMenu>
 
-						<Button variant="ghost" size="icon-sm" aria-label="放大">
-							<Icons.expand className="size-4" />
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							aria-label={isExpanded ? "缩小" : "放大"}
+							onClick={() => setIsExpanded((v) => !v)}
+						>
+							{isExpanded ? (
+								<Icons.minimize className="size-4" />
+							) : (
+								<Icons.expand className="size-4" />
+							)}
 						</Button>
 					</div>
 				</div>

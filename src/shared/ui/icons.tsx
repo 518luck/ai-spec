@@ -3,6 +3,7 @@ import {
 	IconAdjustmentsAlt,
 	IconArrowBarLeft,
 	IconArrowsDiagonal,
+	IconArrowsDiagonalMinimize2,
 	IconArrowUpRight,
 	IconBold,
 	IconBook,
@@ -139,6 +140,7 @@ export const Icons = {
 	trash: IconTrash,
 	promote: IconArrowUpRight,
 	expand: IconArrowsDiagonal,
+	minimize: IconArrowsDiagonalMinimize2,
 
 	themeLight: IconSun,
 	themeDark: IconMoonStars,
