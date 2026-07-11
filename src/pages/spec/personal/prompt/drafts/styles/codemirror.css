@@ -1,0 +1,52 @@
+/*
+ * CodeMirror 滚动条样式
+ *
+ * 复刻项目 ScrollArea 组件的视觉效果：
+ * - 默认隐藏，鼠标悬停或滚动时淡入显示
+ * - 滑块圆角、bg-border 颜色，宽度 10px（w-2.5）
+ * - 同时兼容 Webkit（Chrome/Safari/Edge）和 Firefox
+ */
+
+/* Webkit 内核浏览器（Chrome / Safari / Edge） */
+.cm-scroller::-webkit-scrollbar {
+	width: 10px;
+}
+
+.cm-scroller::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.cm-scroller::-webkit-scrollbar-thumb {
+	background-color: var(--color-border);
+	border-radius: 9999px;
+	border: 1px solid transparent;
+	background-clip: padding-box;
+}
+
+/* 默认透明，悬停时显示（模拟 ScrollArea 的 opacity-0 → data-hovering:opacity-100） */
+.cm-scroller::-webkit-scrollbar-thumb {
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.cm-scroller:hover::-webkit-scrollbar-thumb,
+.cm-scroller:focus-within::-webkit-scrollbar-thumb {
+	opacity: 1;
+}
+
+/* Firefox */
+.cm-scroller {
+	scrollbar-width: thin;
+	scrollbar-color: var(--color-border) transparent;
+}
+
+/*
+ * 首行标题样式
+ *
+ * 编辑器第一行作为标题展示，字号放大、加粗，和导航栏标题视觉呼应
+ */
+.cm-line.first-line-title {
+	font-size: 1.25rem;
+	font-weight: 600;
+	padding-top: 0.25rem;
+}

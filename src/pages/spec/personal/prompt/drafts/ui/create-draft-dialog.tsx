@@ -1,47 +1,57 @@
 "use client";
 
+import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { languages } from "@codemirror/language-data";
+import { Decoration, EditorView } from "@codemirror/view";
+import CodeMirror from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
-import { type JSX, useState } from "react";
+import { type JSX, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
-import { Button } from "@/shared/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-} from "@/shared/ui/dialog";
-import { Input } from "@/shared/ui/input";
-import { Textarea } from "@/shared/ui/textarea";
+import { Dialog, DialogContent } from "@/shared/ui/dialog";
+import "../styles/codemirror.css";
 
 type CreateDraftDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
 
-// 创建草稿弹窗：填写名称（可选）和内容后提交到 POST /api/prompt/drafts
+// 创建草稿弹窗：全屏 CodeMirror 编辑器，顶部导航栏自动提取首行作为标题，关闭时有内容则自动保存
 export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps): JSX.Element {
 	const router = useRouter();
-	const [name, setName] = useState("");
 	const [content, setContent] = useState("");
-	const [isCreating, setIsCreating] = useState(false);
+	const [isSaving, setIsSaving] = useState(false);
 
-	// 弹窗关闭时重置表单，避免下次打开残留上次输入
-	const handleOpenChange = (next: boolean): void => {
-		if (!next) {
-			setName("");
+	// Markdown 语法扩展（含代码块内语言高亮）+ 首行标题装饰，用 useMemo 缓存避免每次渲染重建
+	const extensions = useMemo(
+		() => [
+			markdown({ base: markdownLanguage, codeLanguages: languages }),
+			// 给第一行加 first-line-title class，配合 CSS 放大字号和加粗
+			EditorView.decorations.of(() =>
+				Decoration.set([Decoration.line({ class: "first-line-title" }).range(0)]),
+			),
+		],
+		[],
+	);
+
+	// 从内容首行提取标题，为空时显示占位文案
+	const title = content.split("\n")[0]?.trim() || "无标题草稿";
+
+	// 关闭弹窗：有内容则保存后关闭，空内容直接关闭
+	const handleClose = async (): Promise<void> => {
+		const trimmed = content.trim();
+
+		// 空内容直接关闭，不创建草稿
+		if (!trimmed) {
 			setContent("");
+			onOpenChange(false);
+			return;
 		}
-		onOpenChange(next);
-	};
 
-	// 提交创建：用与后端同一份 schema 预校验，通过后调 API
-	const handleCreate = async (): Promise<void> => {
+		// 有内容：预校验后调 API 创建
 		const parsed = createDraftDtoSchema.safeParse({
-			name: name || undefined,
+			name: content.split("\n")[0]?.trim() || undefined,
 			content,
 		});
 		if (!parsed.success) {
@@ -49,68 +59,59 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			return;
 		}
 
-		setIsCreating(true);
+		setIsSaving(true);
 		try {
 			await createDraft(parsed.data);
 			toast.success("草稿已创建");
+			setContent("");
 			router.refresh();
-			handleOpenChange(false);
+			onOpenChange(false);
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "创建失败，请稍后重试");
 		} finally {
-			setIsCreating(false);
+			setIsSaving(false);
 		}
 	};
 
 	return (
-		<Dialog open={open} onOpenChange={handleOpenChange}>
-			<DialogContent className="sm:max-w-md">
-				<DialogHeader>
-					<DialogTitle className="text-lg">新建草稿</DialogTitle>
-					<DialogDescription className="text-sm leading-6">
-						随手记录灵感，转正后进入收录库管理版本与标签。
-					</DialogDescription>
-				</DialogHeader>
-
-				<div className="flex flex-col gap-4 py-2">
-					<div className="flex flex-col gap-1.5">
-						<label htmlFor="draft-name" className="font-medium text-sm">
-							名称
-							<span className="ml-1 text-muted-foreground">（可选）</span>
-						</label>
-						<Input
-							id="draft-name"
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							placeholder="给草稿起个名字"
-							maxLength={64}
-						/>
-					</div>
-
-					<div className="flex flex-col gap-1.5">
-						<label htmlFor="draft-content" className="font-medium text-sm">
-							内容
-						</label>
-						<Textarea
-							id="draft-content"
-							value={content}
-							onChange={(e) => setContent(e.target.value)}
-							placeholder="写下你的想法…"
-							className="min-h-32"
-						/>
-					</div>
+		<Dialog
+			open={open}
+			onOpenChange={(next) => {
+				// 关闭时走保存逻辑，打开时直接放行
+				if (!next) {
+					void handleClose();
+				} else {
+					onOpenChange(next);
+				}
+			}}
+		>
+			<DialogContent
+				showCloseButton={false}
+				scrollable={false}
+				className="flex aspect-square max-h-[85vh] flex-col gap-0 p-0 sm:max-w-lg"
+			>
+				{/* 顶部导航栏：标题 + 保存状态（点击遮罩即可关闭，无需额外关闭按钮） */}
+				<div className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+					<span className="flex-1 truncate font-semibold text-base">{title}</span>
+					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
 				</div>
 
-				<DialogFooter>
-					<Button
-						className="w-full"
-						onClick={handleCreate}
-						disabled={isCreating}
-						aria-busy={isCreating}
-					>
-						{isCreating ? "创建中..." : "创建"}
-					</Button>
-				</DialogFooter>
+				{/* 编辑器区域：占满剩余高度 */}
+				<div className="min-h-0 flex-1 overflow-hidden">
+					<CodeMirror
+						value={content} // 编辑器内容（受控值，绑定 React state）
+						onChange={setContent} // 内容变化时同步到 state
+						extensions={extensions} // Markdown 语法支持（useMemo 缓存的扩展数组）
+						placeholder="写下你的想法…" // 空内容时的占位文案
+						height="100%" // 编辑器内部滚动容器高度，设为 100% 由外层 div 的 flex-1 撑满
+						className="h-full text-sm" // h-full 让 CodeMirror 根元素也占满外层 div；text-sm 统一正文字号
+						basicSetup={{
+							lineNumbers: false, // 关闭行号（草稿不是代码，不需要 1 2 3 编号）
+							foldGutter: false, // 关闭代码折叠（草稿一般不长，不需要收起区块）
+							highlightActiveLine: false, // 关闭当前行背景高亮（写笔记时变色会分散注意力）
+						}}
+					/>
+				</div>
 			</DialogContent>
 		</Dialog>
 	);
