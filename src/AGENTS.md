@@ -175,6 +175,14 @@ pnpm dlx shadcn@latest add [组件名]
 
 使用 shadcn 组件时，如果不确定组件 API、组合方式或最佳实践，应调用 /shadcn 技能查看正确用法。
 
+## React Hooks 工具库
+
+项目使用 [react-use](https://github.com/streamich/react-use)（100+ hooks）作为 React hooks 工具库。需要防抖、节流、事件监听、localStorage 等通用 hooks 时，优先从 `react-use` 导入。使用前查阅文档确认 hook 名称和行为。
+
+常用 hooks：`useSetState`（对象状态自动合并）、`useToggle`、`useDebounce`、`useThrottle`、`useLocalStorage`、`usePrevious`、`useClickAway`、`useScroll`、`useWindowSize`、`useAsync`/`useAsyncFn`。
+
+多个相关联的状态优先用 `useSetState` 合并为一个对象，而非拆成多个 `useState`。
+
 ## 排版规范
 
 统一使用 Tailwind 的 `text-*` 工具类，不要自行新增字号档位。
