@@ -136,6 +136,12 @@ export const MENU_GROUPS: readonly { type: "tool" | "view"; items: readonly Menu
 				icon: Icons.highlight,
 				description: "高亮显示光标所在行",
 			},
+			{
+				id: "preview",
+				label: "预览",
+				icon: Icons.eye,
+				description: "切换到 Markdown 渲染预览模式",
+			},
 		],
 	},
 ];

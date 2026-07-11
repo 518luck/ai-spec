@@ -29,6 +29,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Spinner } from "@/shared/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
@@ -293,41 +294,41 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 
 					{/* 操作栏：快捷操作（椭圆胶囊）+ 更多操作 + 放大 */}
 					<div className="ml-auto flex items-center gap-2">
-						{/* 快捷操作工具栏：不透明椭圆背景，内容由 activeToolbarItems 动态渲染；光标在对应格式内时按钮高亮 */}
+						{/* 快捷操作工具栏：椭圆背景，max-w-74 自动触发横向滚动 */}
 						{activeToolbarItems.length > 0 && (
-							<div
-								className="flex items-center gap-0.5 rounded-full p-0.5"
-								style={{ backgroundColor: toolbarBgColor }}
-							>
-								{activeToolbarItems.map((item) => {
-									// tool 组：光标在对应格式内时高亮；view 组：设置开启时高亮
-									const isActive =
-										item.type === "tool"
-											? activeFormats.has(item.id)
-											: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
-									return (
-										<Tooltip key={item.id}>
-											<TooltipTrigger
-												render={
-													<Button
-														variant="ghost"
-														size="icon-sm"
-														aria-label={item.label}
-														className={`rounded-full ${
-															isActive
-																? "bg-primary/15! text-primary hover:bg-primary/25"
-																: "hover:bg-foreground/20!"
-														}`}
-														onClick={() => handleItemAction(item.type, item.id)}
-													/>
-												}
-											>
-												<item.icon className="size-4" />
-											</TooltipTrigger>
-											<TooltipContent>{item.label}</TooltipContent>
-										</Tooltip>
-									);
-								})}
+							<div className="rounded-full p-0.5" style={{ backgroundColor: toolbarBgColor }}>
+								<ScrollArea orientation="horizontal" className="max-w-76">
+									<div className="flex items-center gap-0.5">
+										{activeToolbarItems.map((item) => {
+											const isActive =
+												item.type === "tool"
+													? activeFormats.has(item.id)
+													: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
+											return (
+												<Tooltip key={item.id}>
+													<TooltipTrigger
+														render={
+															<Button
+																variant="ghost"
+																size="icon-sm"
+																aria-label={item.label}
+																className={`shrink-0 rounded-full ${
+																	isActive
+																		? "bg-primary/15! text-primary hover:bg-primary/25"
+																		: "hover:bg-foreground/20!"
+																}`}
+																onClick={() => handleItemAction(item.type, item.id)}
+															/>
+														}
+													>
+														<item.icon className="size-4" />
+													</TooltipTrigger>
+													<TooltipContent>{item.label}</TooltipContent>
+												</Tooltip>
+											);
+										})}
+									</div>
+								</ScrollArea>
 							</div>
 						)}
 

@@ -4,7 +4,15 @@ import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 
 import { cn } from "@/shared/lib/utils";
 
-function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.Props) {
+function ScrollArea({
+	className,
+	children,
+	orientation = "vertical",
+	...props
+}: ScrollAreaPrimitive.Root.Props & {
+	/** 滚动方向：vertical（默认，竖向）或 horizontal（横向） */
+	orientation?: "vertical" | "horizontal";
+}) {
 	return (
 		<ScrollAreaPrimitive.Root
 			data-slot="scroll-area"
@@ -13,14 +21,14 @@ function ScrollArea({ className, children, ...props }: ScrollAreaPrimitive.Root.
 		>
 			<ScrollAreaPrimitive.Viewport
 				data-slot="scroll-area-viewport"
-				// max-h-[inherit] 让 Viewport 继承 Root 的 max-h-*，使「按需滚动」生效：
-				// 内容超出时由 max-height 触发内部 overflow:scroll；内容不足时自动收缩。
-				// 单纯的 h-full 因 Root 高度为 auto 无法解析，会导致内容被裁切且不出现滚动条。
-				className="max-h-[inherit] w-full rounded-[inherit] outline-none transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] focus-visible:ring-ring/50"
+				className={cn(
+					"rounded-[inherit] outline-none transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] focus-visible:ring-ring/50",
+					orientation === "vertical" ? "max-h-[inherit] w-full" : "h-full max-w-[inherit]",
+				)}
 			>
 				{children}
 			</ScrollAreaPrimitive.Viewport>
-			<ScrollBar />
+			<ScrollBar orientation={orientation} />
 			<ScrollAreaPrimitive.Corner />
 		</ScrollAreaPrimitive.Root>
 	);
