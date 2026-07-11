@@ -260,7 +260,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 							maxHeight: "85vh",
 							maxWidth: "calc(100% - 2rem)",
 						}}
-						initial={true}
+						initial={false}
 						animate={{
 							width: isExpanded ? "73rem" : "32rem",
 							height: isExpanded ? "40rem" : "32rem",

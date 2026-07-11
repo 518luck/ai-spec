@@ -1,7 +1,5 @@
 import type { JSX } from "react";
 
-import { Icons } from "@/shared/ui/icons";
-import { EmptyState } from "@/widgets/empty-state";
 import { DraftCard } from "./draft-card";
 
 // 草稿列表项，由服务端查询后传入
@@ -32,9 +30,4 @@ export function DraftsGrid({ drafts }: DraftsGridProps): JSX.Element {
 			))}
 		</div>
 	);
-}
-
-// 草稿列表为空时的占位提示
-export function DraftsEmptyState(): JSX.Element {
-	return <EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />;
 }

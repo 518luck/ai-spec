@@ -3,10 +3,12 @@ import type { JSX } from "react";
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
+import { Icons } from "@/shared/ui/icons";
+import { EmptyState } from "@/widgets/empty-state";
 import { ToolbarPageShell } from "@/widgets/page-shell";
 import { DEFAULT_SORT, PAGE_SIZE } from "../config/draft-list";
 import { CreateDraftButton } from "./create-draft-button";
-import { type DraftItem, DraftsEmptyState, DraftsGrid } from "./drafts-grid";
+import { type DraftItem, DraftsGrid } from "./drafts-grid";
 
 // 草稿列表页参数，由路由层从 searchParams 解析后传入
 type PersonalDraftsPageProps = {
@@ -36,7 +38,11 @@ export async function PersonalDraftsPage({
 			// TODO: 后面需要做弹窗处理，用户没有登录的时候给一个登录引导
 			actions={userId ? <CreateDraftButton /> : undefined}
 		>
-			{total === 0 ? <DraftsEmptyState /> : <DraftsGrid drafts={drafts} />}
+			{total === 0 ? (
+				<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
+			) : (
+				<DraftsGrid drafts={drafts} />
+			)}
 		</ToolbarPageShell>
 	);
 }
