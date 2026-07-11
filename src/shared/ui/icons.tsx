@@ -2,6 +2,7 @@ import type { TablerIcon } from "@tabler/icons-react";
 import {
 	IconAdjustmentsAlt,
 	IconArrowBarLeft,
+	IconArrowsDiagonal,
 	IconArrowUpRight,
 	IconBook,
 	IconBrandMetabrainz,
@@ -115,6 +116,7 @@ export const Icons = {
 	pencil: IconPencil,
 	trash: IconTrash,
 	promote: IconArrowUpRight,
+	expand: IconArrowsDiagonal,
 
 	themeLight: IconSun,
 	themeDark: IconMoonStars,

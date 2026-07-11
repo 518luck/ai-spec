@@ -9,7 +9,9 @@ import { type JSX, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
+import { Icons } from "@/shared/ui/icons";
 import "../styles/codemirror.css";
 
 type CreateDraftDialogProps = {
@@ -107,10 +109,23 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 					/>
 				</div>
 
-				{/* 顶部导航栏：浮在编辑器上方，半透明毛玻璃，滚动时文字从底下透出 */}
+				{/* 顶部导航栏：标题（左）+ 操作栏（右），浮在编辑器上方，半透明毛玻璃 */}
 				<div className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border border-b bg-linear-to-b from-popover to-popover/10 px-4 backdrop-blur-[1.5px]">
 					<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
 					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
+
+					{/* 操作栏：快捷操作（椭圆胶囊）+ 放大 + 更多操作 */}
+					<div className="ml-auto flex items-center gap-2">
+						{/* 快捷操作工具栏：不透明椭圆背景 */}
+						<div className="flex items-center gap-0.5 rounded-full bg-muted p-0.5" />
+
+						<Button variant="ghost" size="icon-sm" aria-label="更多操作">
+							<Icons.more className="size-4" />
+						</Button>
+						<Button variant="ghost" size="icon-sm" aria-label="放大">
+							<Icons.expand className="size-4" />
+						</Button>
+					</div>
 				</div>
 			</DialogContent>
 		</Dialog>
