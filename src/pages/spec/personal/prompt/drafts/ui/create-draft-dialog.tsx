@@ -92,7 +92,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			>
 				{/* 顶部导航栏：标题 + 保存状态（点击遮罩即可关闭，无需额外关闭按钮） */}
 				<div className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
-					<span className="flex-1 truncate font-semibold text-base">{title}</span>
+					<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
 					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
 				</div>
 
