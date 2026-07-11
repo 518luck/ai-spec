@@ -29,6 +29,8 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { Spinner } from "@/shared/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
 	defaultEditorSettings,
 	EDITOR_THEMES,
@@ -288,7 +290,6 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 					style={{ background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` }}
 				>
 					<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
-					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
 
 					{/* 操作栏：快捷操作（椭圆胶囊）+ 更多操作 + 放大 */}
 					<div className="ml-auto flex items-center gap-2">
@@ -305,20 +306,26 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 											? activeFormats.has(item.id)
 											: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
 									return (
-										<Button
-											key={item.id}
-											variant="ghost"
-											size="icon-sm"
-											aria-label={item.label}
-											className={`rounded-full ${
-												isActive
-													? "bg-primary/15! text-primary hover:bg-primary/25"
-													: "hover:bg-foreground/20!"
-											}`}
-											onClick={() => handleItemAction(item.type, item.id)}
-										>
-											<item.icon className="size-4" />
-										</Button>
+										<Tooltip key={item.id}>
+											<TooltipTrigger
+												render={
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														aria-label={item.label}
+														className={`rounded-full ${
+															isActive
+																? "bg-primary/15! text-primary hover:bg-primary/25"
+																: "hover:bg-foreground/20!"
+														}`}
+														onClick={() => handleItemAction(item.type, item.id)}
+													/>
+												}
+											>
+												<item.icon className="size-4" />
+											</TooltipTrigger>
+											<TooltipContent>{item.label}</TooltipContent>
+										</Tooltip>
 									);
 								})}
 							</div>
@@ -418,6 +425,14 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 						</Button>
 					</div>
 				</div>
+
+				{/* 保存中遮罩：关闭弹窗时正在保存，覆盖整个弹窗阻止交互 */}
+				{isSaving && (
+					<div className="absolute inset-0 z-50 flex items-center justify-center gap-2 bg-popover/80 backdrop-blur-sm">
+						<Spinner className="size-5" />
+						<span className="text-sm">保存中...</span>
+					</div>
+				)}
 			</DialogContent>
 		</Dialog>
 	);
