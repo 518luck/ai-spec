@@ -1,9 +1,34 @@
 import { NextResponse } from "next/server";
 
-import { withSession } from "@/server/middleware/with-session";
+import { withPersonal } from "@/server/middleware/with-personal";
+import prisma from "@/shared/db";
+import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+// 创建提示词草稿：校验入参后以 session.user.id 为 owner 写入 PromptDraft；API Key 接入需 promptDraft.write 权限
+export const POST = withPersonal(
+	async ({ req, session }) => {
+		const parsed = createDraftDtoSchema.safeParse(await req.json());
+		if (!parsed.success) {
+			throw parsed.error;
+		}
+		const { name, description, content, images } = parsed.data;
 
-// 创建提示词草稿：鉴权入口已就绪，业务逻辑待实现
-export const POST = withSession(async () => {
-	// TODO: 校验入参（name? / description? / content / images?），以 session.user.id 为 owner 写入 PromptDraft
-	return NextResponse.json({ message: "创建草稿接口尚未实现" }, { status: 501 });
-});
+		const draft = await prisma.promptDraft.create({
+			data: {
+				name: name || null,
+				description: description || null,
+				content,
+				images,
+				owner_id: session.user.id,
+			},
+			select: {
+				id: true,
+				name: true,
+				content: true,
+				updated_at: true,
+			},
+		});
+
+		return NextResponse.json(draft, { status: 201 });
+	},
+	{ permissions: ["promptDraft.write"] },
+);
