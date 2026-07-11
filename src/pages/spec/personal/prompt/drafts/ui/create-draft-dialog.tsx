@@ -364,10 +364,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 										{group.items.map((item) => (
 											<div
 												key={item.id}
-												// tool 组：光标在对应格式内时整行高亮
-												className={`flex items-center rounded-sm px-2 py-1.5 text-sm ${
-													group.type === "tool" && activeFormats.has(item.id) ? "bg-accent" : ""
-												}`}
+												className="flex items-center rounded-sm px-2 py-1.5 text-sm"
 											>
 												{/* 左侧复选框：统一加入/移出快捷栏 */}
 												<Checkbox
@@ -375,10 +372,17 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 													onCheckedChange={() => handleCheckboxToggle(item.id)}
 													className="mr-10 w-4 shrink-0"
 												/>
-												{/* 右侧文字区域：点击执行操作 */}
+												{/* 右侧文字区域：点击执行操作；tool 组光标在格式内时高亮，view 组设置开启时高亮 */}
 												<button
 													type="button"
-													className="flex flex-1 items-center"
+													className={`flex flex-1 items-center rounded-sm px-1 py-0.5 ${
+														group.type === "tool" && activeFormats.has(item.id)
+															? "bg-accent"
+															: group.type === "view" &&
+																	editorSettings[item.id as keyof typeof editorSettings]
+																? "bg-accent"
+																: ""
+													}`}
 													onClick={() => handleItemAction(group.type, item.id)}
 												>
 													<item.icon className="mr-2 size-4" />
