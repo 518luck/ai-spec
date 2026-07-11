@@ -6,6 +6,7 @@ import { languages } from "@codemirror/language-data";
 import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { type JSX, useMemo, useRef, useState } from "react";
 import { useSetState } from "react-use";
 import { toast } from "sonner";
@@ -152,6 +153,7 @@ const executeFormat = (view: ReactCodeMirrorRef | null, id: string): void => {
 // 创建草稿弹窗：全屏 CodeMirror 编辑器，顶部导航栏自动提取首行作为标题，关闭时有内容则自动保存
 export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps): JSX.Element {
 	const router = useRouter();
+	const { resolvedTheme } = useTheme();
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
 	const [content, setContent] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
@@ -277,6 +279,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 						onChange={setContent} // 内容变化时同步到 state
 						onUpdate={handleUpdate} // 选区/文档变化时重新解析活跃格式
 						extensions={extensions} // Markdown 语法支持（含首行标题放大装饰）
+						theme={resolvedTheme === "dark" ? "dark" : "light"} // 跟随应用明暗主题
 						placeholder="写下你的想法…" // 空内容时的占位文案
 						height="100%" // 编辑器内部滚动容器高度，设为 100% 由外层 div 的 flex-1 撑满
 						className="h-full text-sm" // h-full 让 CodeMirror 根元素也占满外层 div；text-sm 统一正文字号
