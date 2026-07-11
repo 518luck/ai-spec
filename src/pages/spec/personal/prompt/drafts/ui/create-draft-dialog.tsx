@@ -4,13 +4,14 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { syntaxTree } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
+import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { type JSX, useMemo, useRef, useState } from "react";
-import { useSetState } from "react-use";
+import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
+import { getCookie, setCookie } from "@/shared/lib/cookie/client-cookie";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -81,6 +82,9 @@ const MENU_GROUPS: readonly { type: "tool" | "view"; items: readonly MenuItem[] 
 		],
 	},
 ];
+
+// 编辑器视图设置默认值
+const defaultEditorSettings = { lineNumbers: false, foldGutter: false, highlightActiveLine: false };
 
 // 从语法树解析光标位置处于哪些格式内，返回活跃的工具 id 集合
 const resolveActiveFormats = (view: ReactCodeMirrorRef | null): Set<string> => {
@@ -161,12 +165,31 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [activeTools, setActiveTools] = useState<string[]>(["bold", "italic"]);
 	// 光标位置正在使用的格式 id 集合（用于高亮菜单项和胶囊按钮）
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
-	// 编辑器视图设置：用户可在「...」菜单中动态开关，useSetState 自动合并无需手动展开
-	const [editorSettings, setEditorSettings] = useSetState({
-		lineNumbers: false,
-		foldGutter: false,
-		highlightActiveLine: false,
-	});
+
+	// 编辑器视图设置：持久化到 cookie，和主题 cookie 统一管理方式
+	const [editorSettings, setEditorSettings] = useState(defaultEditorSettings);
+
+	// 挂载后从 cookie 读取用户上次的设置
+	useEffect(() => {
+		const raw = getCookie("ai-spec.editor-settings");
+		if (raw) {
+			try {
+				setEditorSettings({ ...defaultEditorSettings, ...JSON.parse(raw) });
+			} catch {
+				// cookie 解析失败时用默认值
+			}
+		}
+	}, []);
+
+	// 更新设置并写入 cookie
+	const updateEditorSettings = (settings: typeof defaultEditorSettings): void => {
+		setEditorSettings(settings);
+		setCookie("ai-spec.editor-settings", JSON.stringify(settings), {
+			path: "/",
+			maxAge: 31536000,
+			sameSite: "lax",
+		});
+	};
 
 	// Markdown 语法扩展（含代码块内语言高亮）+ 首行标题装饰，用 useMemo 缓存避免每次渲染重建
 	const extensions = useMemo(
@@ -207,12 +230,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		toggleTool(id);
 	};
 
-	// 点击右侧文字：tool → 执行 Markdown 格式化，view → 开关编辑器设置
+	// 点击右侧文字：tool → 执行 Markdown 格式化，view → 开关编辑器设置（持久化到 cookie）
 	const handleItemAction = (type: "tool" | "view", id: string): void => {
 		if (type === "tool") {
 			executeFormat(editorRef.current, id);
 		} else {
-			setEditorSettings({ [id]: !editorSettings[id as keyof typeof editorSettings] });
+			updateEditorSettings({
+				...editorSettings,
+				[id]: !editorSettings[id as keyof typeof editorSettings],
+			});
 		}
 	};
 
@@ -279,7 +305,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 						onChange={setContent} // 内容变化时同步到 state
 						onUpdate={handleUpdate} // 选区/文档变化时重新解析活跃格式
 						extensions={extensions} // Markdown 语法支持（含首行标题放大装饰）
-						theme={resolvedTheme === "dark" ? "dark" : "light"} // 跟随应用明暗主题
+						theme={resolvedTheme === "dark" ? githubDark : githubLight} // GitHub 主题，跟随应用明暗切换
 						placeholder="写下你的想法…" // 空内容时的占位文案
 						height="100%" // 编辑器内部滚动容器高度，设为 100% 由外层 div 的 flex-1 撑满
 						className="h-full text-sm" // h-full 让 CodeMirror 根元素也占满外层 div；text-sm 统一正文字号
