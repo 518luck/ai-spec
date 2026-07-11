@@ -1,17 +1,28 @@
 "use client";
 
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { syntaxTree } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
-import { Decoration, EditorView } from "@codemirror/view";
-import CodeMirror from "@uiw/react-codemirror";
+import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
+import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
-import { type JSX, useMemo, useState } from "react";
+import { type JSX, useMemo, useRef, useState } from "react";
+import { useSetState } from "react-use";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
-import { Icons } from "@/shared/ui/icons";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuGroup,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/shared/ui/dropdown-menu";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
+import { type Icon, Icons } from "@/shared/ui/icons";
 import "../styles/codemirror.css";
 
 type CreateDraftDialogProps = {
@@ -19,11 +30,141 @@ type CreateDraftDialogProps = {
 	onOpenChange: (open: boolean) => void;
 };
 
+// Lezer Markdown 节点名 → 工具 id 的映射，用于判断光标位置处于什么格式内
+const NODE_NAME_TO_TOOL_ID: Record<string, string> = {
+	StrongEmphasis: "bold",
+	Emphasis: "italic",
+	ATXHeading: "heading1",
+	Blockquote: "quote",
+	FencedCode: "code",
+	Link: "link",
+};
+
+// 菜单项类型：description 可选，有则显示问号提示
+type MenuItem = {
+	id: string;
+	label: string;
+	icon: Icon;
+	description?: string;
+};
+
+// 菜单分组：type 决定点击文字时的行为（tool → Markdown 格式化，view → 开关编辑器设置）
+const MENU_GROUPS: readonly { type: "tool" | "view"; items: readonly MenuItem[] }[] = [
+	{
+		type: "tool",
+		items: [
+			{ id: "bold", label: "加粗", icon: Icons.bold },
+			{ id: "italic", label: "斜体", icon: Icons.italic },
+			{ id: "heading1", label: "标题", icon: Icons.heading1 },
+			{ id: "quote", label: "引用", icon: Icons.quote },
+			{ id: "code", label: "代码", icon: Icons.code },
+			{ id: "link", label: "链接", icon: Icons.link },
+		],
+	},
+	{
+		type: "view",
+		items: [
+			{
+				id: "lineNumbers",
+				label: "行号",
+				icon: Icons.lineNumbers,
+				description: "在编辑器左侧显示行号编号",
+			},
+			{ id: "foldGutter", label: "折叠", icon: Icons.fold, description: "收起或展开代码区块" },
+			{
+				id: "highlightActiveLine",
+				label: "高亮",
+				icon: Icons.highlight,
+				description: "高亮显示光标所在行",
+			},
+		],
+	},
+];
+
+// 从语法树解析光标位置处于哪些格式内，返回活跃的工具 id 集合
+const resolveActiveFormats = (view: ReactCodeMirrorRef | null): Set<string> => {
+	if (!view?.state) return new Set();
+
+	const pos = view.state.selection.main.head;
+	const tree = syntaxTree(view.state);
+	const node = tree.resolveInner(pos);
+	const active = new Set<string>();
+
+	// 从光标处向上遍历语法树，收集所有匹配的格式节点
+	let current: typeof node | null = node;
+	while (current) {
+		const toolId = NODE_NAME_TO_TOOL_ID[current.name];
+		if (toolId) active.add(toolId);
+		current = current.parent;
+	}
+
+	return active;
+};
+
+// 在选区两端包裹 Markdown 格式标记（如 **粗体**），无选区时插入空标记并光标居中
+const wrapSelection = (view: ReactCodeMirrorRef | null, before: string, after = before): void => {
+	const v = view?.view;
+	if (!v) return;
+	const { from, to } = v.state.selection.main;
+	v.dispatch({
+		changes: { from, to, insert: before + v.state.sliceDoc(from, to) + after },
+		selection: { anchor: from + before.length, head: to + before.length },
+	});
+	v.focus();
+};
+
+// 在行首添加 Markdown 前缀（如 # 标题、> 引用）
+const prependLine = (view: ReactCodeMirrorRef | null, prefix: string): void => {
+	const v = view?.view;
+	if (!v) return;
+	const { from } = v.state.selection.main;
+	const line = v.state.doc.lineAt(from);
+	v.dispatch({
+		changes: { from: line.from, insert: prefix },
+	});
+	v.focus();
+};
+
+// 执行某个工具 id 对应的 Markdown 格式化操作
+const executeFormat = (view: ReactCodeMirrorRef | null, id: string): void => {
+	switch (id) {
+		case "bold":
+			wrapSelection(view, "**");
+			break;
+		case "italic":
+			wrapSelection(view, "*");
+			break;
+		case "code":
+			wrapSelection(view, "`");
+			break;
+		case "link":
+			wrapSelection(view, "[", "](url)");
+			break;
+		case "heading1":
+			prependLine(view, "# ");
+			break;
+		case "quote":
+			prependLine(view, "> ");
+			break;
+	}
+};
+
 // 创建草稿弹窗：全屏 CodeMirror 编辑器，顶部导航栏自动提取首行作为标题，关闭时有内容则自动保存
 export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps): JSX.Element {
 	const router = useRouter();
+	const editorRef = useRef<ReactCodeMirrorRef>(null);
 	const [content, setContent] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
+	// 当前在椭圆胶囊中显示的快捷操作 id 列表
+	const [activeTools, setActiveTools] = useState<string[]>(["bold", "italic"]);
+	// 光标位置正在使用的格式 id 集合（用于高亮菜单项和胶囊按钮）
+	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+	// 编辑器视图设置：用户可在「...」菜单中动态开关，useSetState 自动合并无需手动展开
+	const [editorSettings, setEditorSettings] = useSetState({
+		lineNumbers: false,
+		foldGutter: false,
+		highlightActiveLine: false,
+	});
 
 	// Markdown 语法扩展（含代码块内语言高亮）+ 首行标题装饰，用 useMemo 缓存避免每次渲染重建
 	const extensions = useMemo(
@@ -36,6 +177,42 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		],
 		[],
 	);
+
+	// 编辑器更新时重新解析光标位置的活跃格式
+	const handleUpdate = (viewUpdate: ViewUpdate): void => {
+		if (viewUpdate.docChanged || viewUpdate.selectionSet) {
+			setActiveFormats(resolveActiveFormats(editorRef.current));
+		}
+	};
+
+	// 切换某个快捷操作的显示/隐藏
+	const toggleTool = (id: string): void => {
+		setActiveTools((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
+	};
+
+	// 当前在椭圆胶囊中显示的操作项（保持配置顺序，带 type 信息供点击时区分行为）
+	const activeToolbarItems = MENU_GROUPS.flatMap((group) =>
+		group.items
+			.filter((item) => activeTools.includes(item.id))
+			.map((item) => ({ ...item, type: group.type })),
+	);
+
+	// 所有菜单项统一：Checkbox 是否勾选 = 是否在快捷栏
+	const isItemChecked = (id: string): boolean => activeTools.includes(id);
+
+	// 点击左侧复选框：统一加入/移出快捷栏
+	const handleCheckboxToggle = (id: string): void => {
+		toggleTool(id);
+	};
+
+	// 点击右侧文字：tool → 执行 Markdown 格式化，view → 开关编辑器设置
+	const handleItemAction = (type: "tool" | "view", id: string): void => {
+		if (type === "tool") {
+			executeFormat(editorRef.current, id);
+		} else {
+			setEditorSettings({ [id]: !editorSettings[id as keyof typeof editorSettings] });
+		}
+	};
 
 	// 从内容首行提取标题，为空时显示占位文案
 	const title = content.split("\n")[0]?.trim() || "无标题草稿";
@@ -95,17 +272,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 				{/* 编辑器区域：占满整个弹窗（含导航栏下方区域），CodeMirror 内部 scroller 自行滚动 */}
 				<div className="min-h-0 flex-1 overflow-hidden">
 					<CodeMirror
+						ref={editorRef}
 						value={content} // 编辑器内容（受控值，绑定 React state）
 						onChange={setContent} // 内容变化时同步到 state
+						onUpdate={handleUpdate} // 选区/文档变化时重新解析活跃格式
 						extensions={extensions} // Markdown 语法支持（含首行标题放大装饰）
 						placeholder="写下你的想法…" // 空内容时的占位文案
 						height="100%" // 编辑器内部滚动容器高度，设为 100% 由外层 div 的 flex-1 撑满
 						className="h-full text-sm" // h-full 让 CodeMirror 根元素也占满外层 div；text-sm 统一正文字号
-						basicSetup={{
-							lineNumbers: false, // 关闭行号（草稿不是代码，不需要 1 2 3 编号）
-							foldGutter: false, // 关闭代码折叠（草稿一般不长，不需要收起区块）
-							highlightActiveLine: false, // 关闭当前行背景高亮（写笔记时变色会分散注意力）
-						}}
+						basicSetup={editorSettings}
 					/>
 				</div>
 
@@ -114,14 +289,84 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 					<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
 					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
 
-					{/* 操作栏：快捷操作（椭圆胶囊）+ 放大 + 更多操作 */}
+					{/* 操作栏：快捷操作（椭圆胶囊）+ 更多操作 + 放大 */}
 					<div className="ml-auto flex items-center gap-2">
-						{/* 快捷操作工具栏：不透明椭圆背景 */}
-						<div className="flex items-center gap-0.5 rounded-full bg-muted p-0.5" />
+						{/* 快捷操作工具栏：不透明椭圆背景，内容由 activeToolbarItems 动态渲染；光标在对应格式内时按钮高亮 */}
+						{activeToolbarItems.length > 0 && (
+							<div className="flex items-center gap-0.5 rounded-full bg-muted p-0.5">
+								{activeToolbarItems.map((item) => (
+									<Button
+										key={item.id}
+										variant="ghost"
+										size="icon-sm"
+										aria-label={item.label}
+										className={activeFormats.has(item.id) ? "bg-background text-foreground" : ""}
+										onClick={() => handleItemAction(item.type, item.id)}
+									>
+										<item.icon className="size-4" />
+									</Button>
+								))}
+							</div>
+						)}
 
-						<Button variant="ghost" size="icon-sm" aria-label="更多操作">
-							<Icons.more className="size-4" />
-						</Button>
+						{/* 更多操作：下拉面板，Checkbox 控制是否加入快捷栏，点击文字执行对应操作 */}
+						<DropdownMenu>
+							<DropdownMenuTrigger
+								render={
+									<Button variant="ghost" size="icon-sm" aria-label="更多操作">
+										<Icons.more className="size-4" />
+									</Button>
+								}
+							/>
+							<DropdownMenuContent align="end" className="min-w-48">
+								{/* 表头：说明 Checkbox 列的含义 */}
+								<div className="flex items-center px-2 py-1.5">
+									<span className="mr-4 flex shrink-0 items-center text-muted-foreground text-xs">
+										显示
+										<HelpTooltip content="勾选后将该操作加入顶部快捷栏" />
+									</span>
+									<span className="flex-1 text-muted-foreground text-xs">操作</span>
+								</div>
+								<DropdownMenuSeparator />
+								{MENU_GROUPS.map((group, groupIndex) => (
+									<DropdownMenuGroup key={group.type}>
+										{/* 组与组之间插入分隔线 */}
+										{groupIndex > 0 && <DropdownMenuSeparator />}
+										{group.items.map((item) => (
+											<div
+												key={item.id}
+												// tool 组：光标在对应格式内时整行高亮
+												className={`flex items-center rounded-sm px-2 py-1.5 text-sm ${
+													group.type === "tool" && activeFormats.has(item.id) ? "bg-accent" : ""
+												}`}
+											>
+												{/* 左侧复选框：统一加入/移出快捷栏 */}
+												<Checkbox
+													checked={isItemChecked(item.id)}
+													onCheckedChange={() => handleCheckboxToggle(item.id)}
+													className="mr-10 w-4 shrink-0"
+												/>
+												{/* 右侧文字区域：点击执行操作 */}
+												<button
+													type="button"
+													className="flex flex-1 items-center"
+													onClick={() => handleItemAction(group.type, item.id)}
+												>
+													<item.icon className="mr-2 size-4" />
+													{item.label}
+													{item.description && (
+														<span className="ml-1.5">
+															<HelpTooltip content={item.description} />
+														</span>
+													)}
+												</button>
+											</div>
+										))}
+									</DropdownMenuGroup>
+								))}
+							</DropdownMenuContent>
+						</DropdownMenu>
+
 						<Button variant="ghost" size="icon-sm" aria-label="放大">
 							<Icons.expand className="size-4" />
 						</Button>
