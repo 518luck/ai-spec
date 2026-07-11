@@ -21,7 +21,7 @@ export const NODE_NAME_TO_TOOL_ID: Record<string, ToolId> = {
 	Link: "link",
 };
 
-// 编辑器主题配置：每个主题提供亮色和暗色变体及背景色，跟随应用 resolvedTheme 切换
+// 编辑器主题配置：每个主题提供亮色和暗色变体、背景色及快捷栏背景色，跟随应用 resolvedTheme 切换
 export const EDITOR_THEMES = [
 	{
 		id: "github",
@@ -30,6 +30,8 @@ export const EDITOR_THEMES = [
 		dark: githubDark,
 		lightBg: "#ffffff",
 		darkBg: "#0d1117",
+		lightToolbarBg: "#e8e8e8",
+		darkToolbarBg: "#21262d",
 	},
 	{
 		id: "vscode",
@@ -38,6 +40,8 @@ export const EDITOR_THEMES = [
 		dark: vscodeDark,
 		lightBg: "#ffffff",
 		darkBg: "#1e1e1e",
+		lightToolbarBg: "#e8e8e8",
+		darkToolbarBg: "#2d2d2d",
 	},
 	{
 		id: "xcode",
@@ -46,6 +50,8 @@ export const EDITOR_THEMES = [
 		dark: xcodeDark,
 		lightBg: "#ffffff",
 		darkBg: "#292A30",
+		lightToolbarBg: "#e8e8e8",
+		darkToolbarBg: "#3a3b3f",
 	},
 	{
 		id: "material",
@@ -54,6 +60,8 @@ export const EDITOR_THEMES = [
 		dark: materialDark,
 		lightBg: "#FAFAFA",
 		darkBg: "#2e3235",
+		lightToolbarBg: "#ececec",
+		darkToolbarBg: "#3a3f44",
 	},
 	{
 		id: "solarized",
@@ -62,6 +70,8 @@ export const EDITOR_THEMES = [
 		dark: solarizedDark,
 		lightBg: "#FDF6E3",
 		darkBg: "#002B36",
+		lightToolbarBg: "#eee8d5",
+		darkToolbarBg: "#073642",
 	},
 	{
 		id: "duotone",
@@ -70,6 +80,8 @@ export const EDITOR_THEMES = [
 		dark: duotoneDark,
 		lightBg: "#faf8f5",
 		darkBg: "#2a2734",
+		lightToolbarBg: "#ede9e0",
+		darkToolbarBg: "#363342",
 	},
 	{
 		id: "basic",
@@ -78,6 +90,8 @@ export const EDITOR_THEMES = [
 		dark: basicDark,
 		lightBg: "#ffffff",
 		darkBg: "#2E3235",
+		lightToolbarBg: "#e8e8e8",
+		darkToolbarBg: "#3a3f44",
 	},
 ] as const;
 

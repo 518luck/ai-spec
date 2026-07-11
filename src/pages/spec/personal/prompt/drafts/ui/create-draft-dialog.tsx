@@ -118,6 +118,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const isDark = resolvedTheme === "dark";
 	const editorTheme = isDark ? currentTheme.dark : currentTheme.light;
 	const editorBgColor = isDark ? currentTheme.darkBg : currentTheme.lightBg;
+	const toolbarBgColor = isDark ? currentTheme.darkToolbarBg : currentTheme.lightToolbarBg;
 
 	// Markdown 语法扩展（含代码块内语言高亮）+ 首行标题装饰，用 useMemo 缓存避免每次渲染重建
 	const extensions = useMemo(
@@ -253,19 +254,33 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 					<div className="ml-auto flex items-center gap-2">
 						{/* 快捷操作工具栏：不透明椭圆背景，内容由 activeToolbarItems 动态渲染；光标在对应格式内时按钮高亮 */}
 						{activeToolbarItems.length > 0 && (
-							<div className="flex items-center gap-0.5 rounded-full bg-muted p-0.5">
-								{activeToolbarItems.map((item) => (
-									<Button
-										key={item.id}
-										variant="ghost"
-										size="icon-sm"
-										aria-label={item.label}
-										className={activeFormats.has(item.id) ? "bg-background text-foreground" : ""}
-										onClick={() => handleItemAction(item.type, item.id)}
-									>
-										<item.icon className="size-4" />
-									</Button>
-								))}
+							<div
+								className="flex items-center gap-0.5 rounded-full p-0.5"
+								style={{ backgroundColor: toolbarBgColor }}
+							>
+								{activeToolbarItems.map((item) => {
+									// tool 组：光标在对应格式内时高亮；view 组：设置开启时高亮
+									const isActive =
+										item.type === "tool"
+											? activeFormats.has(item.id)
+											: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
+									return (
+										<Button
+											key={item.id}
+											variant="ghost"
+											size="icon-sm"
+											aria-label={item.label}
+											className={`rounded-full ${
+												isActive
+													? "bg-primary/15! text-primary hover:bg-primary/25"
+													: "hover:bg-foreground/20!"
+											}`}
+											onClick={() => handleItemAction(item.type, item.id)}
+										>
+											<item.icon className="size-4" />
+										</Button>
+									);
+								})}
 							</div>
 						)}
 
