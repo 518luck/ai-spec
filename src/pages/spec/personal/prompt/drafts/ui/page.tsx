@@ -4,7 +4,7 @@ import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { ToolbarPageShell } from "@/widgets/page-shell";
-import { DEFAULT_SORT, PAGE_SIZE } from "../config/constants";
+import { DEFAULT_SORT, PAGE_SIZE } from "../config/draft-list";
 import { CreateDraftButton } from "./create-draft-button";
 import { type DraftItem, DraftsEmptyState, DraftsGrid } from "./drafts-grid";
 

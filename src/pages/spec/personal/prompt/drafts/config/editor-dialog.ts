@@ -1,0 +1,186 @@
+import { basicDark, basicLight } from "@uiw/codemirror-theme-basic";
+import { duotoneDark, duotoneLight } from "@uiw/codemirror-theme-duotone";
+import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
+import { materialDark, materialLight } from "@uiw/codemirror-theme-material";
+import { solarizedDark, solarizedLight } from "@uiw/codemirror-theme-solarized";
+import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
+import { xcodeDark, xcodeLight } from "@uiw/codemirror-theme-xcode";
+
+import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+
+import type { Icon } from "@/shared/ui/icons";
+import { Icons } from "@/shared/ui/icons";
+
+// Lezer Markdown 节点名 → 工具 id 的映射，用于判断光标位置处于什么格式内
+export const NODE_NAME_TO_TOOL_ID: Record<string, ToolId> = {
+	StrongEmphasis: "bold",
+	Emphasis: "italic",
+	ATXHeading: "heading1",
+	Blockquote: "quote",
+	FencedCode: "code",
+	Link: "link",
+};
+
+// 编辑器主题配置：每个主题提供亮色和暗色变体及背景色，跟随应用 resolvedTheme 切换
+export const EDITOR_THEMES = [
+	{
+		id: "github",
+		label: "GitHub",
+		light: githubLight,
+		dark: githubDark,
+		lightBg: "#ffffff",
+		darkBg: "#0d1117",
+	},
+	{
+		id: "vscode",
+		label: "VS Code",
+		light: vscodeLight,
+		dark: vscodeDark,
+		lightBg: "#ffffff",
+		darkBg: "#1e1e1e",
+	},
+	{
+		id: "xcode",
+		label: "Xcode",
+		light: xcodeLight,
+		dark: xcodeDark,
+		lightBg: "#ffffff",
+		darkBg: "#292A30",
+	},
+	{
+		id: "material",
+		label: "Material",
+		light: materialLight,
+		dark: materialDark,
+		lightBg: "#FAFAFA",
+		darkBg: "#2e3235",
+	},
+	{
+		id: "solarized",
+		label: "Solarized",
+		light: solarizedLight,
+		dark: solarizedDark,
+		lightBg: "#FDF6E3",
+		darkBg: "#002B36",
+	},
+	{
+		id: "duotone",
+		label: "Duotone",
+		light: duotoneLight,
+		dark: duotoneDark,
+		lightBg: "#faf8f5",
+		darkBg: "#2a2734",
+	},
+	{
+		id: "basic",
+		label: "Basic",
+		light: basicLight,
+		dark: basicDark,
+		lightBg: "#ffffff",
+		darkBg: "#2E3235",
+	},
+] as const;
+
+// 菜单项类型：description 可选，有则显示问号提示
+export type MenuItem = {
+	id: string;
+	label: string;
+	icon: Icon;
+	description?: string;
+};
+
+// 快捷操作工具 id 联合类型：MENU_GROUPS 和 executeFormat 共同受此约束，防止拼写不一致
+export const TOOL_IDS = ["bold", "italic", "heading1", "quote", "code", "link"] as const;
+export type ToolId = (typeof TOOL_IDS)[number];
+
+// 菜单分组：type 决定点击文字时的行为（tool → Markdown 格式化，view → 开关编辑器设置）
+export const MENU_GROUPS: readonly { type: "tool" | "view"; items: readonly MenuItem[] }[] = [
+	{
+		type: "tool",
+		items: [
+			{ id: "bold", label: "加粗", icon: Icons.bold },
+			{ id: "italic", label: "斜体", icon: Icons.italic },
+			{ id: "heading1", label: "标题", icon: Icons.heading1 },
+			{ id: "quote", label: "引用", icon: Icons.quote },
+			{ id: "code", label: "代码", icon: Icons.code },
+			{ id: "link", label: "链接", icon: Icons.link },
+		],
+	},
+	{
+		type: "view",
+		items: [
+			{
+				id: "lineNumbers",
+				label: "行号",
+				icon: Icons.lineNumbers,
+				description: "在编辑器左侧显示行号编号",
+			},
+			{ id: "foldGutter", label: "折叠", icon: Icons.fold, description: "收起或展开代码区块" },
+			{
+				id: "highlightActiveLine",
+				label: "高亮",
+				icon: Icons.highlight,
+				description: "高亮显示光标所在行",
+			},
+		],
+	},
+];
+
+// 编辑器视图设置默认值
+export const defaultEditorSettings = {
+	lineNumbers: false,
+	foldGutter: false,
+	highlightActiveLine: false,
+};
+
+// 在选区两端包裹 Markdown 格式标记（如 **粗体**），无选区时插入空标记并光标居中
+export const wrapSelection = (
+	view: ReactCodeMirrorRef | null,
+	before: string,
+	after = before,
+): void => {
+	const v = view?.view;
+	if (!v) return;
+	const { from, to } = v.state.selection.main;
+	v.dispatch({
+		changes: { from, to, insert: before + v.state.sliceDoc(from, to) + after },
+		selection: { anchor: from + before.length, head: to + before.length },
+	});
+	v.focus();
+};
+
+// 在行首添加 Markdown 前缀（如 # 标题、> 引用）
+export const prependLine = (view: ReactCodeMirrorRef | null, prefix: string): void => {
+	const v = view?.view;
+	if (!v) return;
+	const { from } = v.state.selection.main;
+	const line = v.state.doc.lineAt(from);
+	v.dispatch({
+		changes: { from: line.from, insert: prefix },
+	});
+	v.focus();
+};
+
+// 执行某个工具 id 对应的 Markdown 格式化操作
+export const executeFormat = (view: ReactCodeMirrorRef | null, id: ToolId): void => {
+	switch (id) {
+		case "bold":
+			wrapSelection(view, "**");
+			break;
+		case "italic":
+			wrapSelection(view, "*");
+			break;
+		case "code":
+			wrapSelection(view, "`");
+			break;
+		case "link":
+			wrapSelection(view, "[", "](url)");
+			break;
+		case "heading1":
+			prependLine(view, "# ");
+			break;
+		case "quote":
+			prependLine(view, "> ");
+			break;
+	}
+};

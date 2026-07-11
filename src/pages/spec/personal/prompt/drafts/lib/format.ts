@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import "dayjs/locale/zh-cn";
 import relativeTime from "dayjs/plugin/relativeTime";
 
-import { FALLBACK_TITLE_LENGTH, PREVIEW_MAX_LINES } from "../config/constants";
+import { FALLBACK_TITLE_LENGTH, PREVIEW_MAX_LINES } from "../config/draft-list";
 
 // 初始化 dayjs 中文相对时间插件，仅执行一次
 dayjs.extend(relativeTime);
