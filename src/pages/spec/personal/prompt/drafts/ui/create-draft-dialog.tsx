@@ -71,49 +71,76 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
 	const [content, setContent] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
-	// 当前在椭圆胶囊中显示的快捷操作 id 列表
-	const [activeTools, setActiveTools] = useState<string[]>(["bold", "italic"]);
-	// 光标位置正在使用的格式 id 集合（用于高亮菜单项和胶囊按钮）
-	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
-	// 弹窗是否放大：放大时占满更大尺寸，再点缩小回去
-	const [isExpanded, setIsExpanded] = useState(false);
 
-	// 编辑器视图设置：持久化到 cookie，和主题 cookie 统一管理方式
+	// 编辑器偏好默认值：快捷栏操作、视图设置、主题
+	const defaultToolbar = ["bold", "italic"];
+	const defaultThemeId = "vscode";
+
+	// 编辑器偏好：持久化到单个 cookie（ai-spec.editor-preferences）
+	const [activeTools, setActiveTools] = useState<string[]>(defaultToolbar);
 	const [editorSettings, setEditorSettings] = useState(defaultEditorSettings);
+	const [editorThemeId, setEditorThemeId] = useState(defaultThemeId);
 
-	// 挂载后从 cookie 读取用户上次的设置
+	// 挂载后从 cookie 读取全部偏好
 	useEffect(() => {
-		const raw = getCookie("ai-spec.editor-settings");
-		if (raw) {
-			try {
-				setEditorSettings({ ...defaultEditorSettings, ...JSON.parse(raw) });
-			} catch {
-				// cookie 解析失败时用默认值
-			}
+		const raw = getCookie("ai-spec.editor-preferences");
+		if (!raw) return;
+		try {
+			const prefs = JSON.parse(raw) as {
+				toolbar?: string[];
+				settings?: typeof defaultEditorSettings;
+				theme?: string;
+			};
+			if (Array.isArray(prefs.toolbar)) setActiveTools(prefs.toolbar);
+			if (prefs.settings) setEditorSettings({ ...defaultEditorSettings, ...prefs.settings });
+			if (prefs.theme) setEditorThemeId(prefs.theme);
+		} catch {
+			// cookie 解析失败时用默认值
 		}
 	}, []);
 
-	// 更新设置并写入 cookie
-	const updateEditorSettings = (settings: typeof defaultEditorSettings): void => {
-		setEditorSettings(settings);
-		setCookie("ai-spec.editor-settings", JSON.stringify(settings), {
+	// 把当前全部偏好写入 cookie
+	const savePreferences = (overrides: {
+		toolbar?: string[];
+		settings?: typeof defaultEditorSettings;
+		theme?: string;
+	}): void => {
+		const prefs = {
+			toolbar: overrides.toolbar ?? activeTools,
+			settings: overrides.settings ?? editorSettings,
+			theme: overrides.theme ?? editorThemeId,
+		};
+		setCookie("ai-spec.editor-preferences", JSON.stringify(prefs), {
 			path: "/",
 			maxAge: 31536000,
 			sameSite: "lax",
 		});
 	};
 
-	// 编辑器主题：持久化到 cookie，跟随应用明暗切换亮/暗变体
-	const [editorThemeId, setEditorThemeId] = useState("vscode");
+	// 切换某个快捷操作的显示/隐藏，同时持久化
+	const toggleTool = (id: string): void => {
+		setActiveTools((prev) => {
+			const next = prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id];
+			savePreferences({ toolbar: next });
+			return next;
+		});
+	};
 
-	useEffect(() => {
-		const saved = getCookie("ai-spec.editor-theme");
-		if (saved) setEditorThemeId(saved);
-	}, []);
+	// 光标位置正在使用的格式 id 集合（用于高亮菜单项和胶囊按钮）
+	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+	// 弹窗是否放大：放大时占满更大尺寸，再点缩小回去
+	const [isExpanded, setIsExpanded] = useState(false);
 
+	// 更新视图设置并持久化
+	const updateEditorSettings = (settings: typeof defaultEditorSettings): void => {
+		setEditorSettings(settings);
+		savePreferences({ settings });
+	};
+
+	// 切换编辑器主题并持久化
 	const handleThemeChange = (id: string): void => {
 		setEditorThemeId(id);
-		setCookie("ai-spec.editor-theme", id, { path: "/", maxAge: 31536000, sameSite: "lax" });
+		savePreferences({ theme: id });
 	};
 
 	// 当前生效的主题变体（亮色或暗色）及背景色
@@ -140,11 +167,6 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		if (viewUpdate.docChanged || viewUpdate.selectionSet) {
 			setActiveFormats(resolveActiveFormats(editorRef.current));
 		}
-	};
-
-	// 切换某个快捷操作的显示/隐藏
-	const toggleTool = (id: string): void => {
-		setActiveTools((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 	};
 
 	// 当前在椭圆胶囊中显示的操作项（保持配置顺序，带 type 信息供点击时区分行为）
