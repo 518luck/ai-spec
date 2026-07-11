@@ -4,7 +4,13 @@ import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { syntaxTree } from "@codemirror/language";
 import { languages } from "@codemirror/language-data";
 import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
+import { basicDark, basicLight } from "@uiw/codemirror-theme-basic";
+import { duotoneDark, duotoneLight } from "@uiw/codemirror-theme-duotone";
 import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
+import { materialDark, materialLight } from "@uiw/codemirror-theme-material";
+import { solarizedDark, solarizedLight } from "@uiw/codemirror-theme-solarized";
+import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
+import { xcodeDark, xcodeLight } from "@uiw/codemirror-theme-xcode";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -20,7 +26,11 @@ import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuGroup,
+	DropdownMenuItem,
 	DropdownMenuSeparator,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
@@ -41,6 +51,66 @@ const NODE_NAME_TO_TOOL_ID: Record<string, string> = {
 	FencedCode: "code",
 	Link: "link",
 };
+
+// 编辑器主题配置：每个主题提供亮色和暗色变体及背景色，跟随应用 resolvedTheme 切换
+const EDITOR_THEMES = [
+	{
+		id: "github",
+		label: "GitHub",
+		light: githubLight,
+		dark: githubDark,
+		lightBg: "#ffffff",
+		darkBg: "#0d1117",
+	},
+	{
+		id: "vscode",
+		label: "VS Code",
+		light: vscodeLight,
+		dark: vscodeDark,
+		lightBg: "#ffffff",
+		darkBg: "#1e1e1e",
+	},
+	{
+		id: "xcode",
+		label: "Xcode",
+		light: xcodeLight,
+		dark: xcodeDark,
+		lightBg: "#ffffff",
+		darkBg: "#292A30",
+	},
+	{
+		id: "material",
+		label: "Material",
+		light: materialLight,
+		dark: materialDark,
+		lightBg: "#FAFAFA",
+		darkBg: "#2e3235",
+	},
+	{
+		id: "solarized",
+		label: "Solarized",
+		light: solarizedLight,
+		dark: solarizedDark,
+		lightBg: "#FDF6E3",
+		darkBg: "#002B36",
+	},
+	{
+		id: "duotone",
+		label: "Duotone",
+		light: duotoneLight,
+		dark: duotoneDark,
+		lightBg: "#faf8f5",
+		darkBg: "#2a2734",
+	},
+	{
+		id: "basic",
+		label: "Basic",
+		light: basicLight,
+		dark: basicDark,
+		lightBg: "#ffffff",
+		darkBg: "#2E3235",
+	},
+] as const;
 
 // 菜单项类型：description 可选，有则显示问号提示
 type MenuItem = {
@@ -191,6 +261,25 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		});
 	};
 
+	// 编辑器主题：持久化到 cookie，跟随应用明暗切换亮/暗变体
+	const [editorThemeId, setEditorThemeId] = useState("vscode");
+
+	useEffect(() => {
+		const saved = getCookie("ai-spec.editor-theme");
+		if (saved) setEditorThemeId(saved);
+	}, []);
+
+	const handleThemeChange = (id: string): void => {
+		setEditorThemeId(id);
+		setCookie("ai-spec.editor-theme", id, { path: "/", maxAge: 31536000, sameSite: "lax" });
+	};
+
+	// 当前生效的主题变体（亮色或暗色）及背景色
+	const currentTheme = EDITOR_THEMES.find((t) => t.id === editorThemeId) ?? EDITOR_THEMES[0];
+	const isDark = resolvedTheme === "dark";
+	const editorTheme = isDark ? currentTheme.dark : currentTheme.light;
+	const editorBgColor = isDark ? currentTheme.darkBg : currentTheme.lightBg;
+
 	// Markdown 语法扩展（含代码块内语言高亮）+ 首行标题装饰，用 useMemo 缓存避免每次渲染重建
 	const extensions = useMemo(
 		() => [
@@ -305,7 +394,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 						onChange={setContent} // 内容变化时同步到 state
 						onUpdate={handleUpdate} // 选区/文档变化时重新解析活跃格式
 						extensions={extensions} // Markdown 语法支持（含首行标题放大装饰）
-						theme={resolvedTheme === "dark" ? githubDark : githubLight} // GitHub 主题，跟随应用明暗切换
+						theme={editorTheme} // 编辑器主题，跟随应用明暗切换亮/暗变体
 						placeholder="写下你的想法…" // 空内容时的占位文案
 						height="100%" // 编辑器内部滚动容器高度，设为 100% 由外层 div 的 flex-1 撑满
 						className="h-full text-sm" // h-full 让 CodeMirror 根元素也占满外层 div；text-sm 统一正文字号
@@ -314,7 +403,10 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 				</div>
 
 				{/* 顶部导航栏：标题（左）+ 操作栏（右），浮在编辑器上方，半透明毛玻璃 */}
-				<div className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border border-b bg-linear-to-b from-popover to-popover/10 px-4 backdrop-blur-[1.5px]">
+				<div
+					className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 border-b px-4 backdrop-blur-[1.5px]"
+					style={{ background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` }}
+				>
 					<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
 					{isSaving && <span className="text-muted-foreground text-xs">保存中...</span>}
 
@@ -397,6 +489,24 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 										))}
 									</DropdownMenuGroup>
 								))}
+								{/* 主题选择：子菜单，点击展开主题列表 */}
+								<DropdownMenuSeparator />
+								<DropdownMenuGroup>
+									<DropdownMenuSub>
+										<DropdownMenuSubTrigger>主题</DropdownMenuSubTrigger>
+										<DropdownMenuSubContent>
+											{EDITOR_THEMES.map((theme) => (
+												<DropdownMenuItem
+													key={theme.id}
+													onClick={() => handleThemeChange(theme.id)}
+												>
+													{theme.label}
+													{theme.id === editorThemeId && <Icons.check className="ml-auto size-4" />}
+												</DropdownMenuItem>
+											))}
+										</DropdownMenuSubContent>
+									</DropdownMenuSub>
+								</DropdownMenuGroup>
 							</DropdownMenuContent>
 						</DropdownMenu>
 
