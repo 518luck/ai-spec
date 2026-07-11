@@ -63,7 +63,7 @@ export function ToolbarPageShell({
 			</div>
 
 			{/* 内容区：可滚动，由 PageWidthWrapper 限制最大宽度并居中 */}
-			<PageWidthWrapper>{children}</PageWidthWrapper>
+			<PageWidthWrapper border={false}>{children}</PageWidthWrapper>
 		</div>
 	);
 }
