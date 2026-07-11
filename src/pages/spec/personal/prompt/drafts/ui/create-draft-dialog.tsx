@@ -347,7 +347,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 									</Button>
 								}
 							/>
-							<DropdownMenuContent align="end" className="min-w-48">
+							<DropdownMenuContent align="start" className="min-w-45">
 								{/* 表头：说明 Checkbox 列的含义 */}
 								<div className="flex items-center px-2 py-1.5">
 									<span className="mr-4 flex shrink-0 items-center text-muted-foreground text-xs">
@@ -370,12 +370,12 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 												<Checkbox
 													checked={isItemChecked(item.id)}
 													onCheckedChange={() => handleCheckboxToggle(item.id)}
-													className="mr-10 w-4 shrink-0"
+													className="mr-10 w-4 shrink-0 cursor-pointer"
 												/>
 												{/* 右侧文字区域：点击执行操作；tool 组光标在格式内时高亮，view 组设置开启时高亮 */}
 												<button
 													type="button"
-													className={`flex flex-1 items-center rounded-sm px-1 py-0.5 ${
+													className={`flex flex-1 cursor-pointer items-center rounded-sm px-1 py-0.5 ${
 														group.type === "tool" && activeFormats.has(item.id)
 															? "bg-accent"
 															: group.type === "view" &&
