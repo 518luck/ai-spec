@@ -76,13 +76,22 @@ export function EditorToolbar({
 			className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 border-b px-4 backdrop-blur-[1.5px]"
 			style={{ background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` }}
 		>
-			<span className="max-w-[20%] truncate font-semibold text-base">{title}</span>
+			{/* 标题 */}
+			<span
+				className={`truncate font-semibold text-base ${isExpanded ? "max-w-[40%]" : "max-w-[20%]"}`}
+			>
+				{title}
+			</span>
 
 			<div className="ml-auto flex items-center gap-2">
-				{/* 快捷操作工具栏：椭圆背景，max-w-76 自动触发横向滚动 */}
+				{/* 快捷操作工具栏：椭圆背景，放大时不限宽度 */}
 				{activeToolbarItems.length > 0 && (
 					<div className="rounded-full p-0.5" style={{ backgroundColor: toolbarBgColor }}>
-						<ScrollArea orientation="horizontal" className="max-w-76" scrollbarClassName="mx-2">
+						<ScrollArea
+							orientation="horizontal"
+							className={isExpanded ? "" : "max-w-76"}
+							scrollbarClassName="mx-2"
+						>
 							<div className="flex items-center gap-0.5">
 								{activeToolbarItems.map((item) => {
 									const isActive =
