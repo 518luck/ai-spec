@@ -97,7 +97,7 @@ export function EditorToolbar({
 						<ScrollArea
 							orientation="horizontal"
 							className={isExpanded ? "" : "max-w-76"}
-							scrollbarClassName="mx-2"
+							scrollbarClassName="mx-4"
 						>
 							<div className="flex items-center gap-0.5">
 								<AnimatePresence mode="sync">
