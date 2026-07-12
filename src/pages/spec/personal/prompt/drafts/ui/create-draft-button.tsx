@@ -16,7 +16,7 @@ export function CreateDraftButton(): JSX.Element {
 		<>
 			<Button size="sm" variant="outline" onClick={() => setOpen(true)} className="gap-2">
 				新建草稿
-				<Kbd className="-translate-y-px">C</Kbd>
+				<Kbd alignWithText>C</Kbd>
 			</Button>
 			<CreateDraftDialog open={open} onOpenChange={setOpen} />
 		</>

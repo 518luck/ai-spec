@@ -227,7 +227,7 @@ export function KeyForm({
 													<span className="whitespace-nowrap font-medium text-sm">
 														{resource.name}
 													</span>
-													<HelpTooltip content={resource.description} />
+													<HelpTooltip alignWithText content={resource.description} />
 												</div>
 												<RadioGroup
 													value={matrix[resource.key]}

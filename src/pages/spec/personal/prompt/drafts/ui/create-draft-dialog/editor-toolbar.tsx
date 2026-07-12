@@ -233,9 +233,9 @@ export function EditorToolbar({
 					<DropdownMenuContent align="start" className="min-w-45">
 						{/* 表头：说明 Checkbox 列的含义 */}
 						<div className="flex items-center px-2 py-1.5">
-							<span className="mr-4 flex shrink-0 items-center text-muted-foreground text-xs">
+							<span className="mr-4 flex shrink-0 items-center gap-1 text-muted-foreground text-xs">
 								显示
-								<HelpTooltip content="勾选后将该操作加入顶部快捷栏" />
+								<HelpTooltip alignWithText content="勾选后将该操作加入顶部快捷栏" />
 							</span>
 							<span className="flex-1 text-muted-foreground text-xs">操作</span>
 						</div>

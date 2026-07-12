@@ -62,7 +62,7 @@ function KeysPageHeader(): JSX.Element {
 		<div className="flex w-full items-center justify-between">
 			<div className="flex items-center gap-1.5">
 				<h1 className="font-semibold text-lg">API 密钥</h1>
-				<HelpTooltip content="生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。" />
+				<HelpTooltip alignWithText content="生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。" />
 			</div>
 			<CreateKeyButton />
 		</div>
