@@ -1,4 +1,5 @@
 "use client";
+// # 草稿创建弹窗 —— CodeMirror 编辑器 + 预览，偏好持久化到 cookie
 
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { syntaxTree } from "@codemirror/language";
@@ -12,7 +13,11 @@ import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { getCookie, setCookie } from "@/shared/lib/cookie/client-cookie";
-import { COOKIE_DEFAULTS, EDITOR_PREFERENCES_COOKIE, type EditorPreferencesCookie } from "@/shared/lib/cookie/cookies";
+import {
+	COOKIE_DEFAULTS,
+	EDITOR_PREFERENCES_COOKIE,
+	type EditorPreferencesCookie,
+} from "@/shared/lib/cookie/cookies";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
@@ -52,11 +57,13 @@ const resolveActiveFormats = (view: ReactCodeMirrorRef | null): Set<string> => {
 	return active;
 };
 
-// 创建草稿弹窗：CodeMirror 编辑器 + react-markdown 预览，顶部导航栏自动提取首行作为标题，关闭时有内容则自动保存
 export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps): JSX.Element {
 	const router = useRouter();
 	const { resolvedTheme } = useTheme();
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
+
+	// @ 状态定义
+
 	const [content, setContent] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
 	const [isPreview, setIsPreview] = useState(false);
@@ -65,14 +72,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const defaultToolbar = ["bold", "italic"];
 	const defaultThemeId = "vscode";
 
-	// 编辑器偏好：持久化到单个 cookie（ai-spec.editor-preferences）
+	// > 偏好状态：持久化到单个 cookie（ai-spec.editor-preferences），刷新后恢复
 	const [activeTools, setActiveTools] = useState<string[]>(defaultToolbar);
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 	const [editorSettings, setEditorSettings] = useState(defaultEditorSettings);
 	const [editorThemeId, setEditorThemeId] = useState(defaultThemeId);
 	const [isExpanded, setIsExpanded] = useState(false);
 
-	// 挂载后从 cookie 读取全部偏好
+	// @ 副作用：挂载后从 cookie 读取全部偏好
+
 	useEffect(() => {
 		const raw = getCookie(EDITOR_PREFERENCES_COOKIE);
 		if (!raw) return;
@@ -85,6 +93,8 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			// cookie 解析失败时用默认值
 		}
 	}, []);
+
+	// @ 偏好持久化方法
 
 	// 把当前全部偏好写入 cookie
 	const savePreferences = (overrides: EditorPreferencesCookie): void => {
@@ -120,12 +130,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		savePreferences({ theme: id });
 	};
 
-	// 当前生效的主题变体及背景色
+	// @ 派生状态：主题变体及背景色
+
 	const currentTheme = EDITOR_THEMES.find((t) => t.id === editorThemeId) ?? EDITOR_THEMES[0];
 	const isDark = resolvedTheme === "dark";
 	const editorTheme = isDark ? currentTheme.dark : currentTheme.light;
 	const editorBgColor = isDark ? currentTheme.darkBg : currentTheme.lightBg;
 	const toolbarBgColor = isDark ? currentTheme.darkToolbarBg : currentTheme.lightToolbarBg;
+
+	// @ Markdown 扩展配置
 
 	// Markdown 语法扩展 + 首行标题装饰，用 useMemo 缓存避免每次渲染重建
 	const extensions = useMemo(
@@ -144,6 +157,8 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			setActiveFormats(resolveActiveFormats(editorRef.current));
 		}
 	};
+
+	// @ 派生状态：可见菜单项
 
 	// 当前模式下可见的菜单项
 	const currentMode = isPreview ? "preview" : "edit";
@@ -175,6 +190,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const title = content.split("\n")[0]?.trim() || "无标题草稿";
 
 	// 关闭弹窗：有内容则保存后关闭，空内容直接关闭
+	// ! handleClose 在内容非空时才调用 createDraft，空内容直接关闭不触发保存
 	const handleClose = async (): Promise<void> => {
 		const trimmed = content.trim();
 

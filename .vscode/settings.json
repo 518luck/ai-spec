@@ -46,5 +46,52 @@
 	"[markdown]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode",
 		"editor.formatOnSave": true
-	}
+	},
+	"better-comments.tags": [
+		{
+			"tag": "#", // 【文件级】整个文件的唯一说明
+			"color": "#FFD60A", // 金色文字
+			"strikethrough": false,
+			"underline": true,
+			"backgroundColor": "rgba(255, 255, 255, 0.10)", // 中性灰底（最重）
+			"bold": true,
+			"italic": false
+		},
+		{
+			"tag": "@", // 【区块级】大功能区块的分隔标题
+			"color": "#237B8C", // 深海青文字
+			"strikethrough": false,
+			"underline": false,
+			"backgroundColor": "rgba(255, 255, 255, 0.06)", // 中性灰底（中等）
+			"bold": false,
+			"italic": false
+		},
+		{
+			"tag": ">", // 【单元级】单个函数/方法/组件的说明
+			"color": "#A85272", // 藕红粉文字
+			"strikethrough": false,
+			"underline": false,
+			"backgroundColor": "rgba(255, 255, 255, 0.04)", // 中性灰底（淡）
+			"bold": false,
+			"italic": false
+		},
+		{
+			"tag": "!", // 【警示级】坑、危险操作、重要约束
+			"color": "#C53030", // 暗红色（亮度降 30%，不再刺眼，保持警示感）
+			"strikethrough": false,
+			"underline": true,
+			"backgroundColor": "rgba(255, 255, 255, 0.10)", // 中性灰底（最重）
+			"bold": false,
+			"italic": false
+		},
+		{
+			"tag": "?", // 【疑问级】待确认的逻辑、待讨论的方案
+			"color": "#52C41A", // 亮绿色文字
+			"strikethrough": false,
+			"underline": false,
+			"backgroundColor": "transparent", // 无底（最轻）
+			"bold": false,
+			"italic": true
+		}
+	]
 }
