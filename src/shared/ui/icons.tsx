@@ -18,7 +18,9 @@ import {
 	IconCopy,
 	IconDots,
 	IconEye,
+	IconEyeCode,
 	IconEyeOff,
+	IconEyeSearch,
 	IconFileAi,
 	IconFiles,
 	IconFileText,
@@ -114,6 +116,8 @@ export const Icons = {
 	calendar: IconCalendar,
 	eye: IconEye,
 	eyeOff: IconEyeOff,
+	eyeSearch: IconEyeSearch,
+	eyeCode: IconEyeCode,
 
 	// 表单/选择控件
 	check: IconCheck,

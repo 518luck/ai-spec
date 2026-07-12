@@ -9,6 +9,8 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import Markdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { getCookie, setCookie } from "@/shared/lib/cookie/client-cookie";
@@ -74,6 +76,8 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
 	const [content, setContent] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
+	// 是否处于预览模式：true 时用 react-markdown 渲染，false 时显示 CodeMirror 编辑器
+	const [isPreview, setIsPreview] = useState(false);
 
 	// 编辑器偏好默认值：快捷栏操作、视图设置、主题
 	const defaultToolbar = ["bold", "italic"];
@@ -172,10 +176,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		}
 	};
 
+	// 当前模式下可见的菜单项 id 集合（根据 showIn 过滤）
+	const currentMode = isPreview ? "preview" : "edit";
+	const isVisible = (item: { showIn?: string }): boolean =>
+		!item.showIn || item.showIn === "both" || item.showIn === currentMode;
+
 	// 当前在椭圆胶囊中显示的操作项（保持配置顺序，带 type 信息供点击时区分行为）
 	const activeToolbarItems = MENU_GROUPS.flatMap((group) =>
 		group.items
-			.filter((item) => activeTools.includes(item.id))
+			.filter((item) => activeTools.includes(item.id) && isVisible(item))
 			.map((item) => ({ ...item, type: group.type })),
 	);
 
@@ -187,15 +196,17 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		toggleTool(id);
 	};
 
-	// 点击右侧文字：tool → 执行 Markdown 格式化，view → 开关编辑器设置（持久化到 cookie）
-	const handleItemAction = (type: "tool" | "view", id: string): void => {
+	// 点击右侧文字：tool → 执行 Markdown 格式化，view → 开关编辑器设置，preview → 切换预览模式
+	const handleItemAction = (type: "tool" | "view" | "preview", id: string): void => {
 		if (type === "tool") {
 			executeFormat(editorRef.current, id as ToolId);
-		} else {
+		} else if (type === "view") {
 			updateEditorSettings({
 				...editorSettings,
 				[id]: !editorSettings[id as keyof typeof editorSettings],
 			});
+		} else if (type === "preview") {
+			setIsPreview((v) => !v);
 		}
 	};
 
@@ -269,20 +280,26 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 					/>
 				}
 			>
-				{/* 编辑器区域：占满整个弹窗（含导航栏下方区域），CodeMirror 内部 scroller 自行滚动 */}
-				<div className="min-h-0 flex-1 overflow-hidden">
-					<CodeMirror
-						ref={editorRef}
-						value={content} // 编辑器内容（受控值，绑定 React state）
-						onChange={setContent} // 内容变化时同步到 state
-						onUpdate={handleUpdate} // 选区/文档变化时重新解析活跃格式
-						extensions={extensions} // Markdown 语法支持（含首行标题放大装饰）
-						theme={editorTheme} // 编辑器主题，跟随应用明暗切换亮/暗变体
-						placeholder="写下你的想法…" // 空内容时的占位文案
-						height="100%" // 编辑器内部滚动容器高度，设为 100% 由外层 div 的 flex-1 撑满
-						className="h-full text-sm" // h-full 让 CodeMirror 根元素也占满外层 div；text-sm 统一正文字号
-						basicSetup={editorSettings}
-					/>
+				{/* 编辑器/预览区域：占满整个弹窗，预览模式时用 react-markdown 渲染 */}
+				<div className="min-h-0 flex-1 overflow-auto">
+					{isPreview ? (
+						<article className="prose prose-sm dark:prose-invert max-w-none p-4 pt-12">
+							<Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+						</article>
+					) : (
+						<CodeMirror
+							ref={editorRef}
+							value={content}
+							onChange={setContent}
+							onUpdate={handleUpdate}
+							extensions={extensions}
+							theme={editorTheme}
+							placeholder="写下你的想法…"
+							height="100%"
+							className="h-full text-sm"
+							basicSetup={editorSettings}
+						/>
+					)}
 				</div>
 
 				{/* 顶部导航栏：标题（左）+ 操作栏（右），浮在编辑器上方，半透明毛玻璃 */}
@@ -303,7 +320,9 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 											const isActive =
 												item.type === "tool"
 													? activeFormats.has(item.id)
-													: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
+													: item.type === "preview"
+														? isPreview
+														: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
 											return (
 												<Tooltip key={item.id}>
 													<TooltipTrigger
@@ -355,7 +374,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 									<DropdownMenuGroup key={group.type}>
 										{/* 组与组之间插入分隔线 */}
 										{groupIndex > 0 && <DropdownMenuSeparator />}
-										{group.items.map((item) => (
+										{group.items.filter(isVisible).map((item) => (
 											<div
 												key={item.id}
 												className="flex items-center rounded-sm px-2 py-1.5 text-sm"
@@ -375,7 +394,9 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 															: group.type === "view" &&
 																	editorSettings[item.id as keyof typeof editorSettings]
 																? "bg-accent"
-																: ""
+																: group.type === "preview" && isPreview
+																	? "bg-accent"
+																	: ""
 													}`}
 													onClick={() => handleItemAction(group.type, item.id)}
 												>

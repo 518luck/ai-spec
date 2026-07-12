@@ -95,29 +95,34 @@ export const EDITOR_THEMES = [
 	},
 ] as const;
 
-// 菜单项类型：description 可选，有则显示问号提示
+// 菜单项类型
 export type MenuItem = {
 	id: string;
 	label: string;
 	icon: Icon;
 	description?: string;
+	/** 该项在哪种模式下显示：edit（编辑模式）、preview（预览模式）、both（两种模式，默认） */
+	showIn?: "edit" | "preview" | "both";
 };
 
 // 快捷操作工具 id 联合类型：MENU_GROUPS 和 executeFormat 共同受此约束，防止拼写不一致
 export const TOOL_IDS = ["bold", "italic", "heading1", "quote", "code", "link"] as const;
 export type ToolId = (typeof TOOL_IDS)[number];
 
-// 菜单分组：type 决定点击文字时的行为（tool → Markdown 格式化，view → 开关编辑器设置）
-export const MENU_GROUPS: readonly { type: "tool" | "view"; items: readonly MenuItem[] }[] = [
+// 菜单分组：type 决定点击文字时的行为
+export const MENU_GROUPS: readonly {
+	type: "tool" | "view" | "preview";
+	items: readonly MenuItem[];
+}[] = [
 	{
 		type: "tool",
 		items: [
-			{ id: "bold", label: "加粗", icon: Icons.bold },
-			{ id: "italic", label: "斜体", icon: Icons.italic },
-			{ id: "heading1", label: "标题", icon: Icons.heading1 },
-			{ id: "quote", label: "引用", icon: Icons.quote },
-			{ id: "code", label: "代码", icon: Icons.code },
-			{ id: "link", label: "链接", icon: Icons.link },
+			{ id: "bold", label: "加粗", icon: Icons.bold, showIn: "edit" },
+			{ id: "italic", label: "斜体", icon: Icons.italic, showIn: "edit" },
+			{ id: "heading1", label: "标题", icon: Icons.heading1, showIn: "edit" },
+			{ id: "quote", label: "引用", icon: Icons.quote, showIn: "edit" },
+			{ id: "code", label: "代码", icon: Icons.code, showIn: "edit" },
+			{ id: "link", label: "链接", icon: Icons.link, showIn: "edit" },
 		],
 	},
 	{
@@ -128,19 +133,40 @@ export const MENU_GROUPS: readonly { type: "tool" | "view"; items: readonly Menu
 				label: "行号",
 				icon: Icons.lineNumbers,
 				description: "在编辑器左侧显示行号编号",
+				showIn: "edit",
 			},
-			{ id: "foldGutter", label: "折叠", icon: Icons.fold, description: "收起或展开代码区块" },
+			{
+				id: "foldGutter",
+				label: "折叠",
+				icon: Icons.fold,
+				description: "收起或展开代码区块",
+				showIn: "edit",
+			},
 			{
 				id: "highlightActiveLine",
 				label: "高亮",
 				icon: Icons.highlight,
 				description: "高亮显示光标所在行",
+				showIn: "edit",
 			},
+		],
+	},
+	{
+		type: "preview",
+		items: [
 			{
 				id: "preview",
 				label: "预览",
-				icon: Icons.eye,
+				icon: Icons.eyeSearch,
 				description: "切换到 Markdown 渲染预览模式",
+				showIn: "edit",
+			},
+			{
+				id: "source",
+				label: "源码",
+				icon: Icons.eyeCode,
+				description: "返回 Markdown 源码编辑模式",
+				showIn: "preview",
 			},
 		],
 	},
