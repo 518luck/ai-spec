@@ -47,23 +47,29 @@
 2. **拼装件**：仅供本文件复用的基础字段 schema（`xxxSchema`，不带 Dto/Vo 后缀），聚在一起。它们是「零件」，第一眼无需关注。
 3. **对外导出**：可直接使用的入参/出参 schema（`xxxDtoSchema` / `xxxVoSchema`）及其类型别名，聚在一起。这是文件的公开 API，应一眼可见。
 
-```
-import ...
-─────────────────  拼装件
-tokenNameSchema
-tokenScopesSchema
-partialKeySchema
-─────────────────  对外导出
-createTokenDtoSchema + CreateTokenDto
-createTokenVoSchema  + CreateTokenVo
+- 拼装件不要 `export`（除非被其他文件复用）；对外只暴露 Dto/Vo schema 与类型。
+
+### 章节标记
+
+「拼装件」段与「对外导出」段上方各加一行 `@` 标题（章节分组标题，定义见根 `AGENTS.md`），一眼定位段落用途：
+
+```ts
+// @ 拼装件
+emailSchema;
+passwordSchema;
+
+// @ 入参
+createTokenDtoSchema + CreateTokenDto;
+// @ 出参
+tokenVoSchema + TokenVo;
 ```
 
-- zod schema 是 `const` 运行时求值，不是函数提升；拼装件必须在引用它的导出之前定义，因此「拼装件在上、导出在下」既是约定也是唯一可行顺序。
-- 拼装件不要 `export`（除非被其他文件复用）；对外只暴露 Dto/Vo schema 与类型。
+- `@` 是路标，整份文件通常只有几个；不要每条 schema 都加。
+- 同段相关的 schema 归在同一个 `@` 下，不再细分。
 
 ## 导入策略
 
-- 统一使用 `import * as z from "zod/v4";`，显式锁定 v4 API，避免默认入口随版本漂移，也防止 v3 旧写法混入。
+- 统一使用 `import * as z from "zod/v4";`。
 
 ## Schema 设计
 
