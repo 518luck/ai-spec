@@ -77,13 +77,18 @@ tokenVoSchema + TokenVo;
 
 - 优先复用基础字段 schema（如 `emailSchema`、`passwordSchema`），不要复制邮箱、密码、验证码等通用规则。
 - 表单或 action 的输入差异用 `.extend()`、`.pick()`、`.omit()`、`.partial()` 等组合表达，而不是另起一份重复定义。
-- 客户端表单可复用共享 schema 搭配 `zodResolver`；服务端 action 仍必须通过 `.inputSchema(schema)` 校验。
 
 ### 输入规范化与错误文案
 
 - `trim`、邮箱小写化等通用规范化写在 schema 中，让所有入口自动获得一致行为。
 - 面向用户的字段错误文案写在 schema 中，保持简洁、可直接展示。
 - schema 只负责输入形状、格式、长度和基础规则校验。
+
+### 校验分层
+
+- 后端（route handler / server action）必须用 Dto schema 校验，是唯一权威防线。
+- 前端 UI 在提交前预校验：React Hook Form 表单用 `zodResolver(xxxSchema)` 接入，简单输入用 `xxxSchema.safeParse` + toast。
+- 前端 API 客户端（`entities/*/api`）只负责传输，不写校验。
 
 ## 边界约束
 

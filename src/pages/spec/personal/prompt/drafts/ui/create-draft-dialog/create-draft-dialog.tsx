@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { createFolder, getFolders } from "@/entities/folder";
 import { createDraft } from "@/entities/prompt";
 import { useLocalStorage } from "@/shared/hooks/use-local-storage";
+import { folderNameSchema } from "@/shared/lib/zod/schemas/folder";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
@@ -128,10 +129,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			});
 	}, [open]);
 
-	// 行内新建草稿文件夹：成功后追加到列表并自动选中
+	// 行内新建草稿文件夹：名称先用同一份 schema 预校验，成功后追加到列表并自动选中
 	const handleCreateFolder = async (name: string): Promise<FolderOption | null> => {
+		const parsed = folderNameSchema.safeParse(name);
+		if (!parsed.success) {
+			toast.error(parsed.error.issues[0]?.message ?? "请输入文件夹名称");
+			return null;
+		}
 		try {
-			const created = await createFolder({ name, resourceType: "promptDraft" });
+			const created = await createFolder({ name: parsed.data, resourceType: "promptDraft" });
 			setFolders((prev) => [...prev, created]);
 			return created;
 		} catch (error) {
