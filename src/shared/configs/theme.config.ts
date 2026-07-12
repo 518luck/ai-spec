@@ -1,4 +1,5 @@
 import { getCookie, setCookie } from "@/shared/lib/cookie/client-cookie";
+import { COOKIE_DEFAULTS, MODE_THEME_COOKIE_PREFIX } from "@/shared/lib/cookie/cookies";
 
 export const DEFAULT_THEME = "base-vega";
 
@@ -15,16 +16,10 @@ export const THEMES = [
 
 export type ColorMode = "light" | "dark";
 
-const MODE_THEME_COOKIE_PREFIX = "mode_theme_";
-
 // 按明暗模式持久化色彩主题到 cookie
 export const setModeThemeCookie = (mode: ColorMode, theme: string) => {
 	if (typeof window === "undefined") return;
-	setCookie(`${MODE_THEME_COOKIE_PREFIX}${mode}`, theme, {
-		path: "/",
-		maxAge: 31536000,
-		sameSite: "lax",
-	});
+	setCookie(`${MODE_THEME_COOKIE_PREFIX}${mode}`, theme, COOKIE_DEFAULTS);
 };
 
 // 从 cookie 读取指定明暗模式下保存的色彩主题

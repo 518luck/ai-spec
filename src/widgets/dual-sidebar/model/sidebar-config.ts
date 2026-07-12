@@ -1,8 +1,7 @@
 // 侧边栏宽度与折叠的配置常量（单位 px），集中维护便于核查与调整
 
-// 存储用户拖拽后宽度与折叠状态的 cookie 名（layout 服务端读、客户端写）
-export const SIDEBAR_WIDTH_COOKIE = "sidebar-width";
-export const SIDEBAR_COLLAPSED_COOKIE = "sidebar-collapsed";
+// re-export cookie 名，方便 dual-sidebar 内部统一从 model 层引用
+export { SIDEBAR_COLLAPSED_COOKIE, SIDEBAR_WIDTH_COOKIE } from "@/shared/lib/cookie/cookies";
 
 // 默认展开宽度，对应当前的 w-76（19rem = 304px），保证 Step 1 无视觉变化
 export const SIDEBAR_DEFAULT_WIDTH = 304;

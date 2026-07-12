@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { SessionProvider } from "next-auth/react";
 import { RootThemeProvider } from "@/app/providers/root-theme-provider";
 import { DEFAULT_THEME } from "@/shared/configs/theme.config";
+import { ACTIVE_THEME_COOKIE } from "@/shared/lib/cookie/cookies";
 import { ActiveThemeProvider } from "@/shared/providers/active-theme-providers";
 import { Toaster } from "@/shared/ui/sonner";
 
@@ -20,8 +21,6 @@ const sourceSerif4 = Source_Serif_4({
 	subsets: ["latin"],
 	variable: "--font-source-serif-4",
 });
-
-const ACTIVE_THEME_COOKIE = "ai-spec.active-theme";
 
 // 根布局外壳：SSR 注入主题，保证首屏即带 data-theme，避免主题闪烁与恢复丢失
 export async function RootLayoutShell({ children }: { children: React.ReactNode }) {

@@ -3,18 +3,13 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
 import { setCookie } from "@/shared/lib/cookie/client-cookie";
+import { ACTIVE_THEME_COOKIE, COOKIE_DEFAULTS } from "@/shared/lib/cookie/cookies";
 import { DEFAULT_THEME } from "../configs/theme.config";
-
-const COOKIE_NAME = "ai-spec.active-theme";
 
 // 设置 cookie
 const setThemeCookie = (theme: string) => {
 	if (typeof window === "undefined") return;
-	setCookie(COOKIE_NAME, theme, {
-		path: "/",
-		maxAge: 31536000,
-		sameSite: "lax",
-	});
+	setCookie(ACTIVE_THEME_COOKIE, theme, COOKIE_DEFAULTS);
 };
 
 type ThemeContextType = {

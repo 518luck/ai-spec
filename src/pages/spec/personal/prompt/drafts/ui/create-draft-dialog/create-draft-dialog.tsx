@@ -12,6 +12,7 @@ import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { getCookie, setCookie } from "@/shared/lib/cookie/client-cookie";
+import { COOKIE_DEFAULTS, EDITOR_PREFERENCES_COOKIE, type EditorPreferencesCookie } from "@/shared/lib/cookie/cookies";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
@@ -73,14 +74,10 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 
 	// 挂载后从 cookie 读取全部偏好
 	useEffect(() => {
-		const raw = getCookie("ai-spec.editor-preferences");
+		const raw = getCookie(EDITOR_PREFERENCES_COOKIE);
 		if (!raw) return;
 		try {
-			const prefs = JSON.parse(raw) as {
-				toolbar?: string[];
-				settings?: typeof defaultEditorSettings;
-				theme?: string;
-			};
+			const prefs = JSON.parse(raw) as EditorPreferencesCookie;
 			if (Array.isArray(prefs.toolbar)) setActiveTools(prefs.toolbar);
 			if (prefs.settings) setEditorSettings({ ...defaultEditorSettings, ...prefs.settings });
 			if (prefs.theme) setEditorThemeId(prefs.theme);
@@ -90,19 +87,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	}, []);
 
 	// 把当前全部偏好写入 cookie
-	const savePreferences = (overrides: {
-		toolbar?: string[];
-		settings?: typeof defaultEditorSettings;
-		theme?: string;
-	}): void => {
+	const savePreferences = (overrides: EditorPreferencesCookie): void => {
 		setCookie(
-			"ai-spec.editor-preferences",
+			EDITOR_PREFERENCES_COOKIE,
 			JSON.stringify({
 				toolbar: overrides.toolbar ?? activeTools,
 				settings: overrides.settings ?? editorSettings,
 				theme: overrides.theme ?? editorThemeId,
 			}),
-			{ path: "/", maxAge: 31536000, sameSite: "lax" },
+			COOKIE_DEFAULTS,
 		);
 	};
 

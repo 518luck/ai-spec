@@ -7,6 +7,7 @@ import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
 import { useIsMobile } from "@/shared/hooks/use-mobile";
 import { setCookie } from "@/shared/lib/cookie/client-cookie";
+import { SIDEBAR_STATE_COOKIE, SIDEBAR_STATE_COOKIE_OPTIONS } from "@/shared/lib/cookie/cookies";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -15,10 +16,6 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
-// 持久化桌面端侧边栏展开状态的 Cookie 名称。
-const SIDEBAR_COOKIE_NAME = "sidebar_state";
-// 侧边栏状态保留 7 天，避免用户每次进入页面都要重新展开或折叠。
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
 // 桌面端完整展开时的默认宽度。
 const SIDEBAR_WIDTH = "16rem";
 // 移动端抽屉形态的宽度，略宽于桌面端以适配触控操作。
@@ -95,10 +92,7 @@ function SidebarProvider({
 			}
 
 			// 将桌面端展开状态写入 Cookie，供后续页面加载时恢复用户偏好。
-			setCookie(SIDEBAR_COOKIE_NAME, String(openState), {
-				path: "/",
-				maxAge: SIDEBAR_COOKIE_MAX_AGE,
-			});
+			setCookie(SIDEBAR_STATE_COOKIE, String(openState), SIDEBAR_STATE_COOKIE_OPTIONS);
 		},
 		[setOpenProp, open],
 	);
