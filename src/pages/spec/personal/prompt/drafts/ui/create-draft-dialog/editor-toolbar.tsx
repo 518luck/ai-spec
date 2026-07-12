@@ -1,7 +1,7 @@
 "use client";
 // # 草稿编辑器顶部导航栏 —— 标题 + 快捷工具栏 + 更多操作下拉 + 主题切换 + 放大
 
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import type { JSX } from "react";
 
 import { Button } from "@/shared/ui/button";
@@ -86,13 +86,13 @@ export function EditorToolbar({
 			</span>
 
 			<div className="ml-auto flex items-center gap-2">
-				{/* // @ 快捷操作工具栏：椭圆背景，放大时不限宽度 */}
+				{/* // @ 快捷操作工具栏：图标逐个进出，背景平滑缩放 */}
 				{activeToolbarItems.length > 0 && (
 					<motion.div
-						layout
+						layout="size"
 						className="rounded-full p-0.5"
 						style={{ backgroundColor: toolbarBgColor }}
-						transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+						transition={{ type: "tween", duration: 0.3, ease: "circOut" }}
 					>
 						<ScrollArea
 							orientation="horizontal"
@@ -100,38 +100,57 @@ export function EditorToolbar({
 							scrollbarClassName="mx-2"
 						>
 							<div className="flex items-center gap-0.5">
-								{activeToolbarItems.map((item) => {
-									const isActive =
-										item.type === "tool"
-											? activeFormats.has(item.id)
-											: item.type === "preview"
-												? isPreview
-												: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
-									return (
-										<Tooltip key={item.id}>
-											<TooltipTrigger
-												render={
-													<Button
-														variant="ghost"
-														size="icon-sm"
-														aria-label={item.label}
-														className={`shrink-0 rounded-full ${
-															isActive
-																? "bg-primary/15! text-primary hover:bg-primary/25"
-																: "hover:bg-foreground/20!"
-														}`}
-														onClick={() =>
-															onItemAction(item.type as "tool" | "display" | "preview", item.id)
-														}
-													/>
-												}
+								<AnimatePresence mode="sync">
+									{activeToolbarItems.map((item, index) => {
+										const isActive =
+											item.type === "tool"
+												? activeFormats.has(item.id)
+												: item.type === "preview"
+													? isPreview
+													: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
+										return (
+											<motion.div
+												key={item.id}
+												layout
+												initial={{ opacity: 0, scale: 0 }}
+												animate={{
+													opacity: 1,
+													scale: 1,
+													transition: { delay: index * 0.03, duration: 0.2 },
+												}}
+												exit={{
+													opacity: 0,
+													scale: 0,
+													transition: { delay: index * 0.03, duration: 0.2 },
+												}}
+												className="shrink-0"
 											>
-												<item.icon className="size-4" />
-											</TooltipTrigger>
-											<TooltipContent>{item.label}</TooltipContent>
-										</Tooltip>
-									);
-								})}
+												<Tooltip>
+													<TooltipTrigger
+														render={
+															<Button
+																variant="ghost"
+																size="icon-sm"
+																aria-label={item.label}
+																className={`rounded-full ${
+																	isActive
+																		? "bg-primary/15! text-primary hover:bg-primary/25"
+																		: "hover:bg-foreground/20!"
+																}`}
+																onClick={() =>
+																	onItemAction(item.type as "tool" | "display" | "preview", item.id)
+																}
+															/>
+														}
+													>
+														<item.icon className="size-4" />
+													</TooltipTrigger>
+													<TooltipContent>{item.label}</TooltipContent>
+												</Tooltip>
+											</motion.div>
+										);
+									})}
+								</AnimatePresence>
 							</div>
 						</ScrollArea>
 					</motion.div>
