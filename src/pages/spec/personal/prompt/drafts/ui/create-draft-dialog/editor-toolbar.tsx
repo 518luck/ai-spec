@@ -42,7 +42,7 @@ type EditorToolbarProps = {
 	// 是否放大
 	isExpanded: boolean;
 	// 点击胶囊按钮或菜单文字时的回调
-	onItemAction: (type: "tool" | "view" | "preview", id: string) => void;
+	onItemAction: (type: "tool" | "display" | "preview", id: string) => void;
 	// 点击 Checkbox 时的回调（加入/移出快捷栏）
 	onCheckboxToggle: (id: string) => void;
 	// 切换主题
@@ -120,7 +120,7 @@ export function EditorToolbar({
 																: "hover:bg-foreground/20!"
 														}`}
 														onClick={() =>
-															onItemAction(item.type as "tool" | "view" | "preview", item.id)
+															onItemAction(item.type as "tool" | "display" | "preview", item.id)
 														}
 													/>
 												}
@@ -170,7 +170,7 @@ export function EditorToolbar({
 											className={`flex flex-1 cursor-pointer items-center rounded-sm px-1 py-0.5 ${
 												group.type === "tool" && activeFormats.has(item.id)
 													? "bg-accent"
-													: group.type === "view" &&
+													: group.type === "display" &&
 															editorSettings[item.id as keyof typeof editorSettings]
 														? "bg-accent"
 														: group.type === "preview" && isPreview

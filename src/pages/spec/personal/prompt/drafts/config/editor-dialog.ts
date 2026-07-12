@@ -1,3 +1,5 @@
+// # 草稿编辑器配置 —— 主题、菜单分组、格式化操作的集中定义
+
 import { basicDark, basicLight } from "@uiw/codemirror-theme-basic";
 import { duotoneDark, duotoneLight } from "@uiw/codemirror-theme-duotone";
 import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
@@ -11,6 +13,8 @@ import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import type { Icon } from "@/shared/ui/icons";
 import { Icons } from "@/shared/ui/icons";
 
+// @ 语法映射
+
 // Lezer Markdown 节点名 → 工具 id 的映射，用于判断光标位置处于什么格式内
 export const NODE_NAME_TO_TOOL_ID: Record<string, ToolId> = {
 	StrongEmphasis: "bold",
@@ -21,7 +25,9 @@ export const NODE_NAME_TO_TOOL_ID: Record<string, ToolId> = {
 	Link: "link",
 };
 
-// 编辑器主题配置：每个主题提供亮色和暗色变体、背景色及快捷栏背景色，跟随应用 resolvedTheme 切换
+// @ 编辑器主题
+
+// 每个主题提供亮色/暗色变体及背景色，跟随应用 resolvedTheme 切换
 export const EDITOR_THEMES = [
 	{
 		id: "github",
@@ -95,6 +101,8 @@ export const EDITOR_THEMES = [
 	},
 ] as const;
 
+// @ 菜单项与分组
+
 // 菜单项类型
 export type MenuItem = {
 	id: string;
@@ -109,9 +117,9 @@ export type MenuItem = {
 export const TOOL_IDS = ["bold", "italic", "heading1", "quote", "code", "link"] as const;
 export type ToolId = (typeof TOOL_IDS)[number];
 
-// 菜单分组：type 决定点击文字时的行为
+// 菜单分组：type 决定点击文字时的行为（tool=格式工具 / display=显示设置 / preview=视图切换）
 export const MENU_GROUPS: readonly {
-	type: "tool" | "view" | "preview";
+	type: "tool" | "display" | "preview";
 	items: readonly MenuItem[];
 }[] = [
 	{
@@ -126,7 +134,7 @@ export const MENU_GROUPS: readonly {
 		],
 	},
 	{
-		type: "view",
+		type: "display",
 		items: [
 			{
 				id: "lineNumbers",
@@ -179,7 +187,9 @@ export const defaultEditorSettings = {
 	highlightActiveLine: false,
 };
 
-// 在选区两端包裹 Markdown 格式标记（如 **粗体**），无选区时插入空标记并光标居中
+// @ Markdown 格式化操作
+
+// > 在选区两端包裹格式标记（如 **粗体**），无选区时插入空标记并光标居中
 export const wrapSelection = (
 	view: ReactCodeMirrorRef | null,
 	before: string,
@@ -207,7 +217,7 @@ export const prependLine = (view: ReactCodeMirrorRef | null, prefix: string): vo
 	v.focus();
 };
 
-// 执行某个工具 id 对应的 Markdown 格式化操作
+// 执行某个工具 id 对应的格式化操作
 export const executeFormat = (view: ReactCodeMirrorRef | null, id: ToolId): void => {
 	switch (id) {
 		case "bold":

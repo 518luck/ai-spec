@@ -173,10 +173,10 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	);
 
 	// 点击胶囊按钮或菜单文字
-	const handleItemAction = (type: "tool" | "view" | "preview", id: string): void => {
+	const handleItemAction = (type: "tool" | "display" | "preview", id: string): void => {
 		if (type === "tool") {
 			executeFormat(editorRef.current, id as ToolId);
-		} else if (type === "view") {
+		} else if (type === "display") {
 			updateEditorSettings({
 				...editorSettings,
 				[id]: !editorSettings[id as keyof typeof editorSettings],
