@@ -10,10 +10,10 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import { useLocalStorage } from "react-use";
 import { toast } from "sonner";
 import { createFolder, getFolders } from "@/entities/folder";
 import { createDraft } from "@/entities/prompt";
-import { useLocalStorage } from "@/shared/hooks/use-local-storage";
 import { folderNameSchema } from "@/shared/lib/zod/schemas/folder";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
@@ -71,27 +71,27 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [folderId, setFolderId] = useState<string | undefined>(undefined);
 	const [folders, setFolders] = useState<FolderOption[]>([]);
 
-	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复（useLocalStorage 自带读写，无需手动存取）
-	const [activeTools, setActiveTools] = useLocalStorage<string[]>("draft.toolbar", [
-		"bold",
-		"italic",
-	]);
-	const [editorSettings, setEditorSettings] = useLocalStorage(
-		"draft.settings",
-		defaultEditorSettings,
-	);
-	const [editorThemeId, setEditorThemeId] = useLocalStorage<string>("draft.theme", "vscode");
-	const [isExpanded, setIsExpanded] = useLocalStorage<boolean>("draft.isExpanded", false);
+	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复
+	// > react-use 的 useLocalStorage 返回 T | undefined（用户清空 localStorage 时），解构默认值兜底防白屏
+	const [activeTools = ["bold", "italic"], setActiveTools] =
+		useLocalStorage<string[]>("draft.toolbar");
+	const [editorSettings = defaultEditorSettings, setEditorSettings] =
+		useLocalStorage<typeof defaultEditorSettings>("draft.settings");
+	const [editorThemeId = "vscode", setEditorThemeId] = useLocalStorage<string>("draft.theme");
+	const [isExpanded = false, setIsExpanded] = useLocalStorage<boolean>("draft.isExpanded");
 
 	// 切换快捷操作的显示/隐藏（useLocalStorage 自动持久化）
 	const toggleTool = (id: string): void => {
-		setActiveTools((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
+		setActiveTools((prev) => {
+			const tools = prev ?? [];
+			return tools.includes(id) ? tools.filter((t) => t !== id) : [...tools, id];
+		});
 	};
 
 	// 拖拽排序后更新工具顺序：以可见项的新顺序为准，把当前不可见的项追加到末尾
 	const reorderTools = (newOrder: string[]): void => {
 		setActiveTools((prev) => {
-			const reordered = prev.slice().sort((a, b) => {
+			const reordered = (prev ?? []).slice().sort((a, b) => {
 				const ia = newOrder.indexOf(a);
 				const ib = newOrder.indexOf(b);
 				// 不在 newOrder 里的（不可见项）排到最后，保持原相对顺序

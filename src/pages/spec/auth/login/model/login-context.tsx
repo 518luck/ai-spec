@@ -8,7 +8,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { useLocalStorage } from "@/shared/hooks/use-local-storage";
+import { useLocalStorage } from "react-use";
 import {
 	AUTH_PROVIDER_EMAIL,
 	AUTH_PROVIDER_GITHUB,
@@ -49,10 +49,9 @@ export function LoginProvider({ children }: PropsWithChildren): JSX.Element {
 	const [emailValue, setEmailValue] = useState("");
 	const [passwordValue, setPasswordValue] = useState("");
 	const [showPasswordField, setShowPasswordField] = useState(false);
-	const [storedPreferredMethod, setStoredPreferredMethod] = useLocalStorage<LoginMethod | null>(
-		loginPreferredMethodStorageKey,
-		null,
-	);
+	// react-use 的 useLocalStorage 返回 T | undefined（用户清空 localStorage 时），解构默认值兜底回 null
+	const [storedPreferredMethod = null, setStoredPreferredMethod] =
+		useLocalStorage<LoginMethod | null>(loginPreferredMethodStorageKey);
 	const [preferredMethod] = useState<LoginMethod | null>(() =>
 		isLoginMethod(storedPreferredMethod) ? storedPreferredMethod : null,
 	);
