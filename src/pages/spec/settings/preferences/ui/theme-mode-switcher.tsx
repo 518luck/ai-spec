@@ -4,7 +4,7 @@ import { useTheme } from "next-themes";
 import type { JSX } from "react";
 
 import { DEFAULT_THEME } from "@/shared/configs/theme.config";
-import { useMounted } from "@/shared/hooks/use-mounted";
+import { useMounted } from "@/shared/hooks";
 import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 import { Button } from "@/shared/ui/button";
 import {

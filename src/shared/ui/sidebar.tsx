@@ -7,7 +7,7 @@ import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
 import { PanelLeftIcon } from "lucide-react";
 import * as React from "react";
-import { useIsMobile } from "@/shared/hooks/use-mobile";
+import { useIsMobile } from "@/shared/hooks";
 import { setCookie } from "@/shared/lib/cookie/client-cookie";
 import { SIDEBAR_STATE_COOKIE, SIDEBAR_STATE_COOKIE_OPTIONS } from "@/shared/lib/cookie/cookies";
 import { cn } from "@/shared/lib/utils";

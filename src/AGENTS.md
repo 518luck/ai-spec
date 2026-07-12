@@ -256,5 +256,5 @@ export function HeaderLogo() {
 ## SSR / Hydration 安全
 
 - 整块 UI 只在客户端渲染 → `ClientOnly`（`@/shared/ui/client-only`）
-- 组件内部分变量需要 SSR/客户端区分 → `useMounted`（`@/shared/hooks/use-mounted`）
+- 组件内部分变量需要 SSR/客户端区分 → `useMounted`（`@/shared/hooks`）
 - 浏览器 API（`localStorage`、`window`、`document.cookie` 等）在 `useEffect` 或回调中访问 → 不需要处理

@@ -11,7 +11,7 @@ import {
 	setModeThemeCookie,
 	THEMES,
 } from "@/shared/configs/theme.config";
-import { useMounted } from "@/shared/hooks/use-mounted";
+import { useMounted } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import { useActiveTheme } from "@/shared/providers/active-theme-providers";
 import { Badge } from "@/shared/ui/badge";

@@ -7,7 +7,7 @@ import { FormProvider, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type * as z from "zod";
 import { sendOtpAction } from "@/server/actions/auth/send-otp";
-import { useMediaQuery } from "@/shared/hooks/use-media-query";
+import { useMediaQuery } from "@/shared/hooks";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
 import { Button } from "@/shared/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";

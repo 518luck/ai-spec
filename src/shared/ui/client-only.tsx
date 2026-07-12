@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "motion/react";
 import type { ReactNode } from "react";
 
-import { useMounted } from "@/shared/hooks/use-mounted";
+import { useMounted } from "@/shared/hooks";
 
 type ClientOnlyProps = {
 	children: ReactNode;
