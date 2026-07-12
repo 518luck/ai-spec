@@ -207,6 +207,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 
 		if (!trimmed) {
 			setContent("");
+			setIsPreview(false);
 			onOpenChange(false);
 			return;
 		}
@@ -225,6 +226,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			await createDraft(parsed.data);
 			toast.success("草稿已创建");
 			setContent("");
+			setIsPreview(false);
 			router.refresh();
 			onOpenChange(false);
 		} catch (error) {
