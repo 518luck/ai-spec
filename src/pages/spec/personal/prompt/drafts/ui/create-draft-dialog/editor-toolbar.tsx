@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "motion/react";
 import type { JSX } from "react";
 
 import { Button } from "@/shared/ui/button";
@@ -86,7 +87,12 @@ export function EditorToolbar({
 			<div className="ml-auto flex items-center gap-2">
 				{/* 快捷操作工具栏：椭圆背景，放大时不限宽度 */}
 				{activeToolbarItems.length > 0 && (
-					<div className="rounded-full p-0.5" style={{ backgroundColor: toolbarBgColor }}>
+					<motion.div
+						layout
+						className="rounded-full p-0.5"
+						style={{ backgroundColor: toolbarBgColor }}
+						transition={{ type: "tween", duration: 0.3, ease: "easeInOut" }}
+					>
 						<ScrollArea
 							orientation="horizontal"
 							className={isExpanded ? "" : "max-w-76"}
@@ -127,7 +133,7 @@ export function EditorToolbar({
 								})}
 							</div>
 						</ScrollArea>
-					</div>
+					</motion.div>
 				)}
 
 				{/* 更多操作：下拉面板，Checkbox 控制是否加入快捷栏，点击文字执行对应操作 */}
