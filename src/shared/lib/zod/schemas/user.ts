@@ -5,7 +5,11 @@ import { emailSchema } from "./auth";
 // # 用户相关 zod schema：名称、头像、默认工作区、部分更新校验
 
 // 用户名称校验：非空、最多 32 字
-export const userNameSchema = z.string().trim().min(1, "请输入名称").max(32, "名称最多 32 字");
+export const userNameSchema = z
+	.string()
+	.trim()
+	.min(1, { error: "请输入名称" })
+	.max(32, { error: "名称最多 32 字" });
 
 // 头像校验：必须是 data URL（data:image/...;base64,...）
 export const userAvatarSchema = z

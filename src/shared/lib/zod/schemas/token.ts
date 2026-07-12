@@ -4,12 +4,12 @@ import { SCOPES } from "@/server/rbac/scopes";
 
 // # API 令牌（Token）相关 zod schema：创建、更新、删除入参与响应出参校验
 
-// name：令牌显示名称，1-50 字符，必填；导出供前端提交前用同一份规则做本地预校验
+// name：令牌显示名称，1-32 字符，必填；导出供前端提交前用同一份规则做本地预校验
 export const tokenNameSchema = z
 	.string({ error: "请输入令牌名称" })
 	.trim()
 	.min(1, { error: "请输入令牌名称" })
-	.max(50, { error: "名称长度不能超过 50 个字符" });
+	.max(32, { error: "名称长度不能超过 32 个字符" });
 
 // description：令牌描述，可选，最多 200 字符，用于补充说明用途
 export const tokenDescriptionSchema = z
