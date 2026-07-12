@@ -15,15 +15,17 @@ export const getFolders = async (type: string): Promise<FolderOption[]> => {
 // > 新建文件夹（POST /api/folders），需指定归属的资源类型；成功后返回新建的文件夹选项
 export const createFolder = async ({
 	name,
+	description,
 	resourceType,
 }: {
 	name: string;
+	description?: string;
 	resourceType: string;
 }): Promise<FolderOption> => {
 	const response = await fetch("/api/folders", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ name, resource_type: resourceType }),
+		body: JSON.stringify({ name, description, resource_type: resourceType }),
 	});
 	if (!response.ok) {
 		throw new Error(await resolveErrorMessage(response));
