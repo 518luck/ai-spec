@@ -10,7 +10,7 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
-import { useLocalStorage } from "react-use";
+import { useLocalStorage } from "@/shared/hooks";
 import { toast } from "sonner";
 import { createFolder, getFolders } from "@/entities/folder";
 import { createDraft } from "@/entities/prompt";

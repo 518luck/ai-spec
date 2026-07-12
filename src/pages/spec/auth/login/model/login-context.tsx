@@ -8,7 +8,7 @@ import {
 	useRef,
 	useState,
 } from "react";
-import { useLocalStorage } from "react-use";
+import { useLocalStorage } from "@/shared/hooks";
 import {
 	AUTH_PROVIDER_EMAIL,
 	AUTH_PROVIDER_GITHUB,

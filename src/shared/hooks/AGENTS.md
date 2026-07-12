@@ -2,15 +2,22 @@
 
 本目录存放项目自实现的 React hooks。继承上级 `AGENTS.md`，仅记录本目录的额外规则。
 
-## 导入方式
+## Barrel File（唯一出口）
 
-所有 hook 从 barrel file `index.ts` 统一导入，不直接引用具体文件：
+`index.ts` 是本目录的唯一对外出口。**所有 hook——自实现和 react-use 转发——都从这里统一导入**，禁止直接引用具体文件或 `react-use` 包：
 
 ```ts
-import { useMounted, useIsMobile } from "@/shared/hooks";
+// ✅ 正确：从 barrel 统一导入
+import { useMounted, useLocalStorage } from "@/shared/hooks";
+
+// ❌ 禁止：直接引用具体文件
+import { useMounted } from "@/shared/hooks/use-mounted";
+
+// ❌ 禁止：直接引用 react-use 包
+import { useLocalStorage } from "react-use";
 ```
 
-新增 hook 时在 `index.ts` 登记 re-export。
+新增自实现 hook 或引入 react-use 新 hook 时，在 `index.ts` 登记 re-export。
 
 ## 优先用 react-use，不自实现
 

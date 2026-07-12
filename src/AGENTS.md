@@ -177,7 +177,7 @@ pnpm dlx shadcn@latest add [组件名]
 
 ## React Hooks 工具库
 
-项目使用 [react-use](https://github.com/streamich/react-use)（100+ hooks）作为 React hooks 工具库。需要防抖、节流、事件监听、localStorage 等通用 hooks 时，优先从 `react-use` 导入，不要自实现。使用前查阅文档确认 hook 名称和行为。
+项目使用 [react-use](https://github.com/streamich/react-use)（100+ hooks）作为 React hooks 工具库。需要防抖、节流、事件监听、localStorage 等通用 hooks 时，优先用 react-use，不要自实现。使用前查阅文档确认 hook 名称和行为。所有 hook（含 react-use）统一从 `@/shared/hooks` barrel file 导入，详见 `src/shared/hooks/AGENTS.md`。
 
 常用 hooks：`useSetState`（对象状态自动合并）、`useToggle`、`useDebounce`、`useThrottle`、`useLocalStorage`、`usePrevious`、`useClickAway`、`useScroll`、`useWindowSize`、`useAsync`/`useAsyncFn`。
 
