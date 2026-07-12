@@ -4,8 +4,6 @@ import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 
-import "highlight.js/styles/github-dark.css";
-
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
 type DraftPreviewProps = {
@@ -19,10 +17,10 @@ type DraftPreviewProps = {
 export function DraftPreview({ content, height }: DraftPreviewProps): JSX.Element {
 	return (
 		<ScrollArea style={{ height, maxHeight: height }}>
-			<article className="prose prose-sm dark:prose-invert max-w-none p-4 pt-12">
+			<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent p-4 pt-12">
 				<Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug, rehypeHighlight]}>
 					{content}
-			</Markdown>
+				</Markdown>
 			</article>
 		</ScrollArea>
 	);
