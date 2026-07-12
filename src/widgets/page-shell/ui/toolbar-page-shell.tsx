@@ -8,10 +8,10 @@ import { PageWidthWrapper } from "./page-width-wrapper";
 
 // TODO: 临时 mock 数据，测完 FolderCombobox 效果后删除
 const MOCK_FOLDERS: FolderOption[] = [
-	{ value: "1", label: "React 精华", icon: "⚛️" },
-	{ value: "2", label: "常用工具", icon: "🛠️" },
-	{ value: "3", label: "学习笔记", icon: "📚" },
-	{ value: "4", label: "AI 提示词", icon: "🤖" },
+	{ value: "1", label: "React 精华", color: "#61dafb" },
+	{ value: "2", label: "常用工具", color: "#f59e0b" },
+	{ value: "3", label: "学习笔记", color: "#10b981" },
+	{ value: "4", label: "AI 提示词", color: "#8b5cf6" },
 	{ value: "5", label: "未分类" },
 ];
 

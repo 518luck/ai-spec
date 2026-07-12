@@ -1,25 +1,34 @@
-import type { JSX } from "react";
+import type { CSSProperties, JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
 
 type FolderIconProps = {
+	// 文件夹颜色值（hex）；不传则显示中性灰底
+	color?: string;
 	className?: string;
 };
 
-/**
- * 带圆角方块背景的文件夹图标。
- * 外层 bg-muted 方块 + 居中的 folderClosed 图标，用于文件夹相关的列表/选择器做视觉标识。
- */
-export function FolderIcon({ className }: FolderIconProps): JSX.Element {
+// 带圆角方块背景的文件夹图标：有 color 时用淡彩底（15% 不透明度）+ 同色图标，无 color 时用灰色底 + 默认图标
+export function FolderIcon({ color, className }: FolderIconProps): JSX.Element {
+	// color 有值时：淡彩底直接设在 span 上；图标颜色直接设在 svg 上，避免 currentColor 继承被干扰
+	const spanStyle: CSSProperties | undefined = color
+		? { backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)` }
+		: undefined;
+	const iconStyle: CSSProperties | undefined = color ? { color } : undefined;
 	return (
 		<span
+			style={spanStyle}
 			className={cn(
-				"flex size-7 shrink-0 items-center justify-center rounded-md bg-muted",
+				"flex size-7 shrink-0 items-center justify-center rounded-md",
+				color ? "" : "bg-muted",
 				className,
 			)}
 		>
-			<Icons.folderClosed className="size-4 text-foreground" />
+			<Icons.folderClosed
+				style={iconStyle}
+				className={cn("size-4", color ? "" : "text-foreground")}
+			/>
 		</span>
 	);
 }

@@ -9,12 +9,12 @@ export const GET = withPersonal(async ({ session }) => {
 	const folders = await prisma.folder.findMany({
 		where: { owner_id: session.user.id, team_id: null },
 		orderBy: [{ sort_order: "asc" }, { created_at: "desc" }],
-		select: { id: true, name: true, icon: true },
+		select: { id: true, name: true, color: true },
 	});
 
-	// 转成 FolderCombobox 所需的 { value, label, icon } 形状
+	// 转成 FolderCombobox 所需的 { value, label, color } 形状
 	return NextResponse.json(
-		folders.map((f) => ({ value: f.id, label: f.name, icon: f.icon ?? undefined })),
+		folders.map((f) => ({ value: f.id, label: f.name, color: f.color ?? undefined })),
 	);
 });
 
@@ -31,11 +31,11 @@ export const POST = withPersonal(async ({ req, session }) => {
 			owner_id: session.user.id,
 			team_id: null,
 		},
-		select: { id: true, name: true, icon: true },
+		select: { id: true, name: true, color: true },
 	});
 
 	return NextResponse.json(
-		{ value: folder.id, label: folder.name, icon: folder.icon ?? undefined },
+		{ value: folder.id, label: folder.name, color: folder.color ?? undefined },
 		{ status: 201 },
 	);
 });

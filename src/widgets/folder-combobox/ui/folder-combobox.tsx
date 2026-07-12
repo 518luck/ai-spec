@@ -22,7 +22,7 @@ import { FolderIcon } from "./folder-icon";
 export type FolderOption = {
 	value: string; // folder.id
 	label: string; // folder.name
-	icon?: string; // folder.icon（emoji 或图标标识，可选）
+	color?: string; // 文件夹颜色值（hex 或颜色标识），驱动 FolderIcon 底色
 };
 
 type FolderComboboxProps = {
@@ -79,7 +79,7 @@ export function FolderCombobox({
 					/>
 				}
 			>
-				<FolderIcon />
+				<FolderIcon color={selectedOption?.color} />
 				{selectedOption ? (
 					<span>{selectedOption.label}</span>
 				) : (
@@ -134,7 +134,7 @@ export function FolderCombobox({
 										}}
 										className="not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
 									>
-										<FolderIcon />
+										<FolderIcon color={option.color} />
 										{option.label}
 										<Icons.check
 											className={cn(

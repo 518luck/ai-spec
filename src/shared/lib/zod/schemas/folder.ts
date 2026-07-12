@@ -15,11 +15,18 @@ export const createFolderDtoSchema = z.object({
 // 创建文件夹入参类型
 export type CreateFolderDto = z.infer<typeof createFolderDtoSchema>;
 
+// 文件夹颜色：#RRGGBB 格式（不含 alpha 通道，天然不支持透明）；不透明、格式非法时校验失败
+export const folderColorSchema = z
+	.string()
+	.regex(/^#[0-9a-fA-F]{6}$/, { error: "颜色需为 #RRGGBB 格式" })
+	.optional()
+	.nullable();
+
 // 文件夹选项（与 FolderCombobox 的 FolderOption 形状一致，供前后端共用）
 export const folderOptionSchema = z.object({
 	value: z.string(),
 	label: z.string(),
-	icon: z.string().nullable().optional(),
+	color: folderColorSchema,
 });
 
 // 文件夹选项类型

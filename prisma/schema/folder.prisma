@@ -14,7 +14,7 @@ model Folder {
   // ② 业务字段
   name         String // 文件夹名称
   description  String? // 描述（可选）
-  icon         String? // 图标标识，预留 UI 展示（emoji 或图标名）
+  color        String? // 文件夹颜色（hex 或颜色标识），驱动 FolderIcon 的方块底色
   sort_order   Int              @default(0) // 同级排序，驱动拖拽排序
   team_id      String? // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属，不决定权限）
   access_level FolderMemberRole @default(viewer) // 团队成员对此文件夹的默认权限（仅团队文件夹生效；个人文件夹忽略此值）
