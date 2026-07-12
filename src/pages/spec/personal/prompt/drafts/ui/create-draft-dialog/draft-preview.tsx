@@ -1,6 +1,10 @@
 import type { JSX } from "react";
 import Markdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
+
+import "highlight.js/styles/github-dark.css";
 
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
@@ -11,12 +15,14 @@ type DraftPreviewProps = {
 	height: string;
 };
 
-// Markdown 预览：用 react-markdown + remark-gfm 渲染，支持 GFM 表格、删除线、任务列表
+// Markdown 预览：GFM 语法 + 代码高亮 + 标题锚点
 export function DraftPreview({ content, height }: DraftPreviewProps): JSX.Element {
 	return (
 		<ScrollArea style={{ height, maxHeight: height }}>
 			<article className="prose prose-sm dark:prose-invert max-w-none p-4 pt-12">
-				<Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+				<Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug, rehypeHighlight]}>
+					{content}
+			</Markdown>
 			</article>
 		</ScrollArea>
 	);
