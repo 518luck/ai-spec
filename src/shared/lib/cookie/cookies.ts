@@ -34,6 +34,8 @@ export interface EditorPreferencesCookie {
 	settings?: Record<string, unknown>;
 	// 编辑器主题 id，如 "vscode"
 	theme?: string;
+	// 是否放大编辑器弹窗
+	isExpanded?: boolean;
 }
 
 // 草稿编辑器偏好 cookie，值：JSON 字符串，解析后类型为上方 EditorPreferencesCookie

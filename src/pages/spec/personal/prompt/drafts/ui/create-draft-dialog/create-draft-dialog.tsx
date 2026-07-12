@@ -89,6 +89,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			if (Array.isArray(prefs.toolbar)) setActiveTools(prefs.toolbar);
 			if (prefs.settings) setEditorSettings({ ...defaultEditorSettings, ...prefs.settings });
 			if (prefs.theme) setEditorThemeId(prefs.theme);
+			if (typeof prefs.isExpanded === "boolean") setIsExpanded(prefs.isExpanded);
 		} catch {
 			// cookie 解析失败时用默认值
 		}
@@ -104,6 +105,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 				toolbar: overrides.toolbar ?? activeTools,
 				settings: overrides.settings ?? editorSettings,
 				theme: overrides.theme ?? editorThemeId,
+				isExpanded: overrides.isExpanded ?? isExpanded,
 			}),
 			COOKIE_DEFAULTS,
 		);
@@ -128,6 +130,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const handleThemeChange = (id: string): void => {
 		setEditorThemeId(id);
 		savePreferences({ theme: id });
+	};
+
+	// 切换放大/缩小并持久化
+	const toggleExpanded = (): void => {
+		setIsExpanded((prev) => {
+			const next = !prev;
+			savePreferences({ isExpanded: next });
+			return next;
+		});
 	};
 
 	// @ 派生状态：主题变体及背景色
@@ -285,7 +296,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 					onItemAction={handleItemAction}
 					onCheckboxToggle={toggleTool}
 					onThemeChange={handleThemeChange}
-					onExpandToggle={() => setIsExpanded((v) => !v)}
+					onExpandToggle={toggleExpanded}
 				/>
 
 				{/* 保存中遮罩 */}
