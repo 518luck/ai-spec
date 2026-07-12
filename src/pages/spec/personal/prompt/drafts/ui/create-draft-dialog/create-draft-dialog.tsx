@@ -81,9 +81,20 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		setActiveTools((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 	};
 
-	// 拖拽排序后更新工具顺序（useLocalStorage 自动持久化）
+	// 拖拽排序后更新工具顺序：以可见项的新顺序为准，把当前不可见的项追加到末尾
 	const reorderTools = (newOrder: string[]): void => {
-		setActiveTools(newOrder);
+		setActiveTools((prev) => {
+			const reordered = prev.slice().sort((a, b) => {
+				const ia = newOrder.indexOf(a);
+				const ib = newOrder.indexOf(b);
+				// 不在 newOrder 里的（不可见项）排到最后，保持原相对顺序
+				if (ia === -1 && ib === -1) return 0;
+				if (ia === -1) return 1;
+				if (ib === -1) return -1;
+				return ia - ib;
+			});
+			return reordered;
+		});
 	};
 
 	// 更新视图设置（useLocalStorage 自动持久化）
