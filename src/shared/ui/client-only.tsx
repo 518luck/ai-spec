@@ -1,7 +1,9 @@
 "use client";
 
 import { AnimatePresence, motion } from "motion/react";
-import { type ReactNode, useSyncExternalStore } from "react";
+import type { ReactNode } from "react";
+
+import { useMounted } from "@/shared/hooks/use-mounted";
 
 type ClientOnlyProps = {
 	children: ReactNode;
@@ -10,27 +12,20 @@ type ClientOnlyProps = {
 	className?: string;
 };
 
-// ! 只在浏览器客户端渲染 children：用 useSyncExternalStore 的 getServerSnapshot 返回 false，保证服务端与客户端首屏一致，避免 hydration 不匹配
+// ! 只在浏览器客户端渲染 children：用 useMounted 保证服务端与客户端首屏一致，避免 hydration 不匹配
 export function ClientOnly({
 	children,
 	fallback,
 	fadeInDuration = 0.5,
 	className,
 }: ClientOnlyProps): ReactNode {
-	const clientReady = useSyncExternalStore(
-		(onStoreChange) => {
-			onStoreChange();
-			return () => {};
-		},
-		() => true,
-		() => false,
-	);
+	const mounted = useMounted();
 
 	const Comp = fadeInDuration ? motion.div : "div";
 
 	return (
 		<AnimatePresence>
-			{clientReady ? (
+			{mounted ? (
 				<Comp
 					{...(fadeInDuration
 						? {
