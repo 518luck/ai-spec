@@ -1,5 +1,6 @@
 import type { JSX } from "react";
 import Markdown from "react-markdown";
+import rehypeExternalLinks from "rehype-external-links";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
@@ -18,7 +19,18 @@ export function DraftPreview({ content, height }: DraftPreviewProps): JSX.Elemen
 	return (
 		<ScrollArea style={{ height, maxHeight: height }}>
 			<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent p-4 pt-12">
-				<Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSlug, rehypeHighlight]}>
+				{/*
+					rehype 插件链顺序：slug 生成 id → autolink 给标题加锚点链接
+					→ external-links 外链新窗口打开 → highlight 代码高亮
+				*/}
+				<Markdown
+					remarkPlugins={[remarkGfm]}
+					rehypePlugins={[
+						rehypeSlug, // 为标题生成 id 锚点（保留，供将来目录/分享定位用）
+						[rehypeExternalLinks, { target: "_blank", rel: ["noopener", "noreferrer"] }], // 外链新窗口打开
+						rehypeHighlight, // 代码块语法高亮
+					]}
+				>
 					{content}
 				</Markdown>
 			</article>
