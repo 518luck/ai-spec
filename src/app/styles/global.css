@@ -11,6 +11,38 @@
 @custom-variant data-horizontal (&[data-orientation="horizontal"]);
 @custom-variant data-vertical (&[data-orientation="vertical"]);
 
+/* macOS 风格滚动条：默认透明，hover/滚动时淡入；细条、圆角、半透明 */
+@utility scrollbar-thin {
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+	transition: scrollbar-color 0.2s;
+
+	&:hover {
+		scrollbar-color: color-mix(in srgb, var(--border) 80%, transparent) transparent;
+	}
+
+	/* Webkit 浏览器（Chrome/Safari）滚动条样式 */
+	&::-webkit-scrollbar {
+		display: block;
+		width: 6px;
+		height: 6px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background-color: transparent;
+		border-radius: 9999px;
+		transition: background-color 0.2s;
+	}
+
+	&:hover::-webkit-scrollbar-thumb {
+		background-color: color-mix(in srgb, var(--border) 80%, transparent);
+	}
+}
+
 @layer base {
 	* {
 		@apply border-border outline-ring/50;

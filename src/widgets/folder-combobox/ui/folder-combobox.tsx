@@ -3,8 +3,9 @@
 // # 文件夹下拉选择框：Popover + Command(cmdk) 组合的 combobox，支持搜索、选中、内联创建
 
 import { useCommandState } from "cmdk";
-import { type JSX, useState } from "react";
+import { type JSX, useRef, useState } from "react";
 
+import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import {
@@ -17,7 +18,7 @@ import {
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { ScrollArea } from "@/shared/ui/scroll-area";
+import { ScrollMask } from "@/shared/ui/scroll-mask";
 import { FolderIcon } from "./folder-icon";
 
 // 文件夹选项的形状：后端 action 接好后返回这个结构，父组件拼好传入
@@ -54,6 +55,9 @@ export function FolderCombobox({
 	className,
 }: FolderComboboxProps): JSX.Element {
 	const [open, setOpen] = useState(false);
+	// 列表滚动容器 ref：驱动 useScrollProgress 算进度，底部接 ScrollMask 渐变遮罩
+	const listRef = useRef<HTMLDivElement>(null);
+	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
 
 	const selectedOption = options.find((opt) => opt.value === value);
 
@@ -94,9 +98,12 @@ export function FolderCombobox({
 				<Command>
 					{/* CommandInput：cmdk 自动管过滤（按 CommandItem 的 value 匹配输入） */}
 					<CommandInput placeholder={searchPlaceholder} />
-					{/* // ! ScrollArea 接管滚动：去掉 CommandList 的 max-h/overflow，避免两层可滚动打架 */}
-					<ScrollArea className="max-h-72">
-						<CommandList className="overflow-visible! max-h-none!">
+					<div className="relative">
+						<CommandList
+							ref={listRef}
+							onScroll={updateScrollProgress}
+							className="scrollbar-thin max-h-72"
+						>
 							{onCreate ? (
 								<CommandEmpty>
 									<CreateButton onCreate={handleCreate} emptyText={emptyText} />
@@ -147,7 +154,9 @@ export function FolderCombobox({
 								))}
 							</CommandGroup>
 						</CommandList>
-					</ScrollArea>
+						{/* // > 底部渐变遮罩：滚到底自动淡出，提示下方还有更多内容 */}
+						<ScrollMask scrollProgress={scrollProgress} />
+					</div>
 				</Command>
 			</PopoverContent>
 		</Popover>

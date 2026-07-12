@@ -80,9 +80,14 @@ function CommandInput({
 	);
 }
 
-function CommandList({ className, ...props }: React.ComponentProps<typeof CommandPrimitive.List>) {
+function CommandList({
+	className,
+	ref,
+	...props
+}: React.ComponentProps<typeof CommandPrimitive.List>) {
 	return (
 		<CommandPrimitive.List
+			ref={ref}
 			data-slot="command-list"
 			className={cn(
 				"no-scrollbar max-h-72 scroll-py-1 overflow-y-auto overflow-x-hidden outline-none",

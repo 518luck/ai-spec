@@ -1,5 +1,3 @@
-import type { CSSProperties } from "react";
-
 import { cn } from "@/shared/lib/utils";
 
 type ScrollMaskProps = {
@@ -18,7 +16,7 @@ export function ScrollMask({ scrollProgress, className }: ScrollMaskProps) {
 				"pointer-events-none absolute bottom-0 left-0 z-10 h-16 w-full bg-linear-to-t from-background to-transparent",
 				className,
 			)}
-			style={{ opacity: 1 - scrollProgress ** 2 } as CSSProperties}
+			style={{ opacity: 1 - scrollProgress ** 2 }}
 		/>
 	);
 }
