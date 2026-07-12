@@ -1,8 +1,9 @@
 "use client";
 // # 草稿编辑器顶部导航栏 —— 标题 + 快捷工具栏 + 更多操作下拉 + 主题切换 + 放大
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, Reorder } from "motion/react";
 import type { JSX } from "react";
+import { useRef } from "react";
 
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -46,6 +47,8 @@ type EditorToolbarProps = {
 	onItemAction: (type: "tool" | "display" | "preview", id: string) => void;
 	// 点击 Checkbox 时的回调（加入/移出快捷栏）
 	onCheckboxToggle: (id: string) => void;
+	// 拖拽排序后的回调
+	onReorder: (newOrder: string[]) => void;
 	// 切换主题
 	onThemeChange: (id: string) => void;
 	// 切换放大/缩小
@@ -65,6 +68,7 @@ export function EditorToolbar({
 	isExpanded,
 	onItemAction,
 	onCheckboxToggle,
+	onReorder,
 	onThemeChange,
 	onExpandToggle,
 }: EditorToolbarProps): JSX.Element {
@@ -72,6 +76,8 @@ export function EditorToolbar({
 	const currentMode = isPreview ? "preview" : "edit";
 	const isVisible = (item: { showIn?: string }): boolean =>
 		!item.showIn || item.showIn === "both" || item.showIn === currentMode;
+	// 记录鼠标按下的起点，用于区分点击和拖拽
+	const startPos = useRef<{ x: number; y: number } | null>(null);
 
 	return (
 		<div
@@ -86,22 +92,27 @@ export function EditorToolbar({
 			</span>
 
 			<div className="ml-auto flex items-center gap-2">
-				{/* // @ 快捷操作工具栏：图标逐个进出，背景平滑缩放 */}
+				{/* // @ 快捷操作工具栏：可拖拽排序，背景平滑缩放 */}
 				{activeToolbarItems.length > 0 && (
 					<motion.div
 						layout="size"
 						className="rounded-full p-0.5"
 						style={{ backgroundColor: toolbarBgColor }}
-						transition={{ type: "tween", duration: 0.3, ease: "circOut" }}
+						transition={{ type: "tween", duration: 0.3, ease: "linear" }}
 					>
 						<ScrollArea
 							orientation="horizontal"
 							className={isExpanded ? "" : "max-w-76"}
 							scrollbarClassName="mx-4"
 						>
-							<div className="flex items-center gap-0.5">
+							<Reorder.Group
+								axis="x"
+								values={activeToolbarItems}
+								onReorder={(newItems) => onReorder(newItems.map((i) => i.id))}
+								className="flex items-center gap-0.5"
+							>
 								<AnimatePresence mode="sync">
-									{activeToolbarItems.map((item, index) => {
+									{activeToolbarItems.map((item) => {
 										const isActive =
 											item.type === "tool"
 												? activeFormats.has(item.id)
@@ -109,21 +120,26 @@ export function EditorToolbar({
 													? isPreview
 													: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
 										return (
-											<motion.div
+											<Reorder.Item
 												key={item.id}
+												value={item}
 												layout
 												initial={{ opacity: 0, scale: 0 }}
-												animate={{
-													opacity: 1,
-													scale: 1,
-													transition: { delay: index * 0.03, duration: 0.2 },
+												animate={{ opacity: 1, scale: 1 }}
+												exit={{ opacity: 0, scale: 0 }}
+												whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
+												className="shrink-0 cursor-pointer"
+												onPointerDown={(e) => (startPos.current = { x: e.clientX, y: e.clientY })}
+												onPointerUp={(e) => {
+													if (!startPos.current) return;
+													const dx = Math.abs(e.clientX - startPos.current.x);
+													const dy = Math.abs(e.clientY - startPos.current.y);
+													// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
+													if (dx < 5 && dy < 5) {
+														onItemAction(item.type as "tool" | "display" | "preview", item.id);
+													}
+													startPos.current = null;
 												}}
-												exit={{
-													opacity: 0,
-													scale: 0,
-													transition: { delay: index * 0.03, duration: 0.2 },
-												}}
-												className="shrink-0"
 											>
 												<Tooltip>
 													<TooltipTrigger
@@ -132,14 +148,11 @@ export function EditorToolbar({
 																variant="ghost"
 																size="icon-sm"
 																aria-label={item.label}
-																className={`rounded-full ${
+																className={`pointer-events-none rounded-full ${
 																	isActive
 																		? "bg-primary/15! text-primary hover:bg-primary/25"
 																		: "hover:bg-foreground/20!"
 																}`}
-																onClick={() =>
-																	onItemAction(item.type as "tool" | "display" | "preview", item.id)
-																}
 															/>
 														}
 													>
@@ -147,11 +160,11 @@ export function EditorToolbar({
 													</TooltipTrigger>
 													<TooltipContent>{item.label}</TooltipContent>
 												</Tooltip>
-											</motion.div>
+											</Reorder.Item>
 										);
 									})}
 								</AnimatePresence>
-							</div>
+							</Reorder.Group>
 						</ScrollArea>
 					</motion.div>
 				)}

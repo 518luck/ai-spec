@@ -1,5 +1,5 @@
 "use client";
-// # 草稿创建弹窗 —— CodeMirror 编辑器 + 预览，偏好持久化到 cookie
+// # 草稿创建弹窗 —— CodeMirror 编辑器 + 预览，偏好持久化到 localStorage
 
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { syntaxTree } from "@codemirror/language";
@@ -12,12 +12,7 @@ import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
-import { getCookie, setCookie } from "@/shared/lib/cookie/client-cookie";
-import {
-	COOKIE_DEFAULTS,
-	EDITOR_PREFERENCES_COOKIE,
-	type EditorPreferencesCookie,
-} from "@/shared/lib/cookie/cookies";
+import { useLocalStorage } from "@/shared/hooks/use-local-storage";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
@@ -67,78 +62,43 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [content, setContent] = useState("");
 	const [isSaving, setIsSaving] = useState(false);
 	const [isPreview, setIsPreview] = useState(false);
-
-	// 编辑器偏好默认值
-	const defaultToolbar = ["bold", "italic"];
-	const defaultThemeId = "vscode";
-
-	// > 偏好状态：持久化到单个 cookie（ai-spec.editor-preferences），刷新后恢复
-	const [activeTools, setActiveTools] = useState<string[]>(defaultToolbar);
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
-	const [editorSettings, setEditorSettings] = useState(defaultEditorSettings);
-	const [editorThemeId, setEditorThemeId] = useState(defaultThemeId);
-	const [isExpanded, setIsExpanded] = useState(false);
 
-	// @ 副作用：挂载后从 cookie 读取全部偏好
+	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复（useLocalStorage 自带读写，无需手动存取）
+	const [activeTools, setActiveTools] = useLocalStorage<string[]>("draft.toolbar", [
+		"bold",
+		"italic",
+	]);
+	const [editorSettings, setEditorSettings] = useLocalStorage(
+		"draft.settings",
+		defaultEditorSettings,
+	);
+	const [editorThemeId, setEditorThemeId] = useLocalStorage<string>("draft.theme", "vscode");
+	const [isExpanded, setIsExpanded] = useLocalStorage<boolean>("draft.isExpanded", false);
 
-	useEffect(() => {
-		const raw = getCookie(EDITOR_PREFERENCES_COOKIE);
-		if (!raw) return;
-		try {
-			const prefs = JSON.parse(raw) as EditorPreferencesCookie;
-			if (Array.isArray(prefs.toolbar)) setActiveTools(prefs.toolbar);
-			if (prefs.settings) setEditorSettings({ ...defaultEditorSettings, ...prefs.settings });
-			if (prefs.theme) setEditorThemeId(prefs.theme);
-			if (typeof prefs.isExpanded === "boolean") setIsExpanded(prefs.isExpanded);
-		} catch {
-			// cookie 解析失败时用默认值
-		}
-	}, []);
-
-	// @ 偏好持久化方法
-
-	// 把当前全部偏好写入 cookie
-	const savePreferences = (overrides: EditorPreferencesCookie): void => {
-		setCookie(
-			EDITOR_PREFERENCES_COOKIE,
-			JSON.stringify({
-				toolbar: overrides.toolbar ?? activeTools,
-				settings: overrides.settings ?? editorSettings,
-				theme: overrides.theme ?? editorThemeId,
-				isExpanded: overrides.isExpanded ?? isExpanded,
-			}),
-			COOKIE_DEFAULTS,
-		);
-	};
-
-	// 切换快捷操作的显示/隐藏，同时持久化
+	// 切换快捷操作的显示/隐藏（useLocalStorage 自动持久化）
 	const toggleTool = (id: string): void => {
-		setActiveTools((prev) => {
-			const next = prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id];
-			savePreferences({ toolbar: next });
-			return next;
-		});
+		setActiveTools((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 	};
 
-	// 更新视图设置并持久化
+	// 拖拽排序后更新工具顺序（useLocalStorage 自动持久化）
+	const reorderTools = (newOrder: string[]): void => {
+		setActiveTools(newOrder);
+	};
+
+	// 更新视图设置（useLocalStorage 自动持久化）
 	const updateEditorSettings = (settings: typeof defaultEditorSettings): void => {
 		setEditorSettings(settings);
-		savePreferences({ settings });
 	};
 
-	// 切换编辑器主题并持久化
+	// 切换编辑器主题（useLocalStorage 自动持久化）
 	const handleThemeChange = (id: string): void => {
 		setEditorThemeId(id);
-		savePreferences({ theme: id });
 	};
 
-	// 切换放大/缩小并持久化
+	// 切换放大/缩小（useLocalStorage 自动持久化）
 	const toggleExpanded = (): void => {
-		setIsExpanded((prev) => {
-			const next = !prev;
-			savePreferences({ isExpanded: next });
-			return next;
-		});
+		setIsExpanded((prev) => !prev);
 	};
 
 	// @ 派生状态：主题变体及背景色
@@ -176,12 +136,15 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const isVisible = (item: { showIn?: string }): boolean =>
 		!item.showIn || item.showIn === "both" || item.showIn === currentMode;
 
-	// 胶囊中显示的操作项（根据 showIn 过滤）
-	const activeToolbarItems = MENU_GROUPS.flatMap((group) =>
-		group.items
-			.filter((item) => activeTools.includes(item.id) && isVisible(item))
-			.map((item) => ({ ...item, type: group.type })),
+	// 胶囊中显示的操作项：按 activeTools 的顺序排列（支持拖拽排序），再按 showIn 过滤
+	const allItems = MENU_GROUPS.flatMap((group) =>
+		group.items.map((item) => ({ ...item, type: group.type })),
 	);
+	const activeToolbarItems = activeTools
+		.map((id) => allItems.find((item) => item.id === id))
+		.filter(
+			(item): item is { type: string } & typeof item => item !== undefined && isVisible(item),
+		);
 
 	// 点击胶囊按钮或菜单文字
 	const handleItemAction = (type: "tool" | "display" | "preview", id: string): void => {
@@ -297,6 +260,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 					isExpanded={isExpanded}
 					onItemAction={handleItemAction}
 					onCheckboxToggle={toggleTool}
+					onReorder={reorderTools}
 					onThemeChange={handleThemeChange}
 					onExpandToggle={toggleExpanded}
 				/>
