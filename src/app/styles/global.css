@@ -2,6 +2,8 @@
 @import "tw-animate-css";
 @import "./theme.css";
 
+@plugin "@tailwindcss/typography";
+
 @custom-variant dark (&:is(.dark *));
 
 /* 映射 base-ui 输出的 data-orientation 到 shadcn 组件使用的变体前缀 */

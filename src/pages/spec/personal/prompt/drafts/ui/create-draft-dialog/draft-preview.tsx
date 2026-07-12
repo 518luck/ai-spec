@@ -2,17 +2,22 @@ import type { JSX } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
+import { ScrollArea } from "@/shared/ui/scroll-area";
+
 type DraftPreviewProps = {
 	// Markdown 源文本
 	content: string;
+	// 预览区域高度：与弹窗 motion.div 的 height 一致（减去导航栏 h-12 = 3rem）
+	height: string;
 };
 
 // Markdown 预览：用 react-markdown + remark-gfm 渲染，支持 GFM 表格、删除线、任务列表
-export function DraftPreview({ content }: DraftPreviewProps): JSX.Element {
-	console.log("🚀 ~ DraftPreview ~ content:", content);
+export function DraftPreview({ content, height }: DraftPreviewProps): JSX.Element {
 	return (
-		<article className="prose prose-sm dark:prose-invert max-w-none p-4 pt-12">
-			<Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
-		</article>
+		<ScrollArea style={{ height, maxHeight: height }}>
+			<article className="prose prose-sm dark:prose-invert max-w-none p-4 pt-12">
+				<Markdown remarkPlugins={[remarkGfm]}>{content}</Markdown>
+			</article>
+		</ScrollArea>
 	);
 }

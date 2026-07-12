@@ -243,9 +243,9 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 				}
 			>
 				{/* 编辑器/预览区域 */}
-				<div className="min-h-0 flex-1 overflow-auto">
+				<div className="min-h-0 flex-1 overflow-hidden">
 					{isPreview ? (
-						<DraftPreview content={content} />
+						<DraftPreview content={content} height={isExpanded ? "37rem" : "29rem"} />
 					) : (
 						<CodeMirror
 							ref={editorRef}
