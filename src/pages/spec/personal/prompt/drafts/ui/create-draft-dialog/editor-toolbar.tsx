@@ -1,4 +1,5 @@
 "use client";
+// # 草稿编辑器顶部导航栏 —— 标题 + 快捷工具栏 + 更多操作下拉 + 主题切换 + 放大
 
 import { motion } from "motion/react";
 import type { JSX } from "react";
@@ -51,7 +52,7 @@ type EditorToolbarProps = {
 	onExpandToggle: () => void;
 };
 
-// 顶部导航栏：标题（左）+ 操作栏（胶囊按钮 + 下拉菜单 + 主题选择 + 放大）
+// > 按当前模式（编辑/预览）过滤菜单项的可见性
 export function EditorToolbar({
 	title,
 	editorBgColor,
@@ -85,7 +86,7 @@ export function EditorToolbar({
 			</span>
 
 			<div className="ml-auto flex items-center gap-2">
-				{/* 快捷操作工具栏：椭圆背景，放大时不限宽度 */}
+				{/* // @ 快捷操作工具栏：椭圆背景，放大时不限宽度 */}
 				{activeToolbarItems.length > 0 && (
 					<motion.div
 						layout
@@ -136,7 +137,7 @@ export function EditorToolbar({
 					</motion.div>
 				)}
 
-				{/* 更多操作：下拉面板，Checkbox 控制是否加入快捷栏，点击文字执行对应操作 */}
+				{/* // @ 更多操作：Checkbox 控制是否加入快捷栏，点击文字执行对应操作 */}
 				<DropdownMenu>
 					<DropdownMenuTrigger
 						render={
