@@ -23,56 +23,96 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { FolderCombobox, type FolderOption } from "@/widgets/folder-combobox";
 import { EDITOR_THEMES, MENU_GROUPS, type MenuItem } from "../../config/editor-dialog";
 
-type EditorToolbarProps = {
-	// 从内容首行提取的标题
-	title: string;
+// 编辑器展示状态 + 主题/展开回调：状态与其对应回调同组，方便后续扩展（如版本处理）
+export type EditorState = {
 	// 编辑器背景色（跟随主题）
 	editorBgColor: string;
 	// 快捷栏胶囊背景色（跟随主题）
 	toolbarBgColor: string;
-	// 胶囊中显示的操作项
-	activeToolbarItems: ({ type: string } & MenuItem)[];
-	// 光标位置正在使用的格式 id 集合
-	activeFormats: Set<string>;
 	// 编辑器视图设置
 	editorSettings: { lineNumbers: boolean; foldGutter: boolean; highlightActiveLine: boolean };
 	// 当前主题 id
 	editorThemeId: string;
+	// 光标位置正在使用的格式 id 集合
+	activeFormats: Set<string>;
 	// 是否处于预览模式
 	isPreview: boolean;
 	// 是否放大
 	isExpanded: boolean;
-	// 点击胶囊按钮或菜单文字时的回调
-	onItemAction: (type: "tool" | "display" | "preview", id: string) => void;
-	// 点击 Checkbox 时的回调（加入/移出快捷栏）
-	onCheckboxToggle: (id: string) => void;
-	// 拖拽排序后的回调
-	onReorder: (newOrder: string[]) => void;
 	// 切换主题
 	onThemeChange: (id: string) => void;
 	// 切换放大/缩小
 	onExpandToggle: () => void;
 };
 
+// 快捷工具胶囊的行为：操作项 + 三个回调
+export type QuickToolbarProps = {
+	// 胶囊中显示的操作项
+	items: ({ type: string } & MenuItem)[];
+	// 点击胶囊按钮或菜单文字时的回调
+	onAction: (type: "tool" | "display" | "preview", id: string) => void;
+	// 点击 Checkbox 时的回调（加入/移出快捷栏）
+	onToggle: (id: string) => void;
+	// 拖拽排序后的回调
+	onReorder: (newOrder: string[]) => void;
+};
+
+// 文件夹选择：选项 + 当前值 + 切换/新建回调
+export type FolderPickerProps = {
+	// 可选的文件夹列表
+	options: FolderOption[];
+	// 当前选中的文件夹 id；undefined 表示不加入任何文件夹
+	value: string | undefined;
+	// 切换文件夹选择
+	onChange: (folderId: string | undefined) => void;
+	// 行内新建文件夹
+	onCreate: (name: string) => Promise<FolderOption | null>;
+};
+
+type EditorToolbarProps = {
+	// 从内容首行提取的标题
+	title: string;
+	// 编辑器展示状态 + 主题/展开回调
+	editorState: EditorState;
+	// 快捷工具胶囊
+	quickToolbar: QuickToolbarProps;
+	// 文件夹选择
+	folder: FolderPickerProps;
+};
+
 // > 按当前模式（编辑/预览）过滤菜单项的可见性
 export function EditorToolbar({
 	title,
-	editorBgColor,
-	toolbarBgColor,
-	activeToolbarItems,
-	activeFormats,
-	editorSettings,
-	editorThemeId,
-	isPreview,
-	isExpanded,
-	onItemAction,
-	onCheckboxToggle,
-	onReorder,
-	onThemeChange,
-	onExpandToggle,
+	editorState,
+	quickToolbar,
+	folder,
 }: EditorToolbarProps): JSX.Element {
+	const {
+		editorBgColor,
+		toolbarBgColor,
+		editorSettings,
+		editorThemeId,
+		activeFormats,
+		isPreview,
+		isExpanded,
+		onThemeChange,
+		onExpandToggle,
+	} = editorState;
+	const {
+		items: activeToolbarItems,
+		onAction: onItemAction,
+		onToggle: onCheckboxToggle,
+		onReorder,
+	} = quickToolbar;
+	const {
+		options: folders,
+		value: folderId,
+		onChange: onFolderChange,
+		onCreate: onFolderCreate,
+	} = folder;
 	// 当前模式下可见的菜单项
 	const currentMode = isPreview ? "preview" : "edit";
 	const isVisible = (item: { showIn?: string }): boolean =>
@@ -91,6 +131,16 @@ export function EditorToolbar({
 			>
 				{title}
 			</span>
+
+			{/* // @ 文件夹选择：归属当前草稿，支持搜索已有文件夹或行内新建 */}
+			<FolderCombobox
+				options={folders}
+				value={folderId}
+				onChange={onFolderChange}
+				onCreate={onFolderCreate}
+				placeholder="选择文件夹"
+				className="max-w-40 shrink-0"
+			/>
 
 			<div className="ml-auto flex items-center gap-2">
 				{/* // @ 快捷操作工具栏：可拖拽排序，宽度跟随内容伸缩；box-content 避免图标贴圆角 */}

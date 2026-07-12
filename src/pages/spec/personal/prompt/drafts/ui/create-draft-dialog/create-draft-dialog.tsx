@@ -9,13 +9,15 @@ import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { type JSX, useMemo, useRef, useState } from "react";
+import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { createFolder, getFolders } from "@/entities/folder";
 import { createDraft } from "@/entities/prompt";
 import { useLocalStorage } from "@/shared/hooks/use-local-storage";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
+import type { FolderOption } from "@/widgets/folder-combobox";
 import {
 	defaultEditorSettings,
 	EDITOR_THEMES,
@@ -64,6 +66,10 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [isPreview, setIsPreview] = useState(false);
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 
+	// 文件夹归属：folderId 为 undefined 表示不加入任何文件夹
+	const [folderId, setFolderId] = useState<string | undefined>(undefined);
+	const [folders, setFolders] = useState<FolderOption[]>([]);
+
 	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复（useLocalStorage 自带读写，无需手动存取）
 	const [activeTools, setActiveTools] = useLocalStorage<string[]>("draft.toolbar", [
 		"bold",
@@ -110,6 +116,28 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	// 切换放大/缩小（useLocalStorage 自动持久化）
 	const toggleExpanded = (): void => {
 		setIsExpanded((prev) => !prev);
+	};
+
+	// 对话框打开时拉取文件夹列表，关闭时重置归属选择
+	useEffect(() => {
+		if (!open) return;
+		void getFolders()
+			.then(setFolders)
+			.catch(() => {
+				// 拉取失败静默处理，文件夹选择仍可用（只是列表为空）
+			});
+	}, [open]);
+
+	// 行内新建文件夹：成功后追加到列表并自动选中
+	const handleCreateFolder = async (name: string): Promise<FolderOption | null> => {
+		try {
+			const created = await createFolder(name);
+			setFolders((prev) => [...prev, created]);
+			return created;
+		} catch (error) {
+			toast.error(error instanceof Error && error.message ? error.message : "创建文件夹失败");
+			return null;
+		}
 	};
 
 	// @ 派生状态：主题变体及背景色
@@ -182,6 +210,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		if (!trimmed) {
 			setContent("");
 			setIsPreview(false);
+			setFolderId(undefined);
 			onOpenChange(false);
 			return;
 		}
@@ -189,6 +218,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		const parsed = createDraftDtoSchema.safeParse({
 			name: content.split("\n")[0]?.trim() || undefined,
 			content,
+			folder_id: folderId,
 		});
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请输入草稿内容");
@@ -201,6 +231,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			toast.success("草稿已创建");
 			setContent("");
 			setIsPreview(false);
+			setFolderId(undefined);
 			router.refresh();
 			onOpenChange(false);
 		} catch (error) {
@@ -261,19 +292,29 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 				{/* 顶部导航栏 */}
 				<EditorToolbar
 					title={title}
-					editorBgColor={editorBgColor}
-					toolbarBgColor={toolbarBgColor}
-					activeToolbarItems={activeToolbarItems}
-					activeFormats={activeFormats}
-					editorSettings={editorSettings}
-					editorThemeId={editorThemeId}
-					isPreview={isPreview}
-					isExpanded={isExpanded}
-					onItemAction={handleItemAction}
-					onCheckboxToggle={toggleTool}
-					onReorder={reorderTools}
-					onThemeChange={handleThemeChange}
-					onExpandToggle={toggleExpanded}
+					editorState={{
+						editorBgColor,
+						toolbarBgColor,
+						editorSettings,
+						editorThemeId,
+						activeFormats,
+						isPreview,
+						isExpanded,
+						onThemeChange: handleThemeChange,
+						onExpandToggle: toggleExpanded,
+					}}
+					quickToolbar={{
+						items: activeToolbarItems,
+						onAction: handleItemAction,
+						onToggle: toggleTool,
+						onReorder: reorderTools,
+					}}
+					folder={{
+						options: folders,
+						value: folderId,
+						onChange: setFolderId,
+						onCreate: handleCreateFolder,
+					}}
 				/>
 
 				{/* 保存中遮罩 */}

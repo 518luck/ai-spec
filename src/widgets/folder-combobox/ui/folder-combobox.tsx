@@ -15,6 +15,7 @@ import {
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { FolderIcon } from "./folder-icon";
 
 // 文件夹选项的形状：后端 action 接好后返回这个结构，父组件拼好传入
@@ -92,37 +93,60 @@ export function FolderCombobox({
 				<Command>
 					{/* CommandInput：cmdk 自动管过滤（按 CommandItem 的 value 匹配输入） */}
 					<CommandInput placeholder={searchPlaceholder} />
-					<CommandList>
-						{onCreate ? (
-							<CommandEmpty>
-								<CreateButton onCreate={handleCreate} emptyText={emptyText} />
-							</CommandEmpty>
-						) : (
-							<CommandEmpty>{emptyText}</CommandEmpty>
-						)}
-						<CommandGroup>
-							{options.map((option) => (
+					{/* ScrollArea 接管滚动：去掉 CommandList 的 max-h/overflow，避免两层可滚动打架 */}
+					<ScrollArea className="max-h-72">
+						<CommandList className="overflow-visible! max-h-none!">
+							{onCreate ? (
+								<CommandEmpty>
+									<CreateButton onCreate={handleCreate} emptyText={emptyText} />
+								</CommandEmpty>
+							) : (
+								<CommandEmpty>{emptyText}</CommandEmpty>
+							)}
+							{/* 不加入任何文件夹（folder_id=null），始终置顶；value 含多关键词便于搜索命中 */}
+							<CommandGroup heading="未分类">
 								<CommandItem
-									key={option.value}
-									value={option.label}
+									value="未分类 无文件夹 不加入 none"
 									onSelect={() => {
-										onChange(option.value);
+										onChange(undefined);
 										setOpen(false);
 									}}
-									className="not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
+									className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
 								>
 									<FolderIcon />
-									{option.label}
+									<span className="text-muted-foreground">未分类</span>
 									<Icons.check
 										className={cn(
 											"ml-auto size-4",
-											value === option.value ? "opacity-100" : "opacity-0",
+											value === undefined ? "opacity-100" : "opacity-0",
 										)}
 									/>
 								</CommandItem>
-							))}
-						</CommandGroup>
-					</CommandList>
+							</CommandGroup>
+							<CommandGroup heading="文件夹">
+								{options.map((option) => (
+									<CommandItem
+										key={option.value}
+										value={option.label}
+										onSelect={() => {
+											onChange(option.value);
+											setOpen(false);
+										}}
+										className="not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
+									>
+										<FolderIcon />
+										{option.label}
+										<Icons.check
+											className={cn(
+												"ml-auto size-4",
+												value === option.value ? "opacity-100" : "opacity-0",
+											)}
+										/>
+									</CommandItem>
+								))}
+							</CommandGroup>
+						</CommandList>
+					</ScrollArea>
 				</Command>
 			</PopoverContent>
 		</Popover>

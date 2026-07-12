@@ -26,12 +26,16 @@ export const draftContentSchema = z
 // 草稿图片列表：可选，默认空数组
 export const draftImagesSchema = z.array(z.string().max(2048)).default([]);
 
+// 草稿所属文件夹：可选，空串或 undefined 表示不加入任何文件夹
+export const draftFolderIdSchema = z.string().optional().or(z.literal(""));
+
 // 创建草稿的请求入参 schema（Dto 入：前端传入待校验数据）
 export const createDraftDtoSchema = z.object({
 	name: draftNameSchema,
 	description: draftDescriptionSchema,
 	content: draftContentSchema,
 	images: draftImagesSchema,
+	folder_id: draftFolderIdSchema,
 });
 
 // 创建草稿入参类型（供 Server Action / 路由处理器使用）
