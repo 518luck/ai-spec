@@ -9,7 +9,7 @@ import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
-import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import { type JSX, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { useLocalStorage } from "@/shared/hooks/use-local-storage";

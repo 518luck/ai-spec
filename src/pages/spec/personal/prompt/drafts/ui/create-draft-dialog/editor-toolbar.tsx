@@ -1,10 +1,11 @@
 "use client";
 // # 草稿编辑器顶部导航栏 —— 标题 + 快捷工具栏 + 更多操作下拉 + 主题切换 + 放大
 
-import { AnimatePresence, motion, Reorder } from "motion/react";
+import { AnimatePresence, Reorder } from "motion/react";
 import type { JSX } from "react";
 import { useRef } from "react";
 
+import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
 import {
@@ -92,13 +93,12 @@ export function EditorToolbar({
 			</span>
 
 			<div className="ml-auto flex items-center gap-2">
-				{/* // @ 快捷操作工具栏：可拖拽排序，背景平滑缩放 */}
+				{/* // @ 快捷操作工具栏：可拖拽排序，宽度跟随内容伸缩；box-content 避免图标贴圆角 */}
 				{activeToolbarItems.length > 0 && (
-					<motion.div
-						layout="size"
-						className="rounded-full p-0.5"
+					<AnimatedSizeContainer
+						width
+						className="box-content rounded-full p-0.5"
 						style={{ backgroundColor: toolbarBgColor }}
-						transition={{ type: "tween", duration: 0.3, ease: "linear" }}
 					>
 						<ScrollArea
 							orientation="horizontal"
@@ -111,7 +111,7 @@ export function EditorToolbar({
 								onReorder={(newItems) => onReorder(newItems.map((i) => i.id))}
 								className="flex items-center gap-0.5"
 							>
-								<AnimatePresence mode="sync">
+								<AnimatePresence mode="popLayout">
 									{activeToolbarItems.map((item) => {
 										const isActive =
 											item.type === "tool"
@@ -127,6 +127,7 @@ export function EditorToolbar({
 												initial={{ opacity: 0, scale: 0 }}
 												animate={{ opacity: 1, scale: 1 }}
 												exit={{ opacity: 0, scale: 0 }}
+												transition={{ type: "spring", stiffness: 400, damping: 32 }}
 												whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
 												className="shrink-0 cursor-pointer"
 												onPointerDown={(e) => (startPos.current = { x: e.clientX, y: e.clientY })}
@@ -166,7 +167,7 @@ export function EditorToolbar({
 								</AnimatePresence>
 							</Reorder.Group>
 						</ScrollArea>
-					</motion.div>
+					</AnimatedSizeContainer>
 				)}
 
 				{/* // @ 更多操作：Checkbox 控制是否加入快捷栏，点击文字执行对应操作 */}
