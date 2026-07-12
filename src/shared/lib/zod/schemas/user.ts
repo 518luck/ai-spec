@@ -4,6 +4,7 @@ import { emailSchema } from "./auth";
 
 // # 用户相关 zod schema：名称、头像、默认工作区、部分更新校验
 
+// @ 拼装件
 // 用户名称校验：非空、最多 32 字
 export const userNameSchema = z
 	.string()
@@ -20,7 +21,8 @@ export const userAvatarSchema = z
 // ? TODO: 工作空间功能尚未上线，此 schema 暂为占位
 export const defaultWorkspaceIdSchema = z.string().min(1);
 
-// PATCH /api/user 的部分更新入参：四字段全可选，至少提交一个
+// @ 入参
+// 用户资料部分更新入参：四字段全可选，至少提交一个
 export const updateUserSchema = z
 	.object({
 		name: userNameSchema.optional(),

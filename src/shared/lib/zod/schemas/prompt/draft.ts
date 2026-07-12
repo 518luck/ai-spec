@@ -2,6 +2,7 @@ import * as z from "zod/v4";
 
 // # 草稿（Draft）相关 zod schema：名称、描述、正文、图片、文件夹归属校验
 
+// @ 拼装件
 // 草稿名称：可选，最多 64 字
 export const draftNameSchema = z
 	.string()
@@ -31,7 +32,8 @@ export const draftImagesSchema = z.array(z.string().max(2048)).default([]);
 // 草稿所属文件夹：可选，空串或 undefined 表示不加入任何文件夹
 export const draftFolderIdSchema = z.string().optional().or(z.literal(""));
 
-// 创建草稿的请求入参 schema（Dto 入：前端传入待校验数据）
+// @ 入参
+// 创建草稿入参
 export const createDraftDtoSchema = z.object({
 	name: draftNameSchema,
 	description: draftDescriptionSchema,
@@ -40,10 +42,11 @@ export const createDraftDtoSchema = z.object({
 	folder_id: draftFolderIdSchema,
 });
 
-// 创建草稿入参类型（供 Server Action / 路由处理器使用）
+// 创建草稿入参类型
 export type CreateDraftDto = z.infer<typeof createDraftDtoSchema>;
 
-// 创建草稿的响应出参 schema（Vo 出：创建成功后返回给前端的数据）
+// @ 出参
+// 创建草稿响应
 export const createDraftVoSchema = z.object({
 	id: z.string(),
 	name: z.string().nullable(),
@@ -51,5 +54,5 @@ export const createDraftVoSchema = z.object({
 	updated_at: z.iso.datetime(),
 });
 
-// 创建草稿响应类型（前端消费 / 列表展示共用）
+// 创建草稿响应类型
 export type CreateDraftVo = z.infer<typeof createDraftVoSchema>;
