@@ -1,3 +1,5 @@
+// # 双栏侧边栏布局：服务端读 cookie 还原宽度/折叠态，装配 Provider 与主内容区
+
 import { cookies } from "next/headers";
 import type { ComponentProps, JSX } from "react";
 
@@ -16,7 +18,6 @@ type DualSidebarLayoutProps = ComponentProps<"div"> & {
 	contentClassName?: string;
 };
 
-// 承载左侧双侧边栏和右侧主内容区的应用级布局。
 export async function DualSidebarLayout({
 	className,
 	sidebarClassName,

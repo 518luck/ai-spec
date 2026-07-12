@@ -27,7 +27,7 @@ const defaultLoginMethods = [
 ] as const;
 const oauthLoginMethods = [AUTH_PROVIDER_GOOGLE, AUTH_PROVIDER_GITHUB] as const;
 
-// 根据用户偏好调整第三方登录按钮的显示顺序。
+// > 根据用户偏好调整第三方登录按钮的显示顺序，偏好的方式排在最前
 const getOrderedOauthMethods = (
 	methods: readonly LoginMethod[],
 	preferredMethod: LoginMethod | null,
@@ -51,7 +51,7 @@ const renderOauthMethod = (method: OauthLoginMethod): JSX.Element => {
 	return <LoginGithub key={method} />;
 };
 
-// 提供登录页状态并渲染登录表单。
+// # 登录表单入口：挂载 Provider 并渲染登录方式
 export function LoginForm({ methods = defaultLoginMethods }: LoginFormProps): JSX.Element {
 	return (
 		<ClientOnly>

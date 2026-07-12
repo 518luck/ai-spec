@@ -1,3 +1,5 @@
+// # Resend 邮件选项类型：在 Resend SDK 字段基础上扩展 variant / unsubscribeUrl
+
 // 描述"一封邮件由哪些字段构成
 import type { CreateEmailOptions } from "resend";
 

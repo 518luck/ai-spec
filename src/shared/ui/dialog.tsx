@@ -1,5 +1,7 @@
 "use client";
 
+// # Dialog 弹窗组合（基于 base-ui）：Portal + 遮罩 + 居中面板，内置 ScrollArea 内容滚动与可选关闭按钮
+
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
@@ -58,7 +60,7 @@ function DialogContent({
 				)}
 				{...props}
 			>
-				{/* ScrollArea 包裹所有内容，让超长弹窗自动滚动；scrollable=false 时直接渲染 children（供 CodeMirror 等自带滚动的组件使用） */}
+				{/* // ! ScrollArea 包裹内容让超长弹窗自动滚动；scrollable=false 时直接渲染 children（供 CodeMirror 等自带滚动的组件使用，避免双重滚动冲突） */}
 				{scrollable ? <ScrollArea className="max-h-[inherit]">{children}</ScrollArea> : children}
 				{showCloseButton && (
 					<DialogPrimitive.Close

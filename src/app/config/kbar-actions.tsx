@@ -1,5 +1,7 @@
 "use client";
 
+// # KBar 命令面板 action 注册：主题切换/循环两个命令，快捷键触发
+
 import { useRegisterActions } from "kbar";
 import { useTheme } from "next-themes";
 import { THEMES } from "@/shared/configs/theme.config";
@@ -15,6 +17,7 @@ function useKBarActions() {
 		setActiveTheme(THEMES[nextIndex].value);
 	};
 
+	// @ 命令定义：id 唯一、shortcut 为两键序列，section 用于面板内分组
 	const actions = [
 		{
 			id: "toggle-light-dark-mode",

@@ -1,3 +1,5 @@
+// # 带标题栏的页面外壳：可选标题 + 可滚动正文区（正文走 PageWidthWrapper 限宽）
+
 import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";

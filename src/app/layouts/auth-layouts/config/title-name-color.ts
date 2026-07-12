@@ -1,9 +1,12 @@
+// # 登录页标题文字粒子背景的颜色预设：驱动粒子色相与发光色
+
 export type TitleNameColorPreset = {
 	glowColor: string;
 	baseHue: number;
 	hueRange: number;
 };
 
+// @ 预设方案：每个 preset 描述一种风格基调，注释说明视觉感受
 export const TITLE_NAME_COLOR_PRESETS = {
 	coolGraphiteSilver: {
 		// 冷石墨银：偏冷的银灰蓝，理性、克制、现代
@@ -25,4 +28,5 @@ export const TITLE_NAME_COLOR_PRESETS = {
 	},
 } satisfies Record<string, TitleNameColorPreset>;
 
+// > 当前启用主题：切换粒子的整体观感只改这一行即可
 export const TITLE_NAME_COLOR = TITLE_NAME_COLOR_PRESETS.coolGraphiteSilver;

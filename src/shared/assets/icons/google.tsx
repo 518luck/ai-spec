@@ -1,3 +1,5 @@
+// # Google 品牌 SVG 图标（四色官方配色）：用于第三方登录按钮
+
 export function Google({ className }: { className?: string }) {
 	return (
 		<svg

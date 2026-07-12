@@ -6,6 +6,7 @@ import { RegisterProvider, useRegisterContext } from "../model/register-context"
 import { SignUpForm } from "./signup-form";
 import { VerifyEmailForm } from "./verify-email-form";
 
+// # 注册页客户端入口：挂载 Provider，按步骤渲染注册/验证流程
 export default function RegisterPageClient() {
 	return (
 		<RegisterProvider>
@@ -55,6 +56,7 @@ function Verify() {
 	);
 }
 
+// > 步骤切换：signup 填写邮箱密码，verify 输入 OTP 验证码
 const RegisterFlow = () => {
 	const { step } = useRegisterContext();
 

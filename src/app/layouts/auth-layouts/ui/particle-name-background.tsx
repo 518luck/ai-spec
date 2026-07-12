@@ -1,5 +1,7 @@
 "use client";
 
+// # 粒子文字背景：把文字光栅化为采样点，用 canvas 粒子云收束成形并响应鼠标扰动
+
 import { useEffect, useRef } from "react";
 import { cn } from "@/shared/lib/utils";
 
@@ -81,6 +83,7 @@ export function ParticleNameBackground({
 			return Math.max(34, Math.min(88, shortest * 0.32));
 		};
 
+		// @ 文字像素采样：把文字渲染到离屏 canvas，再读 alpha 通道得到粒子目标点
 		const createTargets = () => {
 			const fontSize = getFontSize();
 			const sampleGap = Math.max(2, Math.round(fontSize / 22)); // 提高采样密度，避免标题笔画缺失得太厉害
@@ -111,6 +114,7 @@ export function ParticleNameBackground({
 			return points;
 		};
 
+		// @ 粒子初始化：每个目标点分配一个从云团边缘出发的粒子，随机延迟 reveal 形成「汇聚」感
 		const createParticles = () => {
 			introProgress = 0; // 重新布局时让 intro 动画从头开始
 			const targets = createTargets();

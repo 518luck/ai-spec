@@ -1,5 +1,8 @@
 "use client";
 
+// # 密钥列表表格（客户端组件）
+// 固定高度表格 + 底部分页；数据已由服务端按页查询，翻页通过 router.push 改 URL 触发服务端重渲染
+
 import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";

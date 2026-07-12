@@ -1,3 +1,5 @@
+// # 鉴权表单布局：上下分栏——顶部留白、中部居中表单、底部服务条款
+
 import type { PropsWithChildren } from "react";
 import { appConfig } from "@/shared/configs/app.config";
 

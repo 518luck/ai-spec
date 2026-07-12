@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 
-//判断当前设备尺寸属于 desktop、tablet 还是 mobile；如果当前不是浏览器环境，就返回 null。
+// 判断当前设备尺寸属于 desktop、tablet 还是 mobile；非浏览器环境返回 null
 function getDevice(): "mobile" | "tablet" | "desktop" | null {
-	// windo 是浏览器全局对象的
+	// window 是浏览器全局对象，SSR 时不存在
 	if (typeof window === "undefined") return null;
 
 	return window.matchMedia("(min-width: 1024px)").matches
@@ -12,14 +12,14 @@ function getDevice(): "mobile" | "tablet" | "desktop" | null {
 			: "mobile";
 }
 
-//返回一个对象，这个对象里包含当前浏览器窗口的宽和高。
+// 返回一个对象，包含当前浏览器窗口的宽和高
 function getDimensions() {
 	if (typeof window === "undefined") return null;
 
 	return { width: window.innerWidth, height: window.innerHeight };
 }
 
-//用来获取“当前设备类型和窗口尺寸”，并且在窗口大小变化时自动更新。
+// > 获取当前设备类型和窗口尺寸，并在窗口大小变化时自动更新
 export function useMediaQuery() {
 	const [device, setDevice] = useState<"mobile" | "tablet" | "desktop" | null>(getDevice());
 	const [dimensions, setDimensions] = useState<{

@@ -1,5 +1,7 @@
 "use client";
 
+// # 右侧 area 切换动画容器：不可见时按方向滑出并脱离交互，用于业务区之间的过渡
+
 import type { PropsWithChildren } from "react";
 
 import { cn } from "@/shared/lib/utils";

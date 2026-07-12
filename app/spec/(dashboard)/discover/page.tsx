@@ -1,6 +1,6 @@
 import { DiscoverPromptsPage } from "@/pages/spec/discover/prompts";
 
-// 接入发现默认页面路由。
+// # 发现页（薄层路由，委托 DiscoverPromptsPage 组件）
 export default function Page() {
 	return <DiscoverPromptsPage />;
 }

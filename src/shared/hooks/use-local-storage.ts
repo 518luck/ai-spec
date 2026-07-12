@@ -35,7 +35,8 @@ const readLocalStorageValue = <TValue>(key: string, initialValue: TValue): TValu
 	}
 };
 
-// 像 useState 一样读写 localStorage，并用 state 触发界面刷新。
+// > 像 useState 一样读写 localStorage，并用 state 触发界面刷新。
+// > 初始读取在 SSR 时返回 initialValue，避免服务端/客户端不一致。
 export const useLocalStorage = <TValue>(
 	key: string,
 	initialValue: TValue,

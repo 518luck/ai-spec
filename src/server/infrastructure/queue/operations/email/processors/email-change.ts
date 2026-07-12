@@ -4,7 +4,7 @@ import { appConfig } from "@/shared/configs/app.config";
 
 import type { EmailChangeData } from "../types";
 
-// 发送邮箱变更确认邮件，链接携带原始 token 指向前端验证页
+// # 处理器：发送邮箱变更确认邮件，链接携带原始 token 指向前端验证页
 export async function processEmailChange({
 	to,
 	token,

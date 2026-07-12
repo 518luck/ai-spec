@@ -1,3 +1,5 @@
+// # 徽标组件：variant 控制配色，shape 控制形状（pill 胶囊 / square 方块），基于 base-ui useRender 支持 render 组合
+
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";

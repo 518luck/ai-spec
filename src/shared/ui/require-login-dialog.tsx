@@ -1,5 +1,7 @@
 "use client";
 
+// # 未登录提示弹窗：不可关闭的受控 Dialog，提供「返回 / 去登录」入口，常用于需要鉴权的页面
+
 import { useRouter } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { Button } from "@/shared/ui/button";
@@ -21,7 +23,6 @@ type RequireLoginDialogProps = {
 	onLogin?: () => void;
 };
 
-// 未登录时展示的不可关闭登录提示弹窗
 export function RequireLoginDialog({
 	title = "需要登录",
 	description = "请登录后查看此页面内容。",
@@ -58,7 +59,7 @@ export function RequireLoginDialog({
 	);
 }
 
-// 检测浏览器是否有可用于返回的历史记录
+// ! useSyncExternalStore 服务端返回 false（window 不存在），只在客户端读 history.length，避免 hydration 报错
 const useCanGoBack = (): boolean =>
 	useSyncExternalStore(
 		() => () => {},

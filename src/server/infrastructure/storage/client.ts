@@ -4,6 +4,8 @@ import { S3_CONFIG } from "./constants";
 import type { BucketVisibility, DeleteParams, ImageOptions, UploadParams } from "./types";
 import { base64ToBlob, isBase64, isUrl, parseKeyFromPublicUrl, urlToBlob } from "./utils";
 
+// # S3 存储客户端：封装上传、删除等对象存储操作（兼容 AWS S3 / R2 / MinIO）
+
 let s3StorageClient: S3StorageClient | undefined;
 
 // S3 存储客户端，封装上传等对象存储操作
@@ -36,8 +38,8 @@ export class S3StorageClient {
 		const targetBucket = this._resolveBucket(visibility);
 		const resolvedBody = await this._resolveBody(body, options);
 
-		// AWS SDK 对 Buffer 支持最稳定；Node + undici 的 Blob 内部 stream 已流动，
-		// 直接传给 SDK 会导致 checksum 计算失败（"Unable to calculate hash for flowing readable stream"）
+		// > AWS SDK 对 Buffer 支持最稳定；Node + undici 的 Blob 内部 stream 已流动，
+		// > 直接传给 SDK 会导致 checksum 计算失败（"Unable to calculate hash for flowing readable stream"）
 		const uploadBody =
 			resolvedBody instanceof Blob ? Buffer.from(await resolvedBody.arrayBuffer()) : resolvedBody;
 

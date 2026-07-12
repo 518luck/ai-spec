@@ -13,7 +13,7 @@ type ConfirmEmailChangeFlowProps = {
 	isCancel: boolean;
 };
 
-// 邮箱变更确认服务端流程：校验 token → 取消/确认分支 → 更新邮箱 → 清理 → 通知老邮箱
+// # 邮箱变更确认服务端流程：校验 token → 取消/确认分支 → 更新邮箱 → 清理 → 通知老邮箱
 export async function ConfirmEmailChangeFlow({
 	token,
 	isCancel,
@@ -56,7 +56,7 @@ export async function ConfirmEmailChangeFlow({
 		redirect(`/spec/login?next=${encodeURIComponent(`/spec/confirm-email-change/${token}`)}`);
 	}
 
-	// 归属一致：只有发起变更的账号本人才能确认
+	// > 归属一致：只有发起变更的账号本人才能确认
 	if (resolved.context.userId !== userId) {
 		return (
 			<StatusMessage
@@ -66,7 +66,7 @@ export async function ConfirmEmailChangeFlow({
 		);
 	}
 
-	// 写库前再查一次新邮箱是否被占用，防止并发竞态
+	// ! 写库前再查一次新邮箱是否被占用，防止并发竞态
 	const taken = await prisma.user.findFirst({
 		where: { email: resolved.context.newEmail, NOT: { id: userId } },
 		select: { id: true },

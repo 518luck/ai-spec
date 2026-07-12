@@ -28,7 +28,8 @@ type ThemePreferencePreviewProps = {
 	readonly mode: ColorMode;
 };
 
-// 按明暗模式管理色彩主题，点击卡片切换明暗，色盘仅切换色彩
+// > 主题偏好预览卡片
+// 按明暗模式管理色彩主题：点击卡片切换明暗（带圆形揭示动画），色盘仅切换色彩
 export function ThemePreferencePreview({
 	title = "主题外观",
 	description = "当系统唤醒浅色模式，此主题就会亮相。",
@@ -50,7 +51,7 @@ export function ThemePreferencePreview({
 	const displayedTheme = isCurrentMode ? safeActiveTheme : safeLocalTheme;
 	const displayedThemeName = THEMES.find((t) => t.value === displayedTheme)?.name ?? displayedTheme;
 
-	// 点击卡片切换明暗模式并恢复该模式保存的色彩主题，带圆形揭示动画
+	// > 点击卡片切换明暗模式并恢复该模式保存的色彩主题，带圆形揭示动画（View Transitions API）
 	const handleCardClick = (e: React.MouseEvent) => {
 		const root = document.documentElement;
 
@@ -139,6 +140,7 @@ export function ThemePreferencePreview({
 	);
 }
 
+// @ 预览卡片与色盘子组件
 // 预览卡片，根据 mode 强制渲染对应的明暗风格。
 function ThemePreviewCard({
 	activeThemeName,

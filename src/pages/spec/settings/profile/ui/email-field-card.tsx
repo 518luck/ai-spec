@@ -12,13 +12,14 @@ type EmailFieldCardProps = {
 	defaultValue?: string;
 };
 
-// 邮箱字段卡片：邮箱取自客户端 session（响应 update() 实时变化），提交后给新邮箱发确认邮件
+// # 邮箱字段卡片
+// 邮箱取自客户端 session（响应 update() 实时变化），提交后给新邮箱发确认邮件
 export function EmailFieldCard({ defaultValue }: EmailFieldCardProps): JSX.Element {
 	// 优先用客户端 session 的邮箱（响应 update() 实时变化），加载期兜底用服务端传入的初值
 	const { data: session } = useSession();
 	const currentEmail = session?.user?.email ?? defaultValue ?? "";
 
-	// 提交新邮箱：先本地校验格式与“是否变化”，再请求后端查重并发确认邮件；失败抛错由卡片兜底 toast
+	// > 提交新邮箱：先本地校验格式与"是否变化"，再请求后端查重并发确认邮件；失败抛错由卡片兜底 toast
 	const handleSave = async (email: string): Promise<void> => {
 		const parsed = emailSchema.safeParse(email);
 		if (!parsed.success) {

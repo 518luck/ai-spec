@@ -1,5 +1,7 @@
 "use client";
 
+// # 双栏侧边栏 Context：共享 aside 宽度、紧凑模式与拖拽态，并同步持久化到 cookie
+
 import { createContext, type JSX, type PropsWithChildren, useContext, useState } from "react";
 
 import { SIDEBAR_DEFAULT_WIDTH } from "./sidebar-config";
@@ -78,7 +80,7 @@ export function DualSidebarProvider({
 	);
 }
 
-// 读取双栏侧边栏共享状态并保证调用位置正确。
+// ! 必须在 DualSidebarProvider 内部调用，否则抛错
 export const useDualSidebarContext = (): DualSidebarContextType => {
 	const context = useContext(DualSidebarContext);
 

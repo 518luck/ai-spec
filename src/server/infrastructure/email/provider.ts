@@ -2,6 +2,8 @@ import { mailpitProvider } from "./mailpit/send";
 import { resendProvider } from "./resend/send";
 import type { EmailProvider, EmailProviderName } from "./types";
 
+// # 邮件 Provider 选择器：根据环境变量在 resend / mailpit 间切换并缓存
+
 // provider 注册表
 const PROVIDERS: Record<EmailProviderName, EmailProvider> = {
 	resend: resendProvider,

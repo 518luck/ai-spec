@@ -1,5 +1,7 @@
 import Redis from "ioredis";
 
+// # Redis 连接工厂：区分应用侧（fail-fast）与消费侧（无限重试）两套连接
+
 // 开发环境用 globalThis 缓存连接，避免 Next.js 热更新反复创建；生产环境由模块级变量保证单例
 const globalForRedis = globalThis as unknown as {
 	__appRedis?: Redis;
@@ -22,7 +24,7 @@ function createRedisClient(maxRetriesPerRequest?: number | null): Redis {
 	return new Redis(redisUrl, { maxRetriesPerRequest });
 }
 
-// 应用侧 fail-fast 连接：限流、KV、BullMQ 生产者共用；Redis 故障时快速报错，不挂住 HTTP 请求
+// ! 应用侧 fail-fast 连接：限流、KV、BullMQ 生产者共用；Redis 故障时快速报错，不挂住 HTTP 请求
 export function getAppRedis(): Redis {
 	if (process.env.NODE_ENV !== "production") {
 		if (!globalForRedis.__appRedis) {
@@ -37,7 +39,7 @@ export function getAppRedis(): Redis {
 	return appRedis;
 }
 
-// 消费侧无限重试连接：仅 BullMQ Worker 使用，Redis 恢复后自动重连继续取任务
+// > 消费侧无限重试连接：仅 BullMQ Worker 使用，Redis 恢复后自动重连继续取任务
 export function getWorkerRedis(): Redis {
 	if (process.env.NODE_ENV !== "production") {
 		if (!globalForRedis.__workerRedis) {

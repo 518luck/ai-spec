@@ -7,7 +7,8 @@ import { TitlePageShell } from "@/widgets/page-shell";
 import { EmailFieldCard } from "./email-field-card";
 import { NameFieldCard } from "./name-field-card";
 
-// 渲染个人详情页面，以可编辑卡片展示名称（含头像）与邮箱
+// # 个人详情页面（服务端组件）
+// 以可编辑卡片展示名称（含头像）与邮箱
 export async function ProfilePage(): Promise<JSX.Element> {
 	// 服务端读取会话，避免 useSession 的 loading 闪烁
 	const session = await auth();

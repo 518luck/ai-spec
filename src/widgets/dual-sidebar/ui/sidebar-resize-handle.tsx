@@ -1,5 +1,7 @@
 "use client";
 
+// # 侧边栏缩放手柄：鼠标拖拽 + 键盘 ←→ 双模式，按折叠阈值吸附紧凑态
+
 import { type JSX, type KeyboardEvent, type PointerEvent, useRef } from "react";
 
 import { cn } from "@/shared/lib/utils";
@@ -13,15 +15,13 @@ import {
 // 键盘单次 ←→ 调整宽度的步长（px），与鼠标拖拽同样进入折叠阈值判定
 const KEYBOARD_STEP = 8;
 
-// 侧边栏右边缘拖拽手柄：pointerdown 捕获指针，move 实时改宽并钳制到合法范围，up 释放
-// 支持 splitter 角色：鼠标拖拽 + 键盘 ←→ 双模式，aria-valuenow/min/max 完整暴露给 AT
 export function SidebarResizeHandle(): JSX.Element {
 	const { width, setWidth, setCollapsed, setIsResizing } = useDualSidebarContext();
 	// 拖拽起点记录的 aside 左边缘（clientX 减它即新宽度），以及拖拽进行中标记
 	const asideLeftRef = useRef(0);
 	const draggingRef = useRef(false);
 
-	// 应用新宽度并按折叠阈值吸附：< 阈值进紧凑（冻结 width 保留记忆值），≥ 阈值展开并存宽度
+	// > 应用新宽度并按折叠阈值吸附：< 阈值进紧凑（冻结 width 保留记忆值），≥ 阈值展开并存宽度
 	const applyWidth = (next: number): void => {
 		const clamped = Math.max(SIDEBAR_MIN_WIDTH, Math.min(next, SIDEBAR_MAX_WIDTH));
 		if (clamped < SIDEBAR_COLLAPSE_THRESHOLD) {
@@ -78,8 +78,7 @@ export function SidebarResizeHandle(): JSX.Element {
 	};
 
 	return (
-		// 用 div + role=separator 实现 splitter：鼠标 pointer 拖拽 + 键盘 ←→ 双模式。
-		// 不用 <hr> 是因为浏览器对 <hr> 的 pointer 事件有特殊处理，setPointerCapture 会失效导致拖不动。
+		// ! 用 div + role=separator 实现 splitter，不能用 <hr>：浏览器对 <hr> 的 pointer 事件特殊处理会让 setPointerCapture 失效导致拖不动
 		// biome-ignore lint/a11y/useSemanticElements: W3C splitter 模式要求 role=separator(ARIA 1.1 focusable widget),<hr> 无法满足拖拽+键盘+aria-valuenow
 		<div
 			role="separator"

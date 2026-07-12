@@ -12,6 +12,9 @@ import { hashPassword } from "@/shared/lib/utils";
 import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
+// # 创建用户账户 Action：通过邮箱验证码校验注册请求，完成账户创建
+
+// 每次注册尝试消耗的限流积分
 const OTP_ATTEMPTS = 2;
 
 const schema = signUpSchema.extend({
@@ -31,7 +34,7 @@ export const createUserAccountAction = actionClient
 		const signupAttemptKey = `signup:attempts:${email}`;
 
 		if (!skipAuthThrottling) {
-			// 每日 10 积分，每次消耗 2 点 → 最多尝试 5 次，超额锁到当天窗口结束
+			// ! 每日 10 积分，每次消耗 2 点 → 最多尝试 5 次，超额锁到当天窗口结束，防止验证码爆破
 			await hardDailyRatelimit({
 				key: signupAttemptKey,
 				points: OTP_ATTEMPTS,
@@ -46,7 +49,7 @@ export const createUserAccountAction = actionClient
 		});
 
 		if (!verificationToken) {
-			// 验证码错误时累计一次失败次数。
+			// ! 验证码错误时累计一次失败次数，配合限流逐步锁定。
 			if (!skipAuthThrottling) {
 				await hardDailyRatelimit({
 					key: signupAttemptKey,

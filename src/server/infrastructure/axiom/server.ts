@@ -17,6 +17,9 @@ import { getSearchParams } from "@/shared/lib/utils";
 import { axiomClient } from "./axiom";
 import { LocalFileTransport } from "./local-file-transport";
 
+// # 日志基础设施：组装 transports、提供带 module 上下文的子 logger 与 route handler 包装器
+
+// @ 环境与 transports 组装
 // 先取出环境变量到局部变量，让 TS 能在条件分支里收窄类型，避免用 ! 非空断言
 const axiomDataset = process.env.AXIOM_DATASET;
 const axiomToken = process.env.AXIOM_TOKEN;
@@ -48,6 +51,7 @@ export const logger = new Logger({
 	formatters: nextJsFormatters, // 程序格式化程序`
 });
 
+// @ 子 logger 工厂
 // 子 logger 的结构化字段类型
 type LogFields = Record<string, unknown>;
 
@@ -81,9 +85,10 @@ export const serializeError = (e: Error): Record<string, unknown> => {
 	return obj;
 };
 
+// @ Route Handler 日志包装器
 // 带 body 日志的 route handler 包装器：在库的 onSuccess 读 body 前，
 // 先把 clone 过的 req 喂给业务 handler，保留原 req 的 body stream 供 onSuccess 消费，
-// 避免 stream 二次读取被 onSuccess 的 catch 静默吞掉
+// > 避免 stream 二次读取被 onSuccess 的 catch 静默吞掉
 export const withAxiomBodyLog = <TReq extends NextRequest = NextRequest>(
 	handler: (
 		req: TReq,

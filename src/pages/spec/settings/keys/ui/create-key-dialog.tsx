@@ -1,5 +1,8 @@
 "use client";
 
+// # 创建 API 密钥弹窗
+// 密钥归属于个人工作空间，支持名称、权限及限制权限下的资源勾选；创建成功后明文仅展示一次
+
 import copy from "copy-to-clipboard";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
@@ -47,7 +50,7 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 	const { executeAsync, isPending } = useAction(createTokenAction, {
 		onSuccess: ({ data }) => {
 			if (!data) return;
-			// 明文密钥仅此一次返回，切到展示态让用户复制保存
+			// ! 明文密钥仅此一次返回，后端不再存储；切到展示态让用户复制保存，关闭后无法找回
 			setCreatedKey(data.key);
 			router.refresh();
 		},
@@ -152,6 +155,7 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 }
 
 // 创建成功后的一次性密钥展示视图：含明文、复制按钮与「关闭后不可再查」警示
+// ! 此视图的明文关闭后无法再次获取，强调一次性展示语义
 function CreatedKeyView({
 	keyValue,
 	onCopy,

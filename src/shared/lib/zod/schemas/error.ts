@@ -1,5 +1,7 @@
 import * as z from "zod/v4";
 
+// # 错误码 schema：zod 枚举与 ErrorCode 类型的单一来源
+
 // 错误码元组：zod 枚举与 ErrorCode 类型的唯一来源
 const ERROR_CODE_NAMES = [
 	"VALIDATION_ERROR", // 参数校验失败

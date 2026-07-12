@@ -14,7 +14,7 @@ type DraftPreviewProps = {
 	height: string;
 };
 
-// Markdown 预览：GFM 语法 + 代码高亮 + 标题锚点
+// # Markdown 预览：GFM 语法 + 代码高亮 + 标题锚点
 export function DraftPreview({ content, height }: DraftPreviewProps): JSX.Element {
 	return (
 		<ScrollArea style={{ height, maxHeight: height }}>

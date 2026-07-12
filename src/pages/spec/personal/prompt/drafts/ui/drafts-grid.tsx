@@ -15,7 +15,7 @@ type DraftsGridProps = {
 	drafts: DraftItem[];
 };
 
-// 草稿卡片网格，响应式布局：手机单列、平板两列、桌面三列
+// # 草稿卡片网格：响应式布局，手机单列 / 平板两列 / 桌面三列
 export function DraftsGrid({ drafts }: DraftsGridProps): JSX.Element {
 	return (
 		<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">

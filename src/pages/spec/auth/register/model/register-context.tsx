@@ -13,6 +13,7 @@ type RegisterContextType = {
 
 const RegisterContext = createContext<RegisterContextType | null>(null);
 
+// # 注册流程共享状态：邮箱/密码及 signup→verify 步骤切换
 export const RegisterProvider: React.FC<PropsWithChildren<{ email?: string }>> = ({
 	email: emailProp,
 	children,
@@ -37,6 +38,7 @@ export const RegisterProvider: React.FC<PropsWithChildren<{ email?: string }>> =
 	);
 };
 
+// ! 必须在 RegisterProvider 内部调用，否则抛错
 export const useRegisterContext = () => {
 	const context = useContext(RegisterContext);
 

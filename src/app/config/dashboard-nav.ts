@@ -1,3 +1,5 @@
+// # 仪表盘侧边栏导航配置：定义角色权限模型与主导航项
+
 import type { LucideIcon } from "lucide-react";
 import { BookOpen, Command, FolderKanban, SquareTerminal } from "lucide-react";
 
@@ -17,6 +19,7 @@ export type NavItem = {
 	};
 };
 
+// @ 主导航项：每项通过 auth.roles 控制可见角色，权限不足时由布局层隐藏
 export const dashboardNavConfig: NavItem[] = [
 	{
 		title: "Prompts",

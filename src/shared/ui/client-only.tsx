@@ -10,7 +10,7 @@ type ClientOnlyProps = {
 	className?: string;
 };
 
-// 只在浏览器客户端渲染 children，避免 SSR 和 hydration 不一致
+// ! 只在浏览器客户端渲染 children：用 useSyncExternalStore 的 getServerSnapshot 返回 false，保证服务端与客户端首屏一致，避免 hydration 不匹配
 export function ClientOnly({
 	children,
 	fallback,

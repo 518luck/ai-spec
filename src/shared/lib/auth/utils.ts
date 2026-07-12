@@ -1,3 +1,5 @@
+// # 认证工具函数：OTP 验证码生成
+
 // 生成 6 位 OTP 验证码
 export function generateOTP() {
 	// 生成0到999999之间的随机数

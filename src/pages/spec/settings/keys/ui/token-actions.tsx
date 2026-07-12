@@ -27,7 +27,8 @@ type TokenActionsProps = {
 	expires: Date | null;
 };
 
-// 密钥行操作入口：「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
+// # 密钥行操作入口（客户端组件）
+// 「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
 export function TokenActions({
 	id,
 	name,

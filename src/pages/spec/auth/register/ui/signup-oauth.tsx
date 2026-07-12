@@ -12,7 +12,7 @@ import {
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 
-// 渲染第三方 OAuth 注册入口
+// # 第三方 OAuth 注册入口：Google / GitHub
 export const SignUpOAuth = ({ methods }: { methods: AuthProvider[] }) => {
 	const [clickedProvider, setClickedProvider] = useState<AuthProvider | null>(null);
 

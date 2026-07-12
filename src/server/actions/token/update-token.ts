@@ -7,6 +7,8 @@ import { tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
 import { updateTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 
+// # 更新 API 密钥 Action：校验归属后更新令牌元信息并清除缓存
+
 // 更新 API 密钥：仅登录用户可改归属自己的令牌；可改 name/description/scopes，密钥本身不可改
 export const updateTokenAction = authUserActionClient
 	.inputSchema(updateTokenDtoSchema, {
@@ -25,7 +27,7 @@ export const updateTokenAction = authUserActionClient
 		if (!token) {
 			throw new ActionError({ code: "NOT_FOUND", message: "令牌不存在" });
 		}
-		// 归属校验：即便知道别人的令牌 id 也不能改
+		// ! 归属校验：即便知道别人的令牌 id 也不能改
 		if (token.user_id !== userId) {
 			throw new ActionError({ code: "FORBIDDEN", message: "无权修改该令牌" });
 		}

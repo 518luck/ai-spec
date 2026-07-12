@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sendBatchEmail, sendEmail } from "@/server/infrastructure/email";
 
+// # 邮件发送调试端点（单封 + 批量）
+
 export async function GET(request: NextRequest) {
 	const { searchParams } = new URL(request.url);
 	const to = searchParams.get("to") || "1512013298@qq.com";

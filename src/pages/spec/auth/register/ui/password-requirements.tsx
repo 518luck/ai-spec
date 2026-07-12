@@ -28,7 +28,7 @@ const REQUIREMENTS: {
 /**
  * 显示密码要求以及密码字段是否满足各项要求的组件。
  *
- * 注意：此组件必须在 FormProvider 上下文中使用。
+ * ! 注意：此组件必须在 FormProvider 上下文中使用。
  */
 export const PasswordRequirements = memo(function PasswordRequirements({
 	field = "password",

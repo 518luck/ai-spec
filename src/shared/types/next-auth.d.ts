@@ -1,6 +1,6 @@
 import type { DefaultSession } from "next-auth";
 
-// 扩展 NextAuth Session 类型，使 session.user.id 可被类型系统识别
+// # NextAuth 类型扩展：声明 session.user.id 字段供类型系统识别
 declare module "next-auth" {
 	interface Session {
 		user: {

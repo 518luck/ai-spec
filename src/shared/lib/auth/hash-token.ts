@@ -1,5 +1,6 @@
-// 对 API Key 做 HMAC-SHA256：混入服务器密钥(pepper)，输出 64 位十六进制字符串存入 Token.hashed_key。
-// 带 pepper 是为了即使 Token 表泄露，攻击者没有 pepper 也无法伪造合法哈希。
+// # hashToken：对 API Key / 邮箱变更 token 做 HMAC-SHA256 哈希
+// ! 带 pepper（AUTH_SECRET）是为了即使 Token 表泄露，攻击者没有 pepper 也无法伪造合法哈希。
+// ! pepper 取自环境变量 AUTH_SECRET，缺失时为空字符串——部署时务必确保该变量已设置。
 export const hashToken = async (token: string): Promise<string> => {
 	const encoder = new TextEncoder();
 	const pepper = process.env.AUTH_SECRET ?? "";

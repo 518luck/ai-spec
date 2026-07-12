@@ -1,3 +1,5 @@
+// # 登录/鉴权页面布局：左侧装饰区（网格 + 粒子标题），右侧侧边面板
+
 import { Manrope } from "next/font/google";
 import { appConfig } from "@/shared/configs/app.config";
 import { SidePanel } from "@/widgets/auth-side-panel";

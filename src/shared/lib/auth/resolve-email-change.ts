@@ -4,6 +4,8 @@ import { kvGet } from "@/server/infrastructure/redis/kv";
 import prisma from "@/shared/db";
 import { hashToken } from "./hash-token";
 
+// # 解析邮箱变更 token：哈希后查 DB 验证记录与 Redis 上下文，token 缺失/过期/无上下文时返回 null
+
 // 邮箱变更上下文：与 request-email-change 写入 Redis 的结构保持一致
 type EmailChangeContext = {
 	oldEmail: string;

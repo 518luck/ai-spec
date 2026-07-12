@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-// 闭合文件夹图标，用 currentColor 描边，颜色由父级 className 的 text-* 控制
+// # 闭合文件夹图标：用 currentColor 描边，颜色由父级 className 的 text-* 控制
 export function FolderClosedIcon(props: SVGProps<SVGSVGElement>) {
 	return (
 		<svg

@@ -1,4 +1,4 @@
-// 统一的 Action 清单：API Key scope 与 Web 端 RBAC 的共同源
+// # 统一 Action 清单：API Key scope 与 Web 端 RBAC 的共同源
 
 // 资源清单
 const RESOURCE_KEYS = [
@@ -23,6 +23,7 @@ type ValidAction = `${(typeof RESOURCE_KEYS)[number]}.${"read" | "write"}`;
 type ActionDef = {
 	action: ValidAction;
 	teamOnly: boolean; // 是否团队专属
+	// ! apiKeyGrantable 决定该权限能否通过 API Key 授予；团队管理类必须为 false，防止越权
 	apiKeyGrantable: boolean; // API Key 能否授予
 	description: string;
 };

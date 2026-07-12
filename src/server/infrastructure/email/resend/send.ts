@@ -4,6 +4,8 @@ import { resend } from "./client";
 import { VARIANT_TO_FROM_MAP } from "./constants";
 import type { ResendEmailOptions } from "./types";
 
+// # Resend Provider：通过 Resend SDK 发送真实邮件（单封与批量）
+
 // 未配置 API Key 时的跳过结果
 const skipped = (reason: string): SendResult => ({
 	ok: false,

@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 
-// 简单的状态提示区块：标题 + 描述，用于邮箱变更各终态展示
+// # 状态提示区块：标题 + 描述，用于邮箱变更各终态展示
 export function StatusMessage({
 	title,
 	description,

@@ -1,4 +1,4 @@
-// 邮箱领域任务数据类型
+// # 邮箱领域任务数据类型
 export interface EmailChangeData {
 	to: string;
 	token: string;

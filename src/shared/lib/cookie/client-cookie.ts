@@ -1,6 +1,6 @@
-// 客户端 cookie 读写工具：基于现代 Cookie Store API（异步、规范推荐）。
-// 旧浏览器（Safari < 18.4、Firefox < 140 等）不支持 cookieStore 时写入静默失败，
-// 业务上等价于「回到默认值」，不会崩溃；下次访问会重新尝试写入。
+// # 客户端 cookie 读写工具：基于现代 Cookie Store API（异步、规范推荐）
+// > 旧浏览器（Safari < 18.4、Firefox < 140 等）不支持 cookieStore 时写入静默失败，
+// > 业务上等价于「回到默认值」，不会崩溃；下次访问会重新尝试写入。
 
 // Cookie 写入选项：对外统一暴露 maxAge（业务常用秒数），内部转成 cookieStore 需要的 expires
 export interface CookieOptions {

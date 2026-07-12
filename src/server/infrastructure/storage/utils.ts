@@ -1,5 +1,7 @@
 import type { ImageOptions } from "./types";
 
+// # 存储工具函数：Base64 / URL 检测、Blob 转换、key 反解
+
 // 检测字符串是否为 Base64 编码（兼容 data URI 和纯 Base64）
 export const isBase64 = (value: string): boolean => {
 	if (value.startsWith("data:") && value.includes(";base64,")) {

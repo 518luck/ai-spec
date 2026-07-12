@@ -1,5 +1,7 @@
 "use client";
 
+// # 导航图标悬停动画：按 NavIconAnimation 配置渲染旋转/抖动/无动画三种反馈
+
 import { motion } from "motion/react";
 import type { JSX, ReactNode } from "react";
 

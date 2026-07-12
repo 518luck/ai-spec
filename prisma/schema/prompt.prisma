@@ -1,4 +1,10 @@
-// 提示词收录主表，承载完整内容、版本、标签与共享
+// # 提示词域：收录主表（含版本/标签/收藏）+ 草稿暂存 + 可见性控制
+//
+// 收录(PromptRecord) 是正式归档的内容，带版本历史、标签、收藏与团队/公开可见性；
+// 草稿(PromptDraft) 是轻量暂存，无版本、无团队联动，仅归属个人。
+// ! 收录与团队为强绑定：团队删除→级联删除其空间内的收录；用户删除→级联删除其收录
+
+// 收录主表：承载完整内容、版本、标签与共享
 model PromptRecord {
   // ① 主键
   id String @id @default(cuid()) // 收录主键
@@ -10,7 +16,7 @@ model PromptRecord {
   images           String[]   @default([]) // 图片 URL 列表，预留扩展
   visibility       Visibility @default(private) // 可见性：private=私有，public=公开广场
   team_id          String? // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属）
-  source_record_id String? // fork 来源记录 ID，无 FK，允许悬空
+  source_record_id String? // > fork 来源记录 ID，故意不建外键，允许源记录删除后悬空（保留 fork 血缘标记）
   use_count        Int        @default(0) // 使用次数，驱动"常用"排序
   view_count       Int        @default(0) // 浏览次数
 

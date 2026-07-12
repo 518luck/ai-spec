@@ -1,4 +1,4 @@
-// 按邮件类型用不同的发件人地址：
+// # Resend 发件人常量：按邮件类型用不同的发件人地址
 export const VARIANT_TO_FROM_MAP = {
 	primary: "Luckyun <system@luckyun.shop>",
 	notifications: "Luckyun <notifications@luckyun.shop>",

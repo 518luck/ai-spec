@@ -1,5 +1,7 @@
 "use client";
 
+// # 受控日期选择器：Popover + Calendar 组合，点击 trigger 弹出日历，选完自动关闭，支持最小可选日期
+
 import dayjs from "dayjs";
 import type { JSX } from "react";
 import { zhCN } from "react-day-picker/locale";
@@ -18,7 +20,6 @@ type DatePickerProps = {
 	className?: string;
 };
 
-// 受控日期选择器：点击 trigger 弹出 Calendar，选完日期自动关闭
 export function DatePicker({ value, onChange, minDate, className }: DatePickerProps): JSX.Element {
 	return (
 		<Popover>

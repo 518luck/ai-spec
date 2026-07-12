@@ -1,3 +1,8 @@
+// # Prisma 入口配置 + 用户域（User）：datasource/generator 声明与认证主体
+//
+// 本文件声明多 schema 数据源与 Prisma Client 生成配置，并定义用户主体(User)及账户(Account)/会话(Session)。
+// ! Account / Session 为 better-auth 等第三方库的固定表结构，沿用库原生命名，禁止改名（见 prisma/AGENTS.md）。
+
 // 这是你的 Prisma 模式文件（Schema file），
 // 在文档中了解更多信息：https://pris.ly/d/prisma-schema
 
@@ -18,7 +23,7 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   email         String    @unique
-  emailVerified DateTime? // ? :可为空   (系统以后长期判断你这个邮箱是否已验证的标记)
+  emailVerified DateTime? // 可为空，系统判断邮箱是否已验证的标记
   image         String?
 
   // 密码和安全字段
@@ -26,7 +31,7 @@ model User {
   invalidLoginAttempts Int       @default(0) // invalid 无效的  attempts 次数( 输错次数,成功后就清零)
   lockedAt             DateTime? // locked 锁定的 ( 这个账号是在什么时候被锁定的)
 
-  // 个人空间套餐档位，控制个人额度与付费功能；不进 session，每次实时查库
+  // > 个人空间套餐档位，控制个人额度与付费功能；故意不进 session，每次实时查库，确保额度变更即时生效
   plan UserPlan @default(free)
 
   accounts Account[]

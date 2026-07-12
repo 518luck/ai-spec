@@ -1,5 +1,7 @@
 "use client";
 
+// # 头像上传入口：可点击的头像 + 隐藏文件选择 + 裁剪弹窗编排
+
 import { useSession } from "next-auth/react";
 
 import { UserAvatar } from "@/entities/user";
@@ -14,7 +16,6 @@ type AvatarUploaderProps = {
 	className?: string;
 };
 
-// 头像上传入口：可点击的头像 + 隐藏文件选择 + 裁剪弹窗编排
 export function AvatarUploader({ className }: AvatarUploaderProps): React.JSX.Element {
 	const { data: session } = useSession();
 	const { imageSrc, isCropOpen, isSubmitting, onFileSelected, onConfirm, cancel } =

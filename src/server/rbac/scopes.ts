@@ -1,8 +1,8 @@
-// API Key 的权限范围（scope）体系：合法 scope、资源映射、预设与查询
+// # API Key 权限范围（scope）体系：合法 scope、资源映射、预设与查询
 //
 // scope 来源：从 actions.ts 的 API_KEY_SCOPES 派生（个人资源 read/write），
 // 外加两个通配 scope（apis.read / apis.all）做跨资源打包授权。
-// 团队专属 action 因 apiKeyGrantable=false 不会出现在 scope 里。
+// ! 团队专属 action 因 apiKeyGrantable=false 不会出现在 scope 里。
 import type { ResourceKey } from "@/server/rbac/resource-ui";
 import { RESOURCES } from "@/server/rbac/resource-ui";
 import { API_KEY_SCOPES } from "./actions";
@@ -100,7 +100,7 @@ export const scopesToName = (scopes: readonly string[]): { name: string; descrip
 	return { name: "限制", description: "仅能访问指定的资源" };
 };
 
-// 合并去重资源级 scope，保留最强权限：同资源同时有 read 和 write 时只留 write
+// ! 合并去重资源级 scope，保留最强权限：同资源同时有 read 和 write 时只留 write
 export const consolidateScopes = (scopes: readonly Scope[]): Scope[] => {
 	const writeResources = new Set<string>();
 	for (const scope of scopes) {

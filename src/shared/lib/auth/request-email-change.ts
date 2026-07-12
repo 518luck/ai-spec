@@ -8,6 +8,8 @@ import prisma from "@/shared/db";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { nanoid } from "@/shared/lib/nanoid";
 
+// # 发起邮箱变更：限流 → 清旧 token → 生成新 token → 写库 → Redis 存新旧邮箱 → 入队发确认邮件
+
 // 邮箱变更 token 有效期（毫秒），数据库过期与 Redis TTL 保持一致
 const EMAIL_CHANGE_TTL_MS = 15 * 60 * 1000;
 
@@ -34,7 +36,7 @@ export async function requestEmailChange({
 		where: { identifier: userId },
 	});
 
-	// 生成随机 token：数据库存哈希、邮件链接带原文，避免 DB 泄露暴露可用 token
+	// > 生成随机 token：数据库存哈希、邮件链接带原文，避免 DB 泄露暴露可用 token
 	const token = nanoid(32);
 	const expires = new Date(Date.now() + EMAIL_CHANGE_TTL_MS);
 	const hashed = await hashToken(token);

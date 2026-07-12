@@ -1,5 +1,7 @@
 "use client";
 
+// # 文件夹下拉选择框：Popover + Command(cmdk) 组合的 combobox，支持搜索、选中、内联创建
+
 import { useCommandState } from "cmdk";
 import { type JSX, useState } from "react";
 
@@ -40,8 +42,7 @@ type FolderComboboxProps = {
 	className?: string;
 };
 
-// 文件夹下拉选择框：用 Popover（定位稳定）+ Command（cmdk，自带搜索过滤/键盘导航）
-// 这是 shadcn 官方推荐的 combobox 模式，也是参考项目 dub 的实现方式
+// 文件夹下拉选择框：shadcn 官方推荐的 combobox 模式，Popover 定位 + Command(cmdk) 搜索过滤/键盘导航
 export function FolderCombobox({
 	options,
 	value,
@@ -68,32 +69,32 @@ export function FolderCombobox({
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
-			{/* 触发器：ghost 按钮样式，融入标题栏；文件夹图标 + 文字 + 箭头都在按钮内 */}
+			{/* // 触发器：ghost 按钮样式，融入标题栏；文件夹图标 + 文字 + 箭头都在按钮内 */}
 			<PopoverTrigger
 				render={
 					<Button
 						variant="ghost"
 						role="combobox"
 						aria-expanded={open}
-						className={cn("h-8 gap-1.5 px-2 font-normal", className)}
+						className={cn("h-8 max-w-60 gap-1.5 px-2 font-normal", className)}
 					/>
 				}
 			>
 				<FolderIcon color={selectedOption?.color} />
 				{selectedOption ? (
-					<span>{selectedOption.label}</span>
+					<span className="min-w-0 truncate">{selectedOption.label}</span>
 				) : (
-					<span className="text-muted-foreground">{placeholder}</span>
+					<span className="min-w-0 truncate text-muted-foreground">{placeholder}</span>
 				)}
 				<Icons.selector className="size-3.5 opacity-50" />
 			</PopoverTrigger>
 
-			{/* 弹层：Popover 负责定位，Command 负责搜索过滤 + 键盘导航 */}
+			{/* // 弹层：Popover 负责定位，Command 负责搜索过滤 + 键盘导航 */}
 			<PopoverContent className="w-(--anchor-width) p-0" align="start">
 				<Command>
 					{/* CommandInput：cmdk 自动管过滤（按 CommandItem 的 value 匹配输入） */}
 					<CommandInput placeholder={searchPlaceholder} />
-					{/* ScrollArea 接管滚动：去掉 CommandList 的 max-h/overflow，避免两层可滚动打架 */}
+					{/* // ! ScrollArea 接管滚动：去掉 CommandList 的 max-h/overflow，避免两层可滚动打架 */}
 					<ScrollArea className="max-h-72">
 						<CommandList className="overflow-visible! max-h-none!">
 							{onCreate ? (
@@ -103,7 +104,7 @@ export function FolderCombobox({
 							) : (
 								<CommandEmpty>{emptyText}</CommandEmpty>
 							)}
-							{/* 不加入任何文件夹（folder_id=null），始终置顶；value 含多关键词便于搜索命中 */}
+							{/* // > 不加入任何文件夹（folder_id=null），始终置顶；value 含多关键词便于搜索命中 */}
 							<CommandGroup heading="未分类">
 								<CommandItem
 									value="未分类 无文件夹 不加入 none"
@@ -135,7 +136,7 @@ export function FolderCombobox({
 										className="not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
 									>
 										<FolderIcon color={option.color} />
-										{option.label}
+										<span className="min-w-0 truncate">{option.label}</span>
 										<Icons.check
 											className={cn(
 												"ml-auto size-4",
@@ -153,11 +154,7 @@ export function FolderCombobox({
 	);
 }
 
-/**
- * 搜索无结果时的「创建 xxx」按钮。
- * 拆成子组件是因为 cmdk 的 useCommandState 必须在 Command 上下文内调用，
- * 而且它能拿到当前搜索词（CommandInput 的值）。
- */
+// > 搜索无结果时的「创建 xxx」按钮；拆成子组件是因为 useCommandState 必须在 Command 上下文内调用，且能拿到当前搜索词
 function CreateButton({
 	onCreate,
 	emptyText,

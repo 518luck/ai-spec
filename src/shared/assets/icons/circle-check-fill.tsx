@@ -1,3 +1,5 @@
+// # 实心圆形对勾图标：currentColor 填充，颜色由父级 text-* 控制
+
 import type { SVGProps } from "react";
 
 export function CircleCheckFill(props: SVGProps<SVGSVGElement>) {

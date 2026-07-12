@@ -1,3 +1,5 @@
+// # 动画尺寸容器：ResizeObserver 测量子内容尺寸，framer-motion 按测量结果平滑过渡宽/高，常用于内容增减时的伸缩动画
+
 import { motion } from "motion/react";
 import {
 	type ComponentPropsWithoutRef, // 提取某个组件/元素的 props 类型，但不包含 ref；这里用来继承 motion.div 的属性类型。
@@ -75,7 +77,7 @@ const AnimatedSizeContainer: ForwardRefExoticComponent<
 			hasMeasuredRef.current = true;
 		}
 
-		// 首次测量不做动画，避免组件挂载时从 0 抖到目标尺寸。
+		// > 首次测量不做动画，避免组件挂载时从 0 抖到目标尺寸；用 hasMeasuredRef 标记是否已测过，区分首次与后续
 		const effectiveTransition =
 			transition ?? (isFirstMeasurement ? { duration: 0 } : defaultTransition);
 

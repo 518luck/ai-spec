@@ -6,7 +6,7 @@ import { type JSX, useEffect } from "react";
 import { SETTINGS_PROFILE_PATH } from "@/pages/spec/auth/confirm-email-change/model/config";
 import { StatusMessage } from "./status-message";
 
-// 邮箱变更成功后的最小客户端组件：刷新 session（拿到新邮箱）后跳转设置页
+// # 邮箱变更成功后的最小客户端组件：刷新 session（拿到新邮箱）后跳转设置页
 export function ConfirmEmailChangeClient(): JSX.Element {
 	const router = useRouter();
 	const { update } = useSession();

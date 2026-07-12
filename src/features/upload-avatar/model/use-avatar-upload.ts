@@ -1,5 +1,7 @@
 "use client";
 
+// # 头像上传编排 Hook：选文件 → 开裁剪弹窗 → 提交 → 刷新 session 与路由
+
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -22,7 +24,7 @@ export const useAvatarUpload = () => {
 		setIsCropOpen(true);
 	};
 
-	// 裁剪确认后提交：写库 → 刷新 session → 刷新路由 → 提示
+	// > 裁剪确认后提交：写库 → 刷新 session → 刷新路由 → 提示，四步任一失败都要回滚提示
 	const onConfirm = async (dataUrl: string): Promise<void> => {
 		setIsSubmitting(true);
 		try {

@@ -1,5 +1,7 @@
 "use client";
 
+// # 用户头像浮层：头像触发，展示用户名/邮箱与退出登录入口
+
 import { signOut, useSession } from "next-auth/react";
 import type { JSX } from "react";
 
@@ -16,7 +18,6 @@ import {
 } from "@/shared/ui/popover";
 import { Separator } from "@/shared/ui/separator";
 
-// 渲染用户头像弹窗，展示个人信息占位与退出登录入口
 export function UserAvatarPopover(): JSX.Element {
 	const { data: session } = useSession();
 

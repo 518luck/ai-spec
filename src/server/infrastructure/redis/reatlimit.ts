@@ -1,6 +1,9 @@
 import { RateLimiterRedis, type RateLimiterRes } from "rate-limiter-flexible";
 import { getAppRedis } from "./clients";
 
+// # 限流器：基于 Redis 的频率限制，提供通用 / API Key / 硬性每日三种策略
+
+// ! 通用限流器：积分耗尽后额外阻塞 300 秒，期间直接拒绝，是防爆破的关键约束
 export const ratelimiter = new RateLimiterRedis({
 	storeClient: getAppRedis(), // 【存储客户端】Redis 连接实例，限流状态都存这里
 	keyPrefix: "ratelimiter", // 【键前缀】Redis 里实际 key 会变成 "user_id:xxx"，避免跟其他限流器冲突
@@ -17,7 +20,8 @@ export const apiKeyLimiter = new RateLimiterRedis({
 	duration: 60,
 });
 
-// 硬性每日限流器：每日 10 积分，超额后锁到当天窗口结束（不设 blockDuration，避免短阻塞重置日窗口），供多个"每日 N 次"认证流程复用
+// ! 硬性每日限流器：每日 10 积分，超额后锁到当天窗口结束
+// > 不设 blockDuration：避免短阻塞重置日窗口，供多个"每日 N 次"认证流程复用
 export const hardDailyLimiter = new RateLimiterRedis({
 	storeClient: getAppRedis(),
 	keyPrefix: "hard-daily", // 独立键前缀，与通用限流器隔离

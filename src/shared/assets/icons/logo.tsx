@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-// 应用 Logo 图标，品牌色已内置在 SVG path 中
+// # 应用 Logo 图标：品牌色已内置在 SVG path 中（不需要外部传色）
 export function LogoIcon(props: SVGProps<SVGSVGElement>) {
 	return (
 		<svg viewBox="227 227 800 800" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" {...props}>

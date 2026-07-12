@@ -1,3 +1,5 @@
+// # 帮助气泡：问号图标 hover 显示说明文案，用于表单项或标题旁的辅助提示
+
 import type { JSX } from "react";
 
 import { Icons } from "@/shared/ui/icons";
@@ -8,7 +10,6 @@ type HelpTooltipProps = {
 	content: string;
 };
 
-// 帮助气泡：问号图标 hover 显示说明文案
 export function HelpTooltip({ content }: HelpTooltipProps): JSX.Element {
 	const Icon = Icons.helpSquareRounded;
 	return (

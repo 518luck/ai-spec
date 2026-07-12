@@ -5,9 +5,12 @@ import { createLogger, serializeError } from "@/server/infrastructure/axiom/serv
 import { Prisma } from "@/shared/db/generator/client";
 import type { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
+// # HTTP 错误处理：把各类原始错误归一化为带 code 的标准响应体
+
 // 错误归一化专用 logger，自动带 module: "ai-spec-error"
 const log = createLogger("ai-spec-error");
 
+// @ 错误码 → HTTP 状态码映射
 // code → HTTP 状态码映射（原先散落的数字状态码集中到这里）
 export const ERROR_CODES: Record<ErrorCode, number> = {
 	VALIDATION_ERROR: 400, // 参数校验失败
@@ -32,6 +35,7 @@ type ErrorResult = {
 	status: number;
 };
 
+// @ 业务自定义错误类
 // 业务自定义错误：只传 code 名，status 自动从 ERROR_CODES 查表
 export class AiSpecError extends Error {
 	readonly status: number;
@@ -45,8 +49,9 @@ export class AiSpecError extends Error {
 	}
 }
 
+// @ 错误归一化
 // 内部转换器：收到原始错误，按类型归一化为 { error, status }，并通过 Axiom 记录日志。
-// 顺序：AiSpecError（业务自定义）→ ZodError（参数校验）→ Prisma（数据库）→ 兜底 INTERNAL_ERROR。
+// > 顺序：AiSpecError（业务自定义）→ ZodError（参数校验）→ Prisma（数据库）→ 兜底 INTERNAL_ERROR。
 const toError = (e: unknown): ErrorResult => {
 	// ① 业务自定义错误：自带 code，status 由 ERROR_CODES 查
 	if (e instanceof AiSpecError) {

@@ -1,6 +1,10 @@
 import { getCookie, setCookie } from "@/shared/lib/cookie/client-cookie";
 import { COOKIE_DEFAULTS, MODE_THEME_COOKIE_PREFIX } from "@/shared/lib/cookie/cookies";
 
+// # 色彩主题配置：定义可用主题及明暗模式下的主题持久化读写
+
+// @ 主题清单
+
 export const DEFAULT_THEME = "base-vega";
 
 export const THEMES = [
@@ -15,6 +19,8 @@ export const THEMES = [
 ];
 
 export type ColorMode = "light" | "dark";
+
+// @ 明暗模式主题持久化
 
 // 按明暗模式持久化色彩主题到 cookie
 export const setModeThemeCookie = (mode: ColorMode, theme: string) => {

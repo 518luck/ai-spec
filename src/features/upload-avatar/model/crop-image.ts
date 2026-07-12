@@ -1,3 +1,5 @@
+// # 图片裁剪工具：把 react-easy-crop 的裁剪区域在 canvas 上重绘为缩放后的 dataUrl
+
 import type { Area } from "react-easy-crop";
 
 // 加载图片为 HTMLImageElement，用于 canvas 重绘

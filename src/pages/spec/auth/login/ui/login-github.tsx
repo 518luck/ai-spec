@@ -9,7 +9,7 @@ import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { github, useLoginContext } from "../model/login-context";
 
-// 渲染 GitHub 第三方登录入口并记录用户偏好。
+// # GitHub 第三方登录入口：触发 OAuth 并记录用户偏好
 export function LoginGithub(): JSX.Element {
 	const { preferredMethod, setPreferredMethod } = useLoginContext();
 	const [isPending, setIsPending] = useState(false);

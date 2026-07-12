@@ -6,6 +6,8 @@ import { withAxiom } from "@/server/infrastructure/axiom/server";
 import { getSearchParams } from "@/shared/lib/utils";
 import { RATE_LIMIT_MAX_POINTS, resolveContext } from "./resolve-context";
 
+// # withSession：带统一鉴权与限流响应头的高阶 route handler
+
 // Next.js App Router 动态路由上下文类型
 type RouteContext = { params: Promise<Record<string, string | string[]>> };
 

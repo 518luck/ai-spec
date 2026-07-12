@@ -1,7 +1,9 @@
 import * as z from "zod/v4";
 import { getAppRedis } from "./clients";
 
-// 缓存过期时间：24 小时，与 session 时长量级一致
+// # API Key 鉴权缓存层：cache-aside 模式，命中即跳过数据库往返
+
+// ! 缓存过期时间：24 小时，与 session 时长量级一致；TTL 是被吊销令牌仍可用的时间上限
 const CACHE_EXPIRATION = 60 * 60 * 24;
 // Redis Key 前缀，遵循 redis/AGENTS.md 的「模块:动作:标识符」规范
 const CACHE_KEY_PREFIX = "token:cache";
@@ -24,7 +26,7 @@ const tokenCacheItemSchema = z.object({
 export type TokenCacheItem = z.infer<typeof tokenCacheItemSchema>;
 
 // API Key 验证缓存层：cache-aside 模式，命中即跳过数据库往返
-// Key 为 hashedKey（明文不入缓存），TTL 24h，token 删除/更新时主动清缓存
+// > Key 为 hashedKey（明文不入缓存），TTL 24h，token 删除/更新时主动清缓存
 class TokenCache {
 	private _key(hashedKey: string): string {
 		return `${CACHE_KEY_PREFIX}:${hashedKey}`;
@@ -56,7 +58,7 @@ class TokenCache {
 		return parsed.data;
 	}
 
-	// 立即删除：revoke 或更新字段后调用，避免缓存与库不一致
+	// ! 立即删除：revoke 或更新字段后必须调用，否则被吊销的令牌会在 TTL 内继续生效
 	async delete(hashedKey: string): Promise<void> {
 		const redis = getAppRedis();
 		await redis.del(this._key(hashedKey));

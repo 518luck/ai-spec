@@ -2,6 +2,8 @@ import * as z from "zod/v4";
 
 import { emailSchema } from "./auth";
 
+// # 用户相关 zod schema：名称、头像、默认工作区、部分更新校验
+
 // 用户名称校验：非空、最多 32 字
 export const userNameSchema = z.string().trim().min(1, "请输入名称").max(32, "名称最多 32 字");
 
@@ -11,7 +13,7 @@ export const userAvatarSchema = z
 	.regex(/^data:image\/[a-zA-Z0-9.+-]+;base64,/, "头像格式不正确");
 
 // 默认工作区 ID 校验
-// TODO: 工作空间功能尚未上线，此 schema 暂为占位
+// ? TODO: 工作空间功能尚未上线，此 schema 暂为占位
 export const defaultWorkspaceIdSchema = z.string().min(1);
 
 // PATCH /api/user 的部分更新入参：四字段全可选，至少提交一个

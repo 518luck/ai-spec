@@ -1,4 +1,6 @@
-// 后台任务队列配置：所有任务共用一个队列，按 job.name 路由分发
+// # 后台任务队列配置：所有任务共用一个队列，按 job.name 路由分发
+
+// > 默认重试 3 次、指数退避 5s 起；processor 需保证幂等，因为失败会自动重投
 export const BACKGROUND_JOBS_QUEUE_CONFIG = {
 	name: "background-jobs",
 	jobOptions: {

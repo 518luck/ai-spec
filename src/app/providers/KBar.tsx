@@ -1,5 +1,7 @@
 "use client";
 
+// # KBar 命令面板 Provider：装载命令并渲染快捷键唤起的搜索弹窗
+
 import {
 	type ActionImpl,
 	KBarAnimator,
@@ -21,10 +23,10 @@ export function KBar({ children }: { children: React.ReactNode }) {
 	);
 }
 
-// 快捷键弹窗主组件
+// 弹窗主组件：注册命令并渲染搜索面板
 function KBarComponent({ children }: { children: React.ReactNode }) {
 	useKBarActions();
-	// /现在搜出来了哪些命令
+	// 当前匹配到的命令（已过滤）
 	const { results } = useMatches();
 
 	return (

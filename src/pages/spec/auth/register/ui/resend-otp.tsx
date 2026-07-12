@@ -6,6 +6,7 @@ import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 
+// # OTP 重发组件：成功 60s 倒计时，失败 5s 后可重试
 export const ResendOtp = ({ email }: { email: string }) => {
 	const [delaySeconds, setDelaySeconds] = useState(0);
 	const [state, setState] = useState<"default" | "success" | "error">("default");

@@ -1,4 +1,4 @@
-// 侧边栏宽度与折叠的配置常量（单位 px），集中维护便于核查与调整
+// # 侧边栏尺寸配置常量（单位 px）：集中维护宽度/折叠阈值，便于核查与调整
 
 // re-export cookie 名，方便 dual-sidebar 内部统一从 model 层引用
 export { SIDEBAR_COLLAPSED_COOKIE, SIDEBAR_WIDTH_COOKIE } from "@/shared/lib/cookie/cookies";

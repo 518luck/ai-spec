@@ -10,6 +10,8 @@ import prisma from "@/shared/db";
 import { emailSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
+// # 登录邮箱探测 Action：校验邮箱是否已注册且设置了密码，避免无效账户继续走 NextAuth
+
 const schema = z.object({
 	email: emailSchema,
 });
@@ -25,7 +27,7 @@ export const checkLoginEmailAction = actionClient
 		const { email } = parsedInput;
 
 		if (!skipAuthThrottling) {
-			// 邮箱探测按请求 IP 限流，每分钟最多 5 次。
+			// ! 邮箱探测按请求 IP 限流，每分钟最多 5 次，防止账户枚举攻击。
 			await ratelimit({
 				key: `login:email-check:${await getIP()}`,
 				points: 2,

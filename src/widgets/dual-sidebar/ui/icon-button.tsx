@@ -1,5 +1,7 @@
 "use client";
 
+// # 侧边栏图标按钮：标题行收缩/展开/重置等操作的统一按钮，可选 Tooltip 包裹
+
 import type { JSX, ReactNode } from "react";
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";

@@ -1,5 +1,7 @@
 "use client";
 
+// # Sidebar 侧边栏组合（基于 base-ui）：Provider 管状态 + 受控/非受控 + Cookie 持久化 + Cmd/Ctrl+B 快捷键；桌面端折叠占位，移动端 Sheet 抽屉
+
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -16,6 +18,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
+// @ 侧边栏宽度常量：通过 CSS 变量注入，子组件用 w-(--sidebar-width) 等任意值读取
 // 桌面端完整展开时的默认宽度。
 const SIDEBAR_WIDTH = "16rem";
 // 移动端抽屉形态的宽度，略宽于桌面端以适配触控操作。
@@ -91,7 +94,7 @@ function SidebarProvider({
 				_setOpen(openState);
 			}
 
-			// 将桌面端展开状态写入 Cookie，供后续页面加载时恢复用户偏好。
+			// > 将桌面端展开状态写入 Cookie，供后续页面加载时恢复用户偏好（跨刷新持久化折叠态）
 			setCookie(SIDEBAR_STATE_COOKIE, String(openState), SIDEBAR_STATE_COOKIE_OPTIONS);
 		},
 		[setOpenProp, open],
@@ -119,8 +122,7 @@ function SidebarProvider({
 	// 将布尔 open 转成 data-state 友好的语义值，方便 Tailwind group-data-* 联动。
 	const state = open ? "expanded" : "collapsed";
 
-	// 缓存上下文对象，减少 Provider 下游组件的无意义重新渲染。
-	// 这个是比较值得学习的,使用了useMemo 可以避免值对象不变化 要不然虽然里面的值可能没变，但对象引用变了。对于 Context 来说：会让所有使用 useSidebar() 的子组件认为 Context 更新了，可能导致不必要的重新渲染。
+	// > 缓存上下文对象：useMemo 稳定 contextValue 引用，否则即便内部值未变，对象引用变化也会触发所有 useSidebar() 子组件重渲染
 	const contextValue = React.useMemo<SidebarContextProps>(
 		() => ({
 			state, //："expanded" / "collapsed"
@@ -232,9 +234,7 @@ function Sidebar({
 		);
 	}
 
-	// 桌面端根节点不直接承载内容，而是提供状态、方向和变体的样式作用域。
-	// group 让内部元素读取父级 data-*，peer 让相邻主内容区域读取侧边栏状态。
-	// hidden md:block 表示移动端隐藏这套桌面结构，只在中等及以上屏幕启用。
+	// > 桌面端根节点不承载内容，只作样式作用域：group 让内部读 data-*，peer 让相邻 SidebarInset 读侧栏状态
 	return (
 		<div
 			className="group peer hidden text-sidebar-foreground md:block"

@@ -1,3 +1,5 @@
+// # 后台任务数据类型：re-export 各领域类型，并汇总为联合类型供 Worker 路由
+
 // re-export 各领域任务数据类型，外部仍可统一从这里导入
 
 export type {

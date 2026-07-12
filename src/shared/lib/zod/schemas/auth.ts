@@ -1,5 +1,7 @@
 import * as z from "zod/v4";
 
+// # 认证相关 zod schema：邮箱、密码、注册、登录校验规则
+
 export const emailSchema = z
 	.string()
 	.trim()

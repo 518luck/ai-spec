@@ -39,6 +39,7 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 			key: `api:requests:${token.user_id}`,
 		});
 
+		// ! 限流命中即拒绝，防止 API Key 被滥用做高频请求
 		if (!ok) {
 			throw new AiSpecError({
 				code: "RATE_LIMITED",
@@ -80,7 +81,7 @@ const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 	// 1. 先查缓存：命中则零数据库往返
 	const cached = await tokenCache.get(hashedKey);
 	if (cached) {
-		// 缓存里也要走过期校验：token 可能已过期但缓存还没失效
+		// ! 缓存里也要走过期校验：token 可能已过期但缓存还没失效，不可跳过
 		if (cached.expires && new Date(cached.expires) < new Date()) {
 			// 顺手清理过期项，避免后续请求继续命中过期缓存
 			await tokenCache.delete(hashedKey);

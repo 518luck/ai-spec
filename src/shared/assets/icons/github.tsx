@@ -1,3 +1,5 @@
+// # GitHub 品牌 SVG 图标：用于第三方登录按钮
+
 export function Github({ className }: { className?: string }) {
 	return (
 		<svg

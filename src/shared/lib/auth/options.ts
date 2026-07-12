@@ -21,6 +21,7 @@ import { validatePassword } from "@/shared/lib/utils";
 import { signInSchema } from "@/shared/lib/zod/schemas/auth";
 import { isProd } from "./constants";
 
+// # NextAuth 配置中心：session 策略、providers、cookie、callbacks、events
 export const authOptions: NextAuthConfig = {
 	adapter: PrismaAdapter(prisma),
 	session: {
@@ -43,11 +44,11 @@ export const authOptions: NextAuthConfig = {
 					type: "password",
 				},
 			},
-			// 邮箱密码登录验证：限流 → 查用户 → 锁定检查 → 密码校验
+			// > 邮箱密码登录验证流程：限流 → 查用户 → 锁定检查 → 密码校验
 			authorize: async (credentials) => {
 				const { email, password } = signInSchema.parse(credentials);
 
-				// 如果没有启用跳过认证限流，则对登录尝试进行限流，限制每分钟最多5次尝试
+				// > 没有启用跳过认证限流时，对登录尝试限流（每分钟最多 5 次）
 				if (!skipAuthThrottling) {
 					await ratelimit({
 						key: `login:attempts:${email}`,
@@ -98,12 +99,14 @@ export const authOptions: NextAuthConfig = {
 		GoogleProvider({
 			clientId: process.env.GOOGLE_CLIENT_ID,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-			allowDangerousEmailAccountLinking: true, //允许按相同邮箱把 Google 登录和已有账号关联起来
+			// ! allowDangerousEmailAccountLinking：允许按相同邮箱把 Google 登录和已有账号关联起来
+			allowDangerousEmailAccountLinking: true,
 			authorization: { params: { prompt: "select_account" } },
 		}),
 		GitHubProvider({
 			clientId: process.env.GITHUB_CLIENT_ID,
 			clientSecret: process.env.GITHUB_CLIENT_SECRET,
+			// ! allowDangerousEmailAccountLinking：允许按相同邮箱把 GitHub 登录和已有账号关联起来
 			allowDangerousEmailAccountLinking: true,
 			authorization: { params: { login: "true" } },
 		}),
@@ -150,7 +153,7 @@ export const authOptions: NextAuthConfig = {
 	callbacks: {
 		// 在 JWT 中持久化登录用户信息，并支持资料更新后刷新 token
 		jwt: async ({ token, user, trigger }) => {
-			// 只持久化非敏感字段，避免 passwordHash 等敏感信息泄露到客户端 session
+			// ! 只持久化非敏感字段，避免 passwordHash 等敏感信息泄露到客户端 session
 			if (user) {
 				token.user = {
 					id: user.id,

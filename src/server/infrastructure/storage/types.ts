@@ -1,3 +1,5 @@
+// # 存储操作参数类型：upload / delete 的入参与桶可见性
+
 // 存储桶可见性类型
 export type BucketVisibility = "public" | "private";
 

@@ -1,5 +1,7 @@
 "use client";
 
+// # 通用二次确认弹窗：受控开关，支持异步 loading、危险操作样式、输入确认文字校验
+
 import type { JSX, ReactNode } from "react";
 import { useState } from "react";
 
@@ -37,8 +39,7 @@ type ConfirmDialogProps = {
 	requireConfirmInput?: RequireConfirmInput;
 };
 
-// 通用二次确认弹窗：受控开关，支持异步 loading、危险操作样式、输入确认文字校验
-// 核心时序：点确认 → loading（弹窗不关）→ onConfirm resolve → 关闭，避免「先关弹窗后刷新」的列表闪烁
+// > 核心时序：点确认 → loading（弹窗不关）→ onConfirm resolve → 关闭，避免「先关弹窗后刷新」的列表闪烁
 export function ConfirmDialog({
 	open, // 受控开关状态
 	onOpenChange, // 开关回调

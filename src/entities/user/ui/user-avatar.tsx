@@ -1,5 +1,7 @@
 "use client";
 
+// # 用户头像组件：自定义头像优先，其次 Gravatar，均无则显示占位图标
+
 import type { JSX } from "react";
 import { useMemo } from "react";
 

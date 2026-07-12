@@ -1,5 +1,7 @@
 "use client";
 
+// # ScrollArea 滚动区域（基于 base-ui）：自定义滚动条样式，hover/滚动时淡入、移出自动隐藏
+
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 
 import { cn } from "@/shared/lib/utils";

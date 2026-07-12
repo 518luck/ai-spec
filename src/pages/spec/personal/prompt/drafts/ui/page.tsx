@@ -18,7 +18,7 @@ type PersonalDraftsPageProps = {
 	sort: string;
 };
 
-// 渲染个人草稿页面，按搜索/排序查询当前用户的草稿（服务端分页）
+// # 个人草稿页：按搜索/排序查询当前用户草稿（服务端分页），未登录走空状态
 export async function PersonalDraftsPage({
 	query,
 	sort,
@@ -68,7 +68,7 @@ async function loadDrafts(
 	const orderBy =
 		sort === "created" ? { created_at: "desc" as const } : { updated_at: "desc" as const };
 
-	// findMany 取当前页草稿，count 取总数；两者无依赖，并行查询
+	// > findMany 取当前页草稿、count 取总数，两者无依赖并行查询以减少等待
 	const [rows, total] = await Promise.all([
 		prisma.promptDraft.findMany({
 			where,

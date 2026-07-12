@@ -1,3 +1,5 @@
+// # 文件夹图标：带圆角方块背景，有 color 时淡彩底 + 同色图标，无 color 时灰色底
+
 import type { CSSProperties, JSX } from "react";
 
 import { cn } from "@/shared/lib/utils";

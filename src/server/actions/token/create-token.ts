@@ -7,6 +7,9 @@ import { hashToken } from "@/shared/lib/auth/hash-token";
 import { nanoid } from "@/shared/lib/nanoid";
 import { createTokenDtoSchema, createTokenVoSchema } from "@/shared/lib/zod/schemas/token";
 
+// # 创建 API 密钥 Action：生成密钥明文、落库哈希与脱敏片段，明文仅返回一次
+
+// @ 密钥生成参数
 // API Key 固定前缀，便于在列表中识别本平台签发的密钥
 const API_KEY_PREFIX = "aispec_";
 // API Key 随机部分长度，约 238 位熵，满足密钥强度要求
@@ -49,7 +52,7 @@ export const createTokenAction = authUserActionClient
 			},
 		});
 
-		// 明文密钥仅此一次返回给前端，之后无法再从库里反查
+		// ! 明文密钥仅此一次返回给前端，之后无法再从库里反查（库里只存哈希）
 		return {
 			id: created.id,
 			name: created.name,

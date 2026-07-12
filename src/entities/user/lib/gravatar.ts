@@ -1,3 +1,5 @@
+// # 用户头像地址计算：自定义头像优先，其次 Gravatar，均无则返回 undefined 兜底
+
 import { Md5 } from "ts-md5";
 
 const GRAVATAR_BASE = "https://www.gravatar.com/avatar/";
@@ -8,7 +10,7 @@ export type AvatarUser = {
 	email?: string | null;
 };
 
-// 根据邮箱生成 Gravatar 头像 URL，d=404 使邮箱无 Gravatar 时返回 404 以触发 Avatar fallback
+// > d=404 使邮箱无 Gravatar 时返回 404，从而触发 Avatar 组件的 fallback 兜底
 export const buildGravatarUrl = (email: string): string => {
 	const hash = Md5.hashStr(email.trim().toLowerCase());
 	return `${GRAVATAR_BASE}${hash}?d=404`;

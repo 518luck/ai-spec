@@ -1,4 +1,4 @@
-// S3 存储配置（通过环境变量注入，兼容 AWS S3 / R2 / MinIO 等）
+// # S3 存储配置（通过环境变量注入，兼容 AWS S3 / R2 / MinIO 等）
 export const S3_CONFIG = {
 	endpoint: process.env.S3_ENDPOINT, // 自定义服务地址（R2 / MinIO 必填，AWS S3 留空）
 	region: process.env.S3_REGION ?? "auto", // 数据中心区域，默认 auto

@@ -15,6 +15,8 @@ import { generateOTP } from "@/shared/lib/auth/utils";
 import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
+// # 发送注册验证码 Action：向未注册邮箱发送 OTP，并落库待校验
+
 const schema = z.object({
 	email: emailSchema,
 	password: passwordSchema.optional(),
@@ -32,6 +34,7 @@ export const sendOtpAction = actionClient
 	.action(async ({ parsedInput }) => {
 		const { email } = parsedInput;
 
+		// ! 按「邮箱 + IP」限流，避免验证码接口被滥用做邮件轰炸
 		await ratelimit({
 			key: `otp:send:${email}:${getIP()}`,
 			points: 2,
@@ -48,7 +51,7 @@ export const sendOtpAction = actionClient
 			});
 		}
 
-		// 6. 生成新的 OTP 验证码，后面会同时写入数据库并发送邮件。
+		// 生成新的 OTP 验证码，后面会同时写入数据库并发送邮件。
 		const code = generateOTP();
 
 		// 删除邮箱里存在的验证码,删所有匹配的行，删 0 行也不报错

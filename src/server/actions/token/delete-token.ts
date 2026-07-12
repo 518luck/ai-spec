@@ -7,6 +7,8 @@ import { tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
 import { deleteTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 
+// # 删除 API 密钥 Action：校验归属后删除令牌并清除缓存
+
 // 删除 API 密钥：仅登录用户可删除归属自己的令牌；按 id 删除，校验归属防止越权删别人的
 export const deleteTokenAction = authUserActionClient
 	.inputSchema(deleteTokenDtoSchema, {
@@ -25,12 +27,12 @@ export const deleteTokenAction = authUserActionClient
 		if (!token) {
 			throw new ActionError({ code: "NOT_FOUND", message: "令牌不存在" });
 		}
-		// 归属校验：即便知道别人的令牌 id 也不能删除
+		// ! 归属校验：即便知道别人的令牌 id 也不能删除
 		if (token.user_id !== userId) {
 			throw new ActionError({ code: "FORBIDDEN", message: "无权删除该令牌" });
 		}
 
 		await prisma.token.delete({ where: { id } });
-		// 删除后立即清缓存，避免被 revoke 的 key 在缓存 TTL 内仍能通过鉴权
+		// ! 删除后立即清缓存，避免被 revoke 的 key 在缓存 TTL 内仍能通过鉴权
 		await tokenCache.delete(token.hashed_key);
 	});

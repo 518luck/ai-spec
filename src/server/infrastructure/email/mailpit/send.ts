@@ -4,6 +4,8 @@ import type { ResendEmailOptions } from "../resend/types";
 import type { EmailProvider, SendResult } from "../types";
 import { mailpitTransport } from "./client";
 
+// # Mailpit Provider：本地 SMTP 捕获，供开发期查看邮件效果
+
 // 未提供收件人时的跳过结果
 const skipped = (reason: string): SendResult => ({
 	ok: false,

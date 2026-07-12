@@ -1,5 +1,7 @@
 import type { ResendEmailOptions } from "./resend/types";
 
+// # 邮件 Provider 统一契约：屏蔽 resend / mailpit 各自差异
+
 // 支持的邮件 provider 名称
 export type EmailProviderName = "resend" | "mailpit";
 

@@ -1,5 +1,7 @@
 import * as z from "zod/v4";
 
+// # 草稿（Draft）相关 zod schema：名称、描述、正文、图片、文件夹归属校验
+
 // 草稿名称：可选，最多 64 字
 export const draftNameSchema = z
 	.string()

@@ -6,6 +6,8 @@ import { setCookie } from "@/shared/lib/cookie/client-cookie";
 import { ACTIVE_THEME_COOKIE, COOKIE_DEFAULTS } from "@/shared/lib/cookie/cookies";
 import { DEFAULT_THEME } from "../configs/theme.config";
 
+// # ActiveThemeProvider：色彩主题 Context 提供者，管理 activeTheme 并持久化到 cookie
+
 // 设置 cookie
 const setThemeCookie = (theme: string) => {
 	if (typeof window === "undefined") return;
@@ -30,7 +32,7 @@ export function ActiveThemeProvider({
 	const themeToUse = initialTheme ?? DEFAULT_THEME;
 	const [activeTheme, setActiveTheme] = useState<string>(themeToUse);
 
-	// 同步主题到 <html> 并写入 cookie；首屏值由 SSR 注入，此处仅处理后续切换
+	// > 同步主题到 <html> 并写入 cookie；首屏值由 SSR 注入，此处仅处理后续切换
 	useEffect(() => {
 		document.documentElement.setAttribute("data-theme", activeTheme);
 		setThemeCookie(activeTheme);

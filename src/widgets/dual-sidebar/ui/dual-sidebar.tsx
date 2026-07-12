@@ -1,5 +1,7 @@
 "use client";
 
+// # 双栏侧边栏主体：左栏业务导航（图标）+ 右栏操作面板（菜单），支持拖拽缩放与紧凑态
+
 import { motion } from "motion/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -50,7 +52,6 @@ type NavBusinessItemProps = NavBusinessItemBaseProps & {
 	item: NavBusinessItemData;
 };
 
-// 渲染双栏侧边栏，左侧承载业务划分，右侧承载操作划分。
 export function DualSidebar({ className, ...props }: DualSidebarProps): JSX.Element {
 	// 读取侧边栏宽度/紧凑/拖拽状态，左侧业务导航栏始终保留。
 	const { width, collapsed, isResizing } = useDualSidebarContext();

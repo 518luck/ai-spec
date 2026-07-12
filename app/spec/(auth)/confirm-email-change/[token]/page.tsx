@@ -1,6 +1,8 @@
 import { ConfirmEmailChangePage } from "@/pages/spec/auth/confirm-email-change";
 
-// 邮箱变更确认路由：从动态段取 token、从 query 取 cancel，委托给页面主组件
+// # 邮箱变更确认路由（token 确认 / cancel 取消）
+
+// 从动态段取 token、从 query 取 cancel，委托给页面主组件
 export default async function Page({
 	params,
 	searchParams,

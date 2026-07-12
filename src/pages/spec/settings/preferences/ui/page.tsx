@@ -6,7 +6,8 @@ import { TitlePageShell } from "@/widgets/page-shell";
 import { ThemeModeSwitcher } from "./theme-mode-switcher";
 import { ThemePreferencePreview } from "./theme-preference-preview";
 
-// 渲染个人偏好设置页面，展示主题偏好预览样式。
+// # 个人偏好设置页面
+// 展示主题偏好预览样式，选项即选即生效并自动保存
 export function PreferencesPage(): JSX.Element {
 	return (
 		<TitlePageShell title="个人偏好">

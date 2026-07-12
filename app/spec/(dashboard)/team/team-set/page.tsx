@@ -1,6 +1,6 @@
 import { TeamSetPage } from "@/pages/spec/team/team-set";
 
-// 接入团队信息页面路由。
+// # 团队信息设置页（薄层路由，委托 TeamSetPage 组件）
 export default function Page() {
 	return <TeamSetPage />;
 }

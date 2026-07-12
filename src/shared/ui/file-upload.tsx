@@ -1,5 +1,7 @@
 "use client";
 
+// # 通用文件上传区域：拖拽 / 点击选择 + 类型与大小校验 + 预览，纯原生无第三方上传库
+
 import { cva, type VariantProps } from "class-variance-authority";
 import Image from "next/image";
 import type { DragEvent, ReactNode } from "react";
@@ -11,7 +13,7 @@ import type { Icon } from "@/shared/ui/icons";
 import { Icons } from "@/shared/ui/icons";
 import { Spinner } from "@/shared/ui/spinner";
 
-// 受支持的文件格式
+// @ 文件类型与校验配置：新增类型只需改这里的映射表
 type AcceptedFileFormats = "any" | "images" | "csv" | "documents";
 
 // 文档类 MIME 白名单
@@ -96,7 +98,6 @@ export type FileUploadProps = FileUploadReadFileProps & {
 	disabled?: boolean;
 } & VariantProps<typeof fileUploadVariants>;
 
-// 通用文件上传区域：拖拽 / 点击选择 + 类型与大小校验 + 预览，纯原生无第三方上传库
 export function FileUpload({
 	id,
 	readFile,
@@ -129,7 +130,7 @@ export function FileUpload({
 			return;
 		}
 
-		// 记下文件名作为隐藏 input 的 key，便于连续选同一文件
+		// > 记下文件名作为隐藏 input 的 key，强制 remount，便于连续选同一文件也能触发 onChange
 		setFileName(file.name);
 
 		// 校验大小

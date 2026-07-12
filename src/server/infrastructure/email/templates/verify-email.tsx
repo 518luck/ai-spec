@@ -12,6 +12,7 @@ import {
 import { appConfig } from "@/shared/configs/app.config";
 import { Footer } from "../components/footer";
 
+// # 注册验证码邮件模板：展示 6 位 OTP 验证码，10 分钟有效
 export default function VerifyEmail({
 	email = "123@123.co",
 	code = "123456",

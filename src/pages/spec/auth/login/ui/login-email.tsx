@@ -17,7 +17,7 @@ import { Input } from "@/shared/ui/input";
 import { Spinner } from "@/shared/ui/spinner";
 import { useLoginContext } from "../model/login-context";
 
-// 渲染邮箱登录表单并按需展开密码输入框。
+// # 邮箱登录表单：先校验账户状态，再按需展开密码框并调用 NextAuth
 export function LoginEmail(): JSX.Element {
 	const router = useRouter();
 	// 标记 NextAuth 密码登录请求是否进行中，用于禁用重复提交和展示 loading。
@@ -48,7 +48,7 @@ export function LoginEmail(): JSX.Element {
 		setShowPasswordField(false);
 	};
 
-	// 登录前先检查账户状态，只有存在密码的账户才调用 NextAuth。
+	// > 登录前先检查账户状态，只有存在密码的账户才调用 NextAuth
 	const handleSubmit = async (event: SubmitEvent<HTMLFormElement>): Promise<void> => {
 		event.preventDefault();
 

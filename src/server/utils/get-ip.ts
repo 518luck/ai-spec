@@ -1,13 +1,10 @@
 import { headers } from "next/headers";
 
-//这是一个“取当前请求来源 IP”的工具函数。
+// # 取当前请求来源 IP：优先读 x-forwarded-for，回退 x-real-ip
+// > 用于按 IP 限流；取不到时回退 0.0.0.0，这些请求会共用同一限流桶
 export const getIP = async () => {
 	const FALLBACK_IP_ADDRESS = "0.0.0.0";
-	// 1. headers()
-	//    拿到当前这次请求的请求头。
-	// 2. .get("x-forwarded-for")
-	//    优先取 x-forwarded-for。
-	//    这个请求头通常是代理、CDN、负载均衡器转发时加上的，里面常常带客户端真实 IP。
+	// 优先取 x-forwarded-for（代理、CDN、负载均衡器转发时加上，常带客户端真实 IP）
 	const forwardedFor = (await headers()).get("x-forwarded-for");
 
 	if (forwardedFor) {

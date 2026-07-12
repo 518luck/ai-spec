@@ -18,6 +18,7 @@ import { PasswordRequirements } from "./password-requirements";
 
 type SignUpProps = z.infer<typeof signUpSchema>;
 
+// # 邮箱注册表单：先输邮箱再展开密码框，提交后发送 OTP 进入验证步骤
 export function SignUpEmail() {
 	const { isMobile } = useMediaQuery();
 
@@ -55,6 +56,7 @@ export function SignUpEmail() {
 		},
 	});
 
+	// > 两步提交：首次仅填邮箱时阻止提交并展开密码框，第二次才真正发送 OTP
 	const onSubmit = (e: SubmitEvent<HTMLFormElement>) => {
 		const { email, password } = getValues();
 

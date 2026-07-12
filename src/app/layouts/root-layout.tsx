@@ -1,3 +1,5 @@
+// # 应用根布局外壳：SSR 注入主题，装配字体变量与全局 Provider
+
 import { Oxanium, Source_Code_Pro, Source_Serif_4 } from "next/font/google";
 import { cookies } from "next/headers";
 import { SessionProvider } from "next-auth/react";
@@ -22,7 +24,7 @@ const sourceSerif4 = Source_Serif_4({
 	variable: "--font-source-serif-4",
 });
 
-// 根布局外壳：SSR 注入主题，保证首屏即带 data-theme，避免主题闪烁与恢复丢失
+// > SSR 阶段读 cookie 注入 data-theme，保证首屏即带主题，避免主题闪烁
 export async function RootLayoutShell({ children }: { children: React.ReactNode }) {
 	// 服务端读取用户主题偏好，缺失时回退默认主题
 	const cookieStore = await cookies();

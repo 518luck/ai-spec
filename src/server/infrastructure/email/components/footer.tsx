@@ -1,8 +1,10 @@
 import { Hr, Link, Tailwind, Text } from "react-email";
+
+// # 邮件底部 Footer 组件：展示收件人地址、联系方式与退订/通知设置链接
 export function Footer({
 	email, //收件人的邮箱地址
 	marketing, //标记该邮件是否为营销邮件。
-	// TODO 两个连接字段没有做
+	// ? TODO 两个连接字段没有做
 	unsubscribeUrl = "https://www.zdic.net", //营销类邮件的退订/偏好管理链接。
 	notificationSettingsUrl, //非营销类邮件的通知设置链接。只有当 marketing 为 false/未设置且该值存在时，才会显示"调整通知设置"链接。
 }: {
@@ -17,7 +19,7 @@ export function Footer({
 			<Text className="text-[12px] text-neutral-500 leading-6">
 				本邮件发送至 <span className="text-black">{email}</span>
 				。如非您本人操作，请忽略此邮件。若对账户安全有任何疑虑，欢迎
-				{/* TODO 这个地方的联系邮件需要修改 */}
+				{/* // ? TODO 这个地方的联系邮件需要修改 */}
 				<Link className="text-neutral-700 underline" href="https://dub.co/support">
 					联系我们
 				</Link>

@@ -2,9 +2,11 @@ import { appendFile, mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import type { LogEvent, LogLevel, Transport } from "@axiomhq/logging";
 
+// # 本地文件日志 Transport：开发环境把日志追加写入 logs/server.log
+
 // 本地日志文件路径（项目根 logs/server.log）
 const LOG_FILE = resolve(process.cwd(), "logs/server.log");
-// 仅开发环境启用本地文件日志：生产不落盘，避免敏感信息泄露与文件无限增长
+// ! 仅开发环境启用本地文件日志：生产不落盘，避免敏感信息泄露与文件无限增长
 const isDev = process.env.NODE_ENV !== "production";
 
 // 日志目录只需创建一次，用标志位避免重复系统调用

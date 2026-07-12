@@ -9,7 +9,7 @@ import { Button } from "@/shared/ui/button";
 import { Spinner } from "@/shared/ui/spinner";
 import { google, useLoginContext } from "../model/login-context";
 
-// 渲染 Google 第三方登录入口并记录用户偏好。
+// # Google 第三方登录入口：触发 OAuth 并记录用户偏好
 export function LoginGoogle(): JSX.Element {
 	const { preferredMethod, setPreferredMethod } = useLoginContext();
 	const [isPending, setIsPending] = useState(false);

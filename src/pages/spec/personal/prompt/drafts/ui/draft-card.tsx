@@ -24,7 +24,7 @@ type DraftCardProps = {
 	updatedAt: Date;
 };
 
-// 草稿卡片：内容预览 + 时间 + 复制/转正/更多操作
+// # 草稿卡片：内容预览 + 时间 + 复制/更多操作
 export function DraftCard({ id, name, content, updatedAt }: DraftCardProps): JSX.Element {
 	const title = getDraftTitle(name, content);
 	const preview = truncateContent(content);
@@ -64,7 +64,7 @@ export function DraftCard({ id, name, content, updatedAt }: DraftCardProps): JSX
 	);
 }
 
-// 草稿卡片右上角"更多"菜单（编辑/删除/转正），预留待实现
+// ? 草稿卡片右上角"更多"菜单（编辑/删除/转正），目前均为占位，功能待实现
 function DraftActions({ id: _id }: { id: string }): JSX.Element {
 	return (
 		<DropdownMenu>

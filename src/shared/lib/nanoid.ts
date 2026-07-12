@@ -1,5 +1,7 @@
 import { customAlphabet } from "nanoid";
 
+// # 纯字母数字短随机串生成器（基于 nanoid customAlphabet）
+
 // 纯字母数字（0-9A-Za-z）短随机串生成器，默认 7 位
 const generate = customAlphabet(
 	"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",

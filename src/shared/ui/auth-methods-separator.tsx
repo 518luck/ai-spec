@@ -1,4 +1,4 @@
-// 分隔线 ──────── or ────────
+// # 登录方式分隔线：在第三方登录按钮之间展示「or」分隔线
 export function AuthMethodsSeparator() {
 	return (
 		<div className="my-3 flex shrink items-center justify-center gap-2">

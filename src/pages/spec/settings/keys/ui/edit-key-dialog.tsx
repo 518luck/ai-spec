@@ -1,5 +1,8 @@
 "use client";
 
+// # 编辑 API 密钥弹窗
+// 可改名称、描述、权限、过期时间；密钥本身不可改，因此无明文展示视图
+
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
@@ -45,7 +48,6 @@ type EditKeyDialogProps = {
 const deriveExpiryPreset = (expires: Date | null): ExpiryPresetValue =>
 	expires ? "custom" : "never";
 
-// 编辑 API 密钥弹窗：可改名称、描述、权限、过期时间；密钥本身不可改，因此无明文展示视图
 export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps): JSX.Element {
 	const router = useRouter();
 	// 由 token 现有值派生表单初值：scopes 字符串拆分为数组后反推预设与勾选矩阵

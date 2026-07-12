@@ -1,5 +1,8 @@
 "use client";
 
+// # 密钥表单字段（创建/编辑共用）
+// 名称 + 描述 + 权限 Tab + 限制权限下的资源勾选矩阵；外层容器与动画折叠均封装于此
+
 import dayjs from "dayjs";
 import type { JSX } from "react";
 
@@ -20,6 +23,7 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Textarea } from "@/shared/ui/textarea";
 
+// @ 资源权限粒度与过期预设
 // 资源权限粒度：None(无)/Read(读)/Write(读写)，单选互斥
 const RESOURCE_SCOPES = [
 	{ value: "", label: "None" },
@@ -42,11 +46,12 @@ export type ExpiryPresetValue = (typeof expiryPresets)[number]["value"];
 // 权限勾选矩阵：每个资源对应一个 scope 值（""/read/write），仅「限制」权限下使用
 export type PermissionMatrix = Record<ResourceKey, string>;
 
+// @ 权限矩阵与 scope 互转工具
 // 生成全空的权限勾选矩阵，用于初始化与关闭重置
 export const createEmptyMatrix = (): PermissionMatrix =>
 	Object.fromEntries(RESOURCE_KEYS.map((key) => [key, ""])) as PermissionMatrix;
 
-// 把弹窗权限选择翻译成后端可识别的 scope 数组
+// > 把弹窗权限选择翻译成后端可识别的 scope 数组
 export const buildScopes = (permission: ScopePresetValue, matrix: PermissionMatrix): Scope[] => {
 	// 全部 / 只读直接取预设内带的通配 scope
 	const presetScopes = scopePresets.find((item) => item.value === permission)?.scopes;
@@ -104,8 +109,8 @@ type KeyFormProps = {
 	onExpiryDateChange: (date: Date | undefined) => void;
 };
 
-// 密钥表单：名称 + 描述 + 权限 Tab + 限制权限下的资源勾选矩阵，创建与编辑弹窗共用
-// 外层容器与动画折叠均封装于此，调用方无需关心 KeyFormFields / PermissionTable 的拼装
+// @ 密钥表单主体组件
+// 调用方无需关心 KeyFormFields / PermissionTable 的拼装，直接传受控值与回调
 export function KeyForm({
 	name,
 	description,

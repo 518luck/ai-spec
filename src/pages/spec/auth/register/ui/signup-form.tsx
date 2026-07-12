@@ -5,6 +5,7 @@ import { AuthMethodsSeparator } from "@/shared/ui/auth-methods-separator";
 import { SignUpEmail } from "./signup-email";
 import { SignUpOAuth } from "./signup-oauth";
 
+// # 注册表单组合：邮箱注册 + 第三方 OAuth 入口
 export const SignUpForm = ({
 	methods = ["email", "google", "github"],
 }: {

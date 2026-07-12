@@ -14,12 +14,13 @@ type NameFieldCardProps = {
 	aside?: ReactNode;
 };
 
-// 名称字段卡片：复用通用 EditableFieldCard，注入调用 /api/user 的保存逻辑
+// # 名称字段卡片
+// 复用通用 EditableFieldCard，注入调用 /api/user 的保存逻辑
 export function NameFieldCard({ defaultValue, aside }: NameFieldCardProps): JSX.Element {
 	const { update } = useSession();
 	const router = useRouter();
 
-	// 提交新名称：先本地校验长度避免无谓请求，再写库；失败抛错由卡片兜底 toast；成功后重铸 JWT 并刷新，使新名称同步到顶栏等位置
+	// > 提交新名称：先本地校验长度避免无谓请求，再写库；失败抛错由卡片兜底 toast；成功后重铸 JWT 并刷新，使新名称同步到顶栏等位置
 	const handleSave = async (name: string): Promise<void> => {
 		const parsed = userNameSchema.safeParse(name);
 		if (!parsed.success) {

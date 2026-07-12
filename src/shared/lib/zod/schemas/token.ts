@@ -2,6 +2,8 @@ import * as z from "zod/v4";
 
 import { SCOPES } from "@/server/rbac/scopes";
 
+// # API 令牌（Token）相关 zod schema：创建、更新、删除入参与响应出参校验
+
 // name：令牌显示名称，1-50 字符，必填；导出供前端提交前用同一份规则做本地预校验
 export const tokenNameSchema = z
 	.string({ error: "请输入令牌名称" })
@@ -40,7 +42,7 @@ export const createTokenDtoSchema = z.object({
 export type CreateTokenDto = z.infer<typeof createTokenDtoSchema>;
 
 // 创建 API 令牌的响应出参 schema（Vo 出：创建成功后返回给前端的数据）
-// 明文 key 仅此一次返回，之后库里只剩哈希不可反查；其余字段供列表展示
+// ! 明文 key 仅此一次返回，之后库里只剩哈希不可反查；其余字段供列表展示
 export const createTokenVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),

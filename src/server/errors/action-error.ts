@@ -1,6 +1,6 @@
 import type { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
-// Server Action 可暴露给前端的业务错误，复用项目统一的 ErrorCode
+// # ActionError：Server Action 可暴露给前端的业务错误，复用项目统一的 ErrorCode
 export class ActionError extends Error {
 	code: ErrorCode;
 

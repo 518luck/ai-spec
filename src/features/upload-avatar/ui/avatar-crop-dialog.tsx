@@ -1,5 +1,7 @@
 "use client";
 
+// # 头像裁剪弹窗：1:1 圆形裁剪 + 缩放滑块，确认后输出 JPEG dataUrl
+
 import { useCallback, useState } from "react";
 import Cropper, { type Area } from "react-easy-crop";
 
@@ -23,7 +25,6 @@ type AvatarCropDialogProps = {
 	onConfirm: (croppedDataUrl: string) => void | Promise<void>;
 };
 
-// 头像裁剪弹窗：1:1 圆形裁剪 + 缩放滑块，确认后输出 JPEG dataUrl
 export function AvatarCropDialog({
 	open,
 	imageSrc,

@@ -1,5 +1,6 @@
 import { type RefObject, useEffect, useState } from "react";
 
+// # useResizeObserver：监听元素尺寸变化并触发重渲染
 /**
  * Use a ResizeObserver to react to changes in an element's size
  *
@@ -28,7 +29,7 @@ export function useResizeObserver(
 		// 开始观察这个 DOM 节点的尺寸变化。
 		observer.observe(node);
 
-		// 组件卸载或依赖变化时断开观察，避免继续监听已经不用的 DOM 节点。
+		// > 组件卸载或依赖变化时断开观察，避免内存泄漏和继续监听已卸载的 DOM 节点。
 		return () => observer.disconnect();
 	}, [elementRef]);
 

@@ -1,6 +1,10 @@
 import { compare, hash } from "bcryptjs";
 
+// # 通用纯函数工具：CSS 类名合并、URL 解析、字符串截断、密码哈希
 // lib 是整个工具箱什么都能放（工具/配置/适配/类型/auth…）utils：只放纯函数工具
+
+// @ CSS 类名合并
+
 // shadcn/ui 的工具函数，用于智能合并 Tailwind CSS 类名
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -8,6 +12,8 @@ import { twMerge } from "tailwind-merge";
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
 }
+
+// @ URL 与字符串
 
 //  从一个完整 URL 字符串里，把查询参数提取出来，转换成普通对象返回。
 export const getSearchParams = (url: string) => {
@@ -28,7 +34,9 @@ export const truncate = (str: string | null | undefined, length: number): string
 	return `${str.slice(0, length - 3)}...`;
 };
 
-// 密码哈希
+// @ 密码哈希与校验
+
+// ! 密码哈希：使用 bcryptjs，cost factor 12（兼顾安全与性能）
 export async function hashPassword(password: string) {
 	return await hash(password, 12);
 }

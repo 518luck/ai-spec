@@ -10,6 +10,7 @@ import { Spinner } from "@/shared/ui/spinner";
 import { useRegisterContext } from "../model/register-context";
 import { ResendOtp } from "./resend-otp";
 
+// # 邮箱验证码表单：6 位 OTP 输入完整后自动校验并创建账户
 export function VerifyEmailForm() {
 	const router = useRouter();
 	const { email, password } = useRegisterContext();
@@ -51,7 +52,7 @@ export function VerifyEmailForm() {
 					setCode(value);
 				}}
 				autoFocus={!isMobile} //非移动端自动聚焦
-				// 自动提交
+				// > 6 位输满即自动提交校验，校验通过创建账户并跳转首页
 				onComplete={(completedCode) => {
 					executeAsync({ email, password, code: completedCode });
 				}}

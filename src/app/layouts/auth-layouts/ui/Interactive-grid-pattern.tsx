@@ -1,5 +1,7 @@
 "use client";
 
+// # 交互式网格背景：响应鼠标位置的发光网格，用于登录页装饰
+
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 
@@ -81,7 +83,7 @@ export function InteractiveGridPattern({
 	// 接近高亮的影响半径也跟随缩放变化
 	const scaledProximity = proximity * grid.scale;
 
-	// 预生成行/格稳定 key，避免在 map 回调里直接用数组下标作 key（触发 noArrayIndexKey）
+	// > 预生成行/格稳定 key，避免在 map 回调里直接用数组下标作 key（触发 noArrayIndexKey）
 	// 固定网格场景下这些 key 永不变化，等价于「行号/格子编号」字符串标识
 	const rowKeys = Array.from({ length: grid.rows }, (_, i) => `row-${i}`);
 	const cellKeys = Array.from({ length: grid.rows * grid.cols }, (_, i) => `cell-${i}`);

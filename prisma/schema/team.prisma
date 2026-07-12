@@ -1,6 +1,6 @@
-// 团队域：团队实体、成员关系、团队套餐与角色枚举
+// # 团队域：团队实体、成员关系、团队套餐与角色枚举
 //
-// 跨域引用：TeamMember.user_id 指向 auth.User，Prisma multiSchema 自动处理跨 schema 外键。
+// > 跨域引用：TeamMember.user_id 指向 auth.User，依赖 Prisma multiSchema 自动处理跨 schema 外键
 
 // 团队：协作空间的主体，承载文件夹、收录记录等团队资源
 model Team {

@@ -44,7 +44,7 @@ const isLoginMethod = (value: string | null): value is LoginMethod => {
 	return value === google || value === email || value === github;
 };
 
-// 为登录页提供账号数据与用户登录习惯。
+// # 为登录页提供账号数据与用户登录习惯。
 export function LoginProvider({ children }: PropsWithChildren): JSX.Element {
 	const [emailValue, setEmailValue] = useState("");
 	const [passwordValue, setPasswordValue] = useState("");
@@ -85,7 +85,7 @@ export function LoginProvider({ children }: PropsWithChildren): JSX.Element {
 	);
 }
 
-// 读取登录页共享状态并保证调用位置正确。
+// ! 必须在 LoginProvider 内部调用，否则抛错
 export const useLoginContext = (): LoginContextType => {
 	const context = useContext(LoginContext);
 

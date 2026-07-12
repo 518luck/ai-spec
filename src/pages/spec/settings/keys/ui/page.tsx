@@ -10,7 +10,7 @@ import { PAGE_SIZE } from "../config/constants";
 import { CreateKeyButton } from "./create-key-button";
 import { KeysTable } from "./keys-table";
 
-// 渲染 API 密钥总览页面，按页查询当前登录用户的令牌（服务端分页）
+// # API 密钥总览页面（服务端组件，按页查询当前登录用户的令牌）
 export async function KeysPage({ page }: { page: number }): Promise<JSX.Element> {
 	const session = await auth();
 	const userId = session?.user.id;

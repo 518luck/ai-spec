@@ -1,12 +1,14 @@
 "use client";
 
+// # 带工具栏的页面外壳：标题栏（标题+提示+筛选器）+ 右侧操作区 + 可滚动内容区
+
 import { type JSX, type ReactNode, useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { FolderCombobox, type FolderOption } from "@/widgets/folder-combobox";
 import { PageWidthWrapper } from "./page-width-wrapper";
 
-// TODO: 临时 mock 数据，测完 FolderCombobox 效果后删除
+// ? TODO 临时 mock 数据：测完 FolderCombobox 效果后删除
 const MOCK_FOLDERS: FolderOption[] = [
 	{ value: "1", label: "React 精华", color: "#61dafb" },
 	{ value: "2", label: "常用工具", color: "#f59e0b" },
@@ -24,7 +26,6 @@ type ToolbarPageShellProps = {
 	className?: string; // 透传给最外层 div 的 className
 };
 
-// 带标题栏与右侧操作区的页面外壳，内容区可滚动
 export function ToolbarPageShell({
 	title,
 	help,
@@ -33,7 +34,7 @@ export function ToolbarPageShell({
 	children,
 	className,
 }: ToolbarPageShellProps): JSX.Element {
-	// TODO: 临时 state，测完 FolderCombobox 效果后连同 mock 数据一起删除
+	// ? TODO 临时 state：测完 FolderCombobox 效果后连同 mock 数据一起删除
 	const [folderId, setFolderId] = useState<string | undefined>(undefined);
 
 	return (

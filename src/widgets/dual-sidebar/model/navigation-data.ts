@@ -1,3 +1,5 @@
+// # 侧边栏导航数据模型：定义业务区/资源面板的类型与按路由上下文生成的导航数据
+
 import type { Icon } from "@/shared/ui/icons";
 import { Icons } from "@/shared/ui/icons";
 
@@ -80,8 +82,7 @@ export type NavAreaPanels<T extends Record<PropertyKey, unknown>, TArea extends 
 	(args: T) => NavAreaPanel
 >;
 
-// TODO : 后面可以根据工作空间来分布设置
-// 根据当前路径判断左侧业务导航当前所在区域。
+// ? TODO 后面可根据工作空间来分布设置：当前按路径前缀硬判区域
 export const getCurrentNavBusinessArea = ({ pathname }: NavContext): NavBusinessArea | null => {
 	if (pathname.startsWith("/spec/personal")) {
 		return "personal";
@@ -145,8 +146,7 @@ export const getNavBusinessItems: NavBusinessItemsFn<NavContext> = ({ pathname }
 	];
 };
 
-// TODO : 后面需要根据工作空间来设置
-// 生成右侧资源导航栏的分组数据。
+// ? TODO 后面需根据工作空间来设置：当前右侧面板数据是静态硬编
 export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
 	personal: ({ pathname }) => ({
 		title: "个人空间",

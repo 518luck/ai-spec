@@ -44,9 +44,9 @@ export const withPersonal = (handler: PersonalHandler, { permissions }: Personal
 			session = resolved.session;
 			searchParams = getSearchParams(req.url);
 
-			// 权限校验：仅 API Key 接入（scopes 非 null）时收紧。
-			// cookies 接入 scopes 为 null，跳过校验——浏览器用户权限由 owner_id 数据隔离兜底。
-			// API Key 的 scope 只能收紧（限制钥匙能做什么），不能放宽超过浏览器登录的基线。
+			// ! 权限校验：仅 API Key 接入（scopes 非 null）时收紧。
+			// ! cookies 接入 scopes 为 null，跳过校验——浏览器用户权限由 owner_id 数据隔离兜底。
+			// ! API Key 的 scope 只能收紧（限制钥匙能做什么），不能放宽超过浏览器登录的基线。
 			const { scopes } = resolved;
 			if (permissions && scopes) {
 				const missing = permissions.filter((p) => !scopes.includes(p));
@@ -60,7 +60,7 @@ export const withPersonal = (handler: PersonalHandler, { permissions }: Personal
 				}
 			}
 
-			// TODO: 套餐校验——根据 plans 配置，比对实时查库得到的 userPlan（待订单系统落地）
+			// ? TODO: 套餐校验——根据 plans 配置，比对实时查库得到的 userPlan（待订单系统落地）
 
 			return await handler({ req, ctx, session, searchParams });
 		} catch (e) {

@@ -23,7 +23,8 @@ const themeModeItems = [
 	{ label: "自定义", value: "custom" },
 ];
 
-// 明暗模式切换器，支持系统跟随和手动自定义两种模式
+// > 明暗模式切换器，支持系统跟随和手动自定义两种模式
+// 恢复默认同时重置明暗模式为「系统」、色彩主题为 DEFAULT_THEME
 export function ThemeModeSwitcher(): JSX.Element {
 	const { theme, setTheme, resolvedTheme } = useTheme();
 	const { setActiveTheme } = useActiveTheme();

@@ -1,5 +1,7 @@
 "use client";
 
+// # Tabs 选项卡组合（基于 base-ui）：default 变体用滑动 Indicator 标识激活项，line 变体用底部线条
+
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";
 import { cva, type VariantProps } from "class-variance-authority";
 
@@ -44,7 +46,7 @@ function TabsList({
 			className={cn(tabsListVariants({ variant }), className)}
 			{...props}
 		>
-			{/* 激活态背景：base-ui Indicator 按激活 tab 位置定位，transition 让它在 tab 间滑动 */}
+			{/* // > 激活态背景：base-ui Indicator 注入位置/尺寸 CSS 变量，transition 让背景在 tab 间平滑滑动 */}
 			<TabsPrimitive.Indicator
 				renderBeforeHydration
 				className={cn(

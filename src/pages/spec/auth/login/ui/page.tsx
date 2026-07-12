@@ -10,7 +10,7 @@ import { LoginForm } from "./login-form";
 //   canonicalUrl: `${APP_DOMAIN}/login`,
 // });
 
-// 渲染登录页面并挂载登录表单。
+// # 登录页面：挂载登录表单与注册入口
 export default function LoginPage(): JSX.Element {
 	return (
 		<AuthFormLayout showTerms="app">

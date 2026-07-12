@@ -11,7 +11,9 @@ import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
 // 用户资料更新路由的专用日志作用域，自动注入 module 字段
 const log = createLogger("user-route");
 
-// 更新当前登录用户资料：name 写库，avatar 走对象存储；email 查重后走验证邮件流程；defaultWorkspace 占位静默忽略
+// # 当前登录用户资料更新（name / avatar / email / defaultWorkspace）
+
+// ! email 改动走验证邮件流程，不在本接口直接写库；真正写库由 confirm-email-change 页面完成
 export const PATCH = withSession(async ({ req, session }) => {
 	const parsed = updateUserSchema.safeParse(await req.json());
 	if (!parsed.success) {
@@ -39,7 +41,7 @@ export const PATCH = withSession(async ({ req, session }) => {
 		data.image = await uploadUserAvatar({ userId, body: avatar });
 	}
 
-	// email 走验证流程：先查重，再给新邮箱发确认邮件（真正写库由 /spec/confirm-email-change/[token] 完成）
+	// email 走验证流程：先查重，再给新邮箱发确认邮件
 	if (email !== undefined) {
 		const currentEmail = session.user.email ?? "";
 		// 改成自己当前邮箱时跳过，避免无谓发确认邮件并消耗限流额度

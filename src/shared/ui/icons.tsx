@@ -1,3 +1,5 @@
+// # 图标统一注册表：把 tabler 图标库和自封装 SVG 图标收敛在一处，业务组件只依赖 Icons 而不直接依赖图标库
+
 import type { TablerIcon } from "@tabler/icons-react";
 import {
 	IconAdjustmentsAlt,
@@ -63,10 +65,10 @@ import type { ComponentType, SVGProps } from "react";
 import { LogoIcon } from "@/shared/assets/icons/logo";
 import { FolderClosedIcon } from "@/shared/assets/icons/folder-closed";
 
-// 图标组件类型，兼容 tabler 图标和自定义 SVG 图标组件。
+// @ 图标组件类型：兼容 tabler 图标（TablerIcon）和自封装 SVG 图标组件
 export type Icon = TablerIcon | ComponentType<SVGProps<SVGSVGElement>>;
 
-// 统一管理应用内可复用图标，避免业务组件直接依赖图标库。
+// @ 图标注册表：按使用场景分组，新增图标在此登记后即可通过 Icons.xxx 使用
 export const Icons = {
 	logo: LogoIcon,
 

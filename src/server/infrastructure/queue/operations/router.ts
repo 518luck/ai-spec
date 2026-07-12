@@ -5,8 +5,10 @@ import type { BackgroundJobData } from "../types";
 import { processEmailChange, processEmailChangedNotice } from "./email";
 import { processDeleteUserAvatar, processSyncOauthAvatar } from "./user";
 
+// # 后台任务总路由：按 job.name 从注册表查处理器执行
+
 // 任务处理器注册表：job.name → (data) => Promise<void>
-// 新增任务只需加一行；领域内 processor 在各自子目录维护，router 只做合并
+// > 新增任务只需加一行；领域内 processor 在各自子目录维护，router 只做合并
 const JOB_REGISTRY = {
 	[JOB_NAMES.avatarSync]: processSyncOauthAvatar,
 	[JOB_NAMES.avatarCleanup]: processDeleteUserAvatar,

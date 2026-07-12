@@ -1,3 +1,5 @@
+// # 页面宽度容器：最大宽度居中外壳，可选边框卡片与撑满模式
+
 import type { ReactNode } from "react";
 import { cn } from "@/shared/lib/utils";
 

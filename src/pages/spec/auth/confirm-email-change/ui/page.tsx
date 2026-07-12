@@ -9,7 +9,7 @@ type ConfirmEmailChangePageProps = {
 	isCancel: boolean;
 };
 
-// 渲染邮箱变更确认页：Suspense 包裹异步服务端流程，等待期间显示 loading
+// # 渲染邮箱变更确认页：Suspense 包裹异步服务端流程，等待期间显示 loading
 export function ConfirmEmailChangePage({
 	token,
 	isCancel,

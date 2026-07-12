@@ -3,7 +3,10 @@ import prisma from "@/shared/db";
 
 import type { SyncOauthAvatarData } from "../types";
 
+// # 处理器：下载第三方头像并上传到自有 S3，把返回的 URL 写入用户表
+
 // 下载第三方头像并上传到自有 S3，把返回的 URL 写入用户表
+// > key 带随机后缀做缓存刷新，重复执行会产生多份历史文件，注意清理
 export async function processSyncOauthAvatar({
 	userId,
 	imageUrl,

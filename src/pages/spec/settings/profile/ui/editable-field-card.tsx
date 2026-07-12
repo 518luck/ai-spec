@@ -8,6 +8,8 @@ import { Button } from "@/shared/ui/button";
 import { Card, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 
+// # 可编辑字段卡片（通用）
+// 自包含：内部托管输入值、dirty 判定与保存状态（idle/dirty/saving），调用方只需传初值与可选保存方法
 type EditableFieldCardProps = {
 	title: string;
 	defaultValue?: string;
@@ -22,7 +24,6 @@ type EditableFieldCardProps = {
 	revertOnSuccess?: boolean;
 };
 
-// 自包含的可编辑字段卡片：内部托管输入值、dirty 判定与保存状态，调用方只需传初值与可选保存方法
 export function EditableFieldCard({
 	title,
 	defaultValue = "",
