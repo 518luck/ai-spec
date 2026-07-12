@@ -1,4 +1,8 @@
 // # useScrollProgress：监听可滚动容器，返回当前滚动进度（0~1）
+// > 0=最顶部/最左侧，1=已到底/到最右；内容不足以滚动时返回 1（视为"已到底"）
+// > 用途：遮罩透明度、阅读进度条、懒加载判断
+// > 搭配 ScrollMask 组件使用：本 hook 算进度，ScrollMask 根据进度渲染底部渐变遮罩
+// > 容器尺寸变化时配合 useResizeObserver 自动重算，保证进度准确
 import { type RefObject, useCallback, useEffect, useState } from "react";
 
 import { useResizeObserver } from "./use-resize-observer";
