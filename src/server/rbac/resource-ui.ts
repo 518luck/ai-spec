@@ -1,6 +1,7 @@
-// 资源 UI 元信息：资源 key 类型与清单从 actions.ts 派生，
-// 此处只补充中文名与描述等面向用户的展示信息。
+// # 资源 UI 元信息：从 actions.ts 派生资源 key 类型与清单，补充中文名等展示信息
 import { ACTION_DEFS } from "./actions";
+
+// @ 资源类型派生：从 action 字面量（如 "promptDraft.read"）提取资源 key
 
 // 所有资源 key 的字面量联合，从 actions.ts 派生
 export type ResourceKey = (typeof ACTION_DEFS)[number]["action"] extends `${infer R}.${string}`
@@ -12,10 +13,19 @@ export const RESOURCE_KEYS = [
 	...new Set(ACTION_DEFS.map((def) => def.action.split(".")[0])),
 ] as readonly ResourceKey[];
 
-// 资源 UI 元信息：中文名与描述，供 API Key 弹窗等界面渲染
-// 团队专属资源不出现在此（API Key 弹窗不显示团队资源）
+// @ 可归入文件夹的内容资源子集（排除 project/member/team 等团队管理概念）
+export const FOLDERABLE_RESOURCE_KEYS = [
+	"promptRecord",
+	"promptDraft",
+	"rules",
+	"agentMD",
+	"skills",
+	"agents",
+	"plugins",
+] as const satisfies readonly ResourceKey[];
+
+// @ 资源中文展示信息：供 API Key 弹窗渲染，团队专属资源不在此列
 export const RESOURCES = [
-	// —— 个人内容资源 ——
 	{
 		key: "promptRecord",
 		name: "提示词-收录",
@@ -31,8 +41,6 @@ export const RESOURCES = [
 		name: "规约库",
 		description: "可复用的规则约定片段",
 	},
-
-	// —— 共享资源（个人空间与团队空间共有） ——
 	{
 		key: "agentMD",
 		name: "AGENTS.md",

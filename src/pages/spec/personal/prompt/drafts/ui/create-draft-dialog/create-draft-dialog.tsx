@@ -118,20 +118,20 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		setIsExpanded((prev) => !prev);
 	};
 
-	// 对话框打开时拉取文件夹列表，关闭时重置归属选择
+	// 对话框打开时拉取草稿文件夹列表，关闭时重置归属选择
 	useEffect(() => {
 		if (!open) return;
-		void getFolders()
+		void getFolders("promptDraft")
 			.then(setFolders)
 			.catch(() => {
 				// 拉取失败静默处理，文件夹选择仍可用（只是列表为空）
 			});
 	}, [open]);
 
-	// 行内新建文件夹：成功后追加到列表并自动选中
+	// 行内新建草稿文件夹：成功后追加到列表并自动选中
 	const handleCreateFolder = async (name: string): Promise<FolderOption | null> => {
 		try {
-			const created = await createFolder(name);
+			const created = await createFolder({ name, resourceType: "promptDraft" });
 			setFolders((prev) => [...prev, created]);
 			return created;
 		} catch (error) {

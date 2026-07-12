@@ -1,5 +1,7 @@
 import * as z from "zod/v4";
 
+import { FOLDERABLE_RESOURCE_KEYS } from "@/server/rbac/resource-ui";
+
 // 文件夹名称：必填，1~64 字
 export const folderNameSchema = z
 	.string({ error: "请输入文件夹名称" })
@@ -7,9 +9,13 @@ export const folderNameSchema = z
 	.min(1, { error: "请输入文件夹名称" })
 	.max(64, { error: "名称长度不能超过 64 个字符" });
 
+// 文件夹归属的资源类型，从 RBAC 可归类资源清单派生（单一真相，加资源只改 resource-ui.ts）
+export const folderResourceTypeSchema = z.enum(FOLDERABLE_RESOURCE_KEYS);
+
 // 创建文件夹的请求入参 schema（Dto 入）
 export const createFolderDtoSchema = z.object({
 	name: folderNameSchema,
+	resource_type: folderResourceTypeSchema,
 });
 
 // 创建文件夹入参类型
@@ -27,6 +33,7 @@ export const folderOptionSchema = z.object({
 	value: z.string(),
 	label: z.string(),
 	color: folderColorSchema,
+	resource_type: folderResourceTypeSchema.optional(),
 });
 
 // 文件夹选项类型
