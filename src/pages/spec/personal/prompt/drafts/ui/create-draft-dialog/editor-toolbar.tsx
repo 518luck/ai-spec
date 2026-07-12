@@ -99,6 +99,7 @@ export function EditorToolbar({
 						width
 						className="box-content rounded-full p-0.5"
 						style={{ backgroundColor: toolbarBgColor }}
+						transition={{ type: "spring", duration: 0.5, bounce: 0.25 }}
 					>
 						<ScrollArea
 							orientation="horizontal"
