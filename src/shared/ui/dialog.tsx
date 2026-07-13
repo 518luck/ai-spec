@@ -89,7 +89,11 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
 // Dialog 内容主体：统一 px-6 py-4 内边距 + bg-muted 灰底，与 Header/Footer 对齐
 function DialogContentBody({ className, ...props }: React.ComponentProps<"div">) {
 	return (
-		<div data-slot="dialog-content-body" className={cn("bg-muted px-6 py-4", className)} {...props} />
+		<div
+			data-slot="dialog-content-body"
+			className={cn("bg-muted px-6 py-4", className)}
+			{...props}
+		/>
 	);
 }
 
@@ -122,7 +126,7 @@ function DialogTitle({ className, ...props }: DialogPrimitive.Title.Props) {
 	return (
 		<DialogPrimitive.Title
 			data-slot="dialog-title"
-			className={cn("text-lg font-medium leading-none", className)}
+			className={cn("font-medium text-lg leading-none", className)}
 			{...props}
 		/>
 	);
