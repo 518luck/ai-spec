@@ -141,7 +141,7 @@ export function EditorToolbar({
 					>
 						<ScrollArea
 							orientation="horizontal"
-							className={isExpanded ? "" : "max-w-76"}
+							className={isExpanded ? "" : "max-w-42"}
 							scrollbarClassName="mx-4"
 						>
 							<Reorder.Group
@@ -159,48 +159,47 @@ export function EditorToolbar({
 													? isPreview
 													: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
 										return (
-											<Reorder.Item
-												key={item.id}
-												value={item}
-												layout
-												initial={{ opacity: 0, scale: 0 }}
-												animate={{ opacity: 1, scale: 1 }}
-												exit={{ opacity: 0, scale: 0 }}
-												transition={{ type: "spring", stiffness: 400, damping: 32 }}
-												whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
-												className="shrink-0 cursor-pointer"
-												onPointerDown={(e) => (startPos.current = { x: e.clientX, y: e.clientY })}
-												onPointerUp={(e) => {
-													if (!startPos.current) return;
-													const dx = Math.abs(e.clientX - startPos.current.x);
-													const dy = Math.abs(e.clientY - startPos.current.y);
-													// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
-													if (dx < 5 && dy < 5) {
-														onItemAction(item.type as "tool" | "display" | "preview", item.id);
+											<Tooltip key={item.id}>
+												<TooltipTrigger
+													render={
+														<Reorder.Item
+															value={item}
+															layout
+															initial={{ opacity: 0, scale: 0 }}
+															animate={{ opacity: 1, scale: 1 }}
+															exit={{ opacity: 0, scale: 0 }}
+															transition={{ type: "spring", stiffness: 400, damping: 32 }}
+															whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
+															className="shrink-0 cursor-pointer"
+															onPointerDown={(e) => (startPos.current = { x: e.clientX, y: e.clientY })}
+															onPointerUp={(e) => {
+																if (!startPos.current) return;
+																const dx = Math.abs(e.clientX - startPos.current.x);
+																const dy = Math.abs(e.clientY - startPos.current.y);
+																// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
+																if (dx < 5 && dy < 5) {
+																	onItemAction(item.type as "tool" | "display" | "preview", item.id);
+																}
+																startPos.current = null;
+															}}
+														/>
 													}
-													startPos.current = null;
-												}}
-											>
-												<Tooltip>
-													<TooltipTrigger
-														render={
-															<Button
-																variant="ghost"
-																size="icon-sm"
-																aria-label={item.label}
-																className={`pointer-events-none rounded-full ${
-																	isActive
-																		? "bg-primary/15! text-primary hover:bg-primary/25"
-																		: "hover:bg-foreground/20!"
-																}`}
-															/>
-														}
+												>
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														aria-label={item.label}
+														className={`pointer-events-none rounded-full ${
+															isActive
+																? "bg-primary/15! text-primary hover:bg-primary/25"
+																: "hover:bg-foreground/20!"
+														}`}
 													>
 														<item.icon className="size-4" />
-													</TooltipTrigger>
-													<TooltipContent>{item.label}</TooltipContent>
-												</Tooltip>
-											</Reorder.Item>
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>{item.label}</TooltipContent>
+											</Tooltip>
 										);
 									})}
 								</AnimatePresence>

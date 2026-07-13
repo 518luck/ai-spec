@@ -116,42 +116,24 @@ export function FolderCombobox({
 	// 触发器标签文案
 	const triggerLabel = selectedOption ? selectedOption.label : "未分类";
 
-	const trigger = (
-		<PopoverTrigger
-			render={
-				<Button
-					variant="ghost"
-					role="combobox"
-					aria-expanded={open}
-					className={cn(
-						iconOnly
-							? "flex h-8 shrink-0 justify-center gap-1.5 px-2 font-normal"
-							: "flex h-8 w-45 shrink-0 justify-start gap-1.5 px-2 font-normal",
-						className,
-					)}
-				/>
-			}
-		>
-			<FolderIcon color={selectedOption?.color} />
-			{!iconOnly && (
-				<span className={cn("min-w-0 truncate", !selectedOption && "text-muted-foreground")}>
-					{triggerLabel}
-				</span>
-			)}
-			{!iconOnly && <Icons.selector className="size-3.5 opacity-50" />}
-		</PopoverTrigger>
-	);
-
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
-			{/* // 触发器：iconOnly 时包 Tooltip 显示文件夹名 */}
+			{/* // 触发器：iconOnly 时只显示图标 + Tooltip，否则显示完整文字 */}
 			{iconOnly ? (
-				<Tooltip>
-					<TooltipTrigger render={trigger} />
-					<TooltipContent showArrow={false}>{triggerLabel}</TooltipContent>
-				</Tooltip>
+				<IconOnlyTrigger
+					iconColor={selectedOption?.color}
+					label={triggerLabel}
+					open={open}
+					className={className}
+				/>
 			) : (
-				trigger
+				<FullTrigger
+					iconColor={selectedOption?.color}
+					label={triggerLabel}
+					hasSelection={Boolean(selectedOption)}
+					open={open}
+					className={className}
+				/>
 			)}
 
 			{/* // 弹层：Popover 负责定位，Command 负责搜索过滤 + 键盘导航 */}
@@ -237,6 +219,75 @@ export function FolderCombobox({
 				</Command>
 			</PopoverContent>
 		</Popover>
+	);
+}
+
+// > 图标模式触发器：只显示图标，hover 时 Tooltip 显示文件夹名
+function IconOnlyTrigger({
+	iconColor,
+	label,
+	open,
+	className,
+}: {
+	iconColor?: string;
+	label: string;
+	open: boolean;
+	className?: string;
+}): JSX.Element {
+	return (
+		<Tooltip>
+			<TooltipTrigger
+				render={
+					<PopoverTrigger
+						render={
+							<Button
+								variant="ghost"
+								role="combobox"
+								aria-expanded={open}
+								className={cn("flex h-8 shrink-0 p-0", className)}
+							/>
+						}
+					/>
+				}
+			>
+				<FolderIcon color={iconColor} />
+			</TooltipTrigger>
+			<TooltipContent showArrow={false}>{label}</TooltipContent>
+		</Tooltip>
+	);
+}
+
+// > 完整模式触发器：图标 + 文字 + 箭头
+function FullTrigger({
+	iconColor,
+	label,
+	hasSelection,
+	open,
+	className,
+}: {
+	iconColor?: string;
+	label: string;
+	hasSelection: boolean;
+	open: boolean;
+	className?: string;
+}): JSX.Element {
+	return (
+		<PopoverTrigger
+			render={
+				<Button
+					variant="ghost"
+					role="combobox"
+					aria-expanded={open}
+					className={cn("flex h-8 w-45 shrink-0 justify-start gap-1.5 px-2 font-normal", className)}
+				/>
+			}
+		>
+			<FolderIcon color={iconColor} />
+			<span className={cn("min-w-0 truncate", !hasSelection && "text-muted-foreground")}>
+				{label}
+			</span>
+			<Icons.selector className="size-3.5 opacity-50" />
+		</PopoverTrigger>
 	);
 }
 
