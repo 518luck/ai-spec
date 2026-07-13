@@ -121,13 +121,13 @@ export function EditorToolbar({
 				{title}
 			</span>
 
-			{/* // @ 文件夹选择：归属当前草稿，FolderCombobox 封装列表拉取 + 创建 */}
+			{/* // @ 文件夹选择：缩小空间时只显示图标，放大后显示完整文字 */}
 			<FolderCombobox
 				resourceType={folder.resourceType}
 				value={folder.value}
 				onChange={folder.onChange}
 				className="shrink-0"
-				iconOnly
+				iconOnly={!isExpanded}
 			/>
 
 			<div className="ml-auto flex items-center gap-2">
