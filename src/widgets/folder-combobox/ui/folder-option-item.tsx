@@ -1,6 +1,5 @@
 // # 文件夹列表项：文字被截断时才显示 Tooltip（hover 看全名），没截断不显示
 
-import { useCommandState } from "cmdk";
 import type { JSX } from "react";
 import { useRef, useState } from "react";
 

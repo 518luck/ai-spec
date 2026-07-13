@@ -87,9 +87,8 @@ export function FolderCombobox({
 	const listRef = useRef<HTMLDivElement>(null);
 	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
 
-	// 拉取文件夹列表：弹层打开时拉，API 返回 id/name，映射成 UI 层的 value/label
+	// 拉取文件夹列表：挂载时拉一次（驱动触发按钮显示选中项），弹层打开时刷新
 	useEffect(() => {
-		if (!open) return;
 		void getFolders(resourceType)
 			.then((data) =>
 				setFolders(data.map((f) => ({ value: f.id, label: f.name, color: f.color ?? undefined }))),
