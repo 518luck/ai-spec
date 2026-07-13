@@ -65,6 +65,7 @@ import {
 import type { ComponentType, SVGProps } from "react";
 
 import { LogoIcon } from "@/shared/assets/icons/logo";
+import { SquaresIcon } from "@/shared/assets/icons/squares";
 
 // @ 图标组件类型：兼容 tabler 图标（TablerIcon）和自封装 SVG 图标组件
 export type Icon = TablerIcon | ComponentType<SVGProps<SVGSVGElement>>;
@@ -128,6 +129,7 @@ export const Icons = {
 	folderClosed: IconFolder,
 	folderX: IconFolderX,
 	folderPlus: IconFolderPlus,
+	squares: SquaresIcon,
 
 	// Markdown 编辑器快捷操作
 	bold: IconBold,

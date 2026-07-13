@@ -148,7 +148,6 @@ export function KeyForm({
 				<div className="flex flex-col gap-2">
 					<Label>描述（可选）</Label>
 					<Textarea
-						className="resize-none break-all"
 						value={description}
 						placeholder="例如：用于本地开发环境"
 						onChange={(event) => onDescriptionChange(event.target.value)}
