@@ -44,7 +44,7 @@ export type CreateFolderDto = z.infer<typeof createFolderDtoSchema>;
 
 // @ 出参
 // 文件夹信息（返回数据库原始字段名，前端 UI 层自行映射 value/label）
-export const folderOptionSchema = z.object({
+export const folderOptionVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	color: folderColorSchema,
@@ -52,7 +52,7 @@ export const folderOptionSchema = z.object({
 });
 
 // 文件夹信息类型
-export type FolderOptionVo = z.infer<typeof folderOptionSchema>;
+export type FolderOptionVoType = z.infer<typeof folderOptionVoSchema>;
 
 // 文件夹列表响应
-export const folderListVoSchema = z.array(folderOptionSchema);
+export const folderListVoSchema = z.array(folderOptionVoSchema);

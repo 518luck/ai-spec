@@ -32,8 +32,8 @@
 
 - 默认用 `z.infer<typeof xxxDtoSchema>` / `z.infer<typeof xxxVoSchema>` 就地推导类型，多数场景无需单独定义类型别名。
 - 仅当类型需要被多处引用、导出或参与组合时，才显式定义类型别名，命名与 schema 对应：
-  - 入参类型：`[操作动词] + [实体] + Dto`（如 `CreateTokenDto`）。
-  - 出参类型：`[实体] + Vo`（如 `TokenVo`）。
+  - 入参类型：`[操作动词] + [实体] + DtoType`（如 `CreateTokenDtoType`）。
+  - 出参类型：`[实体] + VoType`（如 `TokenVoType`）。
 - 禁止手写与 schema 重复的接口类型；类型只能由 schema 推导而来。
 - 请求入参与响应出参严格分层：**Dto 入 / Vo 出**，不混用。
   - **DTO（Data Transfer Object）**：请求入参，承载前端传入并待校验的数据。
