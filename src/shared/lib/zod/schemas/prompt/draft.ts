@@ -1,6 +1,6 @@
 import * as z from "zod/v4";
 
-// # 草稿（Draft）相关 zod schema：名称、描述、正文、图片、文件夹归属校验
+// # 草稿（Draft）相关 zod schema：名称、正文、图片、文件夹归属校验
 
 // @ 拼装件
 // 草稿名称：可选，最多 64 字
@@ -8,14 +8,6 @@ export const draftNameSchema = z
 	.string()
 	.trim()
 	.max(64, { error: "名称长度不能超过 64 个字符" })
-	.optional()
-	.or(z.literal(""));
-
-// 草稿描述：可选，最多 200 字
-export const draftDescriptionSchema = z
-	.string()
-	.trim()
-	.max(200, { error: "描述长度不能超过 200 个字符" })
 	.optional()
 	.or(z.literal(""));
 
@@ -36,7 +28,6 @@ export const draftFolderIdSchema = z.string().optional().or(z.literal(""));
 // 创建草稿入参
 export const createDraftDtoSchema = z.object({
 	name: draftNameSchema,
-	description: draftDescriptionSchema,
 	content: draftContentSchema,
 	images: draftImagesSchema,
 	folder_id: draftFolderIdSchema,

@@ -13,12 +13,11 @@ export const POST = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { name, description, content, images, folder_id } = parsed.data;
+		const { name, content, images, folder_id } = parsed.data;
 
 		const draft = await prisma.promptDraft.create({
 			data: {
 				name: name || null,
-				description: description || null,
 				content,
 				images,
 				owner_id: session.user.id,

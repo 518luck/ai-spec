@@ -81,7 +81,6 @@ model PromptDraft {
 
   // ② 业务字段
   name        String?
-  description String? // 描述（可选）
   content     String   @db.Text
   images      String[] @default([])
 
