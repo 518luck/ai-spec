@@ -1,8 +1,8 @@
 // # 文件夹域：组织个人/团队空间的各类资源
 //
-// 权限模型：文件夹 access_level 定团队默认 + FolderMember 做个体例外
-// - 个人文件夹(team_id=null)：仅 owner 可访问，access_level 不生效
-// - 团队文件夹(team_id=team_xxx)：团队成员的默认权限取文件夹 access_level
+// 权限模型：文件夹 default_member_role 定团队默认 + FolderMember 做个体例外
+// - 个人文件夹(team_id=null)：仅 owner 可访问，default_member_role 不生效
+// - 团队文件夹(team_id=team_xxx)：团队成员的默认权限取文件夹 default_member_role
 //   可通过 FolderMember 对特定用户做例外调整：升级(editor)、降级(none=拉黑覆盖默认)
 // ! owner 始终由 Folder.owner_id 标识，不通过 FolderMember 表表达
 
@@ -18,7 +18,7 @@ model Folder {
   resource_type String // > 文件夹归属的资源类型（promptDraft/promptRecord/rules...），故意不给默认值，强制调用方显式传入，防止归类错误
   sort_order    Int              @default(0) // 同级排序，驱动拖拽排序
   team_id       String? // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属，不决定权限）
-  access_level  FolderMemberRole @default(viewer) // 团队成员对此文件夹的默认权限（仅团队文件夹生效；个人文件夹忽略此值）
+  default_member_role FolderMemberRole @default(viewer) // 团队成员对此文件夹的默认角色（可被 FolderMember 表覆盖；仅团队文件夹生效）
 
   // ③ 时间戳
   created_at DateTime @default(now()) // 创建时间
