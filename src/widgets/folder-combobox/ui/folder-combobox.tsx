@@ -105,6 +105,17 @@ export function FolderCombobox({
 		if (open) void refetchFolders();
 	}, [open, refetchFolders]);
 
+	// > 重算滚动进度：弹层打开/数据到达时，容器可见高度被 max-h-72 钉死（ResizeObserver 失效），
+	// > 且 cmdk 的 item 注册晚于本 effect（同步读 scrollHeight 拿到未撑开的值），需双 rAF 跨过布局后再测量
+	// biome-ignore lint/correctness/useExhaustiveDependencies: open/rawFolders 作为触发信号，effect body 不读它们但需响应其变化
+	useEffect(() => {
+		if (!open) return;
+		const id = requestAnimationFrame(() => {
+			requestAnimationFrame(() => updateScrollProgress());
+		});
+		return () => cancelAnimationFrame(id);
+	}, [open, rawFolders, updateScrollProgress]);
+
 	const selectedOption = folders.find((opt) => opt.value === value);
 
 	// > 创建文件夹：全量 Dto schema 校验（含 resource_type），成功后追加到列表、选中并关闭弹层
