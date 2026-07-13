@@ -1,8 +1,9 @@
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
-
+import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
+import { folderDescriptionSchema, folderNameSchema } from "@/shared/lib/zod/schemas/folder";
 import { Button } from "@/shared/ui/button";
 import {
 	Dialog,
@@ -13,25 +14,12 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/shared/ui/dialog";
+import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
+import { FOLDER_DEFAULT_COLOR, FOLDER_PRESET_COLORS } from "../config/folder-colors";
 import { FolderIcon } from "./folder-icon";
-
-// 预定义颜色盘：覆盖常见分类色相，含中性灰；均为 #RRGGBB 格式（对齐 folderColorSchema）
-const PRESET_COLORS = [
-	"#ef4444", // 红
-	"#f59e0b", // 橙
-	"#10b981", // 绿
-	"#06b6d4", // 青
-	"#3b82f6", // 蓝
-	"#8b5cf6", // 紫
-	"#ec4899", // 粉
-	"#64748b", // 灰
-] as const;
-
-// 默认颜色：蓝色，首次打开时选中
-const DEFAULT_COLOR = PRESET_COLORS[4];
 
 type CreateFolderDialogProps = {
 	open: boolean;
@@ -51,24 +39,33 @@ export function CreateFolderDialog({
 }: CreateFolderDialogProps): JSX.Element {
 	const [name, setName] = useState(initialName);
 	const [description, setDescription] = useState("");
-	const [color, setColor] = useState<string>(DEFAULT_COLOR);
+	const [color, setColor] = useState<string>(FOLDER_DEFAULT_COLOR);
 
 	// open 打开时同步预填名称，重置描述/颜色
 	useEffect(() => {
 		if (open) {
 			setName(initialName);
 			setDescription("");
-			setColor(DEFAULT_COLOR);
+			setColor(FOLDER_DEFAULT_COLOR);
 		}
 	}, [open, initialName]);
 
-	// 校验名称非空后提交，成功清空
+	// 名称/描述用同一份 schema 预校验，通过后才提交
 	const handleSubmit = async (): Promise<void> => {
-		const trimmed = name.trim();
-		if (!trimmed) return;
+		const parsedName = folderNameSchema.safeParse(name.trim());
+		if (!parsedName.success) {
+			toast.error(parsedName.error.issues[0]?.message ?? "请输入文件夹名称");
+			return;
+		}
+		const parsedDescription = folderDescriptionSchema.safeParse(description.trim() || undefined);
+		if (!parsedDescription.success) {
+			toast.error(parsedDescription.error.issues[0]?.message ?? "描述过长");
+			return;
+		}
+		// ! 调用方需要注意传递资源类型
 		await onSubmit({
-			name: trimmed,
-			description: description.trim() || undefined,
+			name: parsedName.data,
+			description: parsedDescription.data,
 			color,
 		});
 	};
@@ -76,14 +73,19 @@ export function CreateFolderDialog({
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent showCloseButton={false} className="sm:max-w-lg">
-				<DialogHeader>
+				<DialogHeader className="relative">
 					<DialogTitle>新建文件夹</DialogTitle>
-					<DialogDescription>输入文件夹名称、描述和颜色，创建后会自动选中。</DialogDescription>
+					<DialogDescription>创建一个属于你的文件夹吧，取个好记的名字和颜色。</DialogDescription>
+					<FolderIcon
+						color={color}
+						className="absolute top-4 right-4 size-12 rounded-lg"
+						iconClassName="size-6"
+					/>
 				</DialogHeader>
 
 				<DialogContentBody className="flex gap-4">
 					{/* // 右侧：名称 + 描述输入 */}
-					<div className="flex flex-1 flex-col gap-3">
+					<div className="flex min-w-0 flex-1 flex-col gap-3">
 						<div className="flex flex-col gap-2">
 							<Label>文件夹名称</Label>
 							<Input
@@ -99,32 +101,34 @@ export function CreateFolderDialog({
 						<div className="flex flex-col gap-2">
 							<Label>描述（可选）</Label>
 							<Textarea
+								className="max-h-32"
 								value={description}
 								onChange={(e) => setDescription(e.target.value)}
 								placeholder="补充说明文件夹用途"
 								rows={3}
 							/>
 						</div>
-						<div className="grid grid-cols-4 gap-2">
-							{PRESET_COLORS.map((preset) => (
-								<button
+						<div className="grid grid-cols-5 gap-2">
+							{FOLDER_PRESET_COLORS.map((preset) => (
+								<Button
 									key={preset}
-									type="button"
+									variant="ghost"
+									size="icon-sm"
 									onClick={() => setColor(preset)}
 									aria-label={`选择颜色 ${preset}`}
 									className={cn(
-										"size-5 cursor-pointer rounded-full transition-transform hover:scale-110",
-										color === preset ? "ring-2 ring-ring ring-offset-1 ring-offset-background" : "",
+										"hover:scale-110",
+										color === preset && "ring-2 ring-ring ring-offset-1 ring-offset-background",
 									)}
-									style={{ backgroundColor: preset }}
-								/>
+									style={{ color: preset }}
+								>
+									<Icons.squares className="size-6" />
+								</Button>
 							))}
 						</div>
 					</div>
-					{/* // 左侧：图标预览 + 颜色选择器 */}
-					<div className="flex w-52 shrink-0 flex-col items-center gap-3">
-						<FolderIcon color={color} className="size-12 rounded-lg" />
-
+					{/* // 左侧：颜色选择器 */}
+					<div className="flex w-52 shrink-0 flex-col items-center justify-end gap-3 pb-1">
 						<HexColorPicker color={color} onChange={setColor} className="w-full" />
 					</div>
 				</DialogContentBody>
