@@ -80,9 +80,9 @@ model PromptDraft {
   id String @id @default(cuid())
 
   // ② 业务字段
-  name        String?
-  content     String   @db.Text
-  images      String[] @default([])
+  name    String?
+  content String   @db.Text
+  images  String[] @default([])
 
   // ③ 时间戳
   created_at DateTime @default(now())

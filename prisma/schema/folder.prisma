@@ -31,8 +31,8 @@ model Folder {
   owner          User           @relation("FolderOwner", fields: [owner_id], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文件夹）
   team           Team?          @relation("TeamFolders", fields: [team_id], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其文件夹；null=个人空间）
   members        FolderMember[] // 文件夹的例外成员列表（叠加在团队默认权限之上）
-  prompt_records PromptRecord[] @relation("FolderItems_PromptRecord") // 文件夹内的收录记录（多态：文件夹删除→SetNull，资源保留）
   prompt_drafts  PromptDraft[]  @relation("FolderItems_PromptDraft") // 文件夹内的草稿（多态：文件夹删除→SetNull，资源保留）
+  prompt_records PromptRecord[] @relation("FolderItems_PromptRecord") // 文件夹内的收录记录（多态：文件夹删除→SetNull，资源保留）
 
   // ⑥ 索引
   @@index([owner_id]) // 加速"我的文件夹"查询
