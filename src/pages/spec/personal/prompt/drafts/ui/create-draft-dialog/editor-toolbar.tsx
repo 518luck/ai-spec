@@ -126,7 +126,7 @@ export function EditorToolbar({
 				resourceType={folder.resourceType}
 				value={folder.value}
 				onChange={folder.onChange}
-				className="max-w-40 shrink-0"
+				className="shrink-0"
 			/>
 
 			<div className="ml-auto flex items-center gap-2">
