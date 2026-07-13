@@ -50,7 +50,7 @@ export function CreateFolderDialog({
 		}
 	}, [open, initialName]);
 
-	// 名称/描述用同一份 schema 预校验，通过后才提交
+	// 用基础字段 schema 预校验（name/description/color），resource_type 由调用方注入，后端 createFolderDtoSchema 兜底全量校验
 	const handleSubmit = async (): Promise<void> => {
 		const parsedName = folderNameSchema.safeParse(name.trim());
 		if (!parsedName.success) {
@@ -62,7 +62,6 @@ export function CreateFolderDialog({
 			toast.error(parsedDescription.error.issues[0]?.message ?? "描述过长");
 			return;
 		}
-		// ! 调用方需要注意传递资源类型
 		await onSubmit({
 			name: parsedName.data,
 			description: parsedDescription.data,
