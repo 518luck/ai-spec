@@ -10,6 +10,10 @@ import type { NextConfig } from "next";
 // eslint / typescript	                是否在构建时跑 lint / typecheck
 // 根路径跳转到个人空间默认页
 const nextConfig: NextConfig = {
+	// 关闭 dev 下的 incoming request 日志，避免与 Axiom 业务日志重复输出
+	logging: {
+		incomingRequests: false,
+	},
 	async redirects() {
 		return [
 			{
