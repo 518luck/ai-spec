@@ -3,8 +3,9 @@
 // # 文件夹下拉选择框：按 resourceType 拉取列表 + 搜索/选中/内联创建（全量校验落库）
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useCallback, useEffect, useRef, useState } from "react";
+import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import useSWR from "swr";
 
 import { createFolder, getFolders } from "@/entities/folder/api/folder";
 import { useScrollProgress } from "@/shared/hooks";
@@ -23,6 +24,7 @@ import {
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { ScrollMask } from "@/shared/ui/scroll-mask";
+import { Skeleton } from "@/shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { CreateButton, CreateFolderItemContent } from "./folder-create-items";
@@ -81,22 +83,27 @@ export function FolderCombobox({
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	// 创建对话框预填名称：来自搜索词，点击「新建文件夹」列表项时清空
 	const [createInitialName, setCreateInitialName] = useState("");
-	// 文件夹列表：按 resourceType 拉取
-	const [folders, setFolders] = useState<FolderOption[]>([]);
+	// 文件夹列表：按 resourceType 拉取，由 SWR 托管缓存（key 变化自动重拉）
+	// 错误处理、失焦/重试策略由全局 SwrProvider 统一配置，这里无需重复
+	const {
+		data: rawFolders,
+		isLoading,
+		mutate: refetchFolders,
+	} = useSWR(["folders", resourceType], ([, type]) => getFolders(type));
+	// 后端 VO 映射为下拉选项；rawFolders 为 undefined 时回退空数组
+	const folders = useMemo<FolderOption[]>(
+		() =>
+			(rawFolders ?? []).map((f) => ({ value: f.id, label: f.name, color: f.color ?? undefined })),
+		[rawFolders],
+	);
 	// 列表滚动容器 ref：驱动 useScrollProgress 算进度，底部接 ScrollMask 渐变遮罩
 	const listRef = useRef<HTMLDivElement>(null);
 	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
 
-	// 拉取文件夹列表：挂载时拉一次（驱动触发按钮显示选中项），弹层打开时刷新
+	// 弹层打开时刷新一次，保证列表新鲜
 	useEffect(() => {
-		void getFolders(resourceType)
-			.then((data) =>
-				setFolders(data.map((f) => ({ value: f.id, label: f.name, color: f.color ?? undefined }))),
-			)
-			.catch(() => {
-				// 拉取失败静默处理，文件夹选择仍可用（只是列表为空）
-			});
-	}, [resourceType, open]);
+		if (open) void refetchFolders();
+	}, [open, refetchFolders]);
 
 	const selectedOption = folders.find((opt) => opt.value === value);
 
@@ -121,10 +128,8 @@ export function FolderCombobox({
 				color: parsed.data.color ?? undefined,
 				resourceType: parsed.data.resource_type,
 			});
-			setFolders((prev) => [
-				...prev,
-				{ value: created.id, label: created.name, color: created.color ?? undefined },
-			]);
+			// 创建成功后刷新缓存（替代手动 setFolders），让新文件夹出现在列表里
+			await refetchFolders();
 			handleChange(created.id);
 			setOpen(false);
 			setCreateDialogOpen(false);
@@ -203,20 +208,31 @@ export function FolderCombobox({
 							</CommandGroup>
 							<CommandSeparator />
 
-							{/* // > 文件夹列表 */}
-							<CommandGroup>
-								{folders.map((option) => (
-									<FolderOptionItem
-										key={option.value}
-										option={option}
-										selected={value === option.value}
-										onSelect={() => {
-											handleChange(option.value);
-											setOpen(false);
-										}}
-									/>
-								))}
-							</CommandGroup>
+							{/* // > 文件夹列表：首次加载中用骨架占位，有缓存后 SWR 直接返回旧数据不闪骨架 */}
+							{isLoading ? (
+								<CommandGroup>
+									{["a", "b", "c"].map((k) => (
+										<div key={k} className="flex items-center gap-2 px-2 py-1.5">
+											<Skeleton className="size-4 shrink-0 rounded" />
+											<Skeleton className="h-4 flex-1" />
+										</div>
+									))}
+								</CommandGroup>
+							) : (
+								<CommandGroup>
+									{folders.map((option) => (
+										<FolderOptionItem
+											key={option.value}
+											option={option}
+											selected={value === option.value}
+											onSelect={() => {
+												handleChange(option.value);
+												setOpen(false);
+											}}
+										/>
+									))}
+								</CommandGroup>
+							)}
 
 							{/* // > 新建文件夹：作为列表项放在分组里，和文件夹列表视觉统一 */}
 							<CommandSeparator />

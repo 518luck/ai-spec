@@ -171,14 +171,19 @@ export function EditorToolbar({
 															transition={{ type: "spring", stiffness: 400, damping: 32 }}
 															whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
 															className="shrink-0 cursor-pointer"
-															onPointerDown={(e) => (startPos.current = { x: e.clientX, y: e.clientY })}
+															onPointerDown={(e) =>
+																(startPos.current = { x: e.clientX, y: e.clientY })
+															}
 															onPointerUp={(e) => {
 																if (!startPos.current) return;
 																const dx = Math.abs(e.clientX - startPos.current.x);
 																const dy = Math.abs(e.clientY - startPos.current.y);
 																// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
 																if (dx < 5 && dy < 5) {
-																	onItemAction(item.type as "tool" | "display" | "preview", item.id);
+																	onItemAction(
+																		item.type as "tool" | "display" | "preview",
+																		item.id,
+																	);
 																}
 																startPos.current = null;
 															}}
