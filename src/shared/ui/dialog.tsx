@@ -86,6 +86,11 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
 	);
 }
 
+// Dialog 内容主体：统一 px-6 py-4 内边距，与 Header/Footer 对齐，避免每个弹窗手写 padding
+function DialogContentBody({ className, ...props }: React.ComponentProps<"div">) {
+	return <div data-slot="dialog-content-body" className={cn("px-6 py-4", className)} {...props} />;
+}
+
 function DialogFooter({
 	className,
 	showCloseButton = false,
@@ -138,6 +143,7 @@ export {
 	Dialog,
 	DialogClose,
 	DialogContent,
+	DialogContentBody,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
