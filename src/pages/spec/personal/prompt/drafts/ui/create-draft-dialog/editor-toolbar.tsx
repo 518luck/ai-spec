@@ -23,7 +23,7 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-import { FolderCombobox, type FolderOption } from "@/widgets/folder-combobox";
+import { FolderCombobox } from "@/widgets/folder-combobox";
 import { EDITOR_THEMES, MENU_GROUPS, type MenuItem } from "../../config/editor-dialog";
 
 // 编辑器展示状态 + 主题/展开回调：状态与其对应回调同组，方便后续扩展（如版本处理）
@@ -60,20 +60,11 @@ export type QuickToolbarProps = {
 	onReorder: (newOrder: string[]) => void;
 };
 
-// 文件夹选择：选项 + 当前值 + 切换/新建回调
-export type FolderPickerProps = {
-	// 可选的文件夹列表
-	options: FolderOption[];
-	// 当前选中的文件夹 id；undefined 表示不加入任何文件夹
+// 文件夹选择：resourceType 决定拉取哪类文件夹 + 创建时归属
+export type FolderConfigProps = {
+	resourceType: string;
 	value: string | undefined;
-	// 切换文件夹选择
 	onChange: (folderId: string | undefined) => void;
-	// 行内新建文件夹
-	onCreate: (input: {
-		name: string;
-		description?: string;
-		color?: string;
-	}) => Promise<FolderOption | null>;
 };
 
 type EditorToolbarProps = {
@@ -84,7 +75,7 @@ type EditorToolbarProps = {
 	// 快捷工具胶囊
 	quickToolbar: QuickToolbarProps;
 	// 文件夹选择
-	folder: FolderPickerProps;
+	folder: FolderConfigProps;
 };
 
 // > 按当前模式（编辑/预览）过滤菜单项的可见性
@@ -111,12 +102,6 @@ export function EditorToolbar({
 		onToggle: onCheckboxToggle,
 		onReorder,
 	} = quickToolbar;
-	const {
-		options: folders,
-		value: folderId,
-		onChange: onFolderChange,
-		onCreate: onFolderCreate,
-	} = folder;
 	// 当前模式下可见的菜单项
 	const currentMode = isPreview ? "preview" : "edit";
 	const isVisible = (item: { showIn?: string }): boolean =>
@@ -136,13 +121,11 @@ export function EditorToolbar({
 				{title}
 			</span>
 
-			{/* // @ 文件夹选择：归属当前草稿，支持搜索已有文件夹或行内新建 */}
+			{/* // @ 文件夹选择：归属当前草稿，FolderCombobox 封装列表拉取 + 创建 */}
 			<FolderCombobox
-				options={folders}
-				value={folderId}
-				onChange={onFolderChange}
-				onCreate={onFolderCreate}
-				placeholder="选择文件夹"
+				resourceType={folder.resourceType}
+				value={folder.value}
+				onChange={folder.onChange}
 				className="max-w-40 shrink-0"
 			/>
 

@@ -1,9 +1,7 @@
 import type { JSX } from "react";
 import { useEffect, useState } from "react";
 import { HexColorPicker } from "react-colorful";
-import { toast } from "sonner";
 import { cn } from "@/shared/lib/utils";
-import { folderDescriptionSchema, folderNameSchema } from "@/shared/lib/zod/schemas/folder";
 import { Button } from "@/shared/ui/button";
 import {
 	Dialog,
@@ -50,21 +48,11 @@ export function CreateFolderDialog({
 		}
 	}, [open, initialName]);
 
-	// 用基础字段 schema 预校验（name/description/color），resource_type 由调用方注入，后端 createFolderDtoSchema 兜底全量校验
+	// 提交：把原始值传给调用方，由调用方用 createFolderDtoSchema 全量校验（含 resource_type）
 	const handleSubmit = async (): Promise<void> => {
-		const parsedName = folderNameSchema.safeParse(name.trim());
-		if (!parsedName.success) {
-			toast.error(parsedName.error.issues[0]?.message ?? "请输入文件夹名称");
-			return;
-		}
-		const parsedDescription = folderDescriptionSchema.safeParse(description.trim() || undefined);
-		if (!parsedDescription.success) {
-			toast.error(parsedDescription.error.issues[0]?.message ?? "描述过长");
-			return;
-		}
 		await onSubmit({
-			name: parsedName.data,
-			description: parsedDescription.data,
+			name: name.trim(),
+			description: description.trim() || undefined,
 			color,
 		});
 	};

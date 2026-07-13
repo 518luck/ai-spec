@@ -8,6 +8,7 @@ import { EmptyState } from "@/widgets/empty-state";
 import { ToolbarPageShell } from "@/widgets/page-shell";
 import { DEFAULT_SORT, PAGE_SIZE } from "../config/draft-list";
 import { CreateDraftButton } from "./create-draft-button";
+import { DraftFolderFilter } from "./draft-folder-filter";
 import { type DraftItem, DraftsGrid } from "./drafts-grid";
 
 // 草稿列表页参数，由路由层从 searchParams 解析后传入
@@ -35,6 +36,7 @@ export async function PersonalDraftsPage({
 		<ToolbarPageShell
 			title="草稿"
 			help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
+			filter={<DraftFolderFilter />}
 			// TODO: 后面需要做弹窗处理，用户没有登录的时候给一个登录引导
 			actions={userId ? <CreateDraftButton /> : undefined}
 		>

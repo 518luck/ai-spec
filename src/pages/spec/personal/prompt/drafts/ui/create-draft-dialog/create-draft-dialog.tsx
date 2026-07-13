@@ -11,14 +11,11 @@ import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { createFolder, getFolders } from "@/entities/folder";
 import { createDraft } from "@/entities/prompt";
 import { useLocalStorage } from "@/shared/hooks";
-import { folderNameSchema } from "@/shared/lib/zod/schemas/folder";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
-import type { FolderOption } from "@/widgets/folder-combobox";
 import {
 	defaultEditorSettings,
 	EDITOR_THEMES,
@@ -69,7 +66,6 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 
 	// 文件夹归属：folderId 为 undefined 表示不加入任何文件夹
 	const [folderId, setFolderId] = useState<string | undefined>(undefined);
-	const [folders, setFolders] = useState<FolderOption[]>([]);
 
 	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复
 	// > react-use 的 useLocalStorage 返回 T | undefined（用户清空 localStorage 时），解构默认值兜底防白屏
@@ -117,46 +113,6 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	// 切换放大/缩小（useLocalStorage 自动持久化）
 	const toggleExpanded = (): void => {
 		setIsExpanded((prev) => !prev);
-	};
-
-	// 对话框打开时拉取草稿文件夹列表，关闭时重置归属选择
-	useEffect(() => {
-		if (!open) return;
-		void getFolders("promptDraft")
-			.then(setFolders)
-			.catch(() => {
-				// 拉取失败静默处理，文件夹选择仍可用（只是列表为空）
-			});
-	}, [open]);
-
-	// 行内新建草稿文件夹：名称先用同一份 schema 预校验，成功后追加到列表并自动选中
-	const handleCreateFolder = async ({
-		name,
-		description,
-		color,
-	}: {
-		name: string;
-		description?: string;
-		color?: string;
-	}): Promise<FolderOption | null> => {
-		const parsed = folderNameSchema.safeParse(name);
-		if (!parsed.success) {
-			toast.error(parsed.error.issues[0]?.message ?? "请输入文件夹名称");
-			return null;
-		}
-		try {
-			const created = await createFolder({
-				name: parsed.data,
-				description,
-				color,
-				resourceType: "promptDraft",
-			});
-			setFolders((prev) => [...prev, created]);
-			return created;
-		} catch (error) {
-			toast.error(error instanceof Error && error.message ? error.message : "创建文件夹失败");
-			return null;
-		}
 	};
 
 	// @ 派生状态：主题变体及背景色
@@ -329,10 +285,9 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 						onReorder: reorderTools,
 					}}
 					folder={{
-						options: folders,
+						resourceType: "promptDraft",
 						value: folderId,
 						onChange: setFolderId,
-						onCreate: handleCreateFolder,
 					}}
 				/>
 
