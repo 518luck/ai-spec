@@ -15,6 +15,7 @@ import { Button } from "@/shared/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogContentBody,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -122,20 +123,22 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 							</DialogDescription>
 						</DialogHeader>
 
-						<KeyForm
-							name={name}
-							description={description}
-							permission={permission}
-							matrix={matrix}
-							expiryPreset={expiryPreset}
-							expiryDate={expiryDate}
-							onNameChange={setName}
-							onDescriptionChange={setDescription}
-							onPermissionChange={setPermission}
-							onMatrixChange={setMatrix}
-							onExpiryPresetChange={setExpiryPreset}
-							onExpiryDateChange={setExpiryDate}
-						/>
+						<DialogContentBody className="pb-0">
+							<KeyForm
+								name={name}
+								description={description}
+								permission={permission}
+								matrix={matrix}
+								expiryPreset={expiryPreset}
+								expiryDate={expiryDate}
+								onNameChange={setName}
+								onDescriptionChange={setDescription}
+								onPermissionChange={setPermission}
+								onMatrixChange={setMatrix}
+								onExpiryPresetChange={setExpiryPreset}
+								onExpiryDateChange={setExpiryDate}
+							/>
+						</DialogContentBody>
 
 						<DialogFooter>
 							<Button
