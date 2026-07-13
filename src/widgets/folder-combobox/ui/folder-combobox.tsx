@@ -65,11 +65,13 @@ export function FolderCombobox({
 	const listRef = useRef<HTMLDivElement>(null);
 	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
 
-	// 拉取文件夹列表：弹层打开时拉，避免常驻组件一直请求
+	// 拉取文件夹列表：弹层打开时拉，API 返回 id/name，映射成 UI 层的 value/label
 	useEffect(() => {
 		if (!open) return;
 		void getFolders(resourceType)
-			.then(setFolders)
+			.then((data) =>
+				setFolders(data.map((f) => ({ value: f.id, label: f.name, color: f.color ?? undefined }))),
+			)
 			.catch(() => {
 				// 拉取失败静默处理，文件夹选择仍可用（只是列表为空）
 			});
@@ -98,8 +100,11 @@ export function FolderCombobox({
 				color: parsed.data.color ?? undefined,
 				resourceType: parsed.data.resource_type,
 			});
-			setFolders((prev) => [...prev, created]);
-			onChange(created.value);
+			setFolders((prev) => [
+				...prev,
+				{ value: created.id, label: created.name, color: created.color ?? undefined },
+			]);
+			onChange(created.id);
 			setOpen(false);
 			setCreateDialogOpen(false);
 		} catch (error) {

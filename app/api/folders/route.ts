@@ -15,11 +15,11 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 		select: { id: true, name: true, color: true, resource_type: true },
 	});
 
-	// 转成 FolderCombobox 所需的 { value, label, color, resource_type } 形状
+	// 直接返回数据库字段名，前端自行映射 UI 所需的 value/label
 	return NextResponse.json(
 		folders.map((f) => ({
-			value: f.id,
-			label: f.name,
+			id: f.id,
+			name: f.name,
 			color: f.color ?? undefined,
 			resource_type: f.resource_type,
 		})),
@@ -47,8 +47,8 @@ export const POST = withPersonal(async ({ req, session }) => {
 
 	return NextResponse.json(
 		{
-			value: folder.id,
-			label: folder.name,
+			id: folder.id,
+			name: folder.name,
 			color: folder.color ?? undefined,
 			resource_type: folder.resource_type,
 		},

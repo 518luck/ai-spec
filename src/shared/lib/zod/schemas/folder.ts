@@ -43,15 +43,15 @@ export const createFolderDtoSchema = z.object({
 export type CreateFolderDto = z.infer<typeof createFolderDtoSchema>;
 
 // @ 出参
-// 文件夹选项（与 FolderCombobox 的 FolderOption 形状一致，供前后端共用）
+// 文件夹信息（返回数据库原始字段名，前端 UI 层自行映射 value/label）
 export const folderOptionSchema = z.object({
-	value: z.string(),
-	label: z.string(),
+	id: z.string(),
+	name: z.string(),
 	color: folderColorSchema,
 	resource_type: folderResourceTypeSchema.optional(),
 });
 
-// 文件夹选项类型
+// 文件夹信息类型
 export type FolderOptionVo = z.infer<typeof folderOptionSchema>;
 
 // 文件夹列表响应
