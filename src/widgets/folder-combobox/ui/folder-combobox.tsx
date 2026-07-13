@@ -98,13 +98,20 @@ export function FolderCombobox({
 			setFolders((prev) => [...prev, created]);
 			onChange(created.value);
 			setOpen(false);
+			setCreateDialogOpen(false);
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "创建文件夹失败");
 		}
 	};
 
+	// Popover 关闭时同步关闭创建对话框，避免 Dialog 的 open state 残留
+	const handlePopoverOpenChange = (next: boolean): void => {
+		setOpen(next);
+		if (!next) setCreateDialogOpen(false);
+	};
+
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
+		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
 			{/* // 触发器：ghost 按钮样式，融入标题栏；文件夹图标 + 文字 + 箭头都在按钮内 */}
 			<PopoverTrigger
 				render={
@@ -112,7 +119,10 @@ export function FolderCombobox({
 						variant="ghost"
 						role="combobox"
 						aria-expanded={open}
-						className={cn("h-8 w-42 gap-1.5 px-2 font-normal", className)}
+						className={cn(
+							"flex h-8 w-45 shrink-0 justify-start gap-1.5 px-2 font-normal",
+							className,
+						)}
 					/>
 				}
 			>
@@ -126,7 +136,7 @@ export function FolderCombobox({
 			</PopoverTrigger>
 
 			{/* // 弹层：Popover 负责定位，Command 负责搜索过滤 + 键盘导航 */}
-			<PopoverContent className="w-42 p-0" align="start">
+			<PopoverContent className="w-45 p-0" align="start">
 				<Command>
 					{/* CommandInput：cmdk 自动管过滤（按 CommandItem 的 value 匹配输入） */}
 					<CommandInput placeholder="搜索文件夹..." />

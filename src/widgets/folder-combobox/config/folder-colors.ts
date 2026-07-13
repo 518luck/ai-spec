@@ -10,4 +10,4 @@ export const FOLDER_PRESET_COLORS = [
 ] as const;
 
 // 默认颜色：蓝色（首次创建时选中）
-export const FOLDER_DEFAULT_COLOR = FOLDER_PRESET_COLORS[4];
+export const FOLDER_DEFAULT_COLOR = FOLDER_PRESET_COLORS[0];
