@@ -85,6 +85,8 @@ export function FolderCombobox({
 	const [createInitialName, setCreateInitialName] = useState("");
 	// 文件夹列表：按 resourceType 拉取，由 SWR 托管缓存（key 变化自动重拉）
 	// 错误处理、失焦/重试策略由全局 SwrProvider 统一配置，这里无需重复
+	// ? 未来扩展：文件夹数量超过阈值（如 50）时，参考 Dub 的 folder-dropdown 智能切换模式——
+	// ? 检测超阈值后关闭 cmdk 内存过滤（shouldFilter={false}），改用后端搜索（getFolders 加 q 参数）+ useDebounce(300ms) 防抖
 	const {
 		data: rawFolders,
 		isLoading,
