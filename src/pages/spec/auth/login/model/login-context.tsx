@@ -49,9 +49,11 @@ export function LoginProvider({ children }: PropsWithChildren): JSX.Element {
 	const [emailValue, setEmailValue] = useState("");
 	const [passwordValue, setPasswordValue] = useState("");
 	const [showPasswordField, setShowPasswordField] = useState(false);
-	// react-use 的 useLocalStorage 返回 T | undefined（用户清空 localStorage 时），解构默认值兜底回 null
-	const [storedPreferredMethod = null, setStoredPreferredMethod] =
-		useLocalStorage<LoginMethod | null>(loginPreferredMethodStorageKey);
+	// localStorage 持久化用户偏好的登录方式（null = 未记录偏好）
+	const [storedPreferredMethod, setStoredPreferredMethod] = useLocalStorage<LoginMethod | null>(
+		loginPreferredMethodStorageKey,
+		null,
+	);
 	const [preferredMethod] = useState<LoginMethod | null>(() =>
 		isLoginMethod(storedPreferredMethod) ? storedPreferredMethod : null,
 	);

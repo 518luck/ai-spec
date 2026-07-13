@@ -68,13 +68,16 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [folderId, setFolderId] = useState<string | undefined>(undefined);
 
 	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复
-	// > react-use 的 useLocalStorage 返回 T | undefined（用户清空 localStorage 时），解构默认值兜底防白屏
-	const [activeTools = ["bold", "italic"], setActiveTools] =
-		useLocalStorage<string[]>("draft.toolbar");
-	const [editorSettings = defaultEditorSettings, setEditorSettings] =
-		useLocalStorage<typeof defaultEditorSettings>("draft.settings");
-	const [editorThemeId = "vscode", setEditorThemeId] = useLocalStorage<string>("draft.theme");
-	const [isExpanded = false, setIsExpanded] = useLocalStorage<boolean>("draft.isExpanded");
+	const [activeTools, setActiveTools] = useLocalStorage<string[]>("draft.toolbar", [
+		"bold",
+		"italic",
+	]);
+	const [editorSettings, setEditorSettings] = useLocalStorage(
+		"draft.settings",
+		defaultEditorSettings,
+	);
+	const [editorThemeId, setEditorThemeId] = useLocalStorage<string>("draft.theme", "vscode");
+	const [isExpanded, setIsExpanded] = useLocalStorage<boolean>("draft.isExpanded", false);
 
 	// 切换快捷操作的显示/隐藏（useLocalStorage 自动持久化）
 	const toggleTool = (id: string): void => {
