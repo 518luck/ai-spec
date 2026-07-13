@@ -41,6 +41,8 @@ type FolderComboboxProps = {
 	value?: string;
 	// 选中回调，undefined 表示用户清空了选择
 	onChange: (folderId: string | undefined) => void;
+	// 图标模式：只显示图标不显示文字，hover 时 Tooltip 显示文件夹名
+	iconOnly?: boolean;
 	className?: string;
 };
 
@@ -49,6 +51,7 @@ export function FolderCombobox({
 	resourceType,
 	value,
 	onChange,
+	iconOnly = false,
 	className,
 }: FolderComboboxProps): JSX.Element {
 	const [open, setOpen] = useState(false);
@@ -110,30 +113,46 @@ export function FolderCombobox({
 		if (!next) setCreateDialogOpen(false);
 	};
 
+	// 触发器标签文案
+	const triggerLabel = selectedOption ? selectedOption.label : "未分类";
+
+	const trigger = (
+		<PopoverTrigger
+			render={
+				<Button
+					variant="ghost"
+					role="combobox"
+					aria-expanded={open}
+					className={cn(
+						iconOnly
+							? "flex h-8 shrink-0 justify-center gap-1.5 px-2 font-normal"
+							: "flex h-8 w-45 shrink-0 justify-start gap-1.5 px-2 font-normal",
+						className,
+					)}
+				/>
+			}
+		>
+			<FolderIcon color={selectedOption?.color} />
+			{!iconOnly && (
+				<span className={cn("min-w-0 truncate", !selectedOption && "text-muted-foreground")}>
+					{triggerLabel}
+				</span>
+			)}
+			{!iconOnly && <Icons.selector className="size-3.5 opacity-50" />}
+		</PopoverTrigger>
+	);
+
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
-			{/* // 触发器：ghost 按钮样式，融入标题栏；文件夹图标 + 文字 + 箭头都在按钮内 */}
-			<PopoverTrigger
-				render={
-					<Button
-						variant="ghost"
-						role="combobox"
-						aria-expanded={open}
-						className={cn(
-							"flex h-8 w-45 shrink-0 justify-start gap-1.5 px-2 font-normal",
-							className,
-						)}
-					/>
-				}
-			>
-				<FolderIcon color={selectedOption?.color} />
-				{selectedOption ? (
-					<span className="min-w-0 truncate">{selectedOption.label}</span>
-				) : (
-					<span className="min-w-0 truncate text-muted-foreground">未分类</span>
-				)}
-				<Icons.selector className="size-3.5 opacity-50" />
-			</PopoverTrigger>
+			{/* // 触发器：iconOnly 时包 Tooltip 显示文件夹名 */}
+			{iconOnly ? (
+				<Tooltip>
+					<TooltipTrigger render={trigger} />
+					<TooltipContent showArrow={false}>{triggerLabel}</TooltipContent>
+				</Tooltip>
+			) : (
+				trigger
+			)}
 
 			{/* // 弹层：Popover 负责定位，Command 负责搜索过滤 + 键盘导航 */}
 			<PopoverContent className="w-45 p-0" align="start">

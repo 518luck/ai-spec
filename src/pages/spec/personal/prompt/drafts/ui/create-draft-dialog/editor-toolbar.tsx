@@ -127,6 +127,7 @@ export function EditorToolbar({
 				value={folder.value}
 				onChange={folder.onChange}
 				className="shrink-0"
+				iconOnly
 			/>
 
 			<div className="ml-auto flex items-center gap-2">
