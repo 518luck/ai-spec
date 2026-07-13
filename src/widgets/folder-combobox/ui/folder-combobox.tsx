@@ -3,7 +3,8 @@
 // # 文件夹下拉选择框：按 resourceType 拉取列表 + 搜索/选中/内联创建（全量校验落库）
 
 import { useCommandState } from "cmdk";
-import { type JSX, useEffect, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { type JSX, useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { createFolder, getFolders } from "@/entities/folder/api/folder";
@@ -37,23 +38,43 @@ export type FolderOption = {
 type FolderComboboxProps = {
 	// 文件夹归属的资源类型（如 "promptDraft"），决定拉取哪类文件夹 + 创建时归属
 	resourceType: string;
-	// 当前选中的 folder_id；undefined 表示未选中
+	// 当前选中的 folder_id；传了走受控模式，没传自动从 URL ?folder=xxx 读写
 	value?: string;
-	// 选中回调，undefined 表示用户清空了选择
-	onChange: (folderId: string | undefined) => void;
+	// 选中回调；传了走受控模式，没传自动写入 URL
+	onChange?: (folderId: string | undefined) => void;
 	// 图标模式：只显示图标不显示文字，hover 时 Tooltip 显示文件夹名
 	iconOnly?: boolean;
 	className?: string;
 };
 
 // 文件夹下拉选择框：Popover 定位 + Command(cmdk) 搜索过滤 + 内联创建（全量校验后落库）
+// > 传 value/onChange 时走受控模式（弹窗用），没传时自动读写 URL ?folder=xxx（导航栏筛选用）
 export function FolderCombobox({
 	resourceType,
-	value,
-	onChange,
+	value: controlledValue,
+	onChange: controlledOnChange,
 	iconOnly = false,
 	className,
 }: FolderComboboxProps): JSX.Element {
+	const router = useRouter();
+	const searchParams = useSearchParams();
+
+	// value 传了用受控，没传从 URL 读
+	const value = controlledValue ?? searchParams?.get("folder") ?? undefined;
+	// onChange 传了走回调，没传改 URL
+	const handleChange = useCallback(
+		(folderId: string | undefined) => {
+			if (controlledOnChange) {
+				controlledOnChange(folderId);
+			} else {
+				const params = new URLSearchParams(searchParams?.toString() ?? "");
+				if (folderId) params.set("folder", folderId);
+				else params.delete("folder");
+				router.replace(`?${params.toString()}`, { scroll: false });
+			}
+		},
+		[controlledOnChange, searchParams, router],
+	);
 	const [open, setOpen] = useState(false);
 	// 创建文件夹对话框：点击「新建文件夹」列表项或搜索无结果时打开
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -104,7 +125,7 @@ export function FolderCombobox({
 				...prev,
 				{ value: created.id, label: created.name, color: created.color ?? undefined },
 			]);
-			onChange(created.id);
+			handleChange(created.id);
 			setOpen(false);
 			setCreateDialogOpen(false);
 		} catch (error) {
@@ -165,7 +186,7 @@ export function FolderCombobox({
 								<CommandItem
 									value="未分类 无文件夹 不加入 none"
 									onSelect={() => {
-										onChange(undefined);
+										handleChange(undefined);
 										setOpen(false);
 									}}
 									className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
@@ -190,7 +211,7 @@ export function FolderCombobox({
 										option={option}
 										selected={value === option.value}
 										onSelect={() => {
-											onChange(option.value);
+											handleChange(option.value);
 											setOpen(false);
 										}}
 									/>

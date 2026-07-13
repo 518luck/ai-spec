@@ -7,7 +7,7 @@ import { languages } from "@codemirror/language-data";
 import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { motion } from "motion/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -64,8 +64,11 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [isPreview, setIsPreview] = useState(false);
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 
-	// 文件夹归属：folderId 为 undefined 表示不加入任何文件夹
-	const [folderId, setFolderId] = useState<string | undefined>(undefined);
+	// 文件夹归属：初始值从 URL ?folder=xxx 读取（和导航栏筛选同步），用户在弹窗内可自由修改
+	const searchParams = useSearchParams();
+	const [folderId, setFolderId] = useState<string | undefined>(
+		searchParams?.get("folder") ?? undefined,
+	);
 
 	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复
 	const [activeTools, setActiveTools] = useLocalStorage<string[]>("draft.toolbar", [

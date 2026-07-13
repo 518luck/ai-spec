@@ -6,8 +6,8 @@ import { PersonalDraftsPage } from "@/pages/spec/personal/prompt/drafts";
 export default async function Page({
 	searchParams,
 }: {
-	searchParams: Promise<{ query?: string; sort?: string }>;
+	searchParams: Promise<{ query?: string; sort?: string; folder?: string }>;
 }) {
-	const { query, sort } = await searchParams;
-	return <PersonalDraftsPage query={query?.trim() ?? ""} sort={sort ?? ""} />;
+	const { query, sort, folder } = await searchParams;
+	return <PersonalDraftsPage query={query?.trim() ?? ""} sort={sort ?? ""} folderId={folder} />;
 }

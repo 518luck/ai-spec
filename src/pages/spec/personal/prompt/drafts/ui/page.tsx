@@ -17,19 +17,22 @@ type PersonalDraftsPageProps = {
 	query: string;
 	// 排序值，对应 SORT_OPTIONS 的 value
 	sort: string;
+	// 文件夹 ID（从 URL ?folder=xxx 解析），按文件夹筛选草稿
+	folderId?: string;
 };
 
-// # 个人草稿页：按搜索/排序查询当前用户草稿（服务端分页），未登录走空状态
+// # 个人草稿页：按搜索/排序/文件夹查询当前用户草稿（服务端分页），未登录走空状态
 export async function PersonalDraftsPage({
 	query,
 	sort,
+	folderId,
 }: PersonalDraftsPageProps): Promise<JSX.Element> {
 	const session = await auth();
 	const userId = session?.user.id;
 
 	// 已登录才查数据库；未登录时 drafts 为空，直接走空状态分支
 	const { drafts, total } = userId
-		? await loadDrafts(userId, query, sort)
+		? await loadDrafts(userId, query, sort, folderId)
 		: { drafts: [] as DraftItem[], total: 0 };
 
 	return (
@@ -49,22 +52,24 @@ export async function PersonalDraftsPage({
 	);
 }
 
-// 按搜索/排序查询当前用户的草稿，返回当前页切片与总数
+// 按搜索/排序/文件夹查询当前用户的草稿，返回当前页切片与总数
 async function loadDrafts(
 	userId: string,
 	query: string,
 	sort: string,
+	folderId?: string,
 ): Promise<{ drafts: DraftItem[]; total: number }> {
-	// 搜索条件：name 或 content 模糊匹配，不区分大小写（兼容英文关键词如 React/react）
-	const where = query.trim()
-		? {
-				owner_id: userId,
-				OR: [
-					{ name: { contains: query, mode: "insensitive" as const } },
-					{ content: { contains: query, mode: "insensitive" as const } },
-				],
-			}
-		: { owner_id: userId };
+	// 组合查询条件：owner_id 必有；有搜索词时加模糊匹配；有文件夹时加 folder_id 筛选
+	const where = {
+		owner_id: userId,
+		...(folderId && { folder_id: folderId }),
+		...(query.trim() && {
+			OR: [
+				{ name: { contains: query, mode: "insensitive" as const } },
+				{ content: { contains: query, mode: "insensitive" as const } },
+			],
+		}),
+	};
 
 	// 排序映射：updated→按更新时间倒序，created→按创建时间倒序
 	const orderBy =
