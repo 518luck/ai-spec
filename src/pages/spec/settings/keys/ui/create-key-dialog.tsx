@@ -117,8 +117,8 @@ export function CreateKeyDialog({ open, onOpenChange }: CreateKeyDialogProps): J
 				) : (
 					<>
 						<DialogHeader>
-						<DialogTitle>创建 API 密钥</DialogTitle>
-						<DialogDescription>
+							<DialogTitle>创建 API 密钥</DialogTitle>
+							<DialogDescription>
 								生成一枚用于程序化接入的密钥，仅归属于你的个人工作空间，创建后请妥善保存。
 							</DialogDescription>
 						</DialogHeader>
@@ -174,9 +174,7 @@ function CreatedKeyView({
 		<>
 			<DialogHeader>
 				<DialogTitle>密钥已创建</DialogTitle>
-				<DialogDescription>
-					请立即复制保存。关闭后将无法再次查看完整密钥。
-				</DialogDescription>
+				<DialogDescription>请立即复制保存。关闭后将无法再次查看完整密钥。</DialogDescription>
 			</DialogHeader>
 
 			<div className="bg-muted px-6 pt-4 pb-0">
