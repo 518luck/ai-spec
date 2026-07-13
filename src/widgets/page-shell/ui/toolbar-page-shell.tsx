@@ -69,9 +69,13 @@ export function ToolbarPageShell({
 							options={MOCK_FOLDERS}
 							value={folderId}
 							onChange={setFolderId}
-							onCreate={async (name) => {
-								console.log("创建文件夹:", name);
-								return { value: Date.now().toString(), label: name };
+							onCreate={async ({ name, description, color }) => {
+								console.log("创建文件夹:", { name, description, color });
+								return {
+									value: Date.now().toString(),
+									label: name,
+									color: color ?? undefined,
+								};
 							}}
 							className="w-48"
 						/>

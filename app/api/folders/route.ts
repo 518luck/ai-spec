@@ -37,6 +37,7 @@ export const POST = withPersonal(async ({ req, session }) => {
 		data: {
 			name: parsed.data.name,
 			description: parsed.data.description || null,
+			color: parsed.data.color || null,
 			resource_type: parsed.data.resource_type,
 			owner_id: session.user.id,
 			team_id: null,

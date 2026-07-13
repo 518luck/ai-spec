@@ -134,7 +134,7 @@ export function KeyForm({
 	};
 
 	return (
-		<div className="flex flex-col gap-6 bg-muted px-6 pt-4 pb-0">
+		<div className="flex flex-col gap-6">
 			<div className="flex flex-col gap-4">
 				<div className="flex flex-col gap-2">
 					<Label>密钥名称</Label>

@@ -16,16 +16,18 @@ export const getFolders = async (type: string): Promise<FolderOption[]> => {
 export const createFolder = async ({
 	name,
 	description,
+	color,
 	resourceType,
 }: {
 	name: string;
 	description?: string;
+	color?: string;
 	resourceType: string;
 }): Promise<FolderOption> => {
 	const response = await fetch("/api/folders", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ name, description, resource_type: resourceType }),
+		body: JSON.stringify({ name, description, color, resource_type: resourceType }),
 	});
 	if (!response.ok) {
 		throw new Error(await resolveErrorMessage(response));

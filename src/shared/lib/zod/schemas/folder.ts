@@ -35,6 +35,7 @@ export const folderColorSchema = z
 export const createFolderDtoSchema = z.object({
 	name: folderNameSchema,
 	description: folderDescriptionSchema,
+	color: folderColorSchema,
 	resource_type: folderResourceTypeSchema,
 });
 

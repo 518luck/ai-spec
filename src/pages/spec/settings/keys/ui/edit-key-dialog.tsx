@@ -14,6 +14,7 @@ import { Button } from "@/shared/ui/button";
 import {
 	Dialog,
 	DialogContent,
+	DialogContentBody,
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
@@ -117,26 +118,28 @@ export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps)
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent showCloseButton={false} className="sm:max-w-md">
 				<DialogHeader>
-					<DialogTitle className="text-lg">编辑 API 密钥</DialogTitle>
+					<DialogTitle>编辑 API 密钥</DialogTitle>
 					<DialogDescription className="text-sm leading-6">
 						修改密钥名称、描述、权限与过期时间。
 					</DialogDescription>
 				</DialogHeader>
 
-				<KeyForm
-					name={name}
-					description={description}
-					permission={permission}
-					matrix={matrix}
-					expiryPreset={expiryPreset}
-					expiryDate={expiryDate}
-					onNameChange={setName}
-					onDescriptionChange={setDescription}
-					onPermissionChange={setPermission}
-					onMatrixChange={setMatrix}
-					onExpiryPresetChange={setExpiryPreset}
-					onExpiryDateChange={setExpiryDate}
-				/>
+				<DialogContentBody className="pb-0">
+					<KeyForm
+						name={name}
+						description={description}
+						permission={permission}
+						matrix={matrix}
+						expiryPreset={expiryPreset}
+						expiryDate={expiryDate}
+						onNameChange={setName}
+						onDescriptionChange={setDescription}
+						onPermissionChange={setPermission}
+						onMatrixChange={setMatrix}
+						onExpiryPresetChange={setExpiryPreset}
+						onExpiryDateChange={setExpiryDate}
+					/>
+				</DialogContentBody>
 
 				<DialogFooter>
 					<Button

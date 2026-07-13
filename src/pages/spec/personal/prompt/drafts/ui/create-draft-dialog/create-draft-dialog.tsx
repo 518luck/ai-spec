@@ -10,10 +10,10 @@ import { motion } from "motion/react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
-import { useLocalStorage } from "@/shared/hooks";
 import { toast } from "sonner";
 import { createFolder, getFolders } from "@/entities/folder";
 import { createDraft } from "@/entities/prompt";
+import { useLocalStorage } from "@/shared/hooks";
 import { folderNameSchema } from "@/shared/lib/zod/schemas/folder";
 import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
@@ -130,14 +130,27 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	}, [open]);
 
 	// 行内新建草稿文件夹：名称先用同一份 schema 预校验，成功后追加到列表并自动选中
-	const handleCreateFolder = async (name: string): Promise<FolderOption | null> => {
+	const handleCreateFolder = async ({
+		name,
+		description,
+		color,
+	}: {
+		name: string;
+		description?: string;
+		color?: string;
+	}): Promise<FolderOption | null> => {
 		const parsed = folderNameSchema.safeParse(name);
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请输入文件夹名称");
 			return null;
 		}
 		try {
-			const created = await createFolder({ name: parsed.data, resourceType: "promptDraft" });
+			const created = await createFolder({
+				name: parsed.data,
+				description,
+				color,
+				resourceType: "promptDraft",
+			});
 			setFolders((prev) => [...prev, created]);
 			return created;
 		} catch (error) {

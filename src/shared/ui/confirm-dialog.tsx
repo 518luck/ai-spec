@@ -84,7 +84,7 @@ export function ConfirmDialog({
 		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogContent showCloseButton={false}>
 				<DialogHeader>
-					<DialogTitle className="text-lg">{title}</DialogTitle>
+					<DialogTitle>{title}</DialogTitle>
 					{description ? <DialogDescription>{description}</DialogDescription> : null}
 				</DialogHeader>
 

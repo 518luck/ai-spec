@@ -69,7 +69,11 @@ export type FolderPickerProps = {
 	// 切换文件夹选择
 	onChange: (folderId: string | undefined) => void;
 	// 行内新建文件夹
-	onCreate: (name: string) => Promise<FolderOption | null>;
+	onCreate: (input: {
+		name: string;
+		description?: string;
+		color?: string;
+	}) => Promise<FolderOption | null>;
 };
 
 type EditorToolbarProps = {

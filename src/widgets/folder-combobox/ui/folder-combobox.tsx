@@ -15,10 +15,13 @@ import {
 	CommandInput,
 	CommandItem,
 	CommandList,
+	CommandSeparator,
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { ScrollMask } from "@/shared/ui/scroll-mask";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { CreateFolderDialog } from "./create-folder-dialog";
 import { FolderIcon } from "./folder-icon";
 
 // 文件夹选项的形状：后端 action 接好后返回这个结构，父组件拼好传入
@@ -38,8 +41,12 @@ type FolderComboboxProps = {
 	placeholder?: string;
 	searchPlaceholder?: string;
 	emptyText?: string;
-	// 可选：创建新文件夹。传入后搜索无结果会显示「创建 xxx」，点击调用它
-	onCreate?: (name: string) => Promise<FolderOption | null>;
+	// 可选：创建新文件夹。传入后列表显示「新建文件夹」入口，搜索无结果显示「创建 xxx」
+	onCreate?: (input: {
+		name: string;
+		description?: string;
+		color?: string;
+	}) => Promise<FolderOption | null>;
 	className?: string;
 };
 
@@ -55,6 +62,10 @@ export function FolderCombobox({
 	className,
 }: FolderComboboxProps): JSX.Element {
 	const [open, setOpen] = useState(false);
+	// 创建文件夹对话框：点击「新建文件夹」列表项或搜索无结果时打开
+	const [createDialogOpen, setCreateDialogOpen] = useState(false);
+	// 创建对话框预填名称：来自搜索词，点击「新建文件夹」列表项时清空
+	const [createInitialName, setCreateInitialName] = useState("");
 	// 列表滚动容器 ref：驱动 useScrollProgress 算进度，底部接 ScrollMask 渐变遮罩
 	const listRef = useRef<HTMLDivElement>(null);
 	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
@@ -62,9 +73,13 @@ export function FolderCombobox({
 	const selectedOption = options.find((opt) => opt.value === value);
 
 	// 创建新文件夹：调 onCreate，成功后选中它并关闭弹层
-	const handleCreate = async (name: string): Promise<void> => {
+	const handleCreate = async (input: {
+		name: string;
+		description?: string;
+		color?: string;
+	}): Promise<void> => {
 		if (!onCreate) return;
-		const created = await onCreate(name);
+		const created = await onCreate(input);
 		if (created) {
 			onChange(created.value);
 			setOpen(false);
@@ -106,13 +121,19 @@ export function FolderCombobox({
 						>
 							{onCreate ? (
 								<CommandEmpty>
-									<CreateButton onCreate={handleCreate} emptyText={emptyText} />
+									<CreateButton
+										onSelect={(name) => {
+											setCreateInitialName(name);
+											setCreateDialogOpen(true);
+										}}
+										emptyText={emptyText}
+									/>
 								</CommandEmpty>
 							) : (
 								<CommandEmpty>{emptyText}</CommandEmpty>
 							)}
 							{/* // > 不加入任何文件夹（folder_id=null），始终置顶；value 含多关键词便于搜索命中 */}
-							<CommandGroup heading="未分类">
+							<CommandGroup>
 								<CommandItem
 									value="未分类 无文件夹 不加入 none"
 									onSelect={() => {
@@ -121,7 +142,7 @@ export function FolderCombobox({
 									}}
 									className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
 								>
-									<FolderIcon />
+									<FolderIcon icon={Icons.folderX} />
 									<span className="text-muted-foreground">未分类</span>
 									<Icons.check
 										className={cn(
@@ -131,60 +152,160 @@ export function FolderCombobox({
 									/>
 								</CommandItem>
 							</CommandGroup>
-							<CommandGroup heading="文件夹">
+							<CommandSeparator />
+
+							{/* // > 文件夹列表 */}
+							<CommandGroup>
 								{options.map((option) => (
-									<CommandItem
+									<FolderOptionItem
 										key={option.value}
-										value={option.label}
+										option={option}
+										selected={value === option.value}
 										onSelect={() => {
 											onChange(option.value);
 											setOpen(false);
 										}}
-										className="not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
-									>
-										<FolderIcon color={option.color} />
-										<span className="min-w-0 truncate">{option.label}</span>
-										<Icons.check
-											className={cn(
-												"ml-auto size-4",
-												value === option.value ? "opacity-100" : "opacity-0",
-											)}
-										/>
-									</CommandItem>
+									/>
 								))}
 							</CommandGroup>
+
+							{/* // > 新建文件夹：作为列表项放在分组里，和文件夹列表视觉统一；onSelect 不关闭弹层，打开创建对话框 */}
+							{onCreate && (
+								<>
+									<CommandSeparator />
+									<CommandGroup>
+										<CommandItem
+											value="新建文件夹 创建 new create"
+											onSelect={() => {
+												setCreateInitialName("");
+												setCreateDialogOpen(true);
+											}}
+											className="not-first:mt-2 cursor-pointer bg-transparent! text-muted-foreground hover:bg-accent! hover:text-accent-foreground!"
+										>
+											<CreateFolderItemContent label="新建文件夹" />
+										</CommandItem>
+									</CommandGroup>
+								</>
+							)}
 						</CommandList>
 						{/* // > 底部渐变遮罩：滚到底自动淡出，提示下方还有更多内容 */}
 						<ScrollMask scrollProgress={scrollProgress} />
 					</div>
+					{onCreate && (
+						<CreateFolderDialog
+							open={createDialogOpen}
+							onOpenChange={setCreateDialogOpen}
+							initialName={createInitialName}
+							onSubmit={handleCreate}
+						/>
+					)}
 				</Command>
 			</PopoverContent>
 		</Popover>
 	);
 }
 
+// > 文件夹列表项：文字被截断时才显示 Tooltip（hover 看全名），没截断不显示
+// > 溢出检测：mouseenter 时比较 scrollWidth 和 clientWidth，截断才开 Tooltip
+function FolderOptionItem({
+	option,
+	selected,
+	onSelect,
+}: {
+	option: FolderOption;
+	selected: boolean;
+	onSelect: () => void;
+}): JSX.Element {
+	const labelRef = useRef<HTMLSpanElement>(null);
+	const [truncated, setTruncated] = useState(false);
+
+	// hover 时检测文字是否溢出：scrollWidth > clientWidth 说明被 truncate 了
+	const handleMouseEnter = (): void => {
+		const el = labelRef.current;
+		if (el) setTruncated(el.scrollWidth > el.clientWidth);
+	};
+
+	// 文件夹项内容：图标 + 文字 + 选中标记，CommandItem 和 TooltipTrigger 复用
+	const content = (
+		<>
+			<FolderIcon color={option.color} />
+			<span ref={labelRef} className="min-w-0 truncate">
+				{option.label}
+			</span>
+			<Icons.check className={cn("ml-auto size-4", selected ? "opacity-100" : "opacity-0")} />
+		</>
+	);
+
+	const itemClassName =
+		"not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!";
+
+	// 截断时用 Tooltip 包裹（hover 显示全名），没截断直接渲染 CommandItem
+	if (!truncated) {
+		return (
+			<CommandItem
+				value={option.label}
+				onSelect={onSelect}
+				onMouseEnter={handleMouseEnter}
+				className={itemClassName}
+			>
+				{content}
+			</CommandItem>
+		);
+	}
+
+	return (
+		<Tooltip>
+			<TooltipTrigger
+				render={
+					<CommandItem
+						value={option.label}
+						onSelect={onSelect}
+						onMouseEnter={handleMouseEnter}
+						className={itemClassName}
+					/>
+				}
+			>
+				{content}
+			</TooltipTrigger>
+			<TooltipContent showArrow={false} side="right" align="center">
+				{option.label}
+			</TooltipContent>
+		</Tooltip>
+	);
+}
+
+// > 创建文件夹项的公共内容：图标 + 文字，供 CommandItem 和 CreateButton 复用
+function CreateFolderItemContent({ label }: { label: string }): JSX.Element {
+	return (
+		<>
+			<FolderIcon icon={Icons.folderPlus} />
+			<span className="min-w-0 truncate">{label}</span>
+		</>
+	);
+}
+
 // > 搜索无结果时的「创建 xxx」按钮；拆成子组件是因为 useCommandState 必须在 Command 上下文内调用，且能拿到当前搜索词
+// > 点击打开 Dialog 并预填搜索词
 function CreateButton({
-	onCreate,
+	onSelect,
 	emptyText,
 }: {
-	onCreate: (name: string) => Promise<void>;
+	onSelect: (name: string) => void;
 	emptyText: string;
 }): JSX.Element {
-	// useCommandState 读取 cmdk 内部状态：当前搜索词
 	const search = useCommandState((state) => state.search);
 
 	if (!search.trim()) {
-		return <span>{emptyText}</span>;
+		return <span className="text-muted-foreground">{emptyText}</span>;
 	}
 
 	return (
 		<button
 			type="button"
-			onClick={() => onCreate(search)}
-			className="w-full text-left text-muted-foreground hover:text-foreground"
+			onClick={() => onSelect(search)}
+			className="flex w-full cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-muted-foreground text-sm hover:bg-accent hover:text-accent-foreground"
 		>
-			创建「{search}」
+			<CreateFolderItemContent label={`创建 ${search}`} />
 		</button>
 	);
 }
