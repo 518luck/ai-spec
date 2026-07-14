@@ -7,13 +7,19 @@ import { languages } from "@codemirror/language-data";
 import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
 import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { motion } from "motion/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
+import { useSWRConfig } from "swr";
+import useSWRMutation from "swr/mutation";
 import { createDraft } from "@/entities/prompt";
 import { useLocalStorage } from "@/shared/hooks";
-import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import {
+	type CreateDraftDto,
+	type CreateDraftVo,
+	createDraftDtoSchema,
+} from "@/shared/lib/zod/schemas/prompt/draft";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Spinner } from "@/shared/ui/spinner";
 import {
@@ -53,16 +59,23 @@ const resolveActiveFormats = (view: ReactCodeMirrorRef | null): Set<string> => {
 };
 
 export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps): JSX.Element {
-	const router = useRouter();
 	const { resolvedTheme } = useTheme();
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
 
 	// @ 状态定义
 
 	const [content, setContent] = useState("");
-	const [isSaving, setIsSaving] = useState(false);
 	const [isPreview, setIsPreview] = useState(false);
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+
+	// 创建草稿 mutation：trigger 触发请求，isMutating 自动管理 loading 状态
+	const { mutate } = useSWRConfig();
+	const { trigger: triggerCreateDraft, isMutating } = useSWRMutation<
+		CreateDraftVo,
+		Error,
+		string,
+		CreateDraftDto
+	>("create-draft", async (_key, { arg }) => createDraft(arg));
 
 	// 文件夹归属：弹窗打开时从 URL ?folderId=xxx 同步（和导航栏筛选同步），用户在弹窗内可自由修改
 	const searchParams = useSearchParams();
@@ -208,19 +221,17 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			return;
 		}
 
-		setIsSaving(true);
 		try {
-			await createDraft(parsed.data);
+			await triggerCreateDraft(parsed.data);
+			// 刷新所有 drafts 相关的 SWR 缓存（替代原来的 router.refresh）
+			await mutate((key) => Array.isArray(key) && key[0] === "drafts");
 			toast.success("草稿已创建");
 			setContent("");
 			setIsPreview(false);
 			setFolderId(undefined);
-			router.refresh();
 			onOpenChange(false);
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "创建失败，请稍后重试");
-		} finally {
-			setIsSaving(false);
 		}
 	};
 
@@ -300,7 +311,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 				/>
 
 				{/* 保存中遮罩 */}
-				{isSaving && (
+				{isMutating && (
 					<div className="absolute inset-0 z-50 flex items-center justify-center gap-2 bg-popover/80 backdrop-blur-sm">
 						<Spinner className="size-5" />
 						<span className="text-sm">保存中...</span>
