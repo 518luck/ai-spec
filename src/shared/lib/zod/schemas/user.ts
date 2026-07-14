@@ -31,3 +31,6 @@ export const updateUserDtoSchema = z
 		defaultWorkspace: defaultWorkspaceIdSchema.optional(),
 	})
 	.refine((d) => Object.values(d).some((v) => v !== undefined), "至少提交一个更新字段");
+
+// 用户资料部分更新入参类型
+export type UpdateUserDto = z.infer<typeof updateUserDtoSchema>;
