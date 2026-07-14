@@ -28,16 +28,14 @@
   - **操作动词**：`Create` / `Update` / `Patch` / `Delete` / `List` / `Get`。
   - **实体**：业务名词单数，如 `User`、`Token`、`PromptDraft`；列表场景用复数。
 
-### 类型与 DTO/VO 分层
+### 类型别名
 
-- 默认用 `z.infer<typeof xxxDtoSchema>` / `z.infer<typeof xxxVoSchema>` 就地推导类型，多数场景无需单独定义类型别名。
-- 仅当类型需要被多处引用、导出或参与组合时，才显式定义类型别名，命名与 schema 对应：
-  - 入参类型：`[操作动词] + [实体] + DtoType`（如 `CreateTokenDtoType`）。
-  - 出参类型：`[实体] + VoType`（如 `TokenVoType`）。
-- 禁止手写与 schema 重复的接口类型；类型只能由 schema 推导而来。
+- 默认用 `z.infer<typeof xxxSchema>` 就地推导，多数场景无需单独定义类型别名。
+- 仅当类型需要被多处引用时才显式导出，命名去掉 `Schema` 后缀：
+  - 入参类型：`CreateDraftDto`、`ListDraftsDto`。
+  - 出参类型：`DraftVo`、`DraftListVo`。
+- **禁止在 UI 组件、API 客户端等处手写与 Dto/Vo 重复的类型**；必须从 schema 派生复用（如 `import type { DraftVo } from "..."`），保证 schema 改字段时全链路自动更新。组件 props、内部状态等非接口类型不受此约束。
 - 请求入参与响应出参严格分层：**Dto 入 / Vo 出**，不混用。
-  - **DTO（Data Transfer Object）**：请求入参，承载前端传入并待校验的数据。
-  - **VO（View Object）**：响应出参，承载返回给前端、按展示需要裁剪后的数据。
 
 ### 文件内顺序
 
@@ -59,9 +57,9 @@ emailSchema;
 passwordSchema;
 
 // @ 入参
-createTokenDtoSchema + CreateTokenDto;
+createTokenDtoSchema + CreateDraftDto;
 // @ 出参
-tokenVoSchema + TokenVo;
+draftVoSchema + DraftVo;
 ```
 
 - `@` 是路标，整份文件通常只有几个；不要每条 schema 都加。
@@ -73,22 +71,17 @@ tokenVoSchema + TokenVo;
 
 ## Schema 设计
 
-### 复用与组合
-
-- 优先复用基础字段 schema（如 `emailSchema`、`passwordSchema`），不要复制邮箱、密码、验证码等通用规则。
-- 表单或 action 的输入差异用 `.extend()`、`.pick()`、`.omit()`、`.partial()` 等组合表达，而不是另起一份重复定义。
-
-### 输入规范化与错误文案
-
+- 优先复用基础字段 schema（如 `emailSchema`、`passwordSchema`），不要复制通用规则。
+- 输入差异用 `.extend()`、`.pick()`、`.omit()`、`.partial()` 组合表达，而不是另起一份重复定义。
 - `trim`、邮箱小写化等通用规范化写在 schema 中，让所有入口自动获得一致行为。
 - 面向用户的字段错误文案写在 schema 中，保持简洁、可直接展示。
 - schema 只负责输入形状、格式、长度和基础规则校验。
 
-### 校验分层
+## 校验分层
 
-- 后端（route handler / server action）必须用 Dto schema 校验，是唯一权威防线。
-- 前端 UI 在提交前预校验：React Hook Form 表单用 `zodResolver(xxxSchema)` 接入，简单输入用 `xxxSchema.safeParse` + toast。
-- 前端 API 客户端（`entities/*/api`）只负责传输，不写校验。
+- 后端 route handler / server action 是唯一权威防线，必须用 Dto schema 校验。
+- 前端 UI 在提交前预校验：React Hook Form 用 `zodResolver`，简单输入用 `safeParse` + toast。
+- 前端 API 客户端（`entities/*/api`）只负责传输，不做权威校验，但**入参/出参类型必须从 Dto/Vo schema 派生**，不得手写参数类型或手写替代校验逻辑。
 
 ## 边界约束
 

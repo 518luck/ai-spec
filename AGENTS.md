@@ -77,6 +77,7 @@ Prisma schema 命名、字段排列顺序、删除策略与旧表迁移规范，
 ### TypeScript 与类型
 
 - 所有新代码使用 TypeScript；避免使用 `any`。
+- 接口数据类型（Dto/Vo）的命名、派生、复用规则，详见 `src/shared/lib/zod/AGENTS.md`。
 - 公共 API 和导出函数优先使用显式返回类型。
 - 类型专用导入使用 `import type`。
 - 除非局部合理，避免非空断言（`!`）。
