@@ -52,7 +52,7 @@ export const folderOptionVoSchema = z.object({
 });
 
 // 文件夹信息类型
-export type FolderOptionVoType = z.infer<typeof folderOptionVoSchema>;
+export type FolderOptionVo = z.infer<typeof folderOptionVoSchema>;
 
 // 文件夹列表响应
 export const folderListVoSchema = z.array(folderOptionVoSchema);
