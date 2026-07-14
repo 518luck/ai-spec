@@ -36,6 +36,16 @@ export const createDraftDtoSchema = z.object({
 // 创建草稿入参类型
 export type CreateDraftDto = z.infer<typeof createDraftDtoSchema>;
 
+// 草稿列表查询入参：搜索词、排序方式、文件夹筛选
+export const listDraftsDtoSchema = z.object({
+	query: z.string().trim().optional(),
+	sort: z.enum(["created", "updated"]).optional(),
+	folderId: z.string().optional(),
+});
+
+// 草稿列表查询入参类型
+export type ListDraftsDto = z.infer<typeof listDraftsDtoSchema>;
+
 // @ 出参
 // 创建草稿响应
 export const createDraftVoSchema = z.object({

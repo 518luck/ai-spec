@@ -63,7 +63,7 @@ export function FolderCombobox({
 	const searchParams = useSearchParams();
 
 	// value 传了用受控，没传从 URL 读
-	const value = controlledValue ?? searchParams?.get("folder") ?? undefined;
+	const value = controlledValue ?? searchParams?.get("folderId") ?? undefined;
 	// onChange 传了走回调，没传改 URL
 	const handleChange = useCallback(
 		(folderId: string | undefined) => {
@@ -71,8 +71,8 @@ export function FolderCombobox({
 				controlledOnChange(folderId);
 			} else {
 				const params = new URLSearchParams(searchParams?.toString() ?? "");
-				if (folderId) params.set("folder", folderId);
-				else params.delete("folder");
+				if (folderId) params.set("folderId", folderId);
+				else params.delete("folderId");
 				router.replace(`?${params.toString()}`, { scroll: false });
 			}
 		},

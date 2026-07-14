@@ -1,6 +1,6 @@
 "use client";
 
-// # 草稿页文件夹筛选器：读写 URL ?folder=xxx，供服务端的 PersonalDraftsPage 渲染
+// # 草稿页文件夹筛选器：读写 URL ?folderId=xxx，供服务端的 PersonalDraftsPage 渲染
 
 import type { JSX } from "react";
 

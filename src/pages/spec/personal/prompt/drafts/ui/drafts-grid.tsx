@@ -1,18 +1,12 @@
 import type { JSX } from "react";
 
-import { DraftCard } from "./draft-card";
+import type { DraftVo } from "@/shared/lib/zod/schemas/prompt/draft";
 
-// 草稿列表项，由客户端 API 返回（updated_at 为 ISO 字符串）
-export type DraftItem = {
-	id: string;
-	name: string | null;
-	content: string;
-	updated_at: string;
-};
+import { DraftCard } from "./draft-card";
 
 type DraftsGridProps = {
 	// 当前页草稿列表
-	drafts: DraftItem[];
+	drafts: DraftVo[];
 };
 
 // # 草稿卡片网格：响应式布局，手机单列 / 平板两列 / 桌面三列
