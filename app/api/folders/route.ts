@@ -19,13 +19,12 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 		select: { id: true, name: true, color: true, resource_type: true },
 	});
 
-	// 直接返回数据库字段名，前端自行映射 UI 所需的 value/label
-	// 返回前经 Vo schema 校验，确保响应形状与前端类型一致
+	// 映射 DB 字段名到业务命名（resource_type → resourceType），返回前经 Vo schema 校验
 	const list = folders.map((f) => ({
 		id: f.id,
 		name: f.name,
 		color: f.color ?? undefined,
-		resource_type: f.resource_type,
+		resourceType: f.resource_type,
 	}));
 	const parsed = folderListVoSchema.safeParse(list);
 	if (!parsed.success) {
@@ -54,12 +53,12 @@ export const POST = withPersonal(async ({ req, session }) => {
 		select: { id: true, name: true, color: true, resource_type: true },
 	});
 
-	// 返回前经 Vo schema 校验，确保响应形状与前端类型一致
+	// 映射 DB 字段名到业务命名（resource_type → resourceType），返回前经 Vo schema 校验
 	const out = {
 		id: folder.id,
 		name: folder.name,
 		color: folder.color ?? undefined,
-		resource_type: folder.resource_type,
+		resourceType: folder.resource_type,
 	};
 	const result = folderOptionVoSchema.safeParse(out);
 	if (!result.success) {

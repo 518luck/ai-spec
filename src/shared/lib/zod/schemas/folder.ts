@@ -43,12 +43,12 @@ export const createFolderDtoSchema = z.object({
 export type CreateFolderDto = z.infer<typeof createFolderDtoSchema>;
 
 // @ 出参
-// 文件夹信息（返回数据库原始字段名，前端 UI 层自行映射 value/label）
+// 文件夹信息：resourceType 为业务命名，route 层负责从 DB 字段 resource_type 映射
 export const folderOptionVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	color: folderColorSchema,
-	resource_type: folderResourceTypeSchema.optional(),
+	resourceType: folderResourceTypeSchema.optional(),
 });
 
 // 文件夹信息类型
