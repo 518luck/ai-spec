@@ -8,6 +8,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { deleteTokenAction } from "@/server/actions/token/delete-token";
+import type { TokenVo } from "@/shared/lib/zod/schemas/token";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import {
 	DropdownMenu,
@@ -18,25 +19,10 @@ import {
 import { Icons } from "@/shared/ui/icons";
 import { EditKeyDialog } from "./edit-key-dialog";
 
-type TokenActionsProps = {
-	id: string;
-	name: string;
-	partialKey: string;
-	description: string | null;
-	scopes: string | null;
-	expires: Date | null;
-};
-
 // # 密钥行操作入口（客户端组件）
 // 「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
-export function TokenActions({
-	id,
-	name,
-	partialKey,
-	description,
-	scopes,
-	expires,
-}: TokenActionsProps): JSX.Element {
+export function TokenActions({ token }: { token: TokenVo }): JSX.Element {
+	const { id, name, partialKey } = token;
 	const router = useRouter();
 	// 确认弹窗的开关状态；点「删除」菜单项时打开
 	const [deleteOpen, setDeleteOpen] = useState(false);
@@ -113,11 +99,7 @@ export function TokenActions({
 				</div>
 			</ConfirmDialog>
 
-			<EditKeyDialog
-				open={editOpen}
-				onOpenChange={setEditOpen}
-				token={{ id, name, description, scopes, expires }}
-			/>
+			<EditKeyDialog open={editOpen} onOpenChange={setEditOpen} token={token} />
 		</>
 	);
 }

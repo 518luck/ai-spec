@@ -9,7 +9,7 @@ import { type JSX, useState } from "react";
 import { toast } from "sonner";
 import { updateTokenAction } from "@/server/actions/token/update-token";
 import type { ScopePresetValue } from "@/server/rbac/scopes";
-import { tokenNameSchema } from "@/shared/lib/zod/schemas/token";
+import { type TokenVo, tokenNameSchema } from "@/shared/lib/zod/schemas/token";
 import { Button } from "@/shared/ui/button";
 import {
 	Dialog,
@@ -30,19 +30,10 @@ import {
 	scopesToPreset,
 } from "./key-form-fields";
 
-// 编辑弹窗所需的最小密钥快照：id 标识更新目标，其余字段用于回填表单初值
-type EditableToken = {
-	id: string;
-	name: string;
-	description: string | null;
-	scopes: string | null;
-	expires: Date | null;
-};
-
 type EditKeyDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	token: EditableToken;
+	token: TokenVo;
 };
 
 // 由令牌的 expires 字段反推过期预设：null=永不过期，有值则统一归为 custom（编辑时无法还原当初是否为 7d/30d/90d，按具体日期展示最准确）

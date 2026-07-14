@@ -7,6 +7,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
 import { scopesToName } from "@/server/rbac/scopes";
+import type { TokenVo } from "@/shared/lib/zod/schemas/token";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
@@ -14,18 +15,8 @@ import { PAGE_SIZE } from "../config/constants";
 import { formatExpires } from "../lib/expires";
 import { TokenActions } from "./token-actions";
 
-// 单条密钥的展示字段（由服务端按页查询后传入，客户端只负责渲染）
-type TokenItem = {
-	id: string;
-	name: string;
-	description: string | null;
-	partial_key: string;
-	scopes: string | null;
-	expires: Date | null;
-};
-
 type KeysTableProps = {
-	tokens: TokenItem[];
+	tokens: TokenVo[];
 	// 当前页码（0-based，由 URL ?page=N 转换而来）
 	page: number;
 	// 密钥总条数（服务端 count 得到，用于分页栏计数与翻页边界）
@@ -75,7 +66,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 								</TableCell>
 								<TableCell>
 									<code className="block truncate font-mono text-muted-foreground text-xs">
-										{token.partial_key}
+										{token.partialKey}
 									</code>
 								</TableCell>
 								<TableCell>
@@ -87,14 +78,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 									{formatExpires(token.expires)}
 								</TableCell>
 								<TableCell className="pr-4">
-									<TokenActions
-										id={token.id}
-										name={token.name}
-										partialKey={token.partial_key}
-										description={token.description}
-										scopes={token.scopes}
-										expires={token.expires}
-									/>
+									<TokenActions token={token} />
 								</TableCell>
 							</TableRow>
 						))}

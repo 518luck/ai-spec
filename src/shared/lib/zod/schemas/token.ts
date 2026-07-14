@@ -56,6 +56,19 @@ export const createTokenVoSchema = z.object({
 // 创建令牌响应类型
 export type CreateTokenVo = z.infer<typeof createTokenVoSchema>;
 
+// 令牌列表项：服务端 select 后经命名转换；description/scopes 可空（scopes 为空格分隔串），expires 为 Date（null=永不过期）
+export const tokenVoSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	description: z.string().nullable(),
+	partialKey: partialKeySchema,
+	scopes: z.string().nullable(),
+	expires: z.date().nullable(),
+});
+
+// 令牌列表项类型
+export type TokenVo = z.infer<typeof tokenVoSchema>;
+
 // 删除令牌入参
 export const deleteTokenDtoSchema = z.object({
 	id: z.string().min(1, { error: "缺少令牌 id" }),
