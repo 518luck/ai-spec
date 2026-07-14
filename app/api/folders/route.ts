@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
-import { createFolderDtoSchema } from "@/shared/lib/zod/schemas/folder";
+import { createFolderDtoSchema, folderListVoSchema } from "@/shared/lib/zod/schemas/folder";
 
 // # 个人空间文件夹：列表查询与新建（team_id 始终为 null）
 
@@ -16,14 +16,19 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 	});
 
 	// 直接返回数据库字段名，前端自行映射 UI 所需的 value/label
-	return NextResponse.json(
-		folders.map((f) => ({
-			id: f.id,
-			name: f.name,
-			color: f.color ?? undefined,
-			resource_type: f.resource_type,
-		})),
-	);
+	// 返回前经 Vo schema 校验，确保响应形状与前端类型一致
+	const list = folders.map((f) => ({
+		id: f.id,
+		name: f.name,
+		color: f.color ?? undefined,
+		resource_type: f.resource_type,
+	}));
+	const parsed = folderListVoSchema.safeParse(list);
+	if (!parsed.success) {
+		throw parsed.error;
+	}
+
+	return NextResponse.json(parsed.data);
 });
 
 // 在个人空间新建文件夹

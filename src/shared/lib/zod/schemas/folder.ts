@@ -56,3 +56,6 @@ export type FolderOptionVo = z.infer<typeof folderOptionVoSchema>;
 
 // 文件夹列表响应
 export const folderListVoSchema = z.array(folderOptionVoSchema);
+
+// 文件夹列表响应类型
+export type FolderListVo = z.infer<typeof folderListVoSchema>;
