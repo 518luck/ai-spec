@@ -1,7 +1,7 @@
 "use server";
 
 import { flattenValidationErrors } from "next-safe-action";
-import * as z from "zod";
+import * as z from "zod/v4";
 import { actionClient } from "@/server/actions/safe-action";
 import { ActionError } from "@/server/errors/action-error";
 import { sendEmail } from "@/server/infrastructure/email";
