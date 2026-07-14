@@ -9,7 +9,9 @@ export default async function Page({
 }: {
 	searchParams: Promise<{ query?: string; sort?: string; folderId?: string }>;
 }) {
-	// 用 Zod 校验 searchParams：合法值保留，非法值丢弃（sort 非 created/updated 时变 undefined）
-	const { query, sort, folderId } = listDraftsDtoSchema.parse(searchParams);
+	// Next.js 15 的 searchParams 是 Promise，必须先 await 再校验
+	const sp = await searchParams;
+	// 用 Zod 校验：合法值保留，非法值（如 ?sort=xxx）校验失败直接抛错
+	const { query, sort, folderId } = listDraftsDtoSchema.parse(sp);
 	return <PersonalDraftsPage query={query?.trim() || undefined} sort={sort} folderId={folderId} />;
 }
