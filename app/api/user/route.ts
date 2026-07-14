@@ -6,7 +6,7 @@ import { uploadUserAvatar } from "@/server/infrastructure/storage";
 import { withSession } from "@/server/middleware/with-session";
 import prisma from "@/shared/db";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
-import { updateUserSchema } from "@/shared/lib/zod/schemas/user";
+import { updateUserDtoSchema } from "@/shared/lib/zod/schemas/user";
 
 // 用户资料更新路由的专用日志作用域，自动注入 module 字段
 const log = createLogger("user-route");
@@ -15,7 +15,7 @@ const log = createLogger("user-route");
 
 // ! email 改动走验证邮件流程，不在本接口直接写库；真正写库由 confirm-email-change 页面完成
 export const PATCH = withSession(async ({ req, session }) => {
-	const parsed = updateUserSchema.safeParse(await req.json());
+	const parsed = updateUserDtoSchema.safeParse(await req.json());
 	if (!parsed.success) {
 		throw parsed.error;
 	}

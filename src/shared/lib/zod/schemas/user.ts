@@ -23,7 +23,7 @@ export const defaultWorkspaceIdSchema = z.string().min(1);
 
 // @ 入参
 // 用户资料部分更新入参：四字段全可选，至少提交一个
-export const updateUserSchema = z
+export const updateUserDtoSchema = z
 	.object({
 		name: userNameSchema.optional(),
 		email: emailSchema.optional(),
