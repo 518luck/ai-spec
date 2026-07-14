@@ -82,6 +82,8 @@ draftVoSchema + DraftVo;
 - 后端 route handler / server action 是唯一权威防线，必须用 Dto schema 校验。
 - 前端 UI 在提交前预校验：React Hook Form 用 `zodResolver`，简单输入用 `safeParse` + toast。
 - 前端 API 客户端（`entities/*/api`）只负责传输，不做权威校验，但**入参/出参类型必须从 Dto/Vo schema 派生**，不得手写参数类型或手写替代校验逻辑。
+- 出参（响应体）必须经 Vo schema 校验后再返回，不要直接返回裸数据。
+- 例外：RSC 直查不经 API 端点、无响应体，其 Vo schema 可仅作前端类型来源，不视为死 schema。
 
 ## 边界约束
 
