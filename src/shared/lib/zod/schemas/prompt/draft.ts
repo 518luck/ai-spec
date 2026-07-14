@@ -30,7 +30,7 @@ export const createDraftDtoSchema = z.object({
 	name: draftNameSchema,
 	content: draftContentSchema,
 	images: draftImagesSchema,
-	folder_id: draftFolderIdSchema,
+	folderId: draftFolderIdSchema,
 });
 
 // 创建草稿入参类型
@@ -59,16 +59,11 @@ export const createDraftVoSchema = z.object({
 export type CreateDraftVo = z.infer<typeof createDraftVoSchema>;
 
 // @ 出参 - 列表
-// 草稿列表项（字段集与 createDraftVoSchema 一致）
-export const draftVoSchema = z.object({
-	id: z.string(),
-	name: z.string().nullable(),
-	content: z.string(),
-	updated_at: z.iso.datetime(),
-});
+// 草稿列表项：形状与 createDraftVoSchema 一致，复用同一 schema 避免重复
+export const draftVoSchema = createDraftVoSchema;
 
 // 草稿列表项类型
-export type DraftVo = z.infer<typeof draftVoSchema>;
+export type DraftVo = CreateDraftVo;
 
 // 草稿列表响应（分页元信息 + 数据）
 export const draftListVoSchema = z.object({

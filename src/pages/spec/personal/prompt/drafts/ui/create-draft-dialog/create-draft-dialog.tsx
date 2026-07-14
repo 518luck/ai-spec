@@ -214,7 +214,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		const parsed = createDraftDtoSchema.safeParse({
 			name: content.split("\n")[0]?.trim() || undefined,
 			content,
-			folder_id: folderId,
+			folderId,
 		});
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请输入草稿内容");
