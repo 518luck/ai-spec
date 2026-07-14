@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import type * as z from "zod/v4";
 import { sendOtpAction } from "@/server/actions/auth/send-otp";
 import { useMediaQuery } from "@/shared/hooks";
-import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
+import { signUpDtoSchema } from "@/shared/lib/zod/schemas/auth";
 import { Button } from "@/shared/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Icons } from "@/shared/ui/icons";
@@ -16,7 +16,7 @@ import { Input } from "@/shared/ui/input";
 import { useRegisterContext } from "../model/register-context";
 import { PasswordRequirements } from "./password-requirements";
 
-type SignUpProps = z.infer<typeof signUpSchema>;
+type SignUpProps = z.infer<typeof signUpDtoSchema>;
 
 // # 邮箱注册表单：先输邮箱再展开密码框，提交后发送 OTP 进入验证步骤
 export function SignUpEmail() {
@@ -31,7 +31,7 @@ export function SignUpEmail() {
 		defaultValues: {
 			email,
 		},
-		resolver: zodResolver(signUpSchema),
+		resolver: zodResolver(signUpDtoSchema),
 	});
 
 	const {

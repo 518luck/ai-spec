@@ -9,7 +9,7 @@ import { skipAuthThrottling } from "@/server/infrastructure/environment";
 import { hardDailyRatelimit } from "@/server/infrastructure/redis/reatlimit";
 import prisma from "@/shared/db";
 import { hashPassword } from "@/shared/lib/utils";
-import { signUpSchema } from "@/shared/lib/zod/schemas/auth";
+import { signUpDtoSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
 // # 创建用户账户 Action：通过邮箱验证码校验注册请求，完成账户创建
@@ -17,7 +17,7 @@ import { throwIfAuthenticated } from "./throw-if-authenticated";
 // 每次注册尝试消耗的限流积分
 const OTP_ATTEMPTS = 2;
 
-const schema = signUpSchema.extend({
+const schema = signUpDtoSchema.extend({
 	code: z.string().min(6, "OTP must be 6 characters long."),
 });
 

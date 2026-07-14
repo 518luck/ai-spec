@@ -18,7 +18,7 @@ import {
 	recordInvalidLoginAttempt,
 } from "@/shared/lib/auth/lock-account";
 import { validatePassword } from "@/shared/lib/utils";
-import { signInSchema } from "@/shared/lib/zod/schemas/auth";
+import { signInDtoSchema } from "@/shared/lib/zod/schemas/auth";
 import { isProd } from "./constants";
 
 // # NextAuth 配置中心：session 策略、providers、cookie、callbacks、events
@@ -46,7 +46,7 @@ export const authOptions: NextAuthConfig = {
 			},
 			// > 邮箱密码登录验证流程：限流 → 查用户 → 锁定检查 → 密码校验
 			authorize: async (credentials) => {
-				const { email, password } = signInSchema.parse(credentials);
+				const { email, password } = signInDtoSchema.parse(credentials);
 
 				// > 没有启用跳过认证限流时，对登录尝试限流（每分钟最多 5 次）
 				if (!skipAuthThrottling) {

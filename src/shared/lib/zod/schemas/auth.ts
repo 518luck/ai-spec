@@ -21,13 +21,13 @@ export const passwordSchema = z
 
 // @ 入参
 // 注册入参
-export const signUpSchema = z.object({
+export const signUpDtoSchema = z.object({
 	email: emailSchema,
 	password: passwordSchema,
 });
 
 // 登录凭据校验
-export const signInSchema = z.object({
+export const signInDtoSchema = z.object({
 	email: emailSchema,
 	password: z.string().min(1, "请输入密码"),
 });
