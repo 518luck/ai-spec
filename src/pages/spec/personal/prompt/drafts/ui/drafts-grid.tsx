@@ -2,12 +2,12 @@ import type { JSX } from "react";
 
 import { DraftCard } from "./draft-card";
 
-// 草稿列表项，由服务端查询后传入
+// 草稿列表项，由客户端 API 返回（updated_at 为 ISO 字符串）
 export type DraftItem = {
 	id: string;
 	name: string | null;
 	content: string;
-	updated_at: Date;
+	updated_at: string;
 };
 
 type DraftsGridProps = {

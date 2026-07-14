@@ -20,8 +20,8 @@ type DraftCardProps = {
 	name: string | null;
 	// 草稿正文
 	content: string;
-	// 更新时间，展示相对时间
-	updatedAt: Date;
+	// 更新时间（ISO 字符串），展示相对时间
+	updatedAt: string;
 };
 
 // # 草稿卡片：内容预览 + 时间 + 复制/更多操作

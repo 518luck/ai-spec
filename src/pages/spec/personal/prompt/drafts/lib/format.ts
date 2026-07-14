@@ -9,7 +9,7 @@ dayjs.extend(relativeTime);
 dayjs.locale("zh-cn");
 
 // # 草稿展示格式化工具：相对时间、标题回退、内容截断
-export const formatRelativeTime = (date: Date): string => {
+export const formatRelativeTime = (date: string): string => {
 	const diffDays = dayjs().diff(dayjs(date), "day");
 	if (diffDays > 30) {
 		return dayjs(date).format("YYYY-MM-DD");

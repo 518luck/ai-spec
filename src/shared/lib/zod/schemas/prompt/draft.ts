@@ -47,3 +47,24 @@ export const createDraftVoSchema = z.object({
 
 // 创建草稿响应类型
 export type CreateDraftVo = z.infer<typeof createDraftVoSchema>;
+
+// @ 出参 - 列表
+// 草稿列表项（字段集与 createDraftVoSchema 一致）
+export const draftVoSchema = z.object({
+	id: z.string(),
+	name: z.string().nullable(),
+	content: z.string(),
+	updated_at: z.iso.datetime(),
+});
+
+// 草稿列表项类型
+export type DraftVo = z.infer<typeof draftVoSchema>;
+
+// 草稿列表响应（分页元信息 + 数据）
+export const draftListVoSchema = z.object({
+	data: z.array(draftVoSchema),
+	total: z.number(),
+});
+
+// 草稿列表响应类型
+export type DraftListVo = z.infer<typeof draftListVoSchema>;

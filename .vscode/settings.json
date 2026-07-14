@@ -1,5 +1,5 @@
 {
-	"editor.fontSize": 12, // 字体大小
+	"editor.fontSize": 14, // 字体大小
 	"editor.defaultFormatter": "biomejs.biome", // 默认格式化器：所有文件（含 SVG）都用 Biome 格式化
 	"editor.formatOnSave": true, // 保存时自动格式化：按 biome.jsonc 规则整理缩进/空格/引号等
 	"editor.codeActionsOnSave": {
@@ -46,5 +46,6 @@
 	"[markdown]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode",
 		"editor.formatOnSave": true
-	}
+	},
+	"biome.lsp.bin": "${workspaceFolder}/node_modules/@biomejs/biome/bin/biome"
 }

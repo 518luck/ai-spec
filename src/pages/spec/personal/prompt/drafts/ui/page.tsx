@@ -1,12 +1,15 @@
-import type { JSX } from "react";
+"use client";
 
-import prisma from "@/shared/db";
-import { auth } from "@/shared/lib/auth/auth";
+import { useSession } from "next-auth/react";
+import type { JSX } from "react";
+import useSWR from "swr";
+
+import { getDrafts } from "@/entities/prompt";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { Spinner } from "@/shared/ui/spinner";
 import { EmptyState } from "@/widgets/empty-state";
 import { ToolbarPageShell } from "@/widgets/page-shell";
-import { DEFAULT_SORT, PAGE_SIZE } from "../config/draft-list";
 import { CreateDraftButton } from "./create-draft-button";
 import { DraftFolderFilter } from "./draft-folder-filter";
 import { type DraftItem, DraftsGrid } from "./drafts-grid";
@@ -21,19 +24,23 @@ type PersonalDraftsPageProps = {
 	folderId?: string;
 };
 
-// # 个人草稿页：按搜索/排序/文件夹查询当前用户草稿（服务端分页），未登录走空状态
-export async function PersonalDraftsPage({
+// # 个人草稿页：SWR 拉 GET /api/prompt/drafts，搜索/排序/文件夹变化自动重新请求
+export function PersonalDraftsPage({
 	query,
 	sort,
 	folderId,
-}: PersonalDraftsPageProps): Promise<JSX.Element> {
-	const session = await auth();
-	const userId = session?.user.id;
+}: PersonalDraftsPageProps): JSX.Element {
+	const { status } = useSession();
 
-	// 已登录才查数据库；未登录时 drafts 为空，直接走空状态分支
-	const { drafts, total } = userId
-		? await loadDrafts(userId, query, sort, folderId)
-		: { drafts: [] as DraftItem[], total: 0 };
+	// SWR key 含 query/sort/folderId，任一变化自动重拉；未登录时不发请求
+	const { data, isLoading } = useSWR(
+		status === "authenticated" ? ["drafts", query, sort, folderId] : null,
+		([, q, s, f]: readonly [string, string, string, string | undefined]) =>
+			getDrafts({ query: q, sort: s, folder: f }),
+	);
+
+	const drafts = (data?.data ?? []) as DraftItem[];
+	const total = data?.total ?? 0;
 
 	return (
 		<ToolbarPageShell
@@ -41,63 +48,17 @@ export async function PersonalDraftsPage({
 			help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
 			filter={<DraftFolderFilter />}
 			// TODO: 后面需要做弹窗处理，用户没有登录的时候给一个登录引导
-			actions={userId ? <CreateDraftButton /> : undefined}
+			actions={status === "authenticated" ? <CreateDraftButton /> : undefined}
 		>
-			{total === 0 ? (
+			{isLoading ? (
+				<div className="flex justify-center py-20">
+					<Spinner className="size-6" />
+				</div>
+			) : total === 0 ? (
 				<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
 			) : (
 				<DraftsGrid drafts={drafts} />
 			)}
 		</ToolbarPageShell>
 	);
-}
-
-// 按搜索/排序/文件夹查询当前用户的草稿，返回当前页切片与总数
-async function loadDrafts(
-	userId: string,
-	query: string,
-	sort: string,
-	folderId?: string,
-): Promise<{ drafts: DraftItem[]; total: number }> {
-	// 组合查询条件：owner_id 必有；有搜索词时加模糊匹配；有文件夹时加 folder_id 筛选
-	const where = {
-		owner_id: userId,
-		...(folderId && { folder_id: folderId }),
-		...(query.trim() && {
-			OR: [
-				{ name: { contains: query, mode: "insensitive" as const } },
-				{ content: { contains: query, mode: "insensitive" as const } },
-			],
-		}),
-	};
-
-	// 排序映射：updated→按更新时间倒序，created→按创建时间倒序
-	const orderBy =
-		sort === "created" ? { created_at: "desc" as const } : { updated_at: "desc" as const };
-
-	// > findMany 取当前页草稿、count 取总数，两者无依赖并行查询以减少等待
-	const [rows, total] = await Promise.all([
-		prisma.promptDraft.findMany({
-			where,
-			orderBy,
-			take: PAGE_SIZE,
-			select: {
-				id: true,
-				name: true,
-				content: true,
-				updated_at: true,
-			},
-		}),
-		prisma.promptDraft.count({ where }),
-	]);
-
-	// 序列化为可安全传递给客户端组件的格式
-	const drafts: DraftItem[] = rows.map((row) => ({
-		id: row.id,
-		name: row.name,
-		content: row.content,
-		updated_at: row.updated_at,
-	}));
-
-	return { drafts, total };
 }
