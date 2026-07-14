@@ -36,7 +36,7 @@ export const createFolderDtoSchema = z.object({
 	name: folderNameSchema,
 	description: folderDescriptionSchema,
 	color: folderColorSchema,
-	resource_type: folderResourceTypeSchema,
+	resourceType: folderResourceTypeSchema,
 });
 
 // 创建文件夹入参类型

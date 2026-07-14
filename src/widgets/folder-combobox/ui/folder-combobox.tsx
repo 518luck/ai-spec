@@ -120,7 +120,7 @@ export function FolderCombobox({
 
 	const selectedOption = folders.find((opt) => opt.value === value);
 
-	// > 创建文件夹：全量 Dto schema 校验（含 resource_type），成功后追加到列表、选中并关闭弹层
+	// > 创建文件夹：全量 Dto schema 校验（含 resourceType），成功后追加到列表、选中并关闭弹层
 	const handleCreate = async (input: {
 		name: string;
 		description?: string;
@@ -128,7 +128,7 @@ export function FolderCombobox({
 	}): Promise<void> => {
 		const parsed = createFolderDtoSchema.safeParse({
 			...input,
-			resource_type: resourceType,
+			resourceType,
 		});
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "创建文件夹失败");
@@ -139,7 +139,7 @@ export function FolderCombobox({
 				name: parsed.data.name,
 				description: parsed.data.description,
 				color: parsed.data.color ?? undefined,
-				resourceType: parsed.data.resource_type,
+				resourceType: parsed.data.resourceType,
 			});
 			// 创建成功后刷新缓存（替代手动 setFolders），让新文件夹出现在列表里
 			await refetchFolders();

@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
-import { createFolderDtoSchema, folderListVoSchema } from "@/shared/lib/zod/schemas/folder";
+import {
+	createFolderDtoSchema,
+	folderListVoSchema,
+	folderOptionVoSchema,
+} from "@/shared/lib/zod/schemas/folder";
 
 // # 个人空间文件夹：列表查询与新建（team_id 始终为 null）
 
@@ -43,20 +47,24 @@ export const POST = withPersonal(async ({ req, session }) => {
 			name: parsed.data.name,
 			description: parsed.data.description || null,
 			color: parsed.data.color || null,
-			resource_type: parsed.data.resource_type,
+			resource_type: parsed.data.resourceType,
 			owner_id: session.user.id,
 			team_id: null,
 		},
 		select: { id: true, name: true, color: true, resource_type: true },
 	});
 
-	return NextResponse.json(
-		{
-			id: folder.id,
-			name: folder.name,
-			color: folder.color ?? undefined,
-			resource_type: folder.resource_type,
-		},
-		{ status: 201 },
-	);
+	// 返回前经 Vo schema 校验，确保响应形状与前端类型一致
+	const out = {
+		id: folder.id,
+		name: folder.name,
+		color: folder.color ?? undefined,
+		resource_type: folder.resource_type,
+	};
+	const result = folderOptionVoSchema.safeParse(out);
+	if (!result.success) {
+		throw result.error;
+	}
+
+	return NextResponse.json(result.data, { status: 201 });
 });

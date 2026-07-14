@@ -1,7 +1,11 @@
 // # 文件夹 API：查询与新建文件夹，统一走 resolveErrorMessage 解析后端错误体
 
 import { resolveErrorMessage } from "@/entities/lib/fetch-error";
-import type { FolderListVo, FolderOptionVo } from "@/shared/lib/zod/schemas/folder";
+import type {
+	CreateFolderDto,
+	FolderListVo,
+	FolderOptionVo,
+} from "@/shared/lib/zod/schemas/folder";
 
 // > 获取当前用户的文件夹列表（GET /api/folders），按资源类型过滤；非 2xx 时解析后端统一错误体并抛出
 export const getFolders = async (type: string): Promise<FolderListVo> => {
@@ -18,16 +22,11 @@ export const createFolder = async ({
 	description,
 	color,
 	resourceType,
-}: {
-	name: string;
-	description?: string;
-	color?: string;
-	resourceType: string;
-}): Promise<FolderOptionVo> => {
+}: CreateFolderDto): Promise<FolderOptionVo> => {
 	const response = await fetch("/api/folders", {
 		method: "POST",
 		headers: { "Content-Type": "application/json" },
-		body: JSON.stringify({ name, description, color, resource_type: resourceType }),
+		body: JSON.stringify({ name, description, color, resourceType }),
 	});
 	if (!response.ok) {
 		throw new Error(await resolveErrorMessage(response));
