@@ -115,9 +115,7 @@ export function EditorToolbar({
 			style={{ background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` }}
 		>
 			{/* 标题 */}
-			<span
-				className={`truncate font-semibold text-base ${isExpanded ? "max-w-[40%]" : "max-w-[20%]"}`}
-			>
+			<span className={`truncate font-semibold text-base ${isExpanded ? "w-64" : "w-32"}`}>
 				{title}
 			</span>
 
