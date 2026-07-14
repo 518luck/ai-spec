@@ -9,7 +9,7 @@ import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { type JSX, useMemo, useRef, useState } from "react";
+import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createDraft } from "@/entities/prompt";
 import { useLocalStorage } from "@/shared/hooks";
@@ -64,11 +64,13 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	const [isPreview, setIsPreview] = useState(false);
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
 
-	// 文件夹归属：初始值从 URL ?folderId=xxx 读取（和导航栏筛选同步），用户在弹窗内可自由修改
+	// 文件夹归属：弹窗打开时从 URL ?folderId=xxx 同步（和导航栏筛选同步），用户在弹窗内可自由修改
 	const searchParams = useSearchParams();
-	const [folderId, setFolderId] = useState<string | undefined>(
-		searchParams?.get("folderId") ?? undefined,
-	);
+	const [folderId, setFolderId] = useState<string | undefined>(undefined);
+	// 弹窗打开时从 URL 读取最新的 folderId（组件始终挂载，useState 初始值只在首次执行，需手动同步）
+	useEffect(() => {
+		if (open) setFolderId(searchParams?.get("folderId") ?? undefined);
+	}, [open, searchParams]);
 
 	// > 编辑器偏好：持久化到 localStorage，刷新后自动恢复
 	const [activeTools, setActiveTools] = useLocalStorage<string[]>("draft.toolbar", [

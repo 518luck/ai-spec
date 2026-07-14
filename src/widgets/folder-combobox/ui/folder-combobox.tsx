@@ -143,6 +143,7 @@ export function FolderCombobox({
 			});
 			// 创建成功后刷新缓存（替代手动 setFolders），让新文件夹出现在列表里
 			await refetchFolders();
+			// 自动选中新文件夹：受控模式走 onChange 回调，URL 模式走 router.replace
 			handleChange(created.id);
 			setOpen(false);
 			setCreateDialogOpen(false);
