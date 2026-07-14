@@ -34,3 +34,15 @@ export const updateUserDtoSchema = z
 
 // 用户资料部分更新入参类型
 export type UpdateUserDto = z.infer<typeof updateUserDtoSchema>;
+
+// @ 出参
+// 用户资料响应：id、名称、邮箱、头像 URL（image 可空）
+export const userVoSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	email: z.string(),
+	image: z.string().nullable(),
+});
+
+// 用户资料响应类型
+export type UserVo = z.infer<typeof userVoSchema>;

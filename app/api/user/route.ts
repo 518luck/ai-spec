@@ -6,7 +6,7 @@ import { uploadUserAvatar } from "@/server/infrastructure/storage";
 import { withSession } from "@/server/middleware/with-session";
 import prisma from "@/shared/db";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
-import { updateUserDtoSchema } from "@/shared/lib/zod/schemas/user";
+import { updateUserDtoSchema, userVoSchema } from "@/shared/lib/zod/schemas/user";
 
 // 用户资料更新路由的专用日志作用域，自动注入 module 字段
 const log = createLogger("user-route");
@@ -87,5 +87,11 @@ export const PATCH = withSession(async ({ req, session }) => {
 		});
 	}
 
-	return NextResponse.json(updated);
+	// 返回前经 Vo schema 校验，确保响应形状与前端类型一致
+	const result = userVoSchema.safeParse(updated);
+	if (!result.success) {
+		throw result.error;
+	}
+
+	return NextResponse.json(result.data);
 });

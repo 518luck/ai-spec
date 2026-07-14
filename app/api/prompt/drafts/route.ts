@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import { PAGE_SIZE } from "@/pages/spec/personal/prompt/drafts/config/draft-list";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
-import { createDraftDtoSchema, listDraftsDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import {
+	createDraftDtoSchema,
+	createDraftVoSchema,
+	draftListVoSchema,
+	listDraftsDtoSchema,
+} from "@/shared/lib/zod/schemas/prompt/draft";
 
 // # 提示词草稿：列表查询 + 创建（API Key 接入需 promptDraft.read / .write 权限）
 
@@ -34,7 +39,7 @@ export const GET = withPersonal(
 			sort === "created" ? { created_at: "desc" as const } : { updated_at: "desc" as const };
 
 		// findMany 取当前页草稿、count 取总数，两者无依赖并行查询以减少等待
-		const [data, total] = await Promise.all([
+		const [rows, total] = await Promise.all([
 			prisma.promptDraft.findMany({
 				where,
 				orderBy,
@@ -44,7 +49,14 @@ export const GET = withPersonal(
 			prisma.promptDraft.count({ where }),
 		]);
 
-		return NextResponse.json({ data, total });
+		// updated_at 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
+		const list = rows.map((r) => ({ ...r, updated_at: r.updated_at.toISOString() }));
+		const voResult = draftListVoSchema.safeParse({ data: list, total });
+		if (!voResult.success) {
+			throw voResult.error;
+		}
+
+		return NextResponse.json(voResult.data);
 	},
 	{ permissions: ["promptDraft.read"] },
 );
@@ -74,7 +86,14 @@ export const POST = withPersonal(
 			},
 		});
 
-		return NextResponse.json(draft, { status: 201 });
+		// updated_at 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
+		const out = { ...draft, updated_at: draft.updated_at.toISOString() };
+		const result = createDraftVoSchema.safeParse(out);
+		if (!result.success) {
+			throw result.error;
+		}
+
+		return NextResponse.json(result.data, { status: 201 });
 	},
 	{ permissions: ["promptDraft.write"] },
 );
