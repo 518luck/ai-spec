@@ -13,7 +13,7 @@ export function HoverOverlay({ children, className }: HoverOverlayProps): ReactN
 	return (
 		<div
 			className={cn(
-				"pointer-events-auto absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 pt-2 backdrop-blur-[1px]",
+				"pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-end gap-1 bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 pt-2 opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100",
 				className,
 			)}
 		>
