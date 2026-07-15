@@ -68,15 +68,15 @@ export function DraftCard({ id, name, content }: DraftCardProps): JSX.Element {
 				{preview || "（无内容）"}
 			</p>
 
-			{/* // > 底部操作遮罩：hover 卡片时淡入显示查看/更多操作（点击卡片即可复制） */}
+			{/* // > 底部操作遮罩：hover 卡片时淡入显示编辑/更多操作（点击卡片即可复制） */}
 			<HoverOverlay className="z-10">
 				<Button
 					variant="ghost"
 					size="icon-sm"
-					aria-label="查看"
-					onClick={() => toast.info("查看功能即将上线")}
+					aria-label="编辑"
+					onClick={() => toast.info("编辑功能即将上线")}
 				>
-					<Icons.eye className="size-4" />
+					<Icons.pencil className="size-4" />
 				</Button>
 				<DraftActions id={id} />
 			</HoverOverlay>
