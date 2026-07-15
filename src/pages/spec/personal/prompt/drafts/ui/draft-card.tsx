@@ -40,7 +40,7 @@ export function DraftCard({ id, name, content, updatedAt }: DraftCardProps): JSX
 	};
 
 	return (
-		<div className="group relative flex flex-col gap-3 rounded-lg border bg-card p-4 transition-colors hover:bg-accent/30">
+		<div className="group relative flex aspect-4/3 flex-col gap-3 overflow-hidden rounded-lg border bg-card p-4 transition-colors hover:bg-accent/30">
 			{/* 标题行：标题 + 更多操作 */}
 			<div className="flex items-start justify-between gap-2">
 				<h3 className="line-clamp-2 flex-1 font-medium text-sm leading-snug">{title}</h3>
