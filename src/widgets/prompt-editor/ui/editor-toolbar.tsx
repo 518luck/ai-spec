@@ -1,5 +1,5 @@
 "use client";
-// # 草稿编辑器顶部导航栏 —— 标题 + 快捷工具栏 + 更多操作下拉 + 主题切换 + 放大
+// # 编辑器顶部导航栏 —— 标题 + 快捷工具栏 + 更多操作下拉 + 主题切换 + 放大
 
 import { AnimatePresence, Reorder } from "motion/react";
 import type { JSX } from "react";
@@ -24,7 +24,7 @@ import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { FolderCombobox } from "@/widgets/folder-combobox";
-import { EDITOR_THEMES, MENU_GROUPS, type MenuItem } from "../../config/editor-dialog";
+import { EDITOR_THEMES, MENU_GROUPS, type MenuItem } from "../config/editor";
 
 // 编辑器展示状态 + 主题/展开回调：状态与其对应回调同组，方便后续扩展（如版本处理）
 export type EditorState = {

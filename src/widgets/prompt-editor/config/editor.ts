@@ -1,4 +1,4 @@
-// # 草稿编辑器配置 —— 主题、菜单分组、格式化操作的集中定义
+// # 编辑器配置 —— 主题、菜单分组、格式化操作的集中定义
 
 import { basicDark, basicLight } from "@uiw/codemirror-theme-basic";
 import { duotoneDark, duotoneLight } from "@uiw/codemirror-theme-duotone";

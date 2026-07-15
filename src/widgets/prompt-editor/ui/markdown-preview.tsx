@@ -7,7 +7,7 @@ import remarkGfm from "remark-gfm";
 
 import { ScrollArea } from "@/shared/ui/scroll-area";
 
-type DraftPreviewProps = {
+type MarkdownPreviewProps = {
 	// Markdown 源文本
 	content: string;
 	// 预览区域高度：与弹窗 motion.div 的 height 一致（减去导航栏 h-12 = 3rem）
@@ -15,7 +15,7 @@ type DraftPreviewProps = {
 };
 
 // # Markdown 预览：GFM 语法 + 代码高亮 + 标题锚点
-export function DraftPreview({ content, height }: DraftPreviewProps): JSX.Element {
+export function MarkdownPreview({ content, height }: MarkdownPreviewProps): JSX.Element {
 	return (
 		<ScrollArea style={{ height, maxHeight: height }}>
 			<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent p-4 pt-12">
