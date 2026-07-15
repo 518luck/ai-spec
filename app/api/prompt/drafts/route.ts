@@ -22,10 +22,10 @@ export const GET = withPersonal(
 		const { query, sort, folderId } = parsed.data;
 		const trimmedQuery = query?.trim() ?? "";
 
-		// 组合查询条件：ownerId 必有；有文件夹时加 folderId 筛选；有搜索词时加模糊匹配
+		// 组合查询条件：ownerId 必有；选了文件夹按 folderId 筛选，未选则只看未分类（folderId 为 null）
 		const where = {
 			ownerId: session.user.id,
-			...(folderId && { folderId }),
+			folderId: folderId || null,
 			...(trimmedQuery && {
 				OR: [
 					{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
