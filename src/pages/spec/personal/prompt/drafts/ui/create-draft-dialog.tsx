@@ -2,10 +2,10 @@
 // # 草稿创建弹窗 —— 薄包装，注入草稿专属的保存逻辑（SWR mutation + schema 校验）
 
 import type { JSX } from "react";
-import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
 import { createDraft } from "@/entities/prompt";
+import { toast } from "@/features/toast";
 import {
 	type CreateDraftDto,
 	type CreateDraftVo,

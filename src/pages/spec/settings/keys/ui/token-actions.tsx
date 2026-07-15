@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import type { JSX } from "react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 
 import { deleteTokenAction } from "@/server/actions/token/delete-token";
 import type { TokenVo } from "@/shared/lib/zod/schemas/token";

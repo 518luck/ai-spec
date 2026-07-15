@@ -1,7 +1,7 @@
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 import { createUserAccountAction } from "@/server/actions/auth/create-user-account";
 import { useMediaQuery } from "@/shared/hooks";
 import { Button } from "@/shared/ui/button";

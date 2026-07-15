@@ -4,8 +4,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction } from "next-safe-action/hooks"; // 把 server action 变成客户端可调用的 hook
 import { type SubmitEvent, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
-import { toast } from "sonner";
 import type * as z from "zod/v4";
+import { toast } from "@/features/toast";
 import { sendOtpAction } from "@/server/actions/auth/send-otp";
 import { useMediaQuery } from "@/shared/hooks";
 import { signUpDtoSchema } from "@/shared/lib/zod/schemas/auth";

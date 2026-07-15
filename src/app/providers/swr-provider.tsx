@@ -3,8 +3,8 @@
 // # SWR 全局配置：统一所有 useSWR 的默认行为（错误 toast 去重、允许有限重试）
 
 import type { ReactNode } from "react";
-import { toast } from "sonner";
 import { SWRConfig } from "swr";
+import { toast } from "@/features/toast";
 
 // > 用 SWR key 序列化作为 toast id：同一请求重试期间只保持一个提示，不同请求互不干扰
 const toastIdOf = (key: unknown): string => `swr-error:${JSON.stringify(key)}`;

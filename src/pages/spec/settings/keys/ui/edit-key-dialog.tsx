@@ -6,7 +6,7 @@
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 import { updateTokenAction } from "@/server/actions/token/update-token";
 import type { ScopePresetValue } from "@/server/rbac/scopes";
 import { type TokenVo, tokenNameSchema } from "@/shared/lib/zod/schemas/token";

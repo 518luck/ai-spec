@@ -10,17 +10,19 @@ const copyToastText = (text: string) => {
 	rawToast.success("已复制", { duration: 1500 });
 };
 
-// 封装每种类型，自动注入复制按钮
+// > 封装每种类型，自动注入复制按钮；message 允许 undefined（和 sonner 原版一致）
 const createTypedToast =
 	(type: "success" | "error" | "warning" | "info" | "loading") =>
-	(message: string, options?: Record<string, unknown>) =>
-		rawToast[type](message, {
+	(message?: string, options?: Record<string, unknown>) => {
+		const text = message ?? "";
+		return rawToast[type](text, {
 			...options,
 			action: {
 				label: "复制",
-				onClick: () => copyToastText(message),
+				onClick: () => copyToastText(text),
 			},
 		});
+	};
 
 export const toast = {
 	success: createTypedToast("success"),
@@ -28,12 +30,16 @@ export const toast = {
 	warning: createTypedToast("warning"),
 	info: createTypedToast("info"),
 	loading: createTypedToast("loading"),
-	message: (message: string, options?: Record<string, unknown>) =>
-		rawToast(message, {
+	message: (message?: string, options?: Record<string, unknown>) => {
+		const text = message ?? "";
+		return rawToast(text, {
 			...options,
 			action: {
 				label: "复制",
-				onClick: () => copyToastText(message),
+				onClick: () => copyToastText(text),
 			},
-		}),
+		});
+	},
+	// 透传 sonner 原生方法（不需要复制按钮的）
+	dismiss: rawToast.dismiss,
 };

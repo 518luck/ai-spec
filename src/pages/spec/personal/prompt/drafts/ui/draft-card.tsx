@@ -1,7 +1,7 @@
 "use client";
 
 import type { JSX } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 
 import { Button } from "@/shared/ui/button";
 import {

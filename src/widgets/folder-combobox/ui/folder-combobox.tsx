@@ -4,10 +4,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import useSWR from "swr";
-
 import { createFolder, getFolders } from "@/entities/folder/api/folder";
+import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import { createFolderDtoSchema } from "@/shared/lib/zod/schemas/folder";

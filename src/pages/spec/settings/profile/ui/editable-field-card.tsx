@@ -2,7 +2,7 @@
 
 import type { JSX, KeyboardEvent, ReactNode } from "react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 
 import { Button } from "@/shared/ui/button";
 import { Card, CardTitle } from "@/shared/ui/card";

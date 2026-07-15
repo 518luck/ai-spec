@@ -1,6 +1,6 @@
 import { useAction } from "next-safe-action/hooks";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 import { sendOtpAction } from "@/server/actions/auth/send-otp";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";

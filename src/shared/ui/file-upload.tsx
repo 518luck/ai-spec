@@ -6,7 +6,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import Image from "next/image";
 import type { DragEvent, ReactNode } from "react";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 import { cn } from "@/shared/lib/utils";
 
 import type { Icon } from "@/shared/ui/icons";

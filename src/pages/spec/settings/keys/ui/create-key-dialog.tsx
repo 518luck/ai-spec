@@ -7,7 +7,7 @@ import copy from "copy-to-clipboard";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 import { createTokenAction } from "@/server/actions/token/create-token";
 import type { ScopePresetValue } from "@/server/rbac/scopes";
 import { tokenNameSchema } from "@/shared/lib/zod/schemas/token";

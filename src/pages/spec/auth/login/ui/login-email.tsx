@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useAction } from "next-safe-action/hooks";
 import { type JSX, type SubmitEvent, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/features/toast";
 import { checkLoginEmailAction } from "@/server/actions/auth/check-login-email";
 import {
 	AUTH_FIELD_PASSWORD,

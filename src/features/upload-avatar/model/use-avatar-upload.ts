@@ -5,9 +5,8 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { toast } from "sonner";
-
 import { updateUser } from "@/entities/user";
+import { toast } from "@/features/toast";
 
 // 头像上传编排：选文件 → 开裁剪弹窗 → 提交 → 刷新 session 与路由
 export const useAvatarUpload = () => {
