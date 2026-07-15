@@ -23,17 +23,15 @@ type DraftCardProps = {
 	content: string;
 };
 
-// 草稿卡片样式：伪元素光照模拟左上斜打光（亮暗共用），暗色额外用表面提亮
+// 草稿卡片样式：外阴影投影 + inset 边缘明暗模拟左上斜打光
 const CARD_CLASS = [
 	// 基础布局
 	"group relative flex aspect-4/3 cursor-pointer flex-col gap-3 overflow-hidden rounded-lg border bg-card p-4 transition-all hover:-translate-y-0.5",
-	// 亮色：右下斜向阴影（模拟左上光源的投影）
+	// 亮色：右下投影 + inset 左上高光右下暗影（只在边缘做明暗，中间保持平面）
 	"shadow-[1px_2px_4px_-1px_rgba(0,0,0,0.1),3px_6px_16px_-4px_rgba(0,0,0,0.06)] hover:bg-accent/30 hover:shadow-[1px_2px_4px_-1px_rgba(0,0,0,0.12),6px_12px_28px_-4px_rgba(0,0,0,0.1)]",
-	// 伪元素光照（亮暗共用）：before 受光面（左上高光）+ after 背光面（右下暗影）
-	"before:pointer-events-none before:absolute before:inset-0 before:z-[1] before:bg-gradient-to-br before:from-white/20 before:via-transparent before:to-transparent before:content-['']",
-	"after:pointer-events-none after:absolute after:inset-0 after:z-[1] after:bg-gradient-to-tl after:from-black/5 after:via-transparent after:to-transparent after:content-['']",
-	// 暗色：去掉亮色阴影，叠加更强的光照高光 + 表面提亮 + 微弱边框
-	"dark:shadow-none dark:border-white/5 dark:bg-[oklch(0.235_0_0)] dark:before:from-white/5 dark:after:from-black/20 dark:hover:border-white/10 dark:hover:bg-[oklch(0.265_0_0)]",
+	"inset-shadow-[1px_1px_0_white/30] inset-shadow-[-1px_-1px_0_rgba(0,0,0,0.06)]",
+	// 暗色：去掉投影，用表面提亮 + inset 边缘明暗
+	"dark:shadow-none dark:border-white/5 dark:bg-[oklch(0.235_0_0)] dark:inset-shadow-[1px_1px_0_white/8] dark:inset-shadow-[-1px_-1px_0_rgba(0,0,0,0.3)] dark:hover:border-white/10 dark:hover:bg-[oklch(0.265_0_0)]",
 ].join(" ");
 
 // # 草稿卡片：内容预览 + 复制/更多操作
