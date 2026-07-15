@@ -59,11 +59,15 @@ export const createDraftVoSchema = z.object({
 export type CreateDraftVo = z.infer<typeof createDraftVoSchema>;
 
 // @ 出参 - 列表
-// 草稿列表项：形状与 createDraftVoSchema 一致，复用同一 schema 避免重复
-export const draftVoSchema = createDraftVoSchema;
+// 草稿列表项：列表不需要更新时间，比 createDraftVoSchema 少 updatedAt
+export const draftVoSchema = z.object({
+	id: z.string(),
+	name: z.string().nullable(),
+	content: z.string(),
+});
 
 // 草稿列表项类型
-export type DraftVo = CreateDraftVo;
+export type DraftVo = z.infer<typeof draftVoSchema>;
 
 // 草稿列表响应（分页元信息 + 数据）
 export const draftListVoSchema = z.object({

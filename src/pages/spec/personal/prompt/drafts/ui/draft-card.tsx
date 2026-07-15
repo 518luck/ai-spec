@@ -11,7 +11,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
-import { formatRelativeTime, getDraftTitle, truncateContent } from "../lib/format";
+import { getDraftTitle, truncateContent } from "../lib/format";
 
 type DraftCardProps = {
 	// 草稿 ID
@@ -20,12 +20,10 @@ type DraftCardProps = {
 	name: string | null;
 	// 草稿正文
 	content: string;
-	// 更新时间（ISO 字符串），展示相对时间
-	updatedAt: string;
 };
 
-// # 草稿卡片：内容预览 + 时间 + 复制/更多操作
-export function DraftCard({ id, name, content, updatedAt }: DraftCardProps): JSX.Element {
+// # 草稿卡片：内容预览 + 复制/更多操作
+export function DraftCard({ id, name, content }: DraftCardProps): JSX.Element {
 	const title = getDraftTitle(name, content);
 	const preview = truncateContent(content);
 
@@ -52,9 +50,8 @@ export function DraftCard({ id, name, content, updatedAt }: DraftCardProps): JSX
 				{preview || "（无内容）"}
 			</p>
 
-			{/* 底部：时间 + 复制按钮 */}
-			<div className="flex items-center justify-between">
-				<span className="text-muted-foreground text-xs">{formatRelativeTime(updatedAt)}</span>
+			{/* 底部：复制按钮 */}
+			<div className="flex justify-end">
 				<Button variant="ghost" size="xs" onClick={handleCopy}>
 					<Icons.copy data-icon="inline-start" />
 					复制

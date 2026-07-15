@@ -44,14 +44,13 @@ export const GET = withPersonal(
 				where,
 				orderBy,
 				take: PAGE_SIZE,
-				select: { id: true, name: true, content: true, updatedAt: true },
+				select: { id: true, name: true, content: true },
 			}),
 			prisma.promptDraft.count({ where }),
 		]);
 
-		// updatedAt 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
-		const list = rows.map((r) => ({ ...r, updatedAt: r.updatedAt.toISOString() }));
-		const voResult = draftListVoSchema.safeParse({ data: list, total });
+		// 经 Vo schema 校验，确保响应形状与前端类型一致
+		const voResult = draftListVoSchema.safeParse({ data: rows, total });
 		if (!voResult.success) {
 			throw voResult.error;
 		}

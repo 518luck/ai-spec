@@ -1,21 +1,6 @@
-import dayjs from "dayjs";
-import "dayjs/locale/zh-cn";
-import relativeTime from "dayjs/plugin/relativeTime";
-
 import { FALLBACK_TITLE_LENGTH, PREVIEW_MAX_LINES } from "../config/draft-list";
 
-// 初始化 dayjs 中文相对时间插件，仅执行一次
-dayjs.extend(relativeTime);
-dayjs.locale("zh-cn");
-
-// # 草稿展示格式化工具：相对时间、标题回退、内容截断
-export const formatRelativeTime = (date: string): string => {
-	const diffDays = dayjs().diff(dayjs(date), "day");
-	if (diffDays > 30) {
-		return dayjs(date).format("YYYY-MM-DD");
-	}
-	return dayjs(date).fromNow();
-};
+// # 草稿展示格式化工具：标题回退、内容截断
 
 // 草稿无标题时，用内容前 N 个字符生成展示标题
 export const getDraftTitle = (name: string | null, content: string): string => {

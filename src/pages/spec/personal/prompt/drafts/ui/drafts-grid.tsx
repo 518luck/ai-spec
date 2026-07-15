@@ -14,13 +14,7 @@ export function DraftsGrid({ drafts }: DraftsGridProps): JSX.Element {
 	return (
 		<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
 			{drafts.map((draft) => (
-				<DraftCard
-					key={draft.id}
-					id={draft.id}
-					name={draft.name}
-					content={draft.content}
-					updatedAt={draft.updatedAt}
-				/>
+				<DraftCard key={draft.id} id={draft.id} name={draft.name} content={draft.content} />
 			))}
 		</div>
 	);
