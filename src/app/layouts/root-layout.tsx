@@ -5,10 +5,10 @@ import { cookies } from "next/headers";
 import { SessionProvider } from "next-auth/react";
 import { RootThemeProvider } from "@/app/providers/root-theme-provider";
 import { SwrProvider } from "@/app/providers/swr-provider";
+import { Toaster } from "@/features/toast";
 import { DEFAULT_THEME } from "@/shared/configs/theme.config";
 import { ACTIVE_THEME_COOKIE } from "@/shared/lib/cookie/cookies";
 import { ActiveThemeProvider } from "@/shared/providers/active-theme-providers";
-import { Toaster } from "@/shared/ui/sonner";
 
 const oxanium = Oxanium({
 	subsets: ["latin"],

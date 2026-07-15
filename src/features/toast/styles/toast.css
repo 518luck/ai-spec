@@ -1,0 +1,25 @@
+/* # sonner toast 磨砂半透明背景
+   > sonner 内部在 [data-sonner-toaster][data-sonner-theme=dark] 上设了不透明 --normal-bg/--error-bg 等
+   > 这里用 [data-sonner-toaster] [data-sonner-toast]（后代选择器，优先级 0,2,0 > sonner 的 0,2,0 平级）
+   > 加 [data-styled=true] 再多一个选择器，优先级 0,2,1 稳定覆盖，不需要 !important
+*/
+
+[data-sonner-toaster] [data-sonner-toast] {
+	--normal-bg: color-mix(in oklch, var(--popover) 10%, transparent);
+	--success-bg: color-mix(
+		in oklch,
+		#10b981 12%,
+		color-mix(in oklch, var(--popover) 10%, transparent)
+	);
+	--error-bg: color-mix(
+		in oklch,
+		#ef4444 12%,
+		color-mix(in oklch, var(--popover) 10%, transparent)
+	);
+	--warning-bg: color-mix(
+		in oklch,
+		#f59e0b 12%,
+		color-mix(in oklch, var(--popover) 10%, transparent)
+	);
+	--info-bg: color-mix(in oklch, #0ea5e9 12%, color-mix(in oklch, var(--popover) 10%, transparent));
+}
