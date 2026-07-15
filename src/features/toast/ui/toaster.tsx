@@ -43,6 +43,8 @@ export function Toaster({ ...props }: ToasterProps) {
 			toastOptions={{
 				classNames: {
 					toast: "cn-toast backdrop-blur-[1px]",
+					actionButton:
+						"bg-transparent! text-muted-foreground! hover:text-foreground! hover:bg-transparent! p-1",
 				},
 			}}
 			{...props}
