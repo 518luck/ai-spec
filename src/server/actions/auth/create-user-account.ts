@@ -2,13 +2,13 @@
 
 import { flattenValidationErrors } from "next-safe-action";
 import { v4 as uuidv4 } from "uuid";
-import * as z from "zod/v4";
 import { actionClient } from "@/server/actions/safe-action";
 import { ActionError } from "@/server/errors/action-error";
 import { skipAuthThrottling } from "@/server/infrastructure/environment";
 import { hardDailyRatelimit } from "@/server/infrastructure/redis/reatlimit";
 import prisma from "@/shared/db";
 import { hashPassword } from "@/shared/lib/utils";
+import { z } from "@/shared/lib/zod";
 import { signUpDtoSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 

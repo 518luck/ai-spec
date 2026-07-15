@@ -1,6 +1,5 @@
-import * as z from "zod/v4";
-
 import { FOLDERABLE_RESOURCE_KEYS } from "@/server/rbac/resource-ui";
+import { z } from "@/shared/lib/zod";
 
 // # 文件夹相关 zod schema：名称、资源类型、颜色、选项、列表校验
 

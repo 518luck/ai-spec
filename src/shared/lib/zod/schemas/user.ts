@@ -1,4 +1,4 @@
-import * as z from "zod/v4";
+import { z } from "@/shared/lib/zod";
 
 import { emailSchema } from "./auth";
 

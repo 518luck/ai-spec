@@ -1,4 +1,4 @@
-import * as z from "zod/v4";
+import { z } from "@/shared/lib/zod";
 
 // # 草稿（Draft）相关 zod schema：名称、正文、图片、文件夹归属校验
 

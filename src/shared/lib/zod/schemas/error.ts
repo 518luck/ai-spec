@@ -1,4 +1,4 @@
-import * as z from "zod/v4";
+import { z } from "@/shared/lib/zod";
 
 // # 错误码 schema：zod 枚举与 ErrorCode 类型的单一来源
 

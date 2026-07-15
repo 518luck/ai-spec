@@ -1,7 +1,6 @@
 "use server";
 
 import { flattenValidationErrors } from "next-safe-action";
-import * as z from "zod/v4";
 import { actionClient } from "@/server/actions/safe-action";
 import { ActionError } from "@/server/errors/action-error";
 import { sendEmail } from "@/server/infrastructure/email";
@@ -12,6 +11,7 @@ import { appConfig } from "@/shared/configs/app.config";
 import prisma from "@/shared/db";
 import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
 import { generateOTP } from "@/shared/lib/auth/utils";
+import { z } from "@/shared/lib/zod";
 import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 

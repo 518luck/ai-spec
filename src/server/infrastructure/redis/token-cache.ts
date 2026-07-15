@@ -1,4 +1,4 @@
-import * as z from "zod/v4";
+import { z } from "@/shared/lib/zod";
 import { getAppRedis } from "./clients";
 
 // # API Key 鉴权缓存层：cache-aside 模式，命中即跳过数据库往返

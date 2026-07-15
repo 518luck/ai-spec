@@ -1,6 +1,5 @@
-import * as z from "zod/v4";
-
 import { SCOPES } from "@/server/rbac/scopes";
+import { z } from "@/shared/lib/zod";
 
 // # API 令牌（Token）相关 zod schema：创建、更新、删除入参与响应出参校验
 
