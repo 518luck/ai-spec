@@ -45,7 +45,7 @@ export const withPersonal = (handler: PersonalHandler, { permissions }: Personal
 			searchParams = getSearchParams(req.url);
 
 			// ! 权限校验：仅 API Key 接入（scopes 非 null）时收紧。
-			// ! cookies 接入 scopes 为 null，跳过校验——浏览器用户权限由 owner_id 数据隔离兜底。
+			// ! cookies 接入 scopes 为 null，跳过校验——浏览器用户权限由 ownerId 数据隔离兜底。
 			// ! API Key 的 scope 只能收紧（限制钥匙能做什么），不能放宽超过浏览器登录的基线。
 			const { scopes } = resolved;
 			if (permissions && scopes) {

@@ -19,7 +19,7 @@ export function DraftsGrid({ drafts }: DraftsGridProps): JSX.Element {
 					id={draft.id}
 					name={draft.name}
 					content={draft.content}
-					updatedAt={draft.updated_at}
+					updatedAt={draft.updatedAt}
 				/>
 			))}
 		</div>

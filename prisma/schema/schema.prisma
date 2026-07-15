@@ -47,7 +47,7 @@ model User {
 
   // 文件夹反向关系
   folders            Folder[]       @relation("FolderOwner") // 用户创建的全部文件夹
-  folder_memberships FolderMember[] // 用户被授予例外权限的文件夹列表
+  folderMemberships  FolderMember[] // 用户被授予例外权限的文件夹列表
 
   // 团队反向关系：该用户加入的所有团队，创建者身份由其中 role=owner 的行表达
   memberships TeamMember[]

@@ -11,24 +11,24 @@ model Token {
     // ② 业务字段
     name        String // 令牌名称，用户自定义用于区分用途（如"本地开发"、"CI"）
     description String? // 令牌描述，可选的业务用途补充说明
-    hashed_key  String    @unique // ! API Key 明文经 HMAC-SHA256（混入 AUTH_SECRET）后的单向哈希值；明文仅在创建时返回一次，库里不可反查
-    partial_key String // API Key 的脱敏片段（前缀+后缀），用于在列表中识别令牌而不暴露完整密钥
+    hashedKey   String    @unique @map("hashed_key") // ! API Key 明文经 HMAC-SHA256（混入 AUTH_SECRET）后的单向哈希值；明文仅在创建时返回一次，库里不可反查
+    partialKey  String @map("partial_key") // API Key 的脱敏片段（前缀+后缀），用于在列表中识别令牌而不暴露完整密钥
     scopes      String? // 空格分隔的权限范围（如 "links.write domains.read"）；空或 null 表示无额外权限
     expires     DateTime? // 令牌过期时间，过期后不可再用于鉴权；null 表示永不过期
-    last_used   DateTime? // > 最近一次用于鉴权的时间；限流窗口内首次请求才更新，故意避免每次请求都落库
+    lastUsed    DateTime? @map("last_used") // > 最近一次用于鉴权的时间；限流窗口内首次请求才更新，故意避免每次请求都落库
 
     // ③ 时间戳
-    created_at DateTime @default(now()) // 创建时间
-    updated_at DateTime @updatedAt // 更新时间
+    createdAt DateTime @default(now()) @map("created_at") // 创建时间
+    updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
 
     // ④ 外键列
-    user_id String // 令牌所属用户 id
+    userId String @map("user_id") // 令牌所属用户 id
 
     // ⑤ 关联关系
-    user User @relation(fields: [user_id], references: [id], onDelete: Cascade) // 令牌所属用户；用户删除时级联删除其全部令牌
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 令牌所属用户；用户删除时级联删除其全部令牌
 
     // ⑥ 索引
-    @@index([user_id]) // 按用户查询其全部令牌
+    @@index([userId]) // 按用户查询其全部令牌
     @@schema("token") // 归属 token 业务库
 }
 

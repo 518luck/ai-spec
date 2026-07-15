@@ -17,7 +17,7 @@ import { hashToken } from "@/shared/lib/auth/hash-token";
 type ResolveResult = {
 	session: Session;
 	rateInfo: RateLimiterRes | null;
-	// API Key 接入时为该 Key 的 scope 数组；cookies 接入时为 null（不走 scope 校验，靠 owner_id 隔离）
+	// API Key 接入时为该 Key 的 scope 数组；cookies 接入时为 null（不走 scope 校验，靠 ownerId 隔离）
 	scopes: string[] | null;
 };
 
@@ -36,7 +36,7 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 	if (authHeader.startsWith(BEARER_PREFIX)) {
 		const token = await resolveApiKeyToken(authHeader.slice(BEARER_PREFIX.length));
 		const { ok, res } = await apiKeyRatelimit({
-			key: `api:requests:${token.user_id}`,
+			key: `api:requests:${token.userId}`,
 		});
 
 		// ! 限流命中即拒绝，防止 API Key 被滥用做高频请求
@@ -52,7 +52,7 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 		if (res.consumedPoints === 1) {
 			await prisma.token.update({
 				where: { id: token.id },
-				data: { last_used: new Date() },
+				data: { lastUsed: new Date() },
 			});
 		}
 
@@ -69,7 +69,7 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 	if (!cookieSession) {
 		throw new AiSpecError({ code: "UNAUTHORIZED", message: "未登录" });
 	}
-	// cookies 接入不走 scope 校验：浏览器用户的权限由 owner_id 数据隔离兜底
+	// cookies 接入不走 scope 校验：浏览器用户的权限由 ownerId 数据隔离兜底
 	return { session: cookieSession, rateInfo: null, scopes: null };
 };
 
@@ -92,10 +92,10 @@ const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 
 	// 2. 缓存未命中 → 查数据库
 	const token = await prisma.token.findFirst({
-		where: { hashed_key: hashedKey },
+		where: { hashedKey },
 		select: {
 			id: true,
-			user_id: true,
+			userId: true,
 			scopes: true,
 			expires: true,
 			user: { select: { id: true, name: true, email: true, image: true } },
@@ -112,7 +112,7 @@ const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 	// 3. 回填缓存：把 Date 统一转成 ISO 字符串以保持 JSON 兼容
 	const cacheItem: TokenCacheItem = {
 		id: token.id,
-		user_id: token.user_id,
+		userId: token.userId,
 		scopes: token.scopes,
 		expires: token.expires?.toISOString() ?? null,
 		user: token.user,

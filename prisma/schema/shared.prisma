@@ -9,10 +9,10 @@ model Tag {
   name String @unique
 
   // ③ 时间戳
-  created_at DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
   // ⑤ 关联关系（反向）
-  prompt_record_tags PromptRecordTag[]
+  promptRecordTags PromptRecordTag[]
 
   // ⑥ 索引
   @@schema("shared")

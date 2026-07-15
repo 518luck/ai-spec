@@ -26,6 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { ScrollMask } from "@/shared/ui/scroll-mask";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { FOLDER_NEUTRAL_COLOR } from "../config/folder-colors";
 import { CreateFolderDialog } from "./create-folder-dialog";
 import { CreateButton, CreateFolderItemContent } from "./folder-create-items";
 import { FolderIcon } from "./folder-icon";
@@ -35,13 +36,13 @@ import { FolderOptionItem } from "./folder-option-item";
 export type FolderOption = {
 	value: string; // folder.id
 	label: string; // folder.name
-	color?: string; // 文件夹颜色值（hex），驱动 FolderIcon 底色
+	color: string; // 文件夹颜色值（#RRGGBB），驱动 FolderIcon 底色
 };
 
 type FolderComboboxProps = {
 	// 文件夹归属的资源类型（如 "promptDraft"），决定拉取哪类文件夹 + 创建时归属
 	resourceType: string;
-	// 当前选中的 folder_id；传了走受控模式，没传自动从 URL ?folder=xxx 读写
+	// 当前选中的 folderId；传了走受控模式，没传自动从 URL ?folder=xxx 读写
 	value?: string;
 	// 选中回调；传了走受控模式，没传自动写入 URL
 	onChange?: (folderId: string | undefined) => void;
@@ -94,8 +95,7 @@ export function FolderCombobox({
 	} = useSWR(["folders", resourceType], ([, type]) => getFolders(type));
 	// 后端 VO 映射为下拉选项；rawFolders 为 undefined 时回退空数组
 	const folders = useMemo<FolderOption[]>(
-		() =>
-			(rawFolders ?? []).map((f) => ({ value: f.id, label: f.name, color: f.color ?? undefined })),
+		() => (rawFolders ?? []).map((f) => ({ value: f.id, label: f.name, color: f.color })),
 		[rawFolders],
 	);
 	// 列表滚动容器 ref：驱动 useScrollProgress 算进度，底部接 ScrollMask 渐变遮罩
@@ -124,7 +124,7 @@ export function FolderCombobox({
 	const handleCreate = async (input: {
 		name: string;
 		description?: string;
-		color?: string;
+		color: string;
 	}): Promise<void> => {
 		const parsed = createFolderDtoSchema.safeParse({
 			...input,
@@ -138,7 +138,7 @@ export function FolderCombobox({
 			const created = await createFolder({
 				name: parsed.data.name,
 				description: parsed.data.description,
-				color: parsed.data.color ?? undefined,
+				color: parsed.data.color,
 				resourceType: parsed.data.resourceType,
 			});
 			// 创建成功后刷新缓存（替代手动 setFolders），让新文件夹出现在列表里
@@ -158,22 +158,23 @@ export function FolderCombobox({
 		if (!next) setCreateDialogOpen(false);
 	};
 
-	// 触发器标签文案
+	// 触发器标签文案与图标颜色：未选中时给中性灰
 	const triggerLabel = selectedOption ? selectedOption.label : "未分类";
+	const triggerColor = selectedOption?.color ?? FOLDER_NEUTRAL_COLOR;
 
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
 			{/* // 触发器：iconOnly 时只显示图标 + Tooltip，否则显示完整文字 */}
 			{iconOnly ? (
 				<IconOnlyTrigger
-					iconColor={selectedOption?.color}
+					iconColor={triggerColor}
 					label={triggerLabel}
 					open={open}
 					className={className}
 				/>
 			) : (
 				<FullTrigger
-					iconColor={selectedOption?.color}
+					iconColor={triggerColor}
 					label={triggerLabel}
 					hasSelection={Boolean(selectedOption)}
 					open={open}
@@ -200,7 +201,7 @@ export function FolderCombobox({
 									}}
 								/>
 							</CommandEmpty>
-							{/* // > 不加入任何文件夹（folder_id=null），始终置顶；value 含多关键词便于搜索命中 */}
+							{/* // > 不加入任何文件夹（folderId=null），始终置顶；value 含多关键词便于搜索命中 */}
 							<CommandGroup>
 								<CommandItem
 									value="未分类 无文件夹 不加入 none"
@@ -210,7 +211,7 @@ export function FolderCombobox({
 									}}
 									className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
 								>
-									<FolderIcon icon={Icons.folderX} />
+									<FolderIcon color={FOLDER_NEUTRAL_COLOR} icon={Icons.folderX} />
 									<span className="text-muted-foreground">未分类</span>
 									<Icons.check
 										className={cn(
@@ -285,7 +286,7 @@ function IconOnlyTrigger({
 	open,
 	className,
 }: {
-	iconColor?: string;
+	iconColor: string;
 	label: string;
 	open: boolean;
 	className?: string;
@@ -321,7 +322,7 @@ function FullTrigger({
 	open,
 	className,
 }: {
-	iconColor?: string;
+	iconColor: string;
 	label: string;
 	hasSelection: boolean;
 	open: boolean;

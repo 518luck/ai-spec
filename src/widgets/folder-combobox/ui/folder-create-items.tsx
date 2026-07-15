@@ -2,15 +2,15 @@
 
 import { useCommandState } from "cmdk";
 import type { JSX } from "react";
-
 import { Icons } from "@/shared/ui/icons";
+import { FOLDER_NEUTRAL_COLOR } from "../config/folder-colors";
 import { FolderIcon } from "./folder-icon";
 
 // > 创建文件夹项的公共内容：图标 + 文字，供 CommandItem 和 CreateButton 复用
 export function CreateFolderItemContent({ label }: { label: string }): JSX.Element {
 	return (
 		<>
-			<FolderIcon icon={Icons.folderPlus} />
+			<FolderIcon color={FOLDER_NEUTRAL_COLOR} icon={Icons.folderPlus} />
 			<span className="min-w-0 truncate">{label}</span>
 		</>
 	);

@@ -1,6 +1,6 @@
 // # 团队域：团队实体、成员关系、团队套餐与角色枚举
 //
-// > 跨域引用：TeamMember.user_id 指向 auth.User，依赖 Prisma multiSchema 自动处理跨 schema 外键
+// > 跨域引用：TeamMember.userId 指向 auth.User，依赖 Prisma multiSchema 自动处理跨 schema 外键
 
 // 团队：协作空间的主体，承载文件夹、收录记录等团队资源
 model Team {
@@ -14,13 +14,13 @@ model Team {
   plan TeamPlan @default(free) // 团队套餐档位，控制团队空间额度与付费功能
 
   // ③ 时间戳
-  created_at DateTime @default(now()) // 创建时间
-  updated_at DateTime @updatedAt // 更新时间
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+  updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
 
   // ④ 关联关系
-  memberships TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
-  folders Folder[] @relation("TeamFolders") // 团队空间下的全部文件夹
-  prompt_records PromptRecord[] @relation("TeamPromptRecords") // 团队空间内的全部收录记录
+  memberships    TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
+  folders        Folder[] @relation("TeamFolders") // 团队空间下的全部文件夹
+  promptRecords  PromptRecord[] @relation("TeamPromptRecords") // 团队空间内的全部收录记录
 
   // ⑤ 索引
   @@schema("team") // 归属 team 域
@@ -35,19 +35,19 @@ model TeamMember {
   role TeamRole @default(member) // 该用户在此团队内的角色
 
   // ③ 时间戳
-  created_at DateTime @default(now()) // 加入团队时间
+  createdAt DateTime @default(now()) @map("created_at") // 加入团队时间
 
   // ④ 外键列
-  team_id String // 所属团队 id
-  user_id String // 成员用户 id
+  teamId String @map("team_id") // 所属团队 id
+  userId String @map("user_id") // 成员用户 id
 
   // ⑤ 关联关系
-  team Team @relation(fields: [team_id], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其成员关系）
-  user User @relation(fields: [user_id], references: [id], onDelete: Cascade) // 成员用户（用户删除→级联删其所有成员关系）；跨域引用 auth.User
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其成员关系）
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 成员用户（用户删除→级联删其所有成员关系）；跨域引用 auth.User
 
   // ⑥ 索引
-  @@unique([team_id, user_id]) // 同一用户在同一团队只能有一条记录，防止角色矛盾
-  @@index([user_id]) // 按用户查询其加入的全部团队
+  @@unique([teamId, userId]) // 同一用户在同一团队只能有一条记录，防止角色矛盾
+  @@index([userId]) // 按用户查询其加入的全部团队
   @@schema("team") // 归属 team 域
 }
 

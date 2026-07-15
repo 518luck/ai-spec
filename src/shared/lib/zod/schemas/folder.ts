@@ -23,12 +23,10 @@ export const folderDescriptionSchema = z
 // 文件夹归属的资源类型，从 RBAC 可归类资源清单派生（单一真相，加资源只改 resource-ui.ts）
 export const folderResourceTypeSchema = z.enum(FOLDERABLE_RESOURCE_KEYS);
 
-// 文件夹颜色：#RRGGBB 格式（不含 alpha 通道，天然不支持透明）；不透明、格式非法时校验失败
+// 文件夹颜色：#RRGGBB 格式（不含 alpha 通道），DB 有 @default，这里必填校验格式
 export const folderColorSchema = z
 	.string()
-	.regex(/^#[0-9a-fA-F]{6}$/, { error: "颜色需为 #RRGGBB 格式" })
-	.optional()
-	.nullable();
+	.regex(/^#[0-9a-fA-F]{6}$/, { error: "颜色需为 #RRGGBB 格式" });
 
 // @ 入参
 // 创建文件夹入参

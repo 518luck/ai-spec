@@ -39,16 +39,16 @@ export const createTokenAction = authUserActionClient
 			data: {
 				name,
 				description: description || null,
-				hashed_key: hashedKey,
-				partial_key: partialKey,
+				hashedKey,
+				partialKey,
 				scopes: scopes.length > 0 ? scopes.join(" ") : null,
 				expires: expires ?? null,
-				user_id: userId,
+				userId,
 			},
 			select: {
 				id: true,
 				name: true,
-				partial_key: true,
+				partialKey: true,
 			},
 		});
 
@@ -56,7 +56,7 @@ export const createTokenAction = authUserActionClient
 		return {
 			id: created.id,
 			name: created.name,
-			partial_key: created.partial_key,
+			partialKey: created.partialKey,
 			key: rawKey,
 		};
 	});

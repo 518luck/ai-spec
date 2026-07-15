@@ -8,23 +8,23 @@ import {
 	folderOptionVoSchema,
 } from "@/shared/lib/zod/schemas/folder";
 
-// # 个人空间文件夹：列表查询与新建（team_id 始终为 null）
+// # 个人空间文件夹：列表查询与新建（teamId 始终为 null）
 
-// 获取个人空间文件夹列表，按资源类型过滤，按 sort_order 和创建时间排序
+// 获取个人空间文件夹列表，按资源类型过滤，按 sortOrder 和创建时间排序
 export const GET = withPersonal(async ({ session, searchParams }) => {
 	const { type } = searchParams;
 	const folders = await prisma.folder.findMany({
-		where: { owner_id: session.user.id, team_id: null, ...(type && { resource_type: type }) },
-		orderBy: [{ sort_order: "asc" }, { created_at: "desc" }],
-		select: { id: true, name: true, color: true, resource_type: true },
+		where: { ownerId: session.user.id, teamId: null, ...(type && { resourceType: type }) },
+		orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+		select: { id: true, name: true, color: true, resourceType: true },
 	});
 
-	// 映射 DB 字段名到业务命名（resource_type → resourceType），返回前经 Vo schema 校验
+	// 映射 resource_type → resourceType（业务命名），返回前经 Vo schema 校验
 	const list = folders.map((f) => ({
 		id: f.id,
 		name: f.name,
-		color: f.color ?? undefined,
-		resourceType: f.resource_type,
+		color: f.color,
+		resourceType: f.resourceType,
 	}));
 	const parsed = folderListVoSchema.safeParse(list);
 	if (!parsed.success) {
@@ -45,20 +45,20 @@ export const POST = withPersonal(async ({ req, session }) => {
 		data: {
 			name: parsed.data.name,
 			description: parsed.data.description || null,
-			color: parsed.data.color || null,
-			resource_type: parsed.data.resourceType,
-			owner_id: session.user.id,
-			team_id: null,
+			color: parsed.data.color,
+			resourceType: parsed.data.resourceType,
+			ownerId: session.user.id,
+			teamId: null,
 		},
-		select: { id: true, name: true, color: true, resource_type: true },
+		select: { id: true, name: true, color: true, resourceType: true },
 	});
 
-	// 映射 DB 字段名到业务命名（resource_type → resourceType），返回前经 Vo schema 校验
+	// 映射 resource_type → resourceType（业务命名），返回前经 Vo schema 校验
 	const out = {
 		id: folder.id,
 		name: folder.name,
-		color: folder.color ?? undefined,
-		resourceType: folder.resource_type,
+		color: folder.color,
+		resourceType: folder.resourceType,
 	};
 	const result = folderOptionVoSchema.safeParse(out);
 	if (!result.success) {

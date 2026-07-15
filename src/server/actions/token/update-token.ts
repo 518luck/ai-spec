@@ -19,16 +19,16 @@ export const updateTokenAction = authUserActionClient
 		const { id, name, description, scopes, expires } = parsedInput;
 		const userId = ctx.user.id;
 
-		// 先查确认令牌存在且属于当前用户，并取出 hashed_key 供缓存清理使用
+		// 先查确认令牌存在且属于当前用户，并取出 hashedKey 供缓存清理使用
 		const token = await prisma.token.findUnique({
 			where: { id },
-			select: { user_id: true, hashed_key: true },
+			select: { userId: true, hashedKey: true },
 		});
 		if (!token) {
 			throw new ActionError({ code: "NOT_FOUND", message: "令牌不存在" });
 		}
 		// ! 归属校验：即便知道别人的令牌 id 也不能改
-		if (token.user_id !== userId) {
+		if (token.userId !== userId) {
 			throw new ActionError({ code: "FORBIDDEN", message: "无权修改该令牌" });
 		}
 
@@ -43,5 +43,5 @@ export const updateTokenAction = authUserActionClient
 			},
 		});
 		// scopes 可能变化，清缓存让下次请求重新拉取最新值
-		await tokenCache.delete(token.hashed_key);
+		await tokenCache.delete(token.hashedKey);
 	});

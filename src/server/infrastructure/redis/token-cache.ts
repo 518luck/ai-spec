@@ -11,7 +11,7 @@ const CACHE_KEY_PREFIX = "token:cache";
 // Token 缓存项 schema：保存该 token 解析出的身份 + 权限信息，避免每次请求都 join user 表
 const tokenCacheItemSchema = z.object({
 	id: z.string(),
-	user_id: z.string(),
+	userId: z.string(),
 	scopes: z.string().nullish(),
 	// ISO 字符串，JSON 兼容；null 表示永不过期
 	expires: z.iso.datetime().nullish(),

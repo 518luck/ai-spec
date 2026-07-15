@@ -22,10 +22,10 @@ export const GET = withPersonal(
 		const { query, sort, folderId } = parsed.data;
 		const trimmedQuery = query?.trim() ?? "";
 
-		// 组合查询条件：owner_id 必有；有文件夹时加 folder_id 筛选；有搜索词时加模糊匹配
+		// 组合查询条件：ownerId 必有；有文件夹时加 folderId 筛选；有搜索词时加模糊匹配
 		const where = {
-			owner_id: session.user.id,
-			...(folderId && { folder_id: folderId }),
+			ownerId: session.user.id,
+			...(folderId && { folderId }),
 			...(trimmedQuery && {
 				OR: [
 					{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
@@ -36,7 +36,7 @@ export const GET = withPersonal(
 
 		// 排序映射：created→按创建时间倒序，其余→按更新时间倒序
 		const orderBy =
-			sort === "created" ? { created_at: "desc" as const } : { updated_at: "desc" as const };
+			sort === "created" ? { createdAt: "desc" as const } : { updatedAt: "desc" as const };
 
 		// findMany 取当前页草稿、count 取总数，两者无依赖并行查询以减少等待
 		const [rows, total] = await Promise.all([
@@ -44,13 +44,13 @@ export const GET = withPersonal(
 				where,
 				orderBy,
 				take: PAGE_SIZE,
-				select: { id: true, name: true, content: true, updated_at: true },
+				select: { id: true, name: true, content: true, updatedAt: true },
 			}),
 			prisma.promptDraft.count({ where }),
 		]);
 
-		// updated_at 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
-		const list = rows.map((r) => ({ ...r, updated_at: r.updated_at.toISOString() }));
+		// updatedAt 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
+		const list = rows.map((r) => ({ ...r, updatedAt: r.updatedAt.toISOString() }));
 		const voResult = draftListVoSchema.safeParse({ data: list, total });
 		if (!voResult.success) {
 			throw voResult.error;
@@ -75,19 +75,19 @@ export const POST = withPersonal(
 				name: name || null,
 				content,
 				images,
-				owner_id: session.user.id,
-				folder_id: folderId || null,
+				ownerId: session.user.id,
+				folderId: folderId || null,
 			},
 			select: {
 				id: true,
 				name: true,
 				content: true,
-				updated_at: true,
+				updatedAt: true,
 			},
 		});
 
-		// updated_at 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
-		const out = { ...draft, updated_at: draft.updated_at.toISOString() };
+		// updatedAt 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
+		const out = { ...draft, updatedAt: draft.updatedAt.toISOString() };
 		const result = createDraftVoSchema.safeParse(out);
 		if (!result.success) {
 			throw result.error;

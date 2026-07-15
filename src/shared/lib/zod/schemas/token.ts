@@ -25,7 +25,7 @@ export const tokenDescriptionSchema = z
 // 注意：前端传数组，后端会 join(" ") 存到 DB 的 scopes 字段
 const tokenScopesSchema = z.array(z.enum(SCOPES)).default([]);
 
-// partial_key 脱敏片段：固定「前缀 + 圆点 + 尾部明文」结构，限制长度防止误把完整密钥塞进来
+// partialKey 脱敏片段：固定「前缀 + 圆点 + 尾部明文」结构，限制长度防止误把完整密钥塞进来
 const partialKeySchema = z.string().min(1).max(64);
 
 // 过期时间：接收 ISO 字符串，null/省略表示永不过期
@@ -49,7 +49,7 @@ export type CreateTokenDto = z.infer<typeof createTokenDtoSchema>;
 export const createTokenVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
-	partial_key: partialKeySchema,
+	partialKey: partialKeySchema,
 	key: z.string(),
 });
 

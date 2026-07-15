@@ -25,7 +25,7 @@ type CreateFolderDialogProps = {
 	// 打开时预填的名称（如来自搜索词），不传则为空
 	initialName?: string;
 	// 提交创建：传入文件夹名称、描述、颜色，由父组件调 onCreate 落库并选中
-	onSubmit: (input: { name: string; description?: string; color?: string }) => Promise<void>;
+	onSubmit: (input: { name: string; description?: string; color: string }) => Promise<void>;
 };
 
 // # 新建文件夹对话框：输入名称、描述、选颜色，提交创建
@@ -48,7 +48,7 @@ export function CreateFolderDialog({
 		}
 	}, [open, initialName]);
 
-	// 提交：把原始值传给调用方，由调用方用 createFolderDtoSchema 全量校验（含 resource_type）
+	// 提交：把原始值传给调用方，由调用方用 createFolderDtoSchema 全量校验（含 resourceType）
 	const handleSubmit = async (): Promise<void> => {
 		await onSubmit({
 			name: name.trim(),

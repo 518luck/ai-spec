@@ -7,20 +7,22 @@
 
 ## 命名规范
 
-### 字段命名（snake_case）
+### 字段命名（camelCase + @map）
 
-自建 model 的**所有字段**统一使用 snake_case，包括标量列、外键列、关系字段：
+自建 model 的**所有字段**统一使用 camelCase，与 TS 侧保持一致；DB 列名通过 `@map` 保持 snake_case（历史列名不变，无需数据迁移）。
 
 ```
-✅ owner_id        ✅ created_at       ✅ last_editor_id   ✅ use_count
-❌ ownerId         ❌ createdAt        ❌ lastEditorId     ❌ useCount
+✅ ownerId String @map("owner_id")
+✅ createdAt DateTime @default(now()) @map("created_at")
+❌ owner_id String
+❌ created_at DateTime
 ```
 
-- 单个单词的字段保持全小写，不加下划线（如 `id`、`name`、`content`、`owner`）；只有多个单词组合时才用下划线连接（如 `owner_id`、`created_at`）。
-- 关系字段同样使用 snake_case（如 `owner`、`last_editor`）。
+- 单个单词的字段保持全小写，不加 `@map`（如 `id`、`name`、`content`、`owner`）；只有多个单词组合时才用 camelCase + `@map` 映射到 DB 的 snake_case 列名。
+- 关系字段同样使用 camelCase（如 `owner`、`lastEditor`）；**关系字段不加 `@map`**（关系没有对应的 DB 列）。
+- `@relation("Name")` 的字符串名称是关系标识，与字段名无关，**改名时不要动它**。
 - 字段类型沿用 Prisma 原生写法（`String` / `DateTime` / `Int` ...），不随字段名变化。
-
-> 与根 AGENTS.md「对象键使用 camelCase」的关系：Prisma 生成的类型字段为 snake_case，TS 中以**属性访问**形式使用（如 `record.owner_id`），该规则约束的是开发者自定义的对象字面量键名，不约束库生成类型的属性访问，二者不冲突。
+- `@@index` / `@@unique` / `@@id` 里引用的字段名跟随 camelCase 改名。
 
 ### Model 与 Enum 命名
 
@@ -33,8 +35,8 @@
 
 1. **主键** — `id @id`
 2. **业务字段** — 核心数据列（`name`、`content`、`visibility` ...）
-3. **时间戳** — `created_at`、`updated_at`
-4. **外键列** — 存储 id 的标量列（`owner_id`、`last_editor_id`）
+3. **时间戳** — `createdAt`、`updatedAt`
+4. **外键列** — 存储 id 的标量列（`ownerId`、`lastEditorId`）
 5. **关联关系** — `@relation` 字段，随后是反向关系（无 `fields` 的 `@relation`）
 6. **索引/约束** — `@@index`、`@@unique`、`@@id`、`@@schema`
 
@@ -52,20 +54,20 @@ model PromptRecord {
   visibility  Visibility @default(private)
 
   // ③ 时间戳
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   // ④ 外键列
-  owner_id        String
-  last_editor_id  String?
+  ownerId         String  @map("owner_id")
+  lastEditorId    String? @map("last_editor_id")
 
   // ⑤ 关联关系
-  owner        User   @relation("PromptRecordOwner", fields: [owner_id], references: [id], onDelete: Cascade)
-  last_editor  User?  @relation("PromptRecordEditor", fields: [last_editor_id], references: [id], onDelete: SetNull)
+  owner        User   @relation("PromptRecordOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  lastEditor   User?  @relation("PromptRecordEditor", fields: [lastEditorId], references: [id], onDelete: SetNull)
   versions     PromptRecordVersion[]
 
   // ⑥ 索引
-  @@index([owner_id])
+  @@index([ownerId])
   @@schema("prompt")
 }
 ```

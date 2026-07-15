@@ -52,7 +52,7 @@ export const createDraftVoSchema = z.object({
 	id: z.string(),
 	name: z.string().nullable(),
 	content: z.string(),
-	updated_at: z.iso.datetime(),
+	updatedAt: z.iso.datetime(),
 });
 
 // 创建草稿响应类型

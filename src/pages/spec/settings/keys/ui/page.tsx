@@ -24,30 +24,27 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 	}
 
 	// findMany 取当前页切片，count 取总数用于分页栏；两者无依赖，并行查询
-	// select 后做字段命名转换：DB 的 partial_key → 对外契约的 partialKey，避免数据库命名泄漏到前端
+	// select 字段名与 DB 列名经 @map 已统一为驼峰，无需手动命名转换
 	const [rows, total] = await Promise.all([
 		prisma.token.findMany({
-			where: { user_id: userId },
-			orderBy: { created_at: "desc" },
+			where: { userId },
+			orderBy: { createdAt: "desc" },
 			skip: page * PAGE_SIZE,
 			take: PAGE_SIZE,
 			select: {
 				id: true,
 				name: true,
 				description: true,
-				partial_key: true,
+				partialKey: true,
 				// scopes 为空格分隔的权限串，split 后交给 scopesToName 反查展示标签
 				scopes: true,
 				// 过期时间，null 表示永不过期；列表展示剩余时间 + 编辑弹窗回填都用
 				expires: true,
 			},
 		}),
-		prisma.token.count({ where: { user_id: userId } }),
+		prisma.token.count({ where: { userId } }),
 	]);
-	const tokens = rows.map(({ partial_key, ...rest }) => ({
-		...rest,
-		partialKey: partial_key,
-	}));
+	const tokens = rows;
 
 	return (
 		<TitlePageShell title={<KeysPageHeader />} fill>
