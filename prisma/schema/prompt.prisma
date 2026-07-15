@@ -55,7 +55,7 @@ model PromptRecordVersion {
   // ② 业务字段
   name          String // 该版本的名称快照
   content       String  @db.Text // 该版本的内容快照
-  versionNumber Int // 版本序号，递增
+  versionNumber Int @map("version_number") // 版本序号，递增
   message       String? // 版本说明，类似 commit message
 
   // ③ 时间戳

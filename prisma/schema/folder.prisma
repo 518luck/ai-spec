@@ -15,7 +15,7 @@ model Folder {
   name              String // 文件夹名称
   description       String? // 描述（可选）
   color             String @default("#ef4444") // 文件夹颜色（#RRGGBB hex），驱动 FolderIcon 的方块底色
-  resourceType      String // > 文件夹归属的资源类型（promptDraft/promptRecord/rules...），故意不给默认值，强制调用方显式传入，防止归类错误
+  resourceType      String @map("resource_type") // > 文件夹归属的资源类型（promptDraft/promptRecord/rules...），故意不给默认值，强制调用方显式传入，防止归类错误
   sortOrder         Int              @default(0) @map("sort_order") // 同级排序，驱动拖拽排序
   teamId            String? @map("team_id") // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属，不决定权限）
   defaultMemberRole FolderMemberRole @default(viewer) @map("default_member_role") // 团队成员对此文件夹的默认角色（可被 FolderMember 表覆盖；仅团队文件夹生效）
