@@ -33,7 +33,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		const parsed = createDraftDtoSchema.safeParse({
 			name: data.name,
 			content: data.content,
-			folder_id: data.folderId,
+			folderId: data.folderId,
 		});
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请输入草稿内容");

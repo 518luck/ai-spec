@@ -1,5 +1,6 @@
 "use client";
 
+import copy from "copy-to-clipboard";
 import type { JSX } from "react";
 import { toast } from "@/features/toast";
 
@@ -39,14 +40,10 @@ export function DraftCard({ id, name, content }: DraftCardProps): JSX.Element {
 	const title = getDraftTitle(name, content);
 	const preview = truncateContent(content);
 
-	// 复制草稿全文到剪贴板
-	const handleCopy = async (): Promise<void> => {
-		try {
-			await navigator.clipboard.writeText(content);
-			toast.success("已复制");
-		} catch {
-			toast.error("复制失败，请手动复制");
-		}
+	// 复制草稿全文到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
+	const handleCopy = (): void => {
+		copy(content);
+		toast.success("已复制");
 	};
 
 	return (
