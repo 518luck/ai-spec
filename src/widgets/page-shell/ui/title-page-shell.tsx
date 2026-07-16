@@ -34,8 +34,8 @@ export function TitlePageShell({
 				</div>
 			) : null}
 
-			{/* 内容区：占满剩余高度，内容超出时内部滚动；宽度限制交给调用方 */}
-			<div className="flex min-h-0 flex-1 flex-col overflow-auto">{children}</div>
+			{/* 内容区：占满剩余高度，宽度限制与滚动交给调用方 */}
+			<div className="flex min-h-0 flex-1 flex-col">{children}</div>
 		</div>
 	);
 }
