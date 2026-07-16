@@ -3,8 +3,7 @@
 // # 草稿编辑弹窗 —— 薄包装，打开时拉取草稿全文，注入更新逻辑（SWR mutation + schema 校验）
 
 import type { JSX } from "react";
-import { useEffect, useState } from "react";
-import { useSWRConfig } from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
 import { getDraft, updateDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
@@ -19,38 +18,17 @@ type EditDraftDialogProps = {
 	draft: {
 		id: string;
 		name: string | null;
-		preview: string;
 	};
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
 
 export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogProps): JSX.Element {
-	// 打开弹窗时拉取草稿全文（列表只有截断预览）
-	const [fullDraft, setFullDraft] = useState<{
-		content: string;
-		folderId?: string;
-	} | null>(null);
-	const [isLoading, setIsLoading] = useState(false);
-
-	useEffect(() => {
-		if (!open) return;
-		let cancelled = false;
-		setIsLoading(true);
-		getDraft(draft.id)
-			.then((data) => {
-				if (!cancelled) setFullDraft({ content: data.content, folderId: data.folderId });
-			})
-			.catch(() => {
-				if (!cancelled) toast.error("加载草稿失败");
-			})
-			.finally(() => {
-				if (!cancelled) setIsLoading(false);
-			});
-		return () => {
-			cancelled = true;
-		};
-	}, [open, draft.id]);
+	// 打开弹窗时拉取草稿全文（列表只有截断预览），用 SWR 缓存避免重复请求；错误提示走全局 SWRConfig
+	const { data: fullDraft, isLoading } = useSWR(
+		open ? (["draft", draft.id] as const) : null,
+		async ([, id]) => getDraft(id),
+	);
 
 	// 更新草稿 mutation
 	const { mutate } = useSWRConfig();
@@ -91,21 +69,8 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 		toast.success("草稿已更新");
 	};
 
-	// 加载中或未打开时不渲染编辑器（避免用 preview 当 initialContent）
-	if (isLoading || !fullDraft) {
-		return (
-			<PromptWorkspaceDialog
-				open={open}
-				onOpenChange={onOpenChange}
-				onSave={async () => {}}
-				isSaving={isLoading}
-				resourceType="promptDraft"
-				initialContent={draft.preview}
-				emptyTitle="无标题草稿"
-				savingText="加载中..."
-			/>
-		);
-	}
+	// 加载完成前用弹窗自带 loading 占位，避免用 preview 渲染编辑器
+	const isLoadingState = isLoading || !fullDraft;
 
 	return (
 		<PromptWorkspaceDialog
@@ -113,9 +78,10 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 			onOpenChange={onOpenChange}
 			onSave={handleSave}
 			isSaving={isMutating}
+			isLoading={isLoadingState}
 			resourceType="promptDraft"
-			initialContent={fullDraft.content}
-			initialFolderId={fullDraft.folderId}
+			initialContent={fullDraft?.content ?? ""}
+			initialFolderId={fullDraft?.folderId}
 			emptyTitle="无标题草稿"
 			savingText="更新中..."
 		/>

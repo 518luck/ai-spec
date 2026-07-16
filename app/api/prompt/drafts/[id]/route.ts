@@ -32,7 +32,7 @@ export const GET = withPersonal(
 			throw result.error;
 		}
 
-		return NextResponse.json({ ...out, folderId: draft.folderId ?? undefined });
+		return NextResponse.json(result.data);
 	},
 	{ permissions: ["promptDraft.read"] },
 );

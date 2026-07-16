@@ -40,6 +40,8 @@ type PromptWorkspaceDialogProps = {
 	onSave: (data: PromptEditorSaveData) => Promise<void>;
 	// 保存中状态由外部管理（useSWRMutation 的 isMutating）
 	isSaving: boolean;
+	// 加载中占位：编辑器区域显示 spinner，避免用不完整内容渲染
+	isLoading?: boolean;
 	// 文件夹归属的资源类型（"promptDraft" / "promptRecord"）
 	resourceType: string;
 	// 编辑器占位文案
@@ -77,6 +79,7 @@ export function PromptWorkspaceDialog({
 	onOpenChange,
 	onSave,
 	isSaving,
+	isLoading = false,
 	resourceType,
 	placeholder = "写下你的想法…",
 	emptyTitle = "无标题",
@@ -91,6 +94,12 @@ export function PromptWorkspaceDialog({
 
 	const isEditMode = initialContent !== undefined; // 是否为编辑模式（传了初始内容就是编辑）
 	const [content, setContent] = useState(initialContent ?? "");
+
+	// initialContent 从外部变化时同步编辑器内容（如编辑弹窗加载完成后从空内容切换到全文）
+	useEffect(() => {
+		setContent(initialContent ?? "");
+	}, [initialContent]);
+
 	const [isPreview, setIsPreview] = useState(false); // 是否处于 Markdown 预览模式
 	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set()); // 光标位置正在使用的格式（加粗/斜体等）
 
@@ -277,7 +286,11 @@ export function PromptWorkspaceDialog({
 			>
 				{/* 编辑器/预览区域 */}
 				<div className="min-h-0 flex-1 overflow-hidden">
-					{isPreview ? (
+					{isLoading ? (
+						<div className="flex h-full items-center justify-center">
+							<Spinner className="size-8" />
+						</div>
+					) : isPreview ? (
 						<MarkdownPreview content={content} height={isExpanded ? "37rem" : "29rem"} />
 					) : (
 						<CodeMirror

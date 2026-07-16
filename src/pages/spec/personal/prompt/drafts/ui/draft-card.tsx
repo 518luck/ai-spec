@@ -75,7 +75,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 			</HoverOverlay>
 
 			{/* 编辑弹窗 */}
-			<EditDraftDialog draft={{ id, name, preview }} open={editOpen} onOpenChange={setEditOpen} />
+			<EditDraftDialog draft={{ id, name }} open={editOpen} onOpenChange={setEditOpen} />
 		</div>
 	);
 }

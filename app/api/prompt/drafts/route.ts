@@ -102,12 +102,17 @@ export const POST = withPersonal(
 				id: true,
 				name: true,
 				content: true,
+				folderId: true,
 				updatedAt: true,
 			},
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串后经 Vo schema 校验，确保响应形状与前端类型一致
-		const out = { ...draft, updatedAt: draft.updatedAt.toISOString() };
+		// updatedAt 由 Date 转 ISO 字符串，folderId null → undefined，后经 Vo schema 校验
+		const out = {
+			...draft,
+			folderId: draft.folderId ?? undefined,
+			updatedAt: draft.updatedAt.toISOString(),
+		};
 		const result = createDraftVoSchema.safeParse(out);
 		if (!result.success) {
 			throw result.error;
@@ -137,11 +142,15 @@ export const PATCH = withPersonal(
 		const updated = await prisma.promptDraft.update({
 			where: { id, ownerId: session.user.id },
 			data,
-			select: { id: true, name: true, content: true, updatedAt: true },
+			select: { id: true, name: true, content: true, folderId: true, updatedAt: true },
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串后经 Vo schema 校验
-		const out = { ...updated, updatedAt: updated.updatedAt.toISOString() };
+		// updatedAt 由 Date 转 ISO 字符串，folderId null → undefined，后经 Vo schema 校验
+		const out = {
+			...updated,
+			folderId: updated.folderId ?? undefined,
+			updatedAt: updated.updatedAt.toISOString(),
+		};
 		const result = createDraftVoSchema.safeParse(out);
 		if (!result.success) {
 			throw result.error;

@@ -73,6 +73,7 @@ export const createDraftVoSchema = z.object({
 	id: z.string(),
 	name: z.string().nullable(),
 	content: z.string(),
+	folderId: z.string().optional(),
 	updatedAt: z.iso.datetime(),
 });
 

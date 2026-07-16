@@ -2,22 +2,26 @@
 
 import { useSession } from "next-auth/react";
 import type { JSX } from "react";
+import { useState } from "react";
 import useSWR from "swr";
 
 import { getDrafts } from "@/entities/prompt";
 import type { ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
+import { Button } from "@/shared/ui/button";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { Kbd } from "@/shared/ui/kbd";
 import { Spinner } from "@/shared/ui/spinner";
 import { EmptyState } from "@/widgets/empty-state";
 import { ToolbarPageShell } from "@/widgets/page-shell";
-import { CreateDraftButton } from "./create-draft-button";
+import { CreateDraftDialog } from "./create-draft-dialog";
 import { DraftFolderFilter } from "./draft-folder-filter";
 import { DraftsGrid } from "./drafts-grid";
 
 // # 个人草稿页：SWR 拉 GET /api/prompt/drafts，搜索/排序/文件夹变化自动重新请求
 export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JSX.Element {
 	const { status } = useSession();
+	const [createOpen, setCreateOpen] = useState(false);
 
 	// SWR key 含 query/sort/folderId，任一变化自动重拉；未登录时不发请求
 	const { data, isLoading } = useSWR(
@@ -33,8 +37,22 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 			title="草稿"
 			help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
 			filter={<DraftFolderFilter />}
-			// TODO: 后面需要做弹窗处理，用户没有登录的时候给一个登录引导
-			actions={status === "authenticated" ? <CreateDraftButton /> : undefined}
+			actions={
+				status === "authenticated" ? (
+					<>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => setCreateOpen(true)}
+							className="gap-2"
+						>
+							新建草稿
+							<Kbd alignWithText>C</Kbd>
+						</Button>
+						<CreateDraftDialog open={createOpen} onOpenChange={setCreateOpen} />
+					</>
+				) : undefined
+			}
 		>
 			{isLoading ? (
 				<div className="flex justify-center py-20">
