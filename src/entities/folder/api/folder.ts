@@ -13,7 +13,7 @@ export const getFolders = async (type: string): Promise<FolderListVo> => {
 	if (!response.ok) {
 		throw new Error(await resolveErrorMessage(response));
 	}
-	return await response.json();
+	return (await response.json()) as FolderListVo;
 };
 
 // > 新建文件夹（POST /api/folders），需指定归属的资源类型；成功后返回新建的文件夹
@@ -31,5 +31,5 @@ export const createFolder = async ({
 	if (!response.ok) {
 		throw new Error(await resolveErrorMessage(response));
 	}
-	return await response.json();
+	return (await response.json()) as FolderOptionVo;
 };
