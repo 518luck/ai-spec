@@ -205,13 +205,13 @@ pnpm dlx shadcn@latest add [组件名]
 
 ```ts
 // ❌ 机器说明书：复述字段、暴露实现
-"输入文件夹名称、描述和颜色，创建后会自动选中。"
+"输入文件夹名称、描述和颜色，创建后会自动选中。";
 
 // ❌ 过度拟人：啰嗦、偏离功能
-"嗨～想给你的文件安个家吗？告诉我它叫什么吧！"
+"嗨～想给你的文件安个家吗？告诉我它叫什么吧！";
 
 // ✅ 对话式 + 简洁 + 功能性
-"创建一个属于你的文件夹吧，取个好记的名字和颜色。"
+"创建一个属于你的文件夹吧，取个好记的名字和颜色。";
 ```
 
 ## 图标
@@ -279,3 +279,16 @@ export function HeaderLogo() {
 - 整块 UI 只在客户端渲染 → `ClientOnly`（`@/shared/ui/client-only`）
 - 组件内部分变量需要 SSR/客户端区分 → `useMounted`（`@/shared/hooks`）
 - 浏览器 API（`localStorage`、`window`、`document.cookie` 等）在 `useEffect` 或回调中访问 → 不需要处理
+
+## 数据请求（SWR）
+
+- 全局 SWR 配置在 `src/app/providers/swr-provider.tsx`：`revalidateOnFocus: false`、`errorRetryCount: 3`，失败自动 toast 并按 key 去重。
+- 组件里直接用 `useSWR(key, fetcher)`，**不要重复写失败 toast**。
+- 列表/详情 key 用数组：`["drafts", query, sort, folderId]`、`["draft", id]`。
+- 仅确实需要偏离全局行为时才传局部配置。
+
+## 全局提示（Toast）
+
+- 统一从 `@/features/toast` 导入 `toast` 和 `Toaster`，**禁止直接从 `sonner` 导入**。
+- `<Toaster />` 已挂载在根布局，业务代码无需重复挂载。
+- 配合全局 SWR `onError` 时，业务组件通常不再手动 `toast.error`。
