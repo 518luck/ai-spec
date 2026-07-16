@@ -3,7 +3,6 @@
 import type { ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 
 export function PageWidthWrapper({
 	className,
@@ -24,13 +23,7 @@ export function PageWidthWrapper({
 				className,
 			)}
 		>
-			{fill ? (
-				<ScrollArea className="h-full max-h-full">
-					<div className="px-3 pt-6 pb-6 lg:px-6">{children}</div>
-				</ScrollArea>
-			) : (
-				children
-			)}
+			{fill ? <div className="px-3 pt-6 pb-6 lg:px-6">{children}</div> : children}
 		</div>
 	);
 }

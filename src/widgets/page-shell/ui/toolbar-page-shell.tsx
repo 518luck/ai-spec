@@ -25,9 +25,12 @@ export function ToolbarPageShell({
 	className,
 }: ToolbarPageShellProps): JSX.Element {
 	return (
-		<div data-slot="toolbar-page-shell" className={cn("flex h-full min-h-0 flex-col", className)}>
-			{/* 标题栏：左侧标题区（标题+提示+筛选器） + 右侧操作区 */}
-			<div className="flex h-16 shrink-0 items-center border-b px-6">
+		<div
+			data-slot="toolbar-page-shell"
+			className={cn("flex h-full min-h-0 flex-col overflow-auto", className)}
+		>
+			{/* 标题栏：吸顶在滚动容器顶部，透明背景让内容可从下方穿过 */}
+			<div className="sticky top-0 z-10 flex h-16 shrink-0 items-center border-b bg-transparent px-6">
 				{typeof title === "string" ? (
 					<div className="flex items-center gap-1.5">
 						<h1 className="font-semibold text-lg leading-tight">{title}</h1>

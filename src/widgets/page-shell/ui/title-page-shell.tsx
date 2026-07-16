@@ -18,13 +18,13 @@ export function TitlePageShell({
 	return (
 		<div
 			data-slot="title-page-shell"
-			className={cn("flex h-full min-h-0 flex-col", className)}
+			className={cn("flex h-full min-h-0 flex-col overflow-auto", className)}
 			{...props}
 		>
 			{title ? (
 				<div
 					data-slot="title-page-shell-header"
-					className="flex h-16 shrink-0 items-center border-b px-6"
+					className="sticky top-0 z-10 flex h-16 shrink-0 items-center border-b bg-transparent px-6"
 				>
 					{typeof title === "string" ? (
 						<h1 className="font-semibold text-lg leading-tight">{title}</h1>
