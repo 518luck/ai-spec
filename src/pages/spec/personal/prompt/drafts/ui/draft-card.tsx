@@ -71,7 +71,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 				<Button variant="ghost" size="icon-sm" aria-label="编辑" onClick={() => setEditOpen(true)}>
 					<Icons.pencil className="size-4" />
 				</Button>
-				<DraftActions id={id} onEdit={() => setEditOpen(true)} />
+				<DraftActions id={id} />
 			</HoverOverlay>
 
 			{/* 编辑弹窗 */}
@@ -80,8 +80,8 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	);
 }
 
-// ? 底部操作栏的"更多"菜单（编辑/删除/转正），目前均为占位，功能待实现
-function DraftActions({ id: _id, onEdit }: { id: string; onEdit: () => void }): JSX.Element {
+// ? 底部操作栏的"更多"菜单（收录/删除），目前均为占位，功能待实现
+function DraftActions({ id: _id }: { id: string }): JSX.Element {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
@@ -94,13 +94,9 @@ function DraftActions({ id: _id, onEdit }: { id: string; onEdit: () => void }): 
 				<Icons.more className="size-4" />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={onEdit}>
-					<Icons.pencil data-icon="inline-start" />
-					编辑
-				</DropdownMenuItem>
 				<DropdownMenuItem onClick={() => toast.info("转正功能即将上线")}>
 					<Icons.promote data-icon="inline-start" />
-					转正为收录
+					收录
 				</DropdownMenuItem>
 				<DropdownMenuItem variant="destructive" onClick={() => toast.info("删除功能即将上线")}>
 					<Icons.trash data-icon="inline-start" />
