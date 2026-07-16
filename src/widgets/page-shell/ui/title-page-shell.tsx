@@ -1,20 +1,16 @@
-// # 带标题栏的页面外壳：可选标题 + 可滚动正文区（正文走 PageWidthWrapper 限宽）
+// # 带标题栏的页面外壳：可选标题 + 可滚动内容区
 
 import type { ComponentProps, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
-import { PageWidthWrapper } from "./page-width-wrapper";
 
 type TitlePageShellProps = Omit<ComponentProps<"div">, "title"> & {
-	title?: ReactNode;
-	/** 是否让内容区撑满父级剩余高度（表格等需要占满视口的场景），默认关闭 */
-	fill?: boolean;
+	title?: ReactNode; // 页面标题，可传字符串或带图标的 ReactNode
 };
 
-// 提供可选标题栏和可滚动正文区的页面外壳。
+// 提供可选标题栏和可滚动内容区的页面外壳，内容宽度由调用方自行控制。
 export function TitlePageShell({
 	title,
-	fill,
 	className,
 	children,
 	...props
@@ -38,7 +34,8 @@ export function TitlePageShell({
 				</div>
 			) : null}
 
-			<PageWidthWrapper fill={fill}>{children}</PageWidthWrapper>
+			{/* 内容区：占满剩余高度，内容超出时内部滚动；宽度限制交给调用方 */}
+			<div className="flex min-h-0 flex-1 flex-col overflow-auto">{children}</div>
 		</div>
 	);
 }

@@ -13,7 +13,7 @@ import { Icons } from "@/shared/ui/icons";
 import { Kbd } from "@/shared/ui/kbd";
 import { Spinner } from "@/shared/ui/spinner";
 import { EmptyState } from "@/widgets/empty-state";
-import { ToolbarPageShell } from "@/widgets/page-shell";
+import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { CreateDraftDialog } from "./create-draft-dialog";
 import { DraftFolderFilter } from "./draft-folder-filter";
 import { DraftsGrid } from "./drafts-grid";
@@ -54,15 +54,17 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 				) : undefined
 			}
 		>
-			{isLoading ? (
-				<div className="flex justify-center py-20">
-					<Spinner className="size-6" />
-				</div>
-			) : total === 0 ? (
-				<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
-			) : (
-				<DraftsGrid drafts={drafts} />
-			)}
+			<PageWidthWrapper fill>
+				{isLoading ? (
+					<div className="flex justify-center py-20">
+						<Spinner className="size-6" />
+					</div>
+				) : total === 0 ? (
+					<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
+				) : (
+					<DraftsGrid drafts={drafts} />
+				)}
+			</PageWidthWrapper>
 		</ToolbarPageShell>
 	);
 }

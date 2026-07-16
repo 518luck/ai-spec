@@ -5,7 +5,6 @@
 import type { JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
-import { PageWidthWrapper } from "./page-width-wrapper";
 
 type ToolbarPageShellProps = {
 	title: ReactNode; // 页面标题，可传字符串或带图标的 ReactNode
@@ -16,6 +15,7 @@ type ToolbarPageShellProps = {
 	className?: string; // 透传给最外层 div 的 className
 };
 
+// 提供标题栏和可滚动内容区的页面外壳，内容宽度由调用方自行控制。
 export function ToolbarPageShell({
 	title,
 	help,
@@ -40,8 +40,8 @@ export function ToolbarPageShell({
 				{actions ? <div className="ml-auto flex items-center gap-2">{actions}</div> : null}
 			</div>
 
-			{/* 内容区：可滚动，由 PageWidthWrapper 限制最大宽度并居中 */}
-			<PageWidthWrapper fill>{children}</PageWidthWrapper>
+			{/* 内容区：占满剩余高度并内部滚动，宽度限制交给调用方 */}
+			<div className="flex min-h-0 flex-1 flex-col overflow-auto">{children}</div>
 		</div>
 	);
 }

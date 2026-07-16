@@ -5,7 +5,7 @@ import { auth } from "@/shared/lib/auth/auth";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { EmptyState } from "@/widgets/empty-state";
-import { TitlePageShell } from "@/widgets/page-shell";
+import { PageWidthWrapper, TitlePageShell } from "@/widgets/page-shell";
 import { PAGE_SIZE } from "../config/constants";
 import { CreateKeyButton } from "./create-key-button";
 import { KeysTable } from "./keys-table";
@@ -18,7 +18,9 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 	if (!userId) {
 		return (
 			<TitlePageShell title="API 密钥">
-				<EmptyState icon={Icons.key} description="登录后即可管理你的 API 密钥" />
+				<PageWidthWrapper>
+					<EmptyState icon={Icons.key} description="登录后即可管理你的 API 密钥" />
+				</PageWidthWrapper>
 			</TitlePageShell>
 		);
 	}
@@ -47,13 +49,15 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 	const tokens = rows;
 
 	return (
-		<TitlePageShell title={<KeysPageHeader />} fill>
-			{total === 0 ? (
-				<EmptyState icon={Icons.key} description="还没有 API 密钥，创建一个开始接入吧" />
-			) : (
-				// 表格 + 分页交由客户端组件渲染（翻页按钮需要导航交互）
-				<KeysTable tokens={tokens} page={page} total={total} />
-			)}
+		<TitlePageShell title={<KeysPageHeader />}>
+			<PageWidthWrapper fill>
+				{total === 0 ? (
+					<EmptyState icon={Icons.key} description="还没有 API 密钥，创建一个开始接入吧" />
+				) : (
+					// 表格 + 分页交由客户端组件渲染（翻页按钮需要导航交互）
+					<KeysTable tokens={tokens} page={page} total={total} />
+				)}
+			</PageWidthWrapper>
 		</TitlePageShell>
 	);
 }
