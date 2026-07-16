@@ -38,9 +38,7 @@ export function TitlePageShell({
 				</div>
 			) : null}
 
-			<PageWidthWrapper border={false} fill={fill}>
-				{children}
-			</PageWidthWrapper>
+			<PageWidthWrapper fill={fill}>{children}</PageWidthWrapper>
 		</div>
 	);
 }
