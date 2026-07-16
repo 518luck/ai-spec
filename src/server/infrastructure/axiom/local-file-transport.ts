@@ -1,4 +1,4 @@
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile, mkdir, stat, writeFile } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import type { LogEvent, LogLevel, Transport } from "@axiomhq/logging";
 
@@ -6,6 +6,8 @@ import type { LogEvent, LogLevel, Transport } from "@axiomhq/logging";
 
 // 本地日志文件路径（项目根 logs/server.log）
 const LOG_FILE = resolve(process.cwd(), "logs/server.log");
+// 单文件大小上限：5MB，超过则清空从头写入，避免开发日志无限膨胀
+const MAX_LOG_SIZE = 5 * 1024 * 1024;
 // ! 仅开发环境启用本地文件日志：生产不落盘，避免敏感信息泄露与文件无限增长
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -17,6 +19,19 @@ const ensureLogDir = async (): Promise<void> => {
 	if (dirReady) return;
 	await mkdir(dirname(LOG_FILE), { recursive: true });
 	dirReady = true;
+};
+
+// 当日志文件超过大小上限时清空，从头开始写入；文件不存在时静默忽略
+const clearIfOversized = async (): Promise<void> => {
+	await ensureLogDir();
+	try {
+		const fileStat = await stat(LOG_FILE);
+		if (fileStat.size > MAX_LOG_SIZE) {
+			await writeFile(LOG_FILE, "", "utf8");
+		}
+	} catch {
+		// 文件尚未创建，无需处理
+	}
 };
 
 // 把 ISO 时间格式化为「YYYY-MM-DD HH:mm:ss.SSS」便于翻阅定位
@@ -38,11 +53,11 @@ const renderLine = (ev: LogEvent): string => {
 // Axiom 自定义 Transport：开发环境把日志追加写入本地 logs/server.log
 // 实现 @axiomhq/logging 的 Transport 接口（log + flush），与 AxiomJSTransport / ConsoleTransport 并列挂载
 export class LocalFileTransport implements Transport {
-	// Axiom 批量传入日志事件，逐条渲染后一次性追加写盘
+	// Axiom 批量传入日志事件，先检查文件大小，再一次性追加写盘
 	log: Transport["log"] = (logs: LogEvent[]): void => {
 		if (!isDev) return;
 		const content = logs.map(renderLine).join("");
-		void ensureLogDir().then(() => appendFile(LOG_FILE, content, "utf8"));
+		void clearIfOversized().then(() => appendFile(LOG_FILE, content, "utf8"));
 	};
 
 	// 本地文件每次 append 即落盘，无需缓冲 flush
