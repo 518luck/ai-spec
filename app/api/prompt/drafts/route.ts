@@ -15,7 +15,7 @@ import {
 // # 提示词草稿：列表查询 + 创建（API Key 接入需 promptDraft.read / .write 权限）
 
 // 分页大小，由列表接口固定，前端不控制
-const PAGE_SIZE = 30;
+const PAGE_SIZE = 130;
 
 // 列表预览的截断长度（字符数），列表接口不返回 content 全文
 const PREVIEW_LENGTH = 120;
