@@ -111,7 +111,7 @@ export function EditorToolbar({
 
 	return (
 		<div
-			className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 border-b px-4 backdrop-blur-[1.5px]"
+			className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 px-4 backdrop-blur-[1.5px]"
 			style={{ background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` }}
 		>
 			{/* 标题 */}

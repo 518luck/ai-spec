@@ -29,7 +29,7 @@ export function ToolbarPageShell({
 		<div data-slot="toolbar-page-shell" className={cn("flex h-full min-h-0 flex-col", className)}>
 			<ScrollArea
 				className="h-full max-h-full"
-				// 滚动条从标题栏下方开始，避免穿过标题栏区域；默认半透明，hover/滚动时稍明显
+				// 滚动条从标题栏下方开始，避免穿过标题栏区域；
 				scrollbarClassName="!top-16 data-[orientation=vertical]:!h-[calc(100%-4rem)]"
 			>
 				{/* 标题栏：吸顶在 ScrollArea viewport 顶部，透明背景让内容可从下方穿过 */}
