@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import { createDraftVoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
@@ -12,13 +13,21 @@ export const GET = withPersonal(
 		const { id: rawId } = await ctx.params;
 		const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
-		const draft = await prisma.promptDraft.findFirst({
-			where: { id, ownerId: session.user.id },
-			select: { id: true, name: true, content: true, folderId: true, updatedAt: true },
+		const draft = await prisma.promptDraft.findUnique({
+			where: { id },
+			select: {
+				id: true,
+				name: true,
+				content: true,
+				folderId: true,
+				ownerId: true,
+				updatedAt: true,
+			},
 		});
 
-		if (!draft) {
-			return NextResponse.json({ error: { message: "草稿不存在" } }, { status: 404 });
+		// 草稿不存在或不是当前用户所有，统一返回 404（避免暴露资源归属）
+		if (!draft || draft.ownerId !== session.user.id) {
+			throw new AiSpecError({ code: "NOT_FOUND", message: "草稿不存在" });
 		}
 
 		// folderId null → undefined（前端约定）

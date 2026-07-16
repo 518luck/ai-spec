@@ -15,3 +15,11 @@
 - 均经 Zod 校验后再使用或返回，不要直接解构裸数据
 
 详见 `src/shared/lib/zod/AGENTS.md`。
+
+## 错误处理
+
+- 业务错误统一抛 `AiSpecError`，**禁止在 handler 里手写 `NextResponse.json({ error: ... })`**。
+- `withPersonal` / `withSession` 会捕获错误并通过 `toErrorResponse` 统一返回 `{ error: { message, code } }`。
+- 常用 `code`：`NOT_FOUND`（资源不存在）、`CONFLICT`（业务冲突）、`FORBIDDEN`（无权限）。
+
+具体 code 映射与 HTTP 状态码见 `src/server/errors/http-error.ts`。
