@@ -30,9 +30,10 @@ export const GET = withPersonal(
 			throw new AiSpecError({ code: "NOT_FOUND", message: "草稿不存在" });
 		}
 
-		// folderId null → undefined（前端约定）
+		// ownerId 仅用于权限校验，不返回给前端；folderId null → undefined（前端约定）
+		const { ownerId, ...rest } = draft;
 		const out = {
-			...draft,
+			...rest,
 			folderId: draft.folderId ?? undefined,
 			updatedAt: draft.updatedAt.toISOString(),
 		};
