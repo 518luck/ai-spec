@@ -9,10 +9,10 @@ type DraftsGridProps = {
 	drafts: DraftVo[];
 };
 
-// # 草稿卡片网格：响应式列数（2→5），大屏自动扩大间距
+// # 草稿卡片网格：auto-fill 自适应列数，所有卡片保持同宽
 export function DraftsGrid({ drafts }: DraftsGridProps): JSX.Element {
 	return (
-		<div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:gap-4 2xl:gap-6">
+		<div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 xl:gap-4 2xl:gap-6">
 			{drafts.map((draft) => (
 				<DraftCard key={draft.id} id={draft.id} name={draft.name} preview={draft.preview} />
 			))}
