@@ -37,6 +37,17 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
+		// 内容和文件夹都没变就不发请求
+		const originalName = draft.name ?? "";
+		const originalFolderId = draft.folderId ?? undefined;
+		if (
+			data.content === draft.content &&
+			(data.name ?? "") === originalName &&
+			data.folderId === originalFolderId
+		) {
+			return;
+		}
+
 		const parsed = updateDraftDtoSchema.safeParse({
 			id: draft.id,
 			name: data.name,
