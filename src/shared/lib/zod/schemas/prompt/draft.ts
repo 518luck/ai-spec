@@ -36,6 +36,27 @@ export const createDraftDtoSchema = z.object({
 // 创建草稿入参类型
 export type CreateDraftDto = z.infer<typeof createDraftDtoSchema>;
 
+// 更新草稿入参：id 必填，其余字段全部可选（部分更新）
+export const updateDraftDtoSchema = z
+	.object({
+		id: z.string().min(1, { error: "缺少草稿 id" }),
+		name: draftNameSchema,
+		content: draftContentSchema,
+		images: draftImagesSchema,
+		folderId: draftFolderIdSchema,
+	})
+	.refine(
+		(data) =>
+			data.name !== undefined ||
+			data.content !== undefined ||
+			data.images !== undefined ||
+			data.folderId !== undefined,
+		{ error: "至少需要更新一个字段" },
+	);
+
+// 更新草稿入参类型
+export type UpdateDraftDto = z.infer<typeof updateDraftDtoSchema>;
+
 // 草稿列表查询入参：搜索词、排序方式、文件夹筛选
 export const listDraftsDtoSchema = z.object({
 	query: z.string().trim().optional(),

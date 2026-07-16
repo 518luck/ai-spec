@@ -8,6 +8,7 @@ import {
 	createDraftVoSchema,
 	draftListVoSchema,
 	listDraftsDtoSchema,
+	updateDraftDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/draft";
 
 // # 提示词草稿：列表查询 + 创建（API Key 接入需 promptDraft.read / .write 权限）
@@ -93,6 +94,40 @@ export const POST = withPersonal(
 		}
 
 		return NextResponse.json(result.data, { status: 201 });
+	},
+	{ permissions: ["promptDraft.write"] },
+);
+
+// > 校验入参后更新草稿（where 含 ownerId 防止越权修改他人草稿）
+export const PATCH = withPersonal(
+	async ({ req, session }) => {
+		const parsed = updateDraftDtoSchema.safeParse(await req.json());
+		if (!parsed.success) {
+			throw parsed.error;
+		}
+		const { id, name, content, images, folderId } = parsed.data;
+
+		// 构建部分更新数据：只更新传入的字段
+		const data: Record<string, unknown> = {};
+		if (name !== undefined) data.name = name || null;
+		if (content !== undefined) data.content = content;
+		if (images !== undefined) data.images = images;
+		if (folderId !== undefined) data.folderId = folderId || null;
+
+		const updated = await prisma.promptDraft.update({
+			where: { id, ownerId: session.user.id },
+			data,
+			select: { id: true, name: true, content: true, updatedAt: true },
+		});
+
+		// updatedAt 由 Date 转 ISO 字符串后经 Vo schema 校验
+		const out = { ...updated, updatedAt: updated.updatedAt.toISOString() };
+		const result = createDraftVoSchema.safeParse(out);
+		if (!result.success) {
+			throw result.error;
+		}
+
+		return NextResponse.json(result.data);
 	},
 	{ permissions: ["promptDraft.write"] },
 );

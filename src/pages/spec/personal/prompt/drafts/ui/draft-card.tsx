@@ -1,7 +1,7 @@
 "use client";
 
 import copy from "copy-to-clipboard";
-import type { JSX } from "react";
+import { type JSX, useState } from "react";
 import { toast } from "@/features/toast";
 
 import { Button } from "@/shared/ui/button";
@@ -13,6 +13,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
 import { getDraftTitle, truncateContent } from "../lib/format";
+import { EditDraftDialog } from "./edit-draft-dialog";
 import { HoverOverlay } from "./hover-overlay";
 
 type DraftCardProps = {
@@ -37,6 +38,7 @@ const CARD_CLASS = [
 
 // # 草稿卡片：内容预览 + 复制/更多操作
 export function DraftCard({ id, name, content }: DraftCardProps): JSX.Element {
+	const [editOpen, setEditOpen] = useState(false);
 	const title = getDraftTitle(name, content);
 	const preview = truncateContent(content);
 
@@ -67,22 +69,20 @@ export function DraftCard({ id, name, content }: DraftCardProps): JSX.Element {
 
 			{/* // > 底部操作遮罩：hover 卡片时淡入显示编辑/更多操作（点击卡片即可复制） */}
 			<HoverOverlay className="z-10">
-				<Button
-					variant="ghost"
-					size="icon-sm"
-					aria-label="编辑"
-					onClick={() => toast.info("编辑功能即将上线")}
-				>
+				<Button variant="ghost" size="icon-sm" aria-label="编辑" onClick={() => setEditOpen(true)}>
 					<Icons.pencil className="size-4" />
 				</Button>
-				<DraftActions id={id} />
+				<DraftActions id={id} onEdit={() => setEditOpen(true)} />
 			</HoverOverlay>
+
+			{/* 编辑弹窗 */}
+			<EditDraftDialog draft={{ id, name, content }} open={editOpen} onOpenChange={setEditOpen} />
 		</div>
 	);
 }
 
 // ? 底部操作栏的"更多"菜单（编辑/删除/转正），目前均为占位，功能待实现
-function DraftActions({ id: _id }: { id: string }): JSX.Element {
+function DraftActions({ id: _id, onEdit }: { id: string; onEdit: () => void }): JSX.Element {
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger
@@ -95,7 +95,7 @@ function DraftActions({ id: _id }: { id: string }): JSX.Element {
 				<Icons.more className="size-4" />
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={() => toast.info("编辑功能即将上线")}>
+				<DropdownMenuItem onClick={onEdit}>
 					<Icons.pencil data-icon="inline-start" />
 					编辑
 				</DropdownMenuItem>

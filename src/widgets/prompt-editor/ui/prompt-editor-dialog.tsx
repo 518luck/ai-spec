@@ -89,9 +89,10 @@ export function PromptEditorDialog({
 
 	// @ 状态定义
 
+	const isEditMode = initialContent !== undefined; // 是否为编辑模式（传了初始内容就是编辑）
 	const [content, setContent] = useState(initialContent ?? "");
-	const [isPreview, setIsPreview] = useState(false);
-	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set());
+	const [isPreview, setIsPreview] = useState(false); // 是否处于 Markdown 预览模式
+	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set()); // 光标位置正在使用的格式（加粗/斜体等）
 
 	// 文件夹归属：弹窗打开时从 URL ?folderId=xxx 同步（和导航栏筛选同步），用户在弹窗内可自由修改
 	const searchParams = useSearchParams();
@@ -218,30 +219,29 @@ export function PromptEditorDialog({
 	const title = content.split("\n")[0]?.trim() || emptyTitle;
 
 	// 关闭弹窗：有内容则保存后关闭，空内容直接关闭
+	// > 编辑模式保存后不清空内容（关闭弹窗即可），创建模式保存后清空以便下次使用
 	const handleClose = async (): Promise<void> => {
 		const trimmed = content.trim();
 
-		if (!trimmed) {
-			setContent("");
-			setIsPreview(false);
-			setFolderId(undefined);
-			onOpenChange(false);
-			return;
+		if (trimmed) {
+			try {
+				await onSave({
+					name: content.split("\n")[0]?.trim() || undefined,
+					content,
+					folderId,
+				});
+			} catch {
+				return; // 错误处理由 onSave 内部完成（toast 等），这里只阻止关闭
+			}
 		}
 
-		try {
-			await onSave({
-				name: content.split("\n")[0]?.trim() || undefined,
-				content,
-				folderId,
-			});
+		// 创建模式清空状态以便下次使用，编辑模式保留内容
+		if (!isEditMode) {
 			setContent("");
 			setIsPreview(false);
 			setFolderId(undefined);
-			onOpenChange(false);
-		} catch {
-			// 错误处理由 onSave 内部完成（toast 等），这里只阻止关闭
 		}
+		onOpenChange(false);
 	};
 
 	return (
