@@ -2,11 +2,11 @@
 
 import { useSession } from "next-auth/react";
 import type { JSX } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getDrafts } from "@/entities/prompt";
-import { useIntersection } from "@/shared/hooks";
+import { useInView } from "@/shared/hooks";
 import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
@@ -23,7 +23,6 @@ import { DraftsGrid } from "./drafts-grid";
 export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JSX.Element {
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
-	const sentinelRef = useRef<HTMLDivElement>(null);
 
 	// SWR Infinite key：query/sort/folderId 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: DraftListVo | null) => {
@@ -43,15 +42,12 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 	const hasMore = data?.[data.length - 1]?.hasMore ?? false;
 
 	// 底部哨兵进入视口且还有下一页、未在加载中时，自动加载下一页
-	// > react-use 的 useIntersection 类型基于 React 17 的 RefObject（不含 null），本项目使用 React 19，此处做兼容断言
-	const intersection = useIntersection(sentinelRef as React.RefObject<HTMLElement>, {
-		threshold: 0,
-	});
+	const { ref: sentinelRef, inView } = useInView({ threshold: 0 });
 	useEffect(() => {
-		if (intersection?.isIntersecting && hasMore && !isValidating) {
+		if (inView && hasMore && !isValidating) {
 			void setSize((s) => s + 1);
 		}
-	}, [intersection?.isIntersecting, hasMore, isValidating, setSize]);
+	}, [inView, hasMore, isValidating, setSize]);
 
 	return (
 		<ToolbarPageShell

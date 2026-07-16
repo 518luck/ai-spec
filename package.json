@@ -75,6 +75,7 @@
 		"react-easy-crop": "^6.0.2",
 		"react-email": "6.1.4",
 		"react-hook-form": "^7.76.0",
+		"react-intersection-observer": "^10.1.0",
 		"react-markdown": "^10.1.0",
 		"react-use": "^17.6.1",
 		"rehype-autolink-headings": "^7.1.0",

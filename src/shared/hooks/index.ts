@@ -1,7 +1,7 @@
-// # Hooks Barrel：本目录唯一对外出口，自实现 hook 与 react-use 转发都从这里统一导入
+// # Hooks Barrel：本目录唯一对外出口，自实现 hook 与第三方 hook 转发都从这里统一导入
 
-// @ react-use 转发
-export { useIntersection } from "react-use"; // 监听元素与视口交叉状态，用于无限滚动等场景
+// @ 第三方 hook 转发
+export { useInView } from "react-intersection-observer"; // 监听元素与视口/滚动容器的交叉状态
 
 // @ 自实现 hook
 export { useLocalStorage } from "./use-local-storage"; // 读写 localStorage，setter 支持函数式更新（无 stale closure）
