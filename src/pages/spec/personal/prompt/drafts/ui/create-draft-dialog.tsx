@@ -11,7 +11,7 @@ import {
 	type CreateDraftVo,
 	createDraftDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/draft";
-import { PromptEditorDialog, type PromptEditorSaveData } from "@/widgets/prompt-editor";
+import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 
 type CreateDraftDialogProps = {
 	open: boolean;
@@ -47,7 +47,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 	};
 
 	return (
-		<PromptEditorDialog
+		<PromptWorkspaceDialog
 			open={open}
 			onOpenChange={onOpenChange}
 			onSave={handleSave}

@@ -12,7 +12,7 @@ import {
 	type UpdateDraftDto,
 	updateDraftDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/draft";
-import { PromptEditorDialog, type PromptEditorSaveData } from "@/widgets/prompt-editor";
+import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 
 type EditDraftDialogProps = {
 	draft: {
@@ -55,7 +55,7 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 	};
 
 	return (
-		<PromptEditorDialog
+		<PromptWorkspaceDialog
 			open={open}
 			onOpenChange={onOpenChange}
 			onSave={handleSave}

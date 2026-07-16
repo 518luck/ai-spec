@@ -1,5 +1,5 @@
 "use client";
-// # 通用提示词编辑器弹窗 —— CodeMirror 编辑器 + 预览，偏好持久化到 localStorage
+// # 通用提示词工作台弹窗 —— CodeMirror 编辑器 + 预览，偏好持久化到 localStorage
 // > 不含任何业务逻辑（创建/更新/校验），保存行为通过 onSave props 注入
 
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
@@ -33,7 +33,7 @@ export type PromptEditorSaveData = {
 	folderId?: string;
 };
 
-type PromptEditorDialogProps = {
+type PromptWorkspaceDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	// 保存逻辑由外部注入（草稿传 createDraft，收录传 createRecord）
@@ -72,7 +72,7 @@ const resolveActiveFormats = (view: ReactCodeMirrorRef | null): Set<string> => {
 	return active;
 };
 
-export function PromptEditorDialog({
+export function PromptWorkspaceDialog({
 	open,
 	onOpenChange,
 	onSave,
@@ -83,7 +83,7 @@ export function PromptEditorDialog({
 	savingText = "保存中...",
 	initialContent,
 	initialFolderId,
-}: PromptEditorDialogProps): JSX.Element {
+}: PromptWorkspaceDialogProps): JSX.Element {
 	const { resolvedTheme } = useTheme();
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
 
@@ -103,19 +103,22 @@ export function PromptEditorDialog({
 	}, [open, searchParams, initialFolderId]);
 
 	// > 编辑器偏好：持久化到 localStorage，所有场景共用同一套偏好
-	const [activeTools, setActiveTools] = useLocalStorage<string[]>("prompt-editor.toolbar", [
+	const [activeTools, setActiveTools] = useLocalStorage<string[]>("prompt-workspace.toolbar", [
 		"bold",
 		"italic",
 	]);
 	const [editorSettings, setEditorSettings] = useLocalStorage(
-		"prompt-editor.settings",
+		"prompt-workspace.settings",
 		defaultEditorSettings,
 	);
 	const [editorThemeId, setEditorThemeId] = useLocalStorage<string>(
-		"prompt-editor.theme",
+		"prompt-workspace.theme",
 		"vscode",
 	);
-	const [isExpanded, setIsExpanded] = useLocalStorage<boolean>("prompt-editor.isExpanded", false);
+	const [isExpanded, setIsExpanded] = useLocalStorage<boolean>(
+		"prompt-workspace.isExpanded",
+		false,
+	);
 
 	// 切换快捷操作的显示/隐藏（useLocalStorage 自动持久化）
 	const toggleTool = (id: string): void => {
