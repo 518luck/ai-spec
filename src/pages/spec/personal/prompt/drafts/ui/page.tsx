@@ -81,10 +81,18 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 				) : (
 					<>
 						<DraftsGrid drafts={drafts} />
-						{hasMore && <div ref={sentinelRef} className="h-4" />}
-						{isValidating && (
-							<div className="flex justify-center py-6">
-								<Spinner className="size-5" />
+						{hasMore ? (
+							<>
+								<div ref={sentinelRef} className="h-4" />
+								{isValidating && (
+									<div className="flex justify-center py-6">
+										<Spinner className="size-5" />
+									</div>
+								)}
+							</>
+						) : (
+							<div className="flex justify-center py-6 text-muted-foreground text-sm">
+								到底了，没有更多草稿了
 							</div>
 						)}
 					</>
