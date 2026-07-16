@@ -1,11 +1,12 @@
 "use client";
 
-// # 草稿编辑弹窗 —— 薄包装，注入草稿专属的更新逻辑（SWR mutation + schema 校验）
+// # 草稿编辑弹窗 —— 薄包装，打开时拉取草稿全文，注入更新逻辑（SWR mutation + schema 校验）
 
 import type { JSX } from "react";
+import { useEffect, useState } from "react";
 import { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
-import { updateDraft } from "@/entities/prompt";
+import { getDraft, updateDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
 import {
 	type CreateDraftVo,
@@ -18,15 +19,40 @@ type EditDraftDialogProps = {
 	draft: {
 		id: string;
 		name: string | null;
-		content: string;
-		folderId?: string;
+		preview: string;
 	};
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
 
 export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogProps): JSX.Element {
-	// 更新草稿 mutation：trigger 触发请求，isMutating 自动管理 loading 状态
+	// 打开弹窗时拉取草稿全文（列表只有截断预览）
+	const [fullDraft, setFullDraft] = useState<{
+		content: string;
+		folderId?: string;
+	} | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+		if (!open) return;
+		let cancelled = false;
+		setIsLoading(true);
+		getDraft(draft.id)
+			.then((data) => {
+				if (!cancelled) setFullDraft({ content: data.content, folderId: data.folderId });
+			})
+			.catch(() => {
+				if (!cancelled) toast.error("加载草稿失败");
+			})
+			.finally(() => {
+				if (!cancelled) setIsLoading(false);
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [open, draft.id]);
+
+	// 更新草稿 mutation
 	const { mutate } = useSWRConfig();
 	const { trigger: triggerUpdateDraft, isMutating } = useSWRMutation<
 		CreateDraftVo,
@@ -39,9 +65,10 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		// 内容和文件夹都没变就不发请求
 		const originalName = draft.name ?? "";
-		const originalFolderId = draft.folderId ?? undefined;
+		const originalFolderId = fullDraft?.folderId ?? undefined;
 		if (
-			data.content === draft.content &&
+			fullDraft &&
+			data.content === fullDraft.content &&
 			(data.name ?? "") === originalName &&
 			data.folderId === originalFolderId
 		) {
@@ -60,10 +87,25 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 		}
 
 		await triggerUpdateDraft(parsed.data);
-		// 刷新所有 drafts 相关的 SWR 缓存
 		await mutate((key) => Array.isArray(key) && key[0] === "drafts");
 		toast.success("草稿已更新");
 	};
+
+	// 加载中或未打开时不渲染编辑器（避免用 preview 当 initialContent）
+	if (isLoading || !fullDraft) {
+		return (
+			<PromptWorkspaceDialog
+				open={open}
+				onOpenChange={onOpenChange}
+				onSave={async () => {}}
+				isSaving={isLoading}
+				resourceType="promptDraft"
+				initialContent={draft.preview}
+				emptyTitle="无标题草稿"
+				savingText="加载中..."
+			/>
+		);
+	}
 
 	return (
 		<PromptWorkspaceDialog
@@ -72,8 +114,8 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 			onSave={handleSave}
 			isSaving={isMutating}
 			resourceType="promptDraft"
-			initialContent={draft.content}
-			initialFolderId={draft.folderId}
+			initialContent={fullDraft.content}
+			initialFolderId={fullDraft.folderId}
 			emptyTitle="无标题草稿"
 			savingText="更新中..."
 		/>

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { PAGE_SIZE } from "@/pages/spec/personal/prompt/drafts/config/draft-list";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
+import { Prisma } from "@/shared/db/generator/client";
+import type { DraftVo } from "@/shared/lib/zod/schemas/prompt/draft";
 import {
 	createDraftDtoSchema,
 	createDraftVoSchema,
@@ -12,6 +13,12 @@ import {
 } from "@/shared/lib/zod/schemas/prompt/draft";
 
 // # 提示词草稿：列表查询 + 创建（API Key 接入需 promptDraft.read / .write 权限）
+
+// 分页大小，由列表接口固定，前端不控制
+const PAGE_SIZE = 30;
+
+// 列表预览的截断长度（字符数），列表接口不返回 content 全文
+const PREVIEW_LENGTH = 120;
 
 // > 按搜索/排序/文件夹查询当前用户草稿（分页），返回 { data, total }
 export const GET = withPersonal(
@@ -24,9 +31,10 @@ export const GET = withPersonal(
 		const trimmedQuery = query?.trim() ?? "";
 
 		// 组合查询条件：ownerId 必有；选了文件夹按 folderId 筛选，未选则只看未分类（folderId 为 null）
+		const targetFolderId = folderId || null;
 		const where = {
 			ownerId: session.user.id,
-			folderId: folderId || null,
+			folderId: targetFolderId,
 			...(trimmedQuery && {
 				OR: [
 					{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
@@ -35,18 +43,30 @@ export const GET = withPersonal(
 			}),
 		};
 
-		// 排序映射：created→按创建时间倒序，其余→按更新时间倒序
-		const orderBy =
-			sort === "created" ? { createdAt: "desc" as const } : { updatedAt: "desc" as const };
+		// 构造 SQL WHERE 与 ORDER BY 片段（Prisma 的 select 不支持字符串截断，用原生查询在数据库层完成）
+		const whereConditions = [
+			Prisma.sql`owner_id = ${session.user.id}`,
+			targetFolderId ? Prisma.sql`folder_id = ${targetFolderId}` : Prisma.sql`folder_id IS NULL`,
+		];
+		if (trimmedQuery) {
+			const pattern = `%${trimmedQuery}%`;
+			whereConditions.push(Prisma.sql`(name ILIKE ${pattern} OR content ILIKE ${pattern})`);
+		}
+		const whereSql = Prisma.sql`WHERE ${Prisma.join(whereConditions, " AND ")}`;
+		const orderBySql =
+			sort === "created"
+				? Prisma.sql`ORDER BY created_at DESC`
+				: Prisma.sql`ORDER BY updated_at DESC`;
 
-		// findMany 取当前页草稿、count 取总数，两者无依赖并行查询以减少等待
+		// 列表用原生查询在数据库层截取 preview；count 仍用 Prisma 安全计数
 		const [rows, total] = await Promise.all([
-			prisma.promptDraft.findMany({
-				where,
-				orderBy,
-				take: PAGE_SIZE,
-				select: { id: true, name: true, content: true },
-			}),
+			prisma.$queryRaw<DraftVo[]>`
+				SELECT id, name, SUBSTRING(content, 1, ${PREVIEW_LENGTH}) AS preview
+				FROM prompt."PromptDraft"
+				${whereSql}
+				${orderBySql}
+				LIMIT ${PAGE_SIZE}
+			`,
 			prisma.promptDraft.count({ where }),
 		]);
 

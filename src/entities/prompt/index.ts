@@ -1,1 +1,1 @@
-export { createDraft, getDrafts, updateDraft } from "./drafts";
+export { createDraft, getDraft, getDrafts, updateDraft } from "./drafts";

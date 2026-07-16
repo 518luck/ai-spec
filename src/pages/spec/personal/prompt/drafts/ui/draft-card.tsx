@@ -12,7 +12,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
-import { getDraftTitle, truncateContent } from "../lib/format";
+import { getDraftTitle } from "../lib/format";
 import { EditDraftDialog } from "./edit-draft-dialog";
 import { HoverOverlay } from "./hover-overlay";
 
@@ -21,8 +21,8 @@ type DraftCardProps = {
 	id: string;
 	// 草稿标题（可为空，为空时用内容生成）
 	name: string | null;
-	// 草稿正文
-	content: string;
+	// 草稿预览（截断后的内容）
+	preview: string;
 };
 
 // 草稿卡片样式：外阴影投影 + inset 边缘明暗模拟左上斜打光
@@ -37,14 +37,13 @@ const CARD_CLASS = [
 ].join(" ");
 
 // # 草稿卡片：内容预览 + 复制/更多操作
-export function DraftCard({ id, name, content }: DraftCardProps): JSX.Element {
+export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	const [editOpen, setEditOpen] = useState(false);
-	const title = getDraftTitle(name, content);
-	const preview = truncateContent(content);
+	const title = getDraftTitle(name, preview);
 
-	// 复制草稿全文到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
+	// 复制预览文本到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
 	const handleCopy = (): void => {
-		copy(content);
+		copy(preview);
 		toast.success("已复制");
 	};
 
@@ -76,7 +75,7 @@ export function DraftCard({ id, name, content }: DraftCardProps): JSX.Element {
 			</HoverOverlay>
 
 			{/* 编辑弹窗 */}
-			<EditDraftDialog draft={{ id, name, content }} open={editOpen} onOpenChange={setEditOpen} />
+			<EditDraftDialog draft={{ id, name, preview }} open={editOpen} onOpenChange={setEditOpen} />
 		</div>
 	);
 }

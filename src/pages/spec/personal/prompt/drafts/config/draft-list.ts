@@ -1,5 +1,4 @@
 // # 草稿列表配置 —— 分页、预览、排序常量（无 "use client"，服务端/客户端皆可导入）
-export const PAGE_SIZE = 12;
 
 // 草稿卡片内容预览的最大行数，超出截断
 export const PREVIEW_MAX_LINES = 6;

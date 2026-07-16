@@ -225,7 +225,10 @@ export function EditorToolbar({
 						<div className="flex items-center px-2 py-1.5">
 							<span className="mr-4 flex shrink-0 items-center gap-1 text-muted-foreground text-xs">
 								显示
-								<HelpTooltip alignWithText content="勾选后将该操作加入顶部快捷栏，快捷栏可拖拽调整顺序" />
+								<HelpTooltip
+									alignWithText
+									content="勾选后将该操作加入顶部快捷栏，快捷栏可拖拽调整顺序"
+								/>
 							</span>
 							<span className="flex-1 text-muted-foreground text-xs">操作</span>
 						</div>

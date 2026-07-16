@@ -80,11 +80,11 @@ export const createDraftVoSchema = z.object({
 export type CreateDraftVo = z.infer<typeof createDraftVoSchema>;
 
 // @ 出参 - 列表
-// 草稿列表项：列表不需要更新时间，比 createDraftVoSchema 少 updatedAt
+// 草稿列表项：列表只返回截断预览，不返回 content 全文
 export const draftVoSchema = z.object({
 	id: z.string(),
 	name: z.string().nullable(),
-	content: z.string(),
+	preview: z.string(),
 });
 
 // 草稿列表项类型
