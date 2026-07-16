@@ -19,16 +19,16 @@ export function PageWidthWrapper({
 	return (
 		<div
 			className={cn(
-				"@container/page mx-auto w-full px-3 pt-6 pb-6 lg:px-6",
+				"@container/page mx-auto w-full bg-amber-600 px-3 pt-6 pb-6 lg:px-6",
 				fill && "flex min-h-0 flex-1 flex-col",
 				className,
 			)}
 		>
 			<div
 				className={cn(
-					"rounded-lg border px-6 py-4",
+					"rounded-lg border bg-green-500 px-6 py-4",
 					!border && "border-none px-0 py-0",
-					fill && "flex min-h-0 flex-1 flex-col",
+					fill && "flex min-h-0 flex-1 flex-col overflow-auto",
 				)}
 			>
 				{children}

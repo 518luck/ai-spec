@@ -40,7 +40,7 @@ export async function DualSidebarLayout({
 				data-slot="dual-sidebar-layout"
 				className={cn(
 					dualSidebarZoneClasses.layout.shell,
-					"flex min-h-dvh w-full overflow-hidden",
+					"flex h-dvh w-full overflow-hidden",
 					className,
 				)}
 				{...props}

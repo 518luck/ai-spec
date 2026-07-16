@@ -79,7 +79,7 @@ export function DualSidebar({ className, ...props }: DualSidebarProps): JSX.Elem
 					? { type: "tween", duration: 0 }
 					: { type: "spring", stiffness: 300, damping: 28, bounce: 0.18 }
 			}
-			className={cn("flex min-h-dvh shrink-0 overflow-hidden", className)}
+			className={cn("flex h-full shrink-0 overflow-hidden", className)}
 			{...props}
 		>
 			{/* 左侧导航栏 */}
