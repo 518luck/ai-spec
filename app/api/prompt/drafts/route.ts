@@ -15,7 +15,7 @@ import {
 // # 提示词草稿：列表查询 + 创建（API Key 接入需 promptDraft.read / .write 权限）
 
 // 分页大小，由列表接口固定，前端不控制
-const PAGE_SIZE = 130;
+const PAGE_SIZE = 30;
 
 // 列表预览的截断长度（字符数），列表接口不返回 content 全文
 const PREVIEW_LENGTH = 120;
@@ -27,7 +27,7 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { query, sort, folderId } = parsed.data;
+		const { query, sort, folderId, offset = 0 } = parsed.data;
 		const trimmedQuery = query?.trim() ?? "";
 
 		// 组合查询条件：ownerId 必有；选了文件夹按 folderId 筛选，未选则只看未分类（folderId 为 null）
@@ -66,12 +66,17 @@ export const GET = withPersonal(
 				${whereSql}
 				${orderBySql}
 				LIMIT ${PAGE_SIZE}
+				OFFSET ${offset}
 			`,
 			prisma.promptDraft.count({ where }),
 		]);
 
+		// 是否还有下一页：本次返回满一页则认为还有
+		const hasMore = rows.length === PAGE_SIZE;
+		const nextOffset = hasMore ? offset + rows.length : undefined;
+
 		// 经 Vo schema 校验，确保响应形状与前端类型一致
-		const voResult = draftListVoSchema.safeParse({ data: rows, total });
+		const voResult = draftListVoSchema.safeParse({ data: rows, total, hasMore, nextOffset });
 		if (!voResult.success) {
 			throw voResult.error;
 		}

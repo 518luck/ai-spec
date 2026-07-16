@@ -2,11 +2,12 @@
 
 import { useSession } from "next-auth/react";
 import type { JSX } from "react";
-import { useState } from "react";
-import useSWR from "swr";
+import { useEffect, useMemo, useRef, useState } from "react";
+import useSWRInfinite from "swr/infinite";
 
 import { getDrafts } from "@/entities/prompt";
-import type { ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
+import { useIntersection } from "@/shared/hooks";
+import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
@@ -18,19 +19,39 @@ import { CreateDraftDialog } from "./create-draft-dialog";
 import { DraftFolderFilter } from "./draft-folder-filter";
 import { DraftsGrid } from "./drafts-grid";
 
-// # 个人草稿页：SWR 拉 GET /api/prompt/drafts，搜索/排序/文件夹变化自动重新请求
+// # 个人草稿页：SWR Infinite 拉取 GET /api/prompt/drafts，底部哨兵进入视口时自动加载下一页
 export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JSX.Element {
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
+	const sentinelRef = useRef<HTMLDivElement>(null);
 
-	// SWR key 含 query/sort/folderId，任一变化自动重拉；未登录时不发请求
-	const { data, isLoading } = useSWR(
-		status === "authenticated" ? (["drafts", query, sort, folderId] as const) : null,
-		async ([, query, sort, folderId]) => getDrafts({ query, sort, folderId }),
+	// SWR Infinite key：query/sort/folderId 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
+	const getKey = (_pageIndex: number, previousPageData: DraftListVo | null) => {
+		if (status !== "authenticated") return null;
+		if (previousPageData && !previousPageData.hasMore) return null;
+		const offset = previousPageData?.nextOffset ?? 0;
+		return ["drafts", query, sort, folderId, offset] as const;
+	};
+
+	const { data, isLoading, isValidating, setSize } = useSWRInfinite(
+		getKey,
+		async ([, query, sort, folderId, offset]) => getDrafts({ query, sort, folderId, offset }),
 	);
 
-	const drafts = data?.data ?? [];
-	const total = data?.total ?? 0;
+	const drafts = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
+	const total = data?.[0]?.total ?? 0;
+	const hasMore = data?.[data.length - 1]?.hasMore ?? false;
+
+	// 底部哨兵进入视口且还有下一页、未在加载中时，自动加载下一页
+	// > react-use 的 useIntersection 类型基于 React 17 的 RefObject（不含 null），本项目使用 React 19，此处做兼容断言
+	const intersection = useIntersection(sentinelRef as React.RefObject<HTMLElement>, {
+		threshold: 0,
+	});
+	useEffect(() => {
+		if (intersection?.isIntersecting && hasMore && !isValidating) {
+			void setSize((s) => s + 1);
+		}
+	}, [intersection?.isIntersecting, hasMore, isValidating, setSize]);
 
 	return (
 		<ToolbarPageShell
@@ -62,7 +83,15 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 				) : total === 0 ? (
 					<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
 				) : (
-					<DraftsGrid drafts={drafts} />
+					<>
+						<DraftsGrid drafts={drafts} />
+						{hasMore && <div ref={sentinelRef} className="h-4" />}
+						{isValidating && (
+							<div className="flex justify-center py-6">
+								<Spinner className="size-5" />
+							</div>
+						)}
+					</>
 				)}
 			</PageWidthWrapper>
 		</ToolbarPageShell>

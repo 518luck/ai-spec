@@ -57,11 +57,12 @@ export const updateDraftDtoSchema = z
 // 更新草稿入参类型
 export type UpdateDraftDto = z.infer<typeof updateDraftDtoSchema>;
 
-// 草稿列表查询入参：搜索词、排序方式、文件夹筛选
+// 草稿列表查询入参：搜索词、排序方式、文件夹筛选、分页偏移
 export const listDraftsDtoSchema = z.object({
 	query: z.string().trim().optional(),
 	sort: z.enum(["created", "updated"]).optional(),
 	folderId: z.string().optional(),
+	offset: z.coerce.number().int().min(0).optional(),
 });
 
 // 草稿列表查询入参类型
@@ -95,6 +96,8 @@ export type DraftVo = z.infer<typeof draftVoSchema>;
 export const draftListVoSchema = z.object({
 	data: z.array(draftVoSchema),
 	total: z.number(),
+	hasMore: z.boolean(),
+	nextOffset: z.number().int().min(0).optional(),
 });
 
 // 草稿列表响应类型
