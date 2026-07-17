@@ -4,7 +4,7 @@
 
 import type { JSX } from "react";
 
-import { FolderCombobox } from "@/widgets/folder-combobox";
+import { FolderCombobox } from "@/features/folder-combobox";
 
 // > 草稿页的文件夹筛选下拉，URL 驱动，选中后服务端自动重新筛选列表
 export function DraftFolderFilter(): JSX.Element {

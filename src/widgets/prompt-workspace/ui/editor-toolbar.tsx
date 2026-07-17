@@ -4,7 +4,7 @@
 import { AnimatePresence, Reorder } from "motion/react";
 import type { JSX } from "react";
 import { useRef } from "react";
-
+import { FolderCombobox } from "@/features/folder-combobox";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -23,7 +23,6 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-import { FolderCombobox } from "@/widgets/folder-combobox";
 import { EDITOR_THEMES, MENU_GROUPS, type MenuItem } from "../config/editor";
 
 // 编辑器展示状态 + 主题/展开回调：状态与其对应回调同组，方便后续扩展（如版本处理）
