@@ -57,6 +57,14 @@ export const updateDraftDtoSchema = z
 // 更新草稿入参类型
 export type UpdateDraftDto = z.infer<typeof updateDraftDtoSchema>;
 
+// 删除草稿入参：仅校验 id 非空（作为路由/前端参数守卫）
+export const deleteDraftDtoSchema = z.object({
+	id: z.string().min(1, { error: "缺少草稿 id" }),
+});
+
+// 删除草稿入参类型
+export type DeleteDraftDto = z.infer<typeof deleteDraftDtoSchema>;
+
 // 草稿列表查询入参：搜索词、排序方式、文件夹筛选、分页偏移
 export const listDraftsDtoSchema = z.object({
 	query: z.string().trim().optional(),

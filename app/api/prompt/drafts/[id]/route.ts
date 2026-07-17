@@ -3,9 +3,9 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
-import { createDraftVoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import { createDraftVoSchema, deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 
-// # 单条草稿详情：编辑时拉取完整内容（列表只返回截断预览）
+// # 单条草稿详情 / 删除：按 id 拉取全文或硬删除，归属隔离统一走 ownerId 进 where
 
 // > 按 id 获取草稿全文（where 含 ownerId 防止越权读取他人草稿）
 export const GET = withPersonal(
@@ -45,4 +45,26 @@ export const GET = withPersonal(
 		return NextResponse.json(result.data);
 	},
 	{ permissions: ["promptDraft.read"] },
+);
+
+// > 硬删除草稿：where 含 ownerId，删除他人草稿时 Prisma P2025 自动映射为 404，不暴露归属
+export const DELETE = withPersonal(
+	async ({ ctx, session }) => {
+		const { id: rawId } = await ctx.params;
+		const id = Array.isArray(rawId) ? rawId[0] : rawId;
+
+		// 路径参数守卫：id 非空才放行
+		const parsed = deleteDraftDtoSchema.safeParse({ id });
+		if (!parsed.success) {
+			throw parsed.error;
+		}
+
+		// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
+		await prisma.promptDraft.delete({
+			where: { id: parsed.data.id, ownerId: session.user.id },
+		});
+
+		return NextResponse.json({ success: true });
+	},
+	{ permissions: ["promptDraft.write"] },
 );

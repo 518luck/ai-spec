@@ -2,9 +2,14 @@
 
 import copy from "copy-to-clipboard";
 import { type JSX, useState } from "react";
+import { useSWRConfig } from "swr";
+import useSWRMutation from "swr/mutation";
+import { deleteDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
+import { deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 
 import { Button } from "@/shared/ui/button";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -80,29 +85,64 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	);
 }
 
-// ? 底部操作栏的"更多"菜单（收录/删除），目前均为占位，功能待实现
-function DraftActions({ id: _id }: { id: string }): JSX.Element {
+// 底部操作栏的"更多"菜单（收录/删除）；删除经 ConfirmDialog 二次确认
+function DraftActions({ id }: { id: string }): JSX.Element {
+	const { mutate } = useSWRConfig();
+	const [deleteOpen, setDeleteOpen] = useState(false);
+	// 删除草稿 mutation；arg 为草稿 id
+	const { trigger: triggerDeleteDraft } = useSWRMutation<void, Error, string, string>(
+		"delete-draft",
+		async (_key, { arg }) => deleteDraft(arg),
+	);
+
+	// 确认删除：id 守卫 + 删除 + 刷新所有 drafts 列表缓存
+	const handleConfirmDelete = async (): Promise<void> => {
+		const parsed = deleteDraftDtoSchema.safeParse({ id });
+		if (!parsed.success) {
+			toast.error(parsed.error.issues[0]?.message ?? "删除失败");
+			return;
+		}
+		await triggerDeleteDraft(parsed.data.id);
+		// 刷新所有 drafts 相关的 SWR 缓存（覆盖搜索/排序/文件夹/分页各变体）
+		await mutate((key) => Array.isArray(key) && key[0] === "drafts");
+		toast.success("已删除");
+	};
+
 	return (
-		<DropdownMenu>
-			<DropdownMenuTrigger
-				render={
-					<Button variant="ghost" size="icon-sm" aria-label="更多操作">
-						<Icons.more className="size-4" />
-					</Button>
-				}
-			>
-				<Icons.more className="size-4" />
-			</DropdownMenuTrigger>
-			<DropdownMenuContent align="end">
-				<DropdownMenuItem onClick={() => toast.info("转正功能即将上线")}>
-					<Icons.promote data-icon="inline-start" />
-					收录
-				</DropdownMenuItem>
-				<DropdownMenuItem variant="destructive" onClick={() => toast.info("删除功能即将上线")}>
-					<Icons.trash data-icon="inline-start" />
-					删除
-				</DropdownMenuItem>
-			</DropdownMenuContent>
-		</DropdownMenu>
+		<>
+			<DropdownMenu>
+				<DropdownMenuTrigger
+					render={
+						<Button variant="ghost" size="icon-sm" aria-label="更多操作">
+							<Icons.more className="size-4" />
+						</Button>
+					}
+				>
+					<Icons.more className="size-4" />
+				</DropdownMenuTrigger>
+				<DropdownMenuContent align="end">
+					<DropdownMenuItem onClick={() => toast.info("转正功能即将上线")}>
+						<Icons.promote data-icon="inline-start" />
+						收录
+					</DropdownMenuItem>
+					{/* 点「删除」打开确认弹窗，不直接执行 */}
+					<DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+						<Icons.trash data-icon="inline-start" />
+						删除
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
+
+			{/* 删除二次确认：草稿为高频低价值内容，简单确认即可，无需输入文字 */}
+			<ConfirmDialog
+				open={deleteOpen}
+				onOpenChange={setDeleteOpen}
+				title="删除草稿"
+				description="此操作将永久删除该草稿，无法恢复。确定继续吗？"
+				confirmText="删除"
+				variant="destructive"
+				onConfirm={handleConfirmDelete}
+			/>
+		</>
 	);
 }
