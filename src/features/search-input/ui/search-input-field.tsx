@@ -45,7 +45,6 @@ export function SearchInputField({ className }: SearchInputFieldProps): JSX.Elem
 
 	return (
 		<div className={cn("flex flex-1 items-center gap-2", className)}>
-			<Icons.search className="size-4 shrink-0 text-muted-foreground" />
 			<input
 				type="text"
 				value={value}

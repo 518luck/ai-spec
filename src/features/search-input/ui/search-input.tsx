@@ -13,8 +13,8 @@ export function SearchInput({ filters, className }: SearchInputProps): JSX.Eleme
 	return (
 		<div
 			className={cn(
-				// 胶囊容器：固定高度、圆角边框，聚焦时高亮边框
-				"flex h-9 items-center gap-1 rounded-md border border-input bg-transparent px-2.5 transition-[color,box-shadow]",
+				// 胶囊容器：固定高度、圆角边框，聚焦时高亮边框；右侧 pr-1 让筛选按钮贴右，避免整体过宽
+				"flex h-9 items-center gap-1 rounded-md border border-input bg-transparent pr-1 pl-2.5 transition-[color,box-shadow]",
 				"focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
 				"dark:bg-input/30",
 				className,
@@ -26,8 +26,7 @@ export function SearchInput({ filters, className }: SearchInputProps): JSX.Eleme
 					{/* 输入框与筛选区的分隔线 */}
 					<div className="h-5 w-px shrink-0 bg-border" />
 					<SearchFilterPopover filters={filters} />
-					{/* // > 右侧 chip 区：预留给"已选标签/筛选条件"展示，做标签功能时在此渲染激活项；当前为空占位撑开空间 */}
-					<div className="flex shrink-0 items-center gap-1" />
+					{/* // > 右侧 chip 区：预留给"已选标签/筛选条件"展示，做标签功能时在此渲染激活项；当前无内容先不占位，避免把筛选按钮挤离右边界 */}
 				</>
 			) : null}
 		</div>

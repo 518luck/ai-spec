@@ -16,6 +16,7 @@ import {
 	IconCalendar,
 	IconCamera,
 	IconCheck,
+	IconChevronDown,
 	IconCode,
 	IconCompass,
 	IconCopy,
@@ -128,6 +129,7 @@ export const Icons = {
 
 	// 表单/选择控件
 	check: IconCheck,
+	chevronDown: IconChevronDown,
 	selector: IconSelector,
 	folderClosed: IconFolder,
 	folderX: IconFolderX,
