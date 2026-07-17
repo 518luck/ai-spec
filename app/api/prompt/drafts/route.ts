@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import { Prisma } from "@/shared/db/generator/client";
+import { decodeFilters } from "@/shared/lib/search-filter";
 import type { DraftVo } from "@/shared/lib/zod/schemas/prompt/draft";
 import {
 	createDraftDtoSchema,
@@ -27,30 +28,47 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { query, sort, folderId, offset = 0 } = parsed.data;
-		const trimmedQuery = query?.trim() ?? "";
+		const { q, filter: filterEncoded, sort, folderId, offset = 0 } = parsed.data;
+		const trimmedQuery = q?.trim() ?? "";
+
+		// > 解析字段开关：filter 为 base64 JSON（{title:true,content:true}）；解码失败或无 filter 参数时默认只搜 name
+		const filter = decodeFilters(filterEncoded) ?? { title: true };
+		// title=true 搜 name，content=true 搜 content；两开关都关时不加搜索条件（兜底，理论上前端不会产生）
+		const searchTitle = filter.title === true;
+		const searchContent = filter.content === true;
 
 		// 组合查询条件：ownerId 必有；选了文件夹按 folderId 筛选，未选则只看未分类（folderId 为 null）
 		const targetFolderId = folderId || null;
-		const where = {
+		// 按开关动态拼 Prisma OR 条件（给 count 用）
+		const searchConditions: Prisma.PromptDraftWhereInput[] = [];
+		if (trimmedQuery && searchTitle) {
+			searchConditions.push({ name: { contains: trimmedQuery, mode: "insensitive" } });
+		}
+		if (trimmedQuery && searchContent) {
+			searchConditions.push({ content: { contains: trimmedQuery, mode: "insensitive" } });
+		}
+		const where: Prisma.PromptDraftWhereInput = {
 			ownerId: session.user.id,
 			folderId: targetFolderId,
-			...(trimmedQuery && {
-				OR: [
-					{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
-					{ content: { contains: trimmedQuery, mode: "insensitive" as const } },
-				],
-			}),
+			...(searchConditions.length > 0 && { OR: searchConditions }),
 		};
 
 		// 构造 SQL WHERE 与 ORDER BY 片段（Prisma 的 select 不支持字符串截断，用原生查询在数据库层完成）
-		const whereConditions = [
+		const whereConditions: Prisma.Sql[] = [
 			Prisma.sql`owner_id = ${session.user.id}`,
 			targetFolderId ? Prisma.sql`folder_id = ${targetFolderId}` : Prisma.sql`folder_id IS NULL`,
 		];
+		// > raw SQL 按同样开关拼搜索条件（必须和上面 Prisma where 同步，否则 total 和列表对不上）
 		if (trimmedQuery) {
 			const pattern = `%${trimmedQuery}%`;
-			whereConditions.push(Prisma.sql`(name ILIKE ${pattern} OR content ILIKE ${pattern})`);
+			const sqlParts: Prisma.Sql[] = [];
+			if (searchTitle) sqlParts.push(Prisma.sql`name ILIKE ${pattern}`);
+			if (searchContent) sqlParts.push(Prisma.sql`content ILIKE ${pattern}`);
+			if (sqlParts.length === 1) {
+				whereConditions.push(sqlParts[0]);
+			} else if (sqlParts.length > 1) {
+				whereConditions.push(Prisma.sql`(${Prisma.join(sqlParts, " OR ")})`);
+			}
 		}
 		const whereSql = Prisma.sql`WHERE ${Prisma.join(whereConditions, " AND ")}`;
 		const orderBySql =

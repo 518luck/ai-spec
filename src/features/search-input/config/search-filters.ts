@@ -1,6 +1,11 @@
-// # 搜索筛选配置：内置字段定义 + filter JSON 编解码 + 默认值
+// # 搜索筛选配置：内置字段定义 + 默认值；编解码复用 shared/lib 的共享实现
 
+import type { SearchFilters } from "@/shared/lib/search-filter";
 import type { SearchFieldDefinition, SearchFieldKey } from "../model/types";
+
+export type { SearchFilters } from "@/shared/lib/search-filter";
+// > 编解码实现从 shared/lib 统一导入（前后端共享，避免 atob/btoa 重复实现）
+export { decodeFilters, encodeFilters } from "@/shared/lib/search-filter";
 
 // @ 内置搜索字段全集：新增字段（如 tag、folder）在此追加，并同步 SearchFieldKey 类型
 // > 字段语义：title/content 是布尔开关（true=参与搜索），tag/folder 是字符串值
@@ -33,25 +38,3 @@ export const SEARCH_DEBOUNCE_MS = 300;
 
 // 默认占位文案
 export const SEARCH_PLACEHOLDER = "搜索...";
-
-// # filter 状态的类型：所有字段开关的当前值集合
-// boolean 字段用 true/false，字符串字段（未来的 tag/folder）用具体值；未出现表示该字段未激活
-export type SearchFilters = Partial<{
-	title: boolean;
-	content: boolean;
-}>;
-
-// > 将 filter 状态编码为 base64 字符串，写入 URL 的 filter= 参数
-// ! 用 encodeURIComponent 包裹 base64：base64 的 +/= 在 URL 里有特殊含义，不编码会导致解析错误
-export const encodeFilters = (filters: SearchFilters): string =>
-	encodeURIComponent(btoa(JSON.stringify(filters)));
-
-// > 将 URL 里 filter= 参数的值解码为 filter 状态；非法值返回 undefined
-export const decodeFilters = (encoded: string | undefined): SearchFilters | undefined => {
-	if (!encoded) return undefined;
-	try {
-		return JSON.parse(atob(decodeURIComponent(encoded))) as SearchFilters;
-	} catch {
-		return undefined;
-	}
-};

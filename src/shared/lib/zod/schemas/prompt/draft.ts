@@ -65,9 +65,10 @@ export const deleteDraftDtoSchema = z.object({
 // 删除草稿入参类型
 export type DeleteDraftDto = z.infer<typeof deleteDraftDtoSchema>;
 
-// 草稿列表查询入参：搜索词、排序方式、文件夹筛选、分页偏移
+// 草稿列表查询入参：搜索词（q）、字段筛选（filter，base64 编码的 JSON）、排序、文件夹、分页
 export const listDraftsDtoSchema = z.object({
-	query: z.string().trim().optional(),
+	q: z.string().trim().optional(),
+	filter: z.string().optional(),
 	sort: z.enum(["created", "updated"]).optional(),
 	folderId: z.string().optional(),
 	offset: z.coerce.number().int().min(0).optional(),
