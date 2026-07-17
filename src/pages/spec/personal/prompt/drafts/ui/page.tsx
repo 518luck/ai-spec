@@ -12,7 +12,7 @@ import { Button } from "@/shared/ui/button";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { Kbd } from "@/shared/ui/kbd";
-import { Spinner } from "@/shared/ui/spinner";
+import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { CreateDraftDialog } from "./create-draft-dialog";
@@ -73,8 +73,8 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 		>
 			<PageWidthWrapper fill>
 				{isLoading ? (
-					<div className="flex justify-center py-20">
-						<Spinner className="size-6" />
+					<div className="flex justify-center py-20 text-muted-foreground">
+						<ScaleLoaderWrap />
 					</div>
 				) : total === 0 ? (
 					<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
@@ -85,8 +85,8 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 							<>
 								<div ref={sentinelRef} className="h-4" />
 								{isValidating && (
-									<div className="flex justify-center py-6">
-										<Spinner className="size-5" />
+									<div className="flex justify-center py-6 text-muted-foreground">
+										<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
 									</div>
 								)}
 							</>

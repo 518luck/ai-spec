@@ -13,7 +13,7 @@ import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalStorage } from "@/shared/hooks";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
-import { Spinner } from "@/shared/ui/spinner";
+import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import {
 	defaultEditorSettings,
 	EDITOR_THEMES,
@@ -287,8 +287,8 @@ export function PromptWorkspaceDialog({
 				{/* 编辑器/预览区域 */}
 				<div className="min-h-0 flex-1 overflow-hidden">
 					{isLoading ? (
-						<div className="flex h-full items-center justify-center">
-							<Spinner className="size-8" />
+						<div className="flex h-full items-center justify-center text-muted-foreground">
+							<ScaleLoaderWrap />
 						</div>
 					) : isPreview ? (
 						<MarkdownPreview content={content} height={isExpanded ? "37rem" : "29rem"} />
@@ -337,8 +337,8 @@ export function PromptWorkspaceDialog({
 
 				{/* 保存中遮罩 */}
 				{isSaving && (
-					<div className="absolute inset-0 z-50 flex items-center justify-center gap-2 bg-popover/80 backdrop-blur-sm">
-						<Spinner className="size-5" />
+					<div className="absolute inset-0 z-50 flex items-center justify-center gap-2 bg-popover/80 text-muted-foreground backdrop-blur-sm">
+						<ScaleLoaderWrap height={16} width={2} margin={1} radius={1} />
 						<span className="text-sm">{savingText}</span>
 					</div>
 				)}

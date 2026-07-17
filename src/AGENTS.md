@@ -175,6 +175,19 @@ pnpm dlx shadcn@latest add [组件名]
 
 使用 shadcn 组件时，如果不确定组件 API、组合方式或最佳实践，应调用 /shadcn 技能查看正确用法。
 
+## 加载状态（Loading）
+
+两种加载组件按场景分工，不要混用：
+
+| 组件 | 适用场景 | 尺寸控制 |
+| --- | --- | --- |
+| `Spinner`（`@/shared/ui/spinner`） | **嵌入式**：按钮、输入框、行内文字旁等紧凑处 | `className` 的 `size-*` |
+| `ScaleLoaderWrap`（`@/shared/ui/scale-loader`） | **独立加载区**：居中、有留白的整块占位（首次加载、列表无限滚动、区域/全屏遮罩、Suspense fallback） | `height`/`width`/`barCount` 等 props |
+
+判断关键：loading 是该区域的**唯一内容**（独立加载区 → `ScaleLoaderWrap`），还是和文字/图标**挤在一起**（嵌入式 → `Spinner`）。两者尺寸 API 不互通，不可互换。
+
+`ScaleLoaderWrap` 颜色靠 `currentColor`，**调用处外层加 `text-muted-foreground`** 控色；默认值与官方一致（`height=35, width=4, barCount=5`），紧凑场景在调用处按比例缩小（如 `height={24} width={3}`）。整块列表用假数据模拟布局的骨架占位仍用 `Skeleton`，不在此列。
+
 ## React Hooks 工具库
 
 项目使用 [react-use](https://github.com/streamich/react-use)（100+ hooks）作为 React hooks 工具库。需要防抖、节流、事件监听等通用 hooks 时，优先用 react-use，不要自实现。使用前查阅文档确认 hook 名称和行为。所有 hook 统一从 `@/shared/hooks` barrel file 导入，详见 `src/shared/hooks/AGENTS.md`。

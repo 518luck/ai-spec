@@ -11,7 +11,7 @@ import { cn } from "@/shared/lib/utils";
 
 import type { Icon } from "@/shared/ui/icons";
 import { Icons } from "@/shared/ui/icons";
-import { Spinner } from "@/shared/ui/spinner";
+import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 
 // @ 文件类型与校验配置：新增类型只需改这里的映射表
 type AcceptedFileFormats = "any" | "images" | "csv" | "documents";
@@ -171,8 +171,8 @@ export function FileUpload({
 			)}
 		>
 			{loading && (
-				<div className="absolute inset-0 z-5 flex items-center justify-center rounded-[inherit] bg-background/80">
-					<Spinner className="size-6" />
+				<div className="absolute inset-0 z-5 flex items-center justify-center rounded-[inherit] bg-background/80 text-muted-foreground">
+					<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
 				</div>
 			)}
 

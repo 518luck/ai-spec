@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { Suspense } from "react";
-import { Spinner } from "@/shared/ui/spinner";
+import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { AuthFormLayout } from "@/widgets/auth-form-layout";
 import { ConfirmEmailChangeFlow } from "./confirm-flow";
 
@@ -18,8 +18,8 @@ export function ConfirmEmailChangePage({
 		<AuthFormLayout showTerms="app">
 			<Suspense
 				fallback={
-					<div className="flex w-full justify-center">
-						<Spinner />
+					<div className="flex w-full justify-center text-muted-foreground">
+						<ScaleLoaderWrap height={20} width={3} margin={2} radius={2} />
 					</div>
 				}
 			>
