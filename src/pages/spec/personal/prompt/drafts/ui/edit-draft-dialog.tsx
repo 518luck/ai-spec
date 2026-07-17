@@ -3,7 +3,7 @@
 // # 草稿编辑弹窗 —— 薄包装，打开时拉取草稿全文，注入更新逻辑（SWR mutation + schema 校验）
 
 import type { JSX } from "react";
-import useSWR, { useSWRConfig } from "swr";
+import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { getDraft, updateDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
@@ -13,6 +13,7 @@ import {
 	updateDraftDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/draft";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
+import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 type EditDraftDialogProps = {
 	draft: {
@@ -31,7 +32,7 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 	);
 
 	// 更新草稿 mutation
-	const { mutate } = useSWRConfig();
+	const mutateDrafts = useDraftsMutate();
 	const { trigger: triggerUpdateDraft, isMutating } = useSWRMutation<
 		CreateDraftVo,
 		Error,
@@ -65,7 +66,7 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 		}
 
 		await triggerUpdateDraft(parsed.data);
-		await mutate((key) => Array.isArray(key) && key[0] === "drafts");
+		await mutateDrafts();
 		toast.success("草稿已更新");
 	};
 

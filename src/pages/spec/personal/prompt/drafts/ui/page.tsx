@@ -15,6 +15,7 @@ import { Kbd } from "@/shared/ui/kbd";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import { DraftsMutateProvider } from "../model/drafts-mutate-context";
 import { CreateDraftDialog } from "./create-draft-dialog";
 import { DraftFolderFilter } from "./draft-folder-filter";
 import { DraftsGrid } from "./drafts-grid";
@@ -32,9 +33,14 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 		return ["drafts", query, sort, folderId, offset] as const;
 	};
 
-	const { data, isLoading, isValidating, setSize } = useSWRInfinite(
-		getKey,
-		async ([, query, sort, folderId, offset]) => getDrafts({ query, sort, folderId, offset }),
+	const {
+		data,
+		isLoading,
+		isValidating,
+		setSize,
+		mutate: mutateDrafts,
+	} = useSWRInfinite(getKey, async ([, query, sort, folderId, offset]) =>
+		getDrafts({ query, sort, folderId, offset }),
 	);
 
 	const drafts = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
@@ -50,54 +56,57 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 	}, [inView, hasMore, isValidating, setSize]);
 
 	return (
-		<ToolbarPageShell
-			title="草稿"
-			help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
-			filter={<DraftFolderFilter />}
-			actions={
-				status === "authenticated" ? (
-					<>
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => setCreateOpen(true)}
-							className="gap-2"
-						>
-							新建草稿
-							<Kbd alignWithText>C</Kbd>
-						</Button>
-						<CreateDraftDialog open={createOpen} onOpenChange={setCreateOpen} />
-					</>
-				) : undefined
-			}
-		>
-			<PageWidthWrapper fill>
-				{isLoading ? (
-					<div className="flex justify-center py-20 text-muted-foreground">
-						<ScaleLoaderWrap />
-					</div>
-				) : total === 0 ? (
-					<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
-				) : (
-					<>
-						<DraftsGrid drafts={drafts} />
-						{hasMore ? (
-							<>
-								<div ref={sentinelRef} className="h-4" />
-								{isValidating && (
-									<div className="flex justify-center py-6 text-muted-foreground">
-										<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-									</div>
-								)}
-							</>
-						) : (
-							<div className="flex justify-center py-6 text-muted-foreground text-sm">
-								到底了，没有更多草稿了
-							</div>
-						)}
-					</>
-				)}
-			</PageWidthWrapper>
-		</ToolbarPageShell>
+		// > 包裹 DraftsMutateProvider：让子树（卡片删除/新建/编辑弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
+		<DraftsMutateProvider mutate={() => mutateDrafts()}>
+			<ToolbarPageShell
+				title="草稿"
+				help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
+				filter={<DraftFolderFilter />}
+				actions={
+					status === "authenticated" ? (
+						<>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => setCreateOpen(true)}
+								className="gap-2"
+							>
+								新建草稿
+								<Kbd alignWithText>C</Kbd>
+							</Button>
+							<CreateDraftDialog open={createOpen} onOpenChange={setCreateOpen} />
+						</>
+					) : undefined
+				}
+			>
+				<PageWidthWrapper fill>
+					{isLoading ? (
+						<div className="flex justify-center py-20 text-muted-foreground">
+							<ScaleLoaderWrap />
+						</div>
+					) : total === 0 ? (
+						<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
+					) : (
+						<>
+							<DraftsGrid drafts={drafts} />
+							{hasMore ? (
+								<>
+									<div ref={sentinelRef} className="h-4" />
+									{isValidating && (
+										<div className="flex justify-center py-6 text-muted-foreground">
+											<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
+										</div>
+									)}
+								</>
+							) : (
+								<div className="flex justify-center py-6 text-muted-foreground text-sm">
+									到底了，没有更多草稿了
+								</div>
+							)}
+						</>
+					)}
+				</PageWidthWrapper>
+			</ToolbarPageShell>
+		</DraftsMutateProvider>
 	);
 }

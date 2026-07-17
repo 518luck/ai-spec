@@ -2,7 +2,6 @@
 // # 草稿创建弹窗 —— 薄包装，注入草稿专属的保存逻辑（SWR mutation + schema 校验）
 
 import type { JSX } from "react";
-import { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
 import { createDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
@@ -12,6 +11,7 @@ import {
 	createDraftDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/draft";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
+import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 type CreateDraftDialogProps = {
 	open: boolean;
@@ -20,7 +20,7 @@ type CreateDraftDialogProps = {
 
 export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps): JSX.Element {
 	// 创建草稿 mutation：trigger 触发请求，isMutating 自动管理 loading 状态
-	const { mutate } = useSWRConfig();
+	const mutateDrafts = useDraftsMutate();
 	const { trigger: triggerCreateDraft, isMutating } = useSWRMutation<
 		CreateDraftVo,
 		Error,
@@ -41,8 +41,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 		}
 
 		await triggerCreateDraft(parsed.data);
-		// 刷新所有 drafts 相关的 SWR 缓存
-		await mutate((key) => Array.isArray(key) && key[0] === "drafts");
+		await mutateDrafts();
 		toast.success("草稿已创建");
 	};
 

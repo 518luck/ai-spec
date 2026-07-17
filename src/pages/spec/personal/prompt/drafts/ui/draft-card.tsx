@@ -2,7 +2,6 @@
 
 import copy from "copy-to-clipboard";
 import { type JSX, useState } from "react";
-import { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
 import { deleteDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
@@ -18,6 +17,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
 import { getDraftTitle } from "../lib/format";
+import { useDraftsMutate } from "../model/drafts-mutate-context";
 import { EditDraftDialog } from "./edit-draft-dialog";
 import { HoverOverlay } from "./hover-overlay";
 
@@ -87,7 +87,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 
 // 底部操作栏的"更多"菜单（收录/删除）；删除经 ConfirmDialog 二次确认
 function DraftActions({ id }: { id: string }): JSX.Element {
-	const { mutate } = useSWRConfig();
+	const mutateDrafts = useDraftsMutate();
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	// 删除草稿 mutation；arg 为草稿 id
 	const { trigger: triggerDeleteDraft } = useSWRMutation<void, Error, string, string>(
@@ -95,7 +95,7 @@ function DraftActions({ id }: { id: string }): JSX.Element {
 		async (_key, { arg }) => deleteDraft(arg),
 	);
 
-	// 确认删除：id 守卫 + 删除 + 刷新所有 drafts 列表缓存
+	// 确认删除：id 守卫 + 删除 + 通过 infinite bound mutate 重拉所有已挂载页
 	const handleConfirmDelete = async (): Promise<void> => {
 		const parsed = deleteDraftDtoSchema.safeParse({ id });
 		if (!parsed.success) {
@@ -103,8 +103,7 @@ function DraftActions({ id }: { id: string }): JSX.Element {
 			return;
 		}
 		await triggerDeleteDraft(parsed.data.id);
-		// 刷新所有 drafts 相关的 SWR 缓存（覆盖搜索/排序/文件夹/分页各变体）
-		await mutate((key) => Array.isArray(key) && key[0] === "drafts");
+		await mutateDrafts();
 		toast.success("已删除");
 	};
 
