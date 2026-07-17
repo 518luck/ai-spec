@@ -195,7 +195,7 @@ function NavAreasPanel({
 	// 路径未匹配业务区域时，保留默认面板以避免右侧内容整块消失。
 	const visibleBusinessArea = currentBusinessArea ?? "personal";
 	// 紧凑模式下隐藏标题/分组文字，一级只留图标、二级只留点
-	const { collapsed, toggleCollapsed, resetWidth } = useDualSidebarContext();
+	const { collapsed, toggleCollapsed, resetWidth, navigate } = useDualSidebarContext();
 
 	return (
 		<nav
@@ -281,6 +281,17 @@ function NavAreasPanel({
 																			? "size-9 shrink-0 justify-center"
 																			: "gap-2 px-2 py-2",
 																	)}
+																	onClick={(event) => {
+																		if (
+																			!event.ctrlKey &&
+																			!event.metaKey &&
+																			!event.shiftKey &&
+																			event.button === 0
+																		) {
+																			event.preventDefault();
+																			navigate(item.href);
+																		}
+																	}}
 																>
 																	<Icon className="size-4 shrink-0 opacity-60" />
 																	{collapsed ? null : (
@@ -303,6 +314,17 @@ function NavAreasPanel({
 																						? "flex size-9 shrink-0 items-center justify-center"
 																						: "px-2 py-1.5 text-sm",
 																				)}
+																				onClick={(event) => {
+																					if (
+																						!event.ctrlKey &&
+																						!event.metaKey &&
+																						!event.shiftKey &&
+																						event.button === 0
+																					) {
+																						event.preventDefault();
+																						navigate(subItem.href);
+																					}
+																				}}
 																			>
 																				{collapsed ? (
 																					<span

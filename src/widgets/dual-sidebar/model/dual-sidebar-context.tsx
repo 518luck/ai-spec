@@ -1,8 +1,16 @@
 "use client";
 
-// # 双栏侧边栏 Context：共享 aside 宽度、紧凑模式与拖拽态，并同步持久化到 cookie
+// # 双栏侧边栏 Context：共享 aside 宽度、紧凑模式、拖拽态与导航过渡状态
 
-import { createContext, type JSX, type PropsWithChildren, useContext, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+	createContext,
+	type JSX,
+	type PropsWithChildren,
+	useContext,
+	useState,
+	useTransition,
+} from "react";
 
 import { SIDEBAR_DEFAULT_WIDTH } from "./sidebar-config";
 import { saveSidebarCollapsed, saveSidebarWidth } from "./sidebar-persistence";
@@ -20,6 +28,10 @@ type DualSidebarContextType = {
 	// 拖拽中标记：供 aside 关闭宽度过渡动画，避免拖拽滞后（瞬时态，不持久化）
 	isResizing: boolean;
 	setIsResizing: (isResizing: boolean) => void;
+	// 路由导航过渡：点击侧边栏链接后到新页面渲染完成前为 true
+	isPending: boolean;
+	// 触发导航；用 startTransition 包裹 router.push，使 isPending 在 RSC 传输期间保持为 true
+	navigate: (href: string) => void;
 };
 
 type DualSidebarProviderProps = PropsWithChildren<{
@@ -29,37 +41,43 @@ type DualSidebarProviderProps = PropsWithChildren<{
 
 const DualSidebarContext = createContext<DualSidebarContextType | null>(null);
 
-// 提供双栏侧边栏共享状态：aside 宽度与紧凑模式，并同步持久化到 cookie
+// 提供双栏侧边栏共享状态：aside 宽度、紧凑模式、拖拽态与导航过渡态
 export function DualSidebarProvider({
 	children,
 	defaultWidth = SIDEBAR_DEFAULT_WIDTH,
 	defaultCollapsed = false,
 }: DualSidebarProviderProps): JSX.Element {
+	const router = useRouter();
+	const [isPending, startTransition] = useTransition();
+
 	const [width, setWidthState] = useState(defaultWidth);
 	const [collapsed, setCollapsedState] = useState(defaultCollapsed);
 	const [isResizing, setIsResizing] = useState(false);
 
-	// 设置 aside 宽度并持久化（拖拽过程高频调用，写入内部已节流）
 	const setWidth = (nextWidth: number): void => {
 		setWidthState(nextWidth);
 		saveSidebarWidth(nextWidth);
 	};
 
-	// 恢复默认展开宽度，用于重置按钮
 	const resetWidth = (): void => {
 		setWidthState(SIDEBAR_DEFAULT_WIDTH);
 		saveSidebarWidth(SIDEBAR_DEFAULT_WIDTH);
 	};
 
-	// 设置紧凑模式并持久化
 	const setCollapsed = (nextCollapsed: boolean): void => {
 		setCollapsedState(nextCollapsed);
 		saveSidebarCollapsed(nextCollapsed);
 	};
 
-	// 在展开与紧凑模式之间切换
 	const toggleCollapsed = (): void => {
 		setCollapsed(!collapsed);
+	};
+
+	// 触发客户端导航：startTransition 使 isPending 在 RSC 传输期间保持 true，让 layout 层显示 loading
+	const navigate = (href: string): void => {
+		startTransition(() => {
+			router.push(href);
+		});
 	};
 
 	return (
@@ -73,6 +91,8 @@ export function DualSidebarProvider({
 				toggleCollapsed,
 				isResizing,
 				setIsResizing,
+				isPending,
+				navigate,
 			}}
 		>
 			{children}
@@ -80,7 +100,7 @@ export function DualSidebarProvider({
 	);
 }
 
-// ! 必须在 DualSidebarProvider 内部调用，否则抛错
+// ! 必须在 DualSidebarProvider 组件内部使用，否则抛错
 export const useDualSidebarContext = (): DualSidebarContextType => {
 	const context = useContext(DualSidebarContext);
 

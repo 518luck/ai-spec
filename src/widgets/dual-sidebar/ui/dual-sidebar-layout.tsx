@@ -12,6 +12,7 @@ import {
 	SIDEBAR_WIDTH_COOKIE,
 } from "../model/sidebar-config";
 import { DualSidebar } from "./dual-sidebar";
+import { DualSidebarContent } from "./dual-sidebar-content";
 
 type DualSidebarLayoutProps = ComponentProps<"div"> & {
 	sidebarClassName?: string;
@@ -50,30 +51,5 @@ export async function DualSidebarLayout({
 				<DualSidebarContent className={contentClassName}>{children}</DualSidebarContent>
 			</div>
 		</DualSidebarProvider>
-	);
-}
-
-// 渲染双栏布局主内容区壳层，分离布局容器和视觉留白。
-function DualSidebarContent({
-	className,
-	children,
-	...props
-}: ComponentProps<"main">): JSX.Element {
-	return (
-		<main
-			data-slot="dual-sidebar-layout-content"
-			className={cn(dualSidebarZoneClasses.content.shell, "flex min-w-0 flex-1 py-2", className)}
-			{...props}
-		>
-			<div
-				data-slot="dual-sidebar-layout-content-inner"
-				className={cn(
-					dualSidebarZoneClasses.content.surface,
-					"flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl",
-				)}
-			>
-				{children}
-			</div>
-		</main>
 	);
 }
