@@ -2,6 +2,7 @@
 
 // @ 第三方 hook 转发
 export { useInView } from "react-intersection-observer"; // 监听元素与视口/滚动容器的交叉状态
+export { default as useDebounce } from "react-use/lib/useDebounce"; // 回调式防抖：延迟 ms 后执行 fn，返回 [isPending, cancel]
 
 // @ 自实现 hook
 export { useLocalStorage } from "./use-local-storage"; // 读写 localStorage，setter 支持函数式更新（无 stale closure）

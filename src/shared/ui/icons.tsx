@@ -3,6 +3,7 @@
 import type { TablerIcon } from "@tabler/icons-react";
 import {
 	IconAdjustmentsAlt,
+	IconAdjustmentsHorizontal,
 	IconArrowBarLeft,
 	IconArrowsDiagonal,
 	IconArrowsDiagonalMinimize2,
@@ -50,6 +51,7 @@ import {
 	IconFold,
 	IconHighlight,
 	IconListNumbers,
+	IconSearch,
 	IconSelector,
 	IconSettings,
 	IconShield,
@@ -61,6 +63,7 @@ import {
 	IconUserFilled,
 	IconUsers,
 	IconUsersGroup,
+	IconX,
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
 
@@ -152,6 +155,9 @@ export const Icons = {
 	promote: IconArrowUpRight,
 	expand: IconArrowsDiagonal,
 	minimize: IconArrowsDiagonalMinimize2,
+	search: IconSearch,
+	filter: IconAdjustmentsHorizontal,
+	x: IconX,
 
 	themeLight: IconSun,
 	themeDark: IconMoonStars,

@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getDrafts } from "@/entities/prompt";
+import { SearchInput } from "@/features/search-input";
 import { useInView } from "@/shared/hooks";
 import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
@@ -62,6 +63,7 @@ export function PersonalDraftsPage({ query, sort, folderId }: ListDraftsDto): JS
 				title="草稿"
 				help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
 				filter={<DraftFolderFilter />}
+				search={<SearchInput className="w-64" filters={["title", "content"]} />}
 				actions={
 					status === "authenticated" ? (
 						<>
