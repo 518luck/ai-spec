@@ -13,10 +13,12 @@ export type SearchFieldDefinition = {
 	type: "boolean" | "string";
 };
 
-// 搜索框 props：外部仅控制"用户能看到哪些字段"
+// 搜索框 props：外部仅控制"用户能看到哪些字段" + 初始默认选中哪个
 export type SearchInputProps = {
 	// 指定显示哪些字段（从内置全集里选）；不传或空数组则不渲染筛选按钮（纯搜索框）
 	filters?: SearchFieldKey[];
+	// 初始默认选中的字段（URL 无 filter 参数时生效）；不传则默认无字段激活
+	defaultFilter?: SearchFieldKey;
 	// 透传给最外层容器的 className
 	className?: string;
 };

@@ -4,27 +4,31 @@
 
 import { type JSX, useState } from "react";
 import { useDebounce } from "@/shared/hooks";
+import type { SearchFilters } from "@/shared/lib/search-filter";
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
-import {
-	SEARCH_DEBOUNCE_MS,
-	SEARCH_PLACEHOLDER,
-	SEARCH_QUERY_PARAM,
-} from "../config/search-filters";
+import { getPlaceholder, SEARCH_DEBOUNCE_MS, SEARCH_QUERY_PARAM } from "../config/search-filters";
 import { useSearchUrl } from "../model/use-search-url";
 
 type SearchInputFieldProps = {
+	// URL 无 filter 参数时的回退默认值
+	defaultFilters: SearchFilters;
 	// 容器 className
 	className?: string;
 };
 
 // > 输入即触发防抖：value 作为 deps，每次变化重设定时器；停止输入后写 URL，避免逐字请求
-export function SearchInputField({ className }: SearchInputFieldProps): JSX.Element {
+export function SearchInputField({
+	defaultFilters,
+	className,
+}: SearchInputFieldProps): JSX.Element {
 	// 搜索词写入的 URL 参数名固定为 q（对齐 Linear）
 	const param = SEARCH_QUERY_PARAM;
-	const { getParam, setParam, deleteParam } = useSearchUrl();
+	const { getParam, setParam, deleteParam, getFilters } = useSearchUrl(defaultFilters);
 	// 初始值来自 URL，支持刷新/分享链接回填
 	const [value, setValue] = useState(() => getParam(param) ?? "");
+	// placeholder 跟随 filter 状态变化：选标题→"搜索标题..."，选标题+内容→"搜索标题和内容..."
+	const placeholder = getPlaceholder(getFilters());
 
 	// 防抖写 URL：value 每次变化重设定时器，停止输入后执行 fn
 	useDebounce(
@@ -49,7 +53,7 @@ export function SearchInputField({ className }: SearchInputFieldProps): JSX.Elem
 				type="text"
 				value={value}
 				onChange={(e) => setValue(e.target.value)}
-				placeholder={SEARCH_PLACEHOLDER}
+				placeholder={placeholder}
 				className="h-full w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 			/>
 			{value ? (

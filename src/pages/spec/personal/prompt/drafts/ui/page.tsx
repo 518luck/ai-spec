@@ -63,7 +63,9 @@ export function PersonalDraftsPage({ q, filter, sort, folderId }: ListDraftsDto)
 				title="草稿"
 				help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
 				filter={<DraftFolderFilter />}
-				search={<SearchInput className="w-64" filters={["title", "content"]} />}
+				search={
+					<SearchInput className="w-64" filters={["title", "content"]} defaultFilter="title" />
+				}
 				actions={
 					status === "authenticated" ? (
 						<>

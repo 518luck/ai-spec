@@ -24,8 +24,8 @@ export const SEARCH_FIELDS: Record<SearchFieldKey, SearchFieldDefinition> = {
 	},
 };
 
-// > 默认筛选状态：只有标题参与搜索（业务约定：无 filter 参数时后端按此处理）
-export const DEFAULT_FILTERS: SearchFilters = { title: true };
+// > 按 field key 构造默认 filter（只激活该字段）：使用方决定初始选中哪个字段，如草稿页用 buildDefaultFilter("title")
+export const buildDefaultFilter = (key: SearchFieldKey): SearchFilters => ({ [key]: true });
 
 // 默认搜索词参数名
 export const SEARCH_QUERY_PARAM = "q";
@@ -36,5 +36,16 @@ export const SEARCH_FILTER_PARAM = "filter";
 // 默认防抖延迟（毫秒）
 export const SEARCH_DEBOUNCE_MS = 300;
 
-// 默认占位文案
-export const SEARCH_PLACEHOLDER = "搜索...";
+// > 根据 filter 状态生成 placeholder：把激活字段的 text 用"和"连接，让用户直观看到当前搜的是哪些字段
+// 规则：{title:true} → "搜索标题..."；{content:true} → "搜索内容..."；都选 → "搜索标题和内容..."；都没选 → "搜索..."
+export const getPlaceholder = (filters: SearchFilters): string => {
+	// 按 SEARCH_FIELDS 的顺序过滤出激活的字段文案
+	const activeTexts = (Object.keys(SEARCH_FIELDS) as SearchFieldKey[])
+		.filter((key) => filters[key] === true)
+		.map((key) => SEARCH_FIELDS[key].text);
+	if (activeTexts.length === 0) return "搜索...";
+	// 用"和"连接：两个 → "标题和内容"；更多字段 → "标题、内容和标签"（暂未用到，预留扩展）
+	if (activeTexts.length === 1) return `搜索${activeTexts[0]}...`;
+	if (activeTexts.length === 2) return `搜索${activeTexts[0]}和${activeTexts[1]}...`;
+	return `搜索${activeTexts.slice(0, -1).join("、")}和${activeTexts.at(-1)}...`;
+};

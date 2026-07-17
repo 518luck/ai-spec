@@ -5,7 +5,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 import {
-	DEFAULT_FILTERS,
 	decodeFilters,
 	encodeFilters,
 	SEARCH_FILTER_PARAM,
@@ -13,7 +12,8 @@ import {
 } from "../config/search-filters";
 
 // > 通用 URL 参数读写 + filter 专用读写：set 时保留其他参数，delete 时移除指定参数；均不触发滚动
-export const useSearchUrl = () => {
+// defaultFilters：URL 无 filter 参数时的回退值，由使用方决定（如草稿页默认搜标题）
+export const useSearchUrl = (defaultFilters: SearchFilters = {}) => {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
@@ -44,21 +44,21 @@ export const useSearchUrl = () => {
 		[searchParams, router],
 	);
 
-	// > 读取 filter 状态：URL 无 filter 参数时回退默认值（只搜标题）
+	// > 读取 filter 状态：URL 无 filter 参数时回退到使用方传入的默认值
 	const getFilters = useCallback((): SearchFilters => {
 		const encoded = getParam(SEARCH_FILTER_PARAM);
-		return decodeFilters(encoded) ?? DEFAULT_FILTERS;
-	}, [getParam]);
+		return decodeFilters(encoded) ?? defaultFilters;
+	}, [getParam, defaultFilters]);
 
 	// > 写入 filter 状态：与默认值相等时不写 filter 参数（保持 URL 干净）；否则编码后写入
 	const setFilters = useCallback(
 		(filters: SearchFilters) => {
 			// JSON 内容稳定比较：键值对序列化后字符串相等视为相等
-			const isDefault = JSON.stringify(filters) === JSON.stringify(DEFAULT_FILTERS);
+			const isDefault = JSON.stringify(filters) === JSON.stringify(defaultFilters);
 			if (isDefault) deleteParam(SEARCH_FILTER_PARAM);
 			else setParam(SEARCH_FILTER_PARAM, encodeFilters(filters));
 		},
-		[deleteParam, setParam],
+		[defaultFilters, deleteParam, setParam],
 	);
 
 	return { getParam, setParam, deleteParam, getFilters, setFilters };
