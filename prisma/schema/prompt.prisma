@@ -15,8 +15,8 @@ model PromptRecord {
   content        String     @db.Text // 提示词正文
   images         String[]   @default([]) // 图片 URL 列表，预留扩展
   visibility     Visibility @default(private) // 可见性：private=私有，public=公开广场
-  teamId         String? @map("team_id") // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属）
-  sourceRecordId String? @map("source_record_id") // > fork 来源记录 ID，故意不建外键，允许源记录删除后悬空（保留 fork 血缘标记）
+  teamId         String?    @map("team_id") // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属）
+  sourceRecordId String?    @map("source_record_id") // > fork 来源记录 ID，故意不建外键，允许源记录删除后悬空（保留 fork 血缘标记）
   useCount       Int        @default(0) @map("use_count") // 使用次数，驱动"常用"排序
   viewCount      Int        @default(0) @map("view_count") // 浏览次数
 
@@ -55,7 +55,7 @@ model PromptRecordVersion {
   // ② 业务字段
   name          String // 该版本的名称快照
   content       String  @db.Text // 该版本的内容快照
-  versionNumber Int @map("version_number") // 版本序号，递增
+  versionNumber Int     @map("version_number") // 版本序号，递增
   message       String? // 版本说明，类似 commit message
 
   // ③ 时间戳
