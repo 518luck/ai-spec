@@ -49,8 +49,8 @@ export function ToolbarPageShell({
 						)}
 						{filter}
 					</div>
-					{/* 中间：搜索区，mx-auto 让它在剩余空间水平居中 */}
-					{search ? <div className="mx-auto">{search}</div> : null}
+					{/* 中间：搜索区；flex-1 占满左右段之间的剩余空间，min-w-0 让其内的 search 可收缩（破除默认 min-width:auto）；内部 justify-center 让 search 在该段水平居中（不能用 mx-auto，会与 flex-1 冲突） */}
+					{search ? <div className="flex min-w-0 flex-1 justify-center">{search}</div> : null}
 					{/* 右侧：操作区 */}
 					{actions ? (
 						<div className="ml-auto flex shrink-0 items-center gap-2">{actions}</div>

@@ -89,7 +89,12 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 				help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
 				filter={<DraftFolderFilter />}
 				search={
-					<SearchInput className="w-80" filters={["title", "content"]} defaultFilter="title" />
+					// // > max-w-80 上限 320px、w-full 跟随父级弹性收缩，避免窄窗口标题栏溢出
+					<SearchInput
+						className="w-full max-w-80"
+						filters={["title", "content"]}
+						defaultFilter="title"
+					/>
 				}
 				actions={
 					status === "authenticated" ? (
@@ -101,7 +106,9 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 								className="gap-2"
 							>
 								新建草稿
-								<Kbd alignWithText>C</Kbd>
+								<Kbd alignWithText className="hidden lg:inline-flex">
+									C
+								</Kbd>
 							</Button>
 							<CreateDraftDialog open={createOpen} onOpenChange={setCreateOpen} />
 						</>

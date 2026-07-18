@@ -22,7 +22,8 @@ export function SearchInput({ filters, defaultFilter, className }: SearchInputPr
 		<div
 			className={cn(
 				// 胶囊容器：固定高度、圆角边框，聚焦时高亮边框；右侧 pr-1 让筛选按钮贴右，避免整体过宽
-				"flex h-9 items-center gap-1 rounded-md border border-input bg-transparent pr-1 pl-2.5 transition-[color,box-shadow]",
+				// w-full 让宽度跟随父级，调用方用 max-w-* 约束上限，实现窄屏可收缩
+				"flex h-9 w-full items-center gap-1 rounded-md border border-input bg-transparent pr-1 pl-2.5 transition-[color,box-shadow]",
 				"focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
 				"dark:bg-input/30",
 				className,
