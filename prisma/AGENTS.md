@@ -49,7 +49,6 @@ model PromptRecord {
 
   // ② 业务字段
   name        String
-  description String?
   content     String   @db.Text
   visibility  Visibility @default(private)
 

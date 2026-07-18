@@ -11,7 +11,6 @@ model PromptRecord {
 
   // ② 业务字段
   name           String // 名称
-  description    String? // 描述（可选）
   content        String     @db.Text // 提示词正文
   images         String[]   @default([]) // 图片 URL 列表，预留扩展
   visibility     Visibility @default(private) // 可见性：private=私有，public=公开广场
