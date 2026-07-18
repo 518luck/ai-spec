@@ -7,7 +7,7 @@ import { cn } from "@/shared/lib/utils";
 
 type PromptCardShellProps = {
 	children: ReactNode;
-	// 底部 hover 遮罩内的操作按钮；不传则不渲染遮罩层
+	// 底部 hover 遮罩内的操作按钮；遮罩层永远渲染以保持 hover 视觉一致，按钮可有可无
 	actions?: ReactNode;
 };
 
@@ -15,16 +15,14 @@ export function PromptCardShell({ children, actions }: PromptCardShellProps): JS
 	return (
 		<div className={PROMPT_CARD_CLASS}>
 			{children}
-			{actions ? (
-				<div
-					className={cn(
-						// 底部渐变遮罩：hover 卡片时淡入显示操作按钮；z-10 让它浮在透明点击层（z-0）之上
-						"pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-end gap-1 bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 pt-2 opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100",
-					)}
-				>
-					{actions}
-				</div>
-			) : null}
+			<div
+				className={cn(
+					// 底部渐变遮罩：hover 卡片时淡入；z-10 让它浮在透明点击层（z-0）之上，按钮可点
+					"pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-end gap-1 bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100",
+				)}
+			>
+				{actions}
+			</div>
 		</div>
 	);
 }

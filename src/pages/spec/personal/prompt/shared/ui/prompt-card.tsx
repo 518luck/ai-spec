@@ -18,7 +18,7 @@ type PromptCardProps = {
 	onCopy: () => void;
 	// 复制进行中（来自调用方的 mutation isMutating）：为 true 时叠加整卡 loading 蒙层并禁用点击
 	isCopying?: boolean;
-	// 底部 hover 遮罩内的操作按钮；不传则不渲染遮罩
+	// 底部 hover 遮罩内的操作按钮；遮罩层永远渲染以保持 hover 视觉一致，按钮可有可无
 	actions?: ReactNode;
 	// 附加内容（弹窗等非视觉 DOM），渲染在主体之后
 	children?: ReactNode;
