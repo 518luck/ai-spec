@@ -106,7 +106,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 								className="gap-2"
 							>
 								新建草稿
-								<Kbd alignWithText className="hidden lg:inline-flex">
+								<Kbd alignWithText hideOnNarrow>
 									C
 								</Kbd>
 							</Button>

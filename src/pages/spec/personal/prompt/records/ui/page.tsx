@@ -90,7 +90,9 @@ export function PersonalRecordsPage(): JSX.Element {
 								className="gap-2"
 							>
 								创建收录
-								<Kbd alignWithText>C</Kbd>
+								<Kbd alignWithText hideOnNarrow>
+									C
+								</Kbd>
 							</Button>
 							<CreateRecordDialog open={createOpen} onOpenChange={setCreateOpen} />
 						</>
