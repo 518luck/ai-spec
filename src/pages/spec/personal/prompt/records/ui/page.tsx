@@ -13,6 +13,7 @@ import { Kbd } from "@/shared/ui/kbd";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { RecordsMutateProvider } from "../model/records-mutate-context";
 import { CreateRecordDialog } from "./create-record-dialog";
 import { RecordsGrid } from "./records-grid";
@@ -50,6 +51,31 @@ export function PersonalRecordsPage(): JSX.Element {
 		}
 	}, [inView, hasMore, isValidating, setSize]);
 
+	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
+	const renderRecordsBody = (): JSX.Element => {
+		if (isLoading) {
+			return (
+				<div className="flex justify-center py-20 text-muted-foreground">
+					<ScaleLoaderWrap />
+				</div>
+			);
+		}
+		if (total === 0) {
+			return <EmptyState icon={Icons.prompt} description="还没有收录，把常用提示词归档进来吧" />;
+		}
+		return (
+			<>
+				<RecordsGrid records={records} />
+				<InfiniteListFooter
+					hasMore={hasMore}
+					isValidating={isValidating}
+					sentinelRef={sentinelRef}
+					endText="到底了，没有更多收录了"
+				/>
+			</>
+		);
+	};
+
 	return (
 		// > 包裹 RecordsMutateProvider：让子树（创建弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
 		<RecordsMutateProvider mutate={() => mutateRecords()}>
@@ -72,33 +98,7 @@ export function PersonalRecordsPage(): JSX.Element {
 					) : undefined
 				}
 			>
-				<PageWidthWrapper fill>
-					{isLoading ? (
-						<div className="flex justify-center py-20 text-muted-foreground">
-							<ScaleLoaderWrap />
-						</div>
-					) : total === 0 ? (
-						<EmptyState icon={Icons.prompt} description="还没有收录，把常用提示词归档进来吧" />
-					) : (
-						<>
-							<RecordsGrid records={records} />
-							{hasMore ? (
-								<>
-									<div ref={sentinelRef} className="h-4" />
-									{isValidating && (
-										<div className="flex justify-center py-6 text-muted-foreground">
-											<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-										</div>
-									)}
-								</>
-							) : (
-								<div className="flex justify-center py-6 text-muted-foreground text-sm">
-									到底了，没有更多收录了
-								</div>
-							)}
-						</>
-					)}
-				</PageWidthWrapper>
+				<PageWidthWrapper fill>{renderRecordsBody()}</PageWidthWrapper>
 			</ToolbarPageShell>
 		</RecordsMutateProvider>
 	);

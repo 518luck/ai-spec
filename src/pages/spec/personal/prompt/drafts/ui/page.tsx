@@ -16,6 +16,7 @@ import { Kbd } from "@/shared/ui/kbd";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { DraftsMutateProvider } from "../model/drafts-mutate-context";
 import { CreateDraftDialog } from "./create-draft-dialog";
 import { DraftFolderFilter } from "./draft-folder-filter";
@@ -56,6 +57,31 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 		}
 	}, [inView, hasMore, isValidating, setSize]);
 
+	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
+	const renderDraftsBody = (): JSX.Element => {
+		if (isLoading) {
+			return (
+				<div className="flex justify-center py-20 text-muted-foreground">
+					<ScaleLoaderWrap />
+				</div>
+			);
+		}
+		if (total === 0) {
+			return <EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />;
+		}
+		return (
+			<>
+				<DraftsGrid drafts={drafts} />
+				<InfiniteListFooter
+					hasMore={hasMore}
+					isValidating={isValidating}
+					sentinelRef={sentinelRef}
+					endText="到底了，没有更多草稿了"
+				/>
+			</>
+		);
+	};
+
 	return (
 		// > 包裹 DraftsMutateProvider：让子树（卡片删除/新建/编辑弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
 		<DraftsMutateProvider mutate={() => mutateDrafts()}>
@@ -83,33 +109,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 					) : undefined
 				}
 			>
-				<PageWidthWrapper fill>
-					{isLoading ? (
-						<div className="flex justify-center py-20 text-muted-foreground">
-							<ScaleLoaderWrap />
-						</div>
-					) : total === 0 ? (
-						<EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />
-					) : (
-						<>
-							<DraftsGrid drafts={drafts} />
-							{hasMore ? (
-								<>
-									<div ref={sentinelRef} className="h-4" />
-									{isValidating && (
-										<div className="flex justify-center py-6 text-muted-foreground">
-											<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-										</div>
-									)}
-								</>
-							) : (
-								<div className="flex justify-center py-6 text-muted-foreground text-sm">
-									到底了，没有更多草稿了
-								</div>
-							)}
-						</>
-					)}
-				</PageWidthWrapper>
+				<PageWidthWrapper fill>{renderDraftsBody()}</PageWidthWrapper>
 			</ToolbarPageShell>
 		</DraftsMutateProvider>
 	);
