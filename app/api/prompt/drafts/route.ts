@@ -28,7 +28,7 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { q, filter: filterEncoded, sort, folderId, offset = 0 } = parsed.data;
+		const { q, filter: filterEncoded, folderId, offset = 0 } = parsed.data;
 		const trimmedQuery = q?.trim() ?? "";
 
 		// > 解析字段开关：filter 为 base64 JSON（{title:true,content:true}）；解码失败或无 filter 参数时默认只搜 name
@@ -71,10 +71,7 @@ export const GET = withPersonal(
 			}
 		}
 		const whereSql = Prisma.sql`WHERE ${Prisma.join(whereConditions, " AND ")}`;
-		const orderBySql =
-			sort === "created"
-				? Prisma.sql`ORDER BY created_at DESC`
-				: Prisma.sql`ORDER BY updated_at DESC`;
+		const orderBySql = Prisma.sql`ORDER BY updated_at DESC`;
 
 		// 列表用原生查询在数据库层截取 preview；count 仍用 Prisma 安全计数
 		const [rows, total] = await Promise.all([

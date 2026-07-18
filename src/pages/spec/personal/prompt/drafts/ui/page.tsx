@@ -22,16 +22,16 @@ import { DraftFolderFilter } from "./draft-folder-filter";
 import { DraftsGrid } from "./drafts-grid";
 
 // # 个人草稿页：SWR Infinite 拉取 GET /api/prompt/drafts，底部哨兵进入视口时自动加载下一页
-export function PersonalDraftsPage({ q, filter, sort, folderId }: ListDraftsDto): JSX.Element {
+export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.Element {
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
 
-	// SWR Infinite key：q/filter/sort/folderId 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
+	// SWR Infinite key：q/filter/folderId 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: DraftListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["drafts", q, filter, sort, folderId, offset] as const;
+		return ["drafts", q, filter, folderId, offset] as const;
 	};
 
 	const {
@@ -40,8 +40,8 @@ export function PersonalDraftsPage({ q, filter, sort, folderId }: ListDraftsDto)
 		isValidating,
 		setSize,
 		mutate: mutateDrafts,
-	} = useSWRInfinite(getKey, async ([, q, filter, sort, folderId, offset]) =>
-		getDrafts({ q, filter, sort, folderId, offset }),
+	} = useSWRInfinite(getKey, async ([, q, filter, folderId, offset]) =>
+		getDrafts({ q, filter, folderId, offset }),
 	);
 
 	const drafts = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
@@ -63,7 +63,7 @@ export function PersonalDraftsPage({ q, filter, sort, folderId }: ListDraftsDto)
 				title="草稿"
 				help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
 				filter={<DraftFolderFilter />}
-					search={
+				search={
 					<SearchInput className="w-80" filters={["title", "content"]} defaultFilter="title" />
 				}
 				actions={
