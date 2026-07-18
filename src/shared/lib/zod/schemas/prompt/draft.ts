@@ -86,6 +86,17 @@ export const createDraftVoSchema = z.object({
 // 创建草稿响应类型
 export type CreateDraftVo = z.infer<typeof createDraftVoSchema>;
 
+// 单条草稿全文响应：仅返回编辑/复制所需的字段（name 可能为空，区别于 record 的必填）
+export const draftContentVoSchema = z.object({
+	id: z.string(),
+	name: z.string().nullable(),
+	content: z.string(),
+	folderId: z.string().optional(),
+});
+
+// 单条草稿全文响应类型
+export type DraftContentVo = z.infer<typeof draftContentVoSchema>;
+
 // @ 出参 - 列表
 // 草稿列表项：列表只返回截断预览，不返回 content 全文
 export const draftVoSchema = z.object({
