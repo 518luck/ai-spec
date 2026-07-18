@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
-import { createDraftVoSchema, deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import { deleteDraftDtoSchema, draftContentVoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 
 // # 单条草稿详情 / 删除：按 id 拉取全文或硬删除，归属隔离统一走 ownerId 进 where
 
@@ -21,7 +21,6 @@ export const GET = withPersonal(
 				content: true,
 				folderId: true,
 				ownerId: true,
-				updatedAt: true,
 			},
 		});
 
@@ -31,13 +30,11 @@ export const GET = withPersonal(
 		}
 
 		// ownerId 仅用于权限校验，不返回给前端；folderId null → undefined（前端约定）
-		const { ownerId, ...rest } = draft;
-		const out = {
+		const { ownerId: _ownerId, ...rest } = draft;
+		const result = draftContentVoSchema.safeParse({
 			...rest,
 			folderId: draft.folderId ?? undefined,
-			updatedAt: draft.updatedAt.toISOString(),
-		};
-		const result = createDraftVoSchema.safeParse(out);
+		});
 		if (!result.success) {
 			throw result.error;
 		}
