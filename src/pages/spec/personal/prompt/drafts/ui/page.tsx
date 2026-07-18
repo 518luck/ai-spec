@@ -48,6 +48,8 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 	const drafts = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
 	const total = data?.[0]?.total ?? 0;
 	const hasMore = data?.[data.length - 1]?.hasMore ?? false;
+	// 已加载页数 > 1 表示翻过页；短列表首页即到底时为 false，配合 hasMore 判断是否渲染底部 footer
+	const hasPaged = (data?.length ?? 0) > 1;
 
 	// 底部哨兵进入视口且还有下一页、未在加载中时，自动加载下一页
 	const { ref: sentinelRef, inView } = useInView({ threshold: 0 });
@@ -70,6 +72,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 				<DraftsGrid drafts={drafts} />
 				<InfiniteListFooter
 					hasMore={hasMore}
+					hasPaged={hasPaged}
 					isValidating={isValidating}
 					sentinelRef={sentinelRef}
 					endText="到底了，没有更多草稿了"
