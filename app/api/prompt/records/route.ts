@@ -9,6 +9,7 @@ import {
 	createRecordVoSchema,
 	listRecordsDtoSchema,
 	recordListVoSchema,
+	updateRecordDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/record";
 
 // # 提示词收录：列表查询 + 创建（API Key 接入需 promptRecord.read / .write 权限）
@@ -101,6 +102,51 @@ export const POST = withPersonal(
 		}
 
 		return NextResponse.json(result.data, { status: 201 });
+	},
+	{ permissions: ["promptRecord.write"] },
+);
+
+// > 校验入参后更新收录（where 含 ownerId 防止越权修改他人收录）；不写版本快照，后续接入版本管理时再补
+export const PATCH = withPersonal(
+	async ({ req, session }) => {
+		const parsed = updateRecordDtoSchema.safeParse(await req.json());
+		if (!parsed.success) {
+			throw parsed.error;
+		}
+		const { id, name, content, images, folderId } = parsed.data;
+
+		// 构建部分更新数据：只更新传入的字段
+		const data: Record<string, unknown> = {};
+		if (name !== undefined) data.name = name;
+		if (content !== undefined) data.content = content;
+		if (images !== undefined) data.images = images;
+		if (folderId !== undefined) data.folderId = folderId || null;
+
+		const updated = await prisma.promptRecord.update({
+			where: { id, ownerId: session.user.id },
+			data,
+			select: {
+				id: true,
+				name: true,
+				content: true,
+				visibility: true,
+				folderId: true,
+				updatedAt: true,
+			},
+		});
+
+		// updatedAt 由 Date 转 ISO 字符串，folderId null → undefined，后经 Vo schema 校验
+		const out = {
+			...updated,
+			folderId: updated.folderId ?? undefined,
+			updatedAt: updated.updatedAt.toISOString(),
+		};
+		const result = createRecordVoSchema.safeParse(out);
+		if (!result.success) {
+			throw result.error;
+		}
+
+		return NextResponse.json(result.data);
 	},
 	{ permissions: ["promptRecord.write"] },
 );
