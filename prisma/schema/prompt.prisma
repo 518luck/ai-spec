@@ -80,7 +80,7 @@ model PromptDraft {
   id String @id @default(cuid())
 
   // ② 业务字段
-  name    String?
+  name    String
   content String   @db.Text
   images  String[] @default([])
 
