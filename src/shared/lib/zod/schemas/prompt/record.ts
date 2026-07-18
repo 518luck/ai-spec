@@ -33,6 +33,27 @@ export const createRecordDtoSchema = z.object({
 // 创建收录入参类型
 export type CreateRecordDto = z.infer<typeof createRecordDtoSchema>;
 
+// 更新收录入参：id 必填，其余字段可选，至少更新一个
+export const updateRecordDtoSchema = z
+	.object({
+		id: z.string().min(1, { error: "缺少收录 id" }),
+		name: recordNameSchema,
+		content: recordContentSchema,
+		images: recordImagesSchema,
+		folderId: recordFolderIdSchema,
+	})
+	.refine(
+		(data) =>
+			data.name !== undefined ||
+			data.content !== undefined ||
+			data.images !== undefined ||
+			data.folderId !== undefined,
+		{ error: "至少需要更新一个字段" },
+	);
+
+// 更新收录入参类型
+export type UpdateRecordDto = z.infer<typeof updateRecordDtoSchema>;
+
 // 收录列表查询入参：仅分页（无搜索/文件夹筛选）
 export const listRecordsDtoSchema = z.object({
 	offset: z.coerce.number().int().min(0).optional(),
