@@ -3,19 +3,16 @@ import { z } from "@/shared/lib/zod";
 // # 草稿（Draft）相关 zod schema：名称、正文、图片、文件夹归属校验
 
 // @ 拼装件
-// 草稿名称：可选，最多 64 字
+// 草稿名称：必填，最多 64 字。refine 只校验纯空白，不改写用户输入
 export const draftNameSchema = z
-	.string()
-	.trim()
-	.max(64, { error: "名称长度不能超过 64 个字符" })
-	.optional()
-	.or(z.literal(""));
+	.string({ error: "请输入名称" })
+	.refine((s) => s.trim().length > 0, { error: "请输入名称" })
+	.max(64, { error: "名称长度不能超过 64 个字符" });
 
-// 草稿正文：必填，最长 10 万字（@db.Text 实际无上限，这里防滥用）
+// 草稿正文：必填，最长 10 万字（@db.Text 实际无上限，这里防滥用）。refine 只校验纯空白，不改写用户输入
 export const draftContentSchema = z
 	.string({ error: "请输入草稿内容" })
-	.trim()
-	.min(1, { error: "请输入草稿内容" })
+	.refine((s) => s.trim().length > 0, { error: "请输入草稿内容" })
 	.max(100_000, { error: "内容过长" });
 
 // 草稿图片列表：可选，默认空数组
@@ -67,7 +64,7 @@ export type DeleteDraftDto = z.infer<typeof deleteDraftDtoSchema>;
 
 // 草稿列表查询入参：搜索词（q）、字段筛选（filter，base64 编码的 JSON）、文件夹、分页
 export const listDraftsDtoSchema = z.object({
-	q: z.string().trim().optional(),
+	q: z.string().optional(),
 	filter: z.string().optional(),
 	folderId: z.string().optional(),
 	offset: z.coerce.number().int().min(0).optional(),
@@ -80,7 +77,7 @@ export type ListDraftsDto = z.infer<typeof listDraftsDtoSchema>;
 // 创建草稿响应
 export const createDraftVoSchema = z.object({
 	id: z.string(),
-	name: z.string().nullable(),
+	name: z.string(),
 	content: z.string(),
 	folderId: z.string().optional(),
 	updatedAt: z.iso.datetime(),
@@ -93,7 +90,7 @@ export type CreateDraftVo = z.infer<typeof createDraftVoSchema>;
 // 草稿列表项：列表只返回截断预览，不返回 content 全文
 export const draftVoSchema = z.object({
 	id: z.string(),
-	name: z.string().nullable(),
+	name: z.string(),
 	preview: z.string(),
 });
 
