@@ -112,7 +112,7 @@ export const POST = withPersonal(
 
 		const draft = await prisma.promptDraft.create({
 			data: {
-				name: name || null,
+				name,
 				content,
 				images,
 				ownerId: session.user.id,
@@ -154,7 +154,7 @@ export const PATCH = withPersonal(
 
 		// 构建部分更新数据：只更新传入的字段
 		const data: Record<string, unknown> = {};
-		if (name !== undefined) data.name = name || null;
+		if (name !== undefined) data.name = name;
 		if (content !== undefined) data.content = content;
 		if (images !== undefined) data.images = images;
 		if (folderId !== undefined) data.folderId = folderId || null;
