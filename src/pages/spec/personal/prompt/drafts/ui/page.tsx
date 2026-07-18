@@ -10,10 +10,10 @@ import { SearchInput } from "@/features/search-input";
 import { useInView } from "@/shared/hooks";
 import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
+import { CenteredLoader } from "@/shared/ui/centered-loader";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { Kbd } from "@/shared/ui/kbd";
-import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
@@ -60,11 +60,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
 	const renderDraftsBody = (): JSX.Element => {
 		if (isLoading) {
-			return (
-				<div className="flex justify-center py-20 text-muted-foreground">
-					<ScaleLoaderWrap />
-				</div>
-			);
+			return <CenteredLoader />;
 		}
 		if (total === 0) {
 			return <EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />;

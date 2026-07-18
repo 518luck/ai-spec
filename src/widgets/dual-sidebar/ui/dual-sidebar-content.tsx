@@ -27,6 +27,7 @@ export function DualSidebarContent({
 				data-slot="dual-sidebar-layout-content-inner"
 				className={cn(
 					dualSidebarZoneClasses.content.surface,
+					// ! relative 是关键：作为 CenteredLoader(absolute inset-0)和 isPending loader 的共同锚点，保证两者位置完全重合。去掉会导致 loader 跑位
 					"relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl",
 				)}
 			>
