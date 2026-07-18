@@ -12,6 +12,7 @@ import {
 	createRecordDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/record";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
+import { useRecordsMutate } from "../model/records-mutate-context";
 
 type CreateRecordDialogProps = {
 	open: boolean;
@@ -20,6 +21,7 @@ type CreateRecordDialogProps = {
 
 export function CreateRecordDialog({ open, onOpenChange }: CreateRecordDialogProps): JSX.Element {
 	// 创建收录 mutation：trigger 触发请求，isMutating 自动管理 loading 状态
+	const mutateRecords = useRecordsMutate();
 	const { trigger: triggerCreateRecord, isMutating } = useSWRMutation<
 		CreateRecordVo,
 		Error,
@@ -27,7 +29,7 @@ export function CreateRecordDialog({ open, onOpenChange }: CreateRecordDialogPro
 		CreateRecordDto
 	>("create-record", async (_key, { arg }) => createRecord(arg));
 
-	// 保存逻辑：name 兜底 + schema 校验 + 创建 + toast（收录页暂无列表，不刷新缓存）
+	// 保存逻辑：name 兜底 + schema 校验 + 创建 + 刷新缓存 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		const parsed = createRecordDtoSchema.safeParse({
 			name: data.name || "无标题收录",
@@ -40,6 +42,7 @@ export function CreateRecordDialog({ open, onOpenChange }: CreateRecordDialogPro
 		}
 
 		await triggerCreateRecord(parsed.data);
+		await mutateRecords();
 		toast.success("收录已创建");
 	};
 
