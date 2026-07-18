@@ -71,7 +71,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 			}
 		>
 			{/* 编辑弹窗 */}
-			<EditDraftDialog draft={{ id, name }} open={editOpen} onOpenChange={setEditOpen} />
+			<EditDraftDialog id={id} open={editOpen} onOpenChange={setEditOpen} />
 		</PromptCard>
 	);
 }

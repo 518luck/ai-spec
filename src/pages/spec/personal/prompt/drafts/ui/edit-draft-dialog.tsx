@@ -16,19 +16,17 @@ import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prom
 import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 type EditDraftDialogProps = {
-	draft: {
-		id: string;
-		name: string;
-	};
+	// 草稿 ID：拉全文 + 更新的主键
+	id: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 };
 
-export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogProps): JSX.Element {
+export function EditDraftDialog({ id, open, onOpenChange }: EditDraftDialogProps): JSX.Element {
 	// 打开弹窗时拉取草稿全文（列表只有截断预览），用 SWR 缓存避免重复请求；错误提示走全局 SWRConfig
 	const { data: fullDraft, isLoading } = useSWR(
-		open ? (["draft", draft.id] as const) : null,
-		async ([, id]) => getDraft(id),
+		open ? (["draft", id] as const) : null,
+		async ([, draftId]) => getDraft(draftId),
 	);
 
 	// 更新草稿 mutation
@@ -42,19 +40,19 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
-		// 内容和文件夹都没变就不发请求
+		// name/content/folderId 都没变就不发请求（name 从全文响应取，不依赖外部传入；draft 的 name 可能为 null）
 		const originalFolderId = fullDraft?.folderId ?? undefined;
 		if (
 			fullDraft &&
 			data.content === fullDraft.content &&
-			data.name === draft.name &&
+			data.name === fullDraft.name &&
 			data.folderId === originalFolderId
 		) {
 			return;
 		}
 
 		const parsed = updateDraftDtoSchema.safeParse({
-			id: draft.id,
+			id,
 			name: data.name,
 			content: data.content,
 			folderId: data.folderId,
