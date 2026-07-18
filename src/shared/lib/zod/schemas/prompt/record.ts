@@ -76,10 +76,12 @@ export const createRecordVoSchema = z.object({
 // 创建收录响应类型
 export type CreateRecordVo = z.infer<typeof createRecordVoSchema>;
 
-// 单条收录全文响应：仅返回复制所需的 content（卡片复制全文时按需拉取，列表仍只返回截断预览）
+// 单条收录全文响应：返回 name + content（复制全文 / 编辑回填用）+ folderId（编辑回填所属文件夹）
 export const recordContentVoSchema = z.object({
 	id: z.string(),
+	name: z.string(),
 	content: z.string(),
+	folderId: z.string().optional(),
 });
 
 // 单条收录全文响应类型
