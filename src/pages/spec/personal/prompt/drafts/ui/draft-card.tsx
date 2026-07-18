@@ -1,5 +1,6 @@
 "use client";
 
+import copy from "copy-to-clipboard";
 import { type JSX, useState } from "react";
 import useSWRMutation from "swr/mutation";
 import { deleteDraft, getDraft } from "@/entities/prompt";
@@ -31,12 +32,29 @@ type DraftCardProps = {
 // # 草稿卡片：基于 PromptCard，注入编辑 + 更多操作（收录/删除）+ 编辑弹窗
 export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	const [editOpen, setEditOpen] = useState(false);
+	// 复制进行中标志：拉全文期间禁用按钮 + 触发卡片 loading 蒙层
+	const [isCopying, setIsCopying] = useState(false);
+
+	// 复制：拉全文 → 写剪贴板。一次性只读请求，不需要缓存，用裸 fetch + useState 最直接
+	const handleCopy = async (): Promise<void> => {
+		setIsCopying(true);
+		try {
+			const { content } = await getDraft(id);
+			copy(content);
+			toast.success("已复制");
+		} catch {
+			toast.error("复制失败");
+		} finally {
+			setIsCopying(false);
+		}
+	};
 
 	return (
 		<PromptCard
 			name={name}
 			preview={preview}
-			fetchFullContent={async () => (await getDraft(id)).content}
+			onCopy={handleCopy}
+			isCopying={isCopying}
 			// > 底部 hover 遮罩的操作：编辑 + 更多（收录/删除）
 			actions={
 				<>
