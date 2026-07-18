@@ -2,7 +2,7 @@
 
 import { type JSX, useState } from "react";
 import useSWRMutation from "swr/mutation";
-import { deleteDraft } from "@/entities/prompt";
+import { deleteDraft, getDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
 import { deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 
@@ -36,6 +36,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 		<PromptCard
 			name={name}
 			preview={preview}
+			fetchFullContent={async () => (await getDraft(id)).content}
 			// > 底部 hover 遮罩的操作：编辑 + 更多（收录/删除）
 			actions={
 				<>

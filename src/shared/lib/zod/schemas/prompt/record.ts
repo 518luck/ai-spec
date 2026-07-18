@@ -55,6 +55,15 @@ export const createRecordVoSchema = z.object({
 // 创建收录响应类型
 export type CreateRecordVo = z.infer<typeof createRecordVoSchema>;
 
+// 单条收录全文响应：仅返回复制所需的 content（卡片复制全文时按需拉取，列表仍只返回截断预览）
+export const recordContentVoSchema = z.object({
+	id: z.string(),
+	content: z.string(),
+});
+
+// 单条收录全文响应类型
+export type RecordContentVo = z.infer<typeof recordContentVoSchema>;
+
 // @ 出参 - 列表
 // 收录列表项：列表只返回截断预览，不返回 content 全文（name 必填，区别于草稿的 nullable）
 export const recordVoSchema = z.object({
