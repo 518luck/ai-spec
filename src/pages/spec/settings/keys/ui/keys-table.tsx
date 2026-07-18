@@ -10,6 +10,7 @@ import { scopesToName } from "@/server/rbac/scopes";
 import type { TokenVo } from "@/shared/lib/zod/schemas/token";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { PAGE_SIZE } from "../config/constants";
 import { formatExpires } from "../lib/expires";
@@ -44,9 +45,15 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 	return (
 		// 外层圆角边框：卡片式表格；h-full 撑满父级，overflow-hidden 让首尾行分隔线被圆角裁剪
 		<div className="flex h-full flex-col overflow-hidden rounded-lg border">
-			{/* 表格区：flex-1 占据剩余高度；table 占满宽度保证行分隔线贯通，靠首末列 pl/pr 制造内容边距 */}
-			<div className="flex-1 overflow-auto">
-				<Table className="table-fixed">
+			{/* 表格区：flex-1 占据剩余高度；窄屏横向溢出时由 ScrollArea 渲染美化滚动条（hover 淡入、移出隐藏） */}
+			<ScrollArea
+				orientation="horizontal"
+				className="min-h-0 flex-1"
+				// 滚动条左右内缩，与表格首末列的 pl-4/pr-4 内容边距对齐
+				scrollbarClassName="mx-4"
+			>
+				{/* // > containerClassName 关闭 Table 自带的内层 overflow-x-auto，避免与 ScrollArea 形成双重横向滚动 */}
+				<Table className="table-fixed" containerClassName="overflow-x-visible">
 					<TableHeader className="bg-muted">
 						<TableRow>
 							<TableHead className="w-32 pl-4">名称</TableHead>
@@ -84,7 +91,7 @@ export function KeysTable({ tokens, page, total }: KeysTableProps): JSX.Element 
 						))}
 					</TableBody>
 				</Table>
-			</div>
+			</ScrollArea>
 
 			{/* 分页栏：左侧「第 X-Y 条，共 Z 条」；右侧上一页/下一页按钮 */}
 			<div className="flex items-center justify-between border-t px-4 py-2 text-muted-foreground text-xs">

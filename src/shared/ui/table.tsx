@@ -4,9 +4,20 @@ import type * as React from "react";
 
 import { cn } from "@/shared/lib/utils";
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+function Table({
+	className,
+	// 外层容器的 className，默认 overflow-x-auto 提供横向滚动；
+	// 嵌入 ScrollArea 等自定义滚动容器时，可传 overflow-x-visible 关闭这层滚动，避免双重滚动条
+	containerClassName,
+	...props
+}: React.ComponentProps<"table"> & {
+	containerClassName?: string;
+}) {
 	return (
-		<div data-slot="table-container" className="relative w-full overflow-x-auto">
+		<div
+			data-slot="table-container"
+			className={cn("relative w-full overflow-x-auto", containerClassName)}
+		>
 			<table
 				data-slot="table"
 				className={cn("w-full caption-bottom text-sm", className)}
