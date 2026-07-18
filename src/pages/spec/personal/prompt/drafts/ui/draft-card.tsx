@@ -16,7 +16,6 @@ import {
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
-import { getDraftTitle } from "../lib/format";
 import { useDraftsMutate } from "../model/drafts-mutate-context";
 import { EditDraftDialog } from "./edit-draft-dialog";
 import { HoverOverlay } from "./hover-overlay";
@@ -24,8 +23,8 @@ import { HoverOverlay } from "./hover-overlay";
 type DraftCardProps = {
 	// 草稿 ID
 	id: string;
-	// 草稿标题（可为空，为空时用内容生成）
-	name: string | null;
+	// 草稿标题（必填，创建时已提取自第一个非空行）
+	name: string;
 	// 草稿预览（截断后的内容）
 	preview: string;
 };
@@ -44,7 +43,6 @@ const CARD_CLASS = [
 // # 草稿卡片：内容预览 + 复制/更多操作
 export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	const [editOpen, setEditOpen] = useState(false);
-	const title = getDraftTitle(name, preview);
 
 	// 复制预览文本到剪贴板（用 copy-to-clipboard 自动处理非 HTTPS / 旧浏览器的回退）
 	const handleCopy = (): void => {
@@ -63,7 +61,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 			/>
 			{/* 标题行 */}
 			<div className="flex items-start justify-between gap-2">
-				<h3 className="line-clamp-2 flex-1 font-medium text-sm leading-snug">{title}</h3>
+				<h3 className="line-clamp-2 flex-1 font-medium text-sm leading-snug">{name}</h3>
 			</div>
 
 			{/* 内容预览 */}

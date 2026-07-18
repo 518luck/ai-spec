@@ -18,7 +18,7 @@ import { useDraftsMutate } from "../model/drafts-mutate-context";
 type EditDraftDialogProps = {
 	draft: {
 		id: string;
-		name: string | null;
+		name: string;
 	};
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
@@ -43,12 +43,11 @@ export function EditDraftDialog({ draft, open, onOpenChange }: EditDraftDialogPr
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		// 内容和文件夹都没变就不发请求
-		const originalName = draft.name ?? "";
 		const originalFolderId = fullDraft?.folderId ?? undefined;
 		if (
 			fullDraft &&
 			data.content === fullDraft.content &&
-			(data.name ?? "") === originalName &&
+			data.name === draft.name &&
 			data.folderId === originalFolderId
 		) {
 			return;
