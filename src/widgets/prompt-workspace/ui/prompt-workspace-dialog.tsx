@@ -74,6 +74,15 @@ const resolveActiveFormats = (view: ReactCodeMirrorRef | null): Set<string> => {
 	return active;
 };
 
+// 从内容中提取第一个非空行作为标题；全为空白时返回 undefined（由调用方兜底）
+const extractTitle = (content: string): string | undefined => {
+	for (const line of content.split("\n")) {
+		const trimmed = line.trim();
+		if (trimmed) return trimmed;
+	}
+	return undefined;
+};
+
 export function PromptWorkspaceDialog({
 	open,
 	onOpenChange,
@@ -227,8 +236,8 @@ export function PromptWorkspaceDialog({
 		}
 	};
 
-	// 从内容首行提取标题
-	const title = content.split("\n")[0]?.trim() || emptyTitle;
+	// 从内容第一个非空行提取标题，全空白时回退到 emptyTitle
+	const title = extractTitle(content) ?? emptyTitle;
 
 	// 关闭弹窗：有内容则保存后关闭，空内容直接关闭
 	// > 编辑模式保存后不清空内容（关闭弹窗即可），创建模式保存后清空以便下次使用
@@ -238,7 +247,7 @@ export function PromptWorkspaceDialog({
 		if (trimmed) {
 			try {
 				await onSave({
-					name: content.split("\n")[0]?.trim() || undefined,
+					name: extractTitle(content) ?? emptyTitle,
 					content,
 					folderId,
 				});
