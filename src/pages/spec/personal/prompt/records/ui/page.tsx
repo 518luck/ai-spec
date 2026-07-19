@@ -5,9 +5,9 @@ import { type JSX, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getRecords } from "@/entities/prompt";
+import { FilterCombobox } from "@/features/filter-combobox";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
-import { TagCombobox } from "@/features/tag-combobox";
 import { useInView } from "@/shared/hooks";
 import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
@@ -108,9 +108,9 @@ export function PersonalRecordsPage({ folderId, tagIds, q, filter }: ListRecords
 				}
 			>
 				<PageWidthWrapper fill>
-					{/* // @ 筛选条带：标签贴左、搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
+					{/* // @ 筛选条带：筛选容器贴左、搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 					<div className="mb-6 flex items-center justify-between gap-3">
-						<TagCombobox resourceType="promptRecord" />
+						<FilterCombobox resourceType="promptRecord" />
 						<SearchInput
 							className="max-w-80"
 							filters={["title", "content"]}
