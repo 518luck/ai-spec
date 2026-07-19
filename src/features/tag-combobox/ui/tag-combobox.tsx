@@ -6,7 +6,15 @@
 
 import { useCommandState } from "cmdk";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+	type JSX,
+	type KeyboardEvent,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import useSWR from "swr";
 import { createTag, getTags } from "@/entities/tag";
 import { CommandScrollMask } from "@/features/command-scroll-mask";
@@ -31,6 +39,11 @@ import { TagOptionItem } from "./tag-option-item";
 
 // URL 参数名：与 folderId 对称的短名风格，不同资源的 tag 筛选在不同页面（不同 URL），不会冲突
 const TAG_IDS_PARAM = "tagIds";
+
+// 阻止 keydown 冒泡到外层 DropdownMenu：base-ui Menu 的 typeahead 会吞掉所有字符按键，导致嵌入的搜索框收不到输入
+const stopMenuTypeahead = (e: KeyboardEvent): void => {
+	e.stopPropagation();
+};
 
 type TagComboboxProps = {
 	// 标签归属的资源类型（如 "promptRecord"）；仅用于 SWR key 隔离缓存，为将来按资源过滤 tag 列表预留
@@ -157,7 +170,10 @@ export function TagCombobox({
 
 	return (
 		<Command className={cn("w-44", className)}>
-			<CommandInput placeholder="搜索标签..." />
+			{/* // > 捕获阶段拦截 keydown：阻止事件冒泡到外层 DropdownMenu 的 typeahead，否则菜单会把字符按键当作快速跳转吞掉，input 收不到输入 */}
+			<div onKeyDownCapture={stopMenuTypeahead}>
+				<CommandInput placeholder="搜索标签..." />
+			</div>
 			<div className="relative">
 				{/* // scrollbar-thin：macOS 风格透明滚动条（hover 淡入），覆盖 CommandList 默认无效的 no-scrollbar */}
 				<CommandList
