@@ -146,7 +146,7 @@ export function TagSelectTrigger({
 						/>
 					}
 				>
-					<Icons.plus className="size-4" />
+					<Icons.tagAdd className="size-4" />
 				</PopoverTrigger>
 				<PopoverContent className="w-44 p-0" align={align}>
 					<TagCombobox

@@ -218,7 +218,7 @@ export function TagCombobox({
 									backgroundColor: `color-mix(in srgb, ${TAG_NEUTRAL_COLOR} 15%, transparent)`,
 								}}
 							>
-								<Icons.plus className="size-4" style={{ color: TAG_NEUTRAL_COLOR }} />
+								<Icons.tagAdd className="size-4" style={{ color: TAG_NEUTRAL_COLOR }} />
 							</span>
 							<span>新建标签</span>
 						</CommandItem>

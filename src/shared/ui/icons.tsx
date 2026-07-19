@@ -62,6 +62,7 @@ import {
 	IconStar,
 	IconSun,
 	IconTag,
+	IconTagPlus,
 	IconTrash,
 	IconUpload,
 	IconUserCircle,
@@ -141,6 +142,7 @@ export const Icons = {
 	folderPlus: IconFolderPlus,
 	squares: SquaresIcon,
 	tag: IconTag,
+	tagAdd: IconTagPlus,
 	star: IconStar,
 
 	// Markdown 编辑器快捷操作
