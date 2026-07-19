@@ -58,13 +58,15 @@ export const updateRecordDtoSchema = z
 // 更新收录入参类型
 export type UpdateRecordDto = z.infer<typeof updateRecordDtoSchema>;
 
-// 收录列表查询入参：文件夹筛选 + 标签筛选 + 搜索（q + filter）+ 分页
+// 收录列表查询入参：文件夹筛选 + 标签筛选 + 搜索（q + filter）+ 收藏筛选 + 分页
 // filter 为 base64 编码的 JSON，形如 {title:true,content:true}，决定 q 搜哪些字段
+// favorite=true 时忽略 folderId，跨文件夹返回当前用户收藏的收录
 export const listRecordsDtoSchema = z.object({
 	folderId: z.string().optional(),
 	tagIds: z.string().optional(), // 逗号分隔的 tag id 列表，多选时 AND 关系
 	q: z.string().optional(),
 	filter: z.string().optional(),
+	favorite: z.coerce.boolean().optional(),
 	offset: z.coerce.number().int().min(0).optional(),
 });
 
@@ -98,12 +100,22 @@ export const recordContentVoSchema = z.object({
 // 单条收录全文响应类型
 export type RecordContentVo = z.infer<typeof recordContentVoSchema>;
 
+// 收藏开关响应：返回最新收藏状态，前端用以同步 UI
+export const favoriteToggleVoSchema = z.object({
+	favorite: z.boolean(),
+});
+
+// 收藏开关响应类型
+export type FavoriteToggleVo = z.infer<typeof favoriteToggleVoSchema>;
+
 // @ 出参 - 列表
 // 收录列表项：列表只返回截断预览，不返回 content 全文（name 必填，区别于草稿的 nullable）
+// favorite 标记当前用户是否已收藏，驱动卡片右上角★按钮的激活态
 export const recordVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	preview: z.string(),
+	favorite: z.boolean(),
 });
 
 // 收录列表项类型

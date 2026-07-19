@@ -33,7 +33,14 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { folderId, tagIds: tagIdsParam, q, filter: filterEncoded, offset = 0 } = parsed.data;
+		const {
+			folderId,
+			tagIds: tagIdsParam,
+			q,
+			filter: filterEncoded,
+			favorite,
+			offset = 0,
+		} = parsed.data;
 		const trimmedQuery = q?.trim() ?? "";
 
 		// > 解析搜索字段开关：filter 为 base64 JSON（{title:true,content:true}）；解码失败或无 filter 参数时默认只搜 name
@@ -57,19 +64,30 @@ export const GET = withPersonal(
 		if (trimmedQuery && searchContent) {
 			searchConditions.push({ content: { contains: trimmedQuery, mode: "insensitive" } });
 		}
+		// > 收藏筛选优先于文件夹：favorite=true 时跨文件夹返回当前用户收藏的收录（忽略 folderId）
+		const isFavoriteMode = favorite === true;
 		// 列表按 owner + folderId + tagIds 筛选；Prisma where 给 count 用，raw SQL where 给列表预览截断用，两者必须同步
 		const where: Prisma.PromptRecordWhereInput = {
 			ownerId: session.user.id,
-			folderId: targetFolderId,
+			...(isFavoriteMode
+				? { favoritedBy: { some: { userId: session.user.id } } }
+				: { folderId: targetFolderId }),
 			...(tagIds.length > 0 && { tags: { some: { tagId: { in: tagIds } } } }),
 			...(searchConditions.length > 0 && { OR: searchConditions }),
 		};
 
 		// 构造 SQL WHERE 片段（Prisma 的 select 不支持字符串截断，用原生查询在数据库层完成）
-		const whereConditions: Prisma.Sql[] = [
-			Prisma.sql`owner_id = ${session.user.id}`,
-			targetFolderId ? Prisma.sql`folder_id = ${targetFolderId}` : Prisma.sql`folder_id IS NULL`,
-		];
+		const whereConditions: Prisma.Sql[] = [Prisma.sql`owner_id = ${session.user.id}`];
+		if (isFavoriteMode) {
+			// > 收藏筛选：EXISTS 子查询匹配 PromptFavorite，忽略 folder_id
+			whereConditions.push(
+				Prisma.sql`EXISTS(SELECT 1 FROM prompt."PromptFavorite" pf WHERE pf.record_id = prompt."PromptRecord".id AND pf.user_id = ${session.user.id})`,
+			);
+		} else {
+			whereConditions.push(
+				targetFolderId ? Prisma.sql`folder_id = ${targetFolderId}` : Prisma.sql`folder_id IS NULL`,
+			);
+		}
 		// > tag 多对多筛选：EXISTS 子查询避免 JOIN 产生重复行（一条 record 挂多个 tag 时不会被计多次）
 		if (tagIds.length > 0) {
 			whereConditions.push(
@@ -106,13 +124,30 @@ export const GET = withPersonal(
 			prisma.promptRecord.count({ where }),
 		]);
 
+		// > 批量查当前页收录的收藏状态：一次性 IN 查询避免 N+1，映射到每行 favorite 字段
+		const rowIds = rows.map((r) => r.id);
+		const favoritedRows =
+			rowIds.length > 0
+				? await prisma.promptFavorite.findMany({
+						where: { userId: session.user.id, recordId: { in: rowIds } },
+						select: { recordId: true },
+					})
+				: [];
+		const favoritedSet = new Set(favoritedRows.map((f) => f.recordId));
+		const rowsWithFavorite = rows.map((r) => ({ ...r, favorite: favoritedSet.has(r.id) }));
+
 		// 是否还有下一页：本次返回满一页（=PAGE_SIZE）说明数据库可能还有更多，认为 hasMore=true；不足一页说明到底了
 		const hasMore = rows.length === PAGE_SIZE;
 		// 下一页起点：有下一页时，用"当前起点 + 本次实际返回条数"算出下一页的 offset；到底了则不提供
 		const nextOffset = hasMore ? offset + rows.length : undefined;
 
 		// 经 Vo schema 校验，确保响应形状与前端类型一致
-		const voResult = recordListVoSchema.safeParse({ data: rows, total, hasMore, nextOffset });
+		const voResult = recordListVoSchema.safeParse({
+			data: rowsWithFavorite,
+			total,
+			hasMore,
+			nextOffset,
+		});
 		if (!voResult.success) {
 			throw voResult.error;
 		}
