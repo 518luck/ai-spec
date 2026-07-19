@@ -108,7 +108,7 @@ export function TagSelectTrigger({
 		<div className={cn("flex items-center gap-1.5", className)}>
 			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位 */}
 			{chips.length > 0 && (
-				<div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+				<div className="flex max-w-md min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 					{chips.map((tag) => (
 						<TagChip
 							key={tag.id}
