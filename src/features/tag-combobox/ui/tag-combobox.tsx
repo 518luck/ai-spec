@@ -1,6 +1,7 @@
 "use client";
 
-// # 标签多选下拉：chips 水平排列展示已选，末尾「+」按钮打开 Popover 搜索/勾选/内联创建
+// # 标签选择面板：搜索 + 勾选 + 内联创建的纯内容组件，不含 Popover/chips/触发器
+// > 由外层容器（FilterCombobox、editor-toolbar 等）自行包 Popover 和 chips 展示
 // > 传 value/onChange 时走受控模式（弹窗用），没传时自动读写 URL ?tagIds=a,b,c（导航栏筛选用）
 
 import { useCommandState } from "cmdk";
@@ -13,7 +14,6 @@ import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import { createTagDtoSchema, type TagOptionVo } from "@/shared/lib/zod/schemas/tag";
-import { Button } from "@/shared/ui/button";
 import {
 	Command,
 	CommandEmpty,
@@ -24,11 +24,9 @@ import {
 	CommandSeparator,
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { TAG_NEUTRAL_COLOR } from "../config/tag-colors";
 import { CreateTagDialog } from "./create-tag-dialog";
-import { TagChip } from "./tag-chip";
 
 // URL 参数名：与 folderId 对称的短名风格，不同资源的 tag 筛选在不同页面（不同 URL），不会冲突
 const TAG_IDS_PARAM = "tagIds";
@@ -36,25 +34,24 @@ const TAG_IDS_PARAM = "tagIds";
 type TagComboboxProps = {
 	// 标签归属的资源类型（如 "promptRecord"）；仅用于 SWR key 隔离缓存，为将来按资源过滤 tag 列表预留
 	resourceType: string;
-	// 已选标签（完整对象：编辑回填与 chips 展示都需要 name/color）；传了走受控，没传自动从 URL 读 id 反查
+	// 已选标签（完整对象：勾选回显需要 name/color）；传了走受控，没传自动从 URL 读 id 反查
 	value?: TagOptionVo[];
 	// 选中变化回调：传了走受控，没传自动写入 URL
 	onChange?: (tags: TagOptionVo[]) => void;
-	// 外层容器 className（控制最大宽度等）
-	className?: string;
+	// 挂载完成回调：外层 Popover 打开后用其触发 SWR 刷新（面板本身不再自管 open）
+	onMount?: () => void;
 };
 
-// > 标签多选：chips 展示已选 + 「+」触发 Popover，弹层内搜索/勾选/新建，选中不关弹层可连续选
+// > 标签选择面板：搜索 + 勾选 + 新建，纯内容组件；选中不关弹层可连续选
 export function TagCombobox({
 	resourceType,
 	value: controlledValue,
 	onChange: controlledOnChange,
-	className,
+	onMount,
 }: TagComboboxProps): JSX.Element {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	const [open, setOpen] = useState(false);
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	const [createInitialName, setCreateInitialName] = useState("");
 
@@ -90,20 +87,20 @@ export function TagCombobox({
 	const listRef = useRef<HTMLDivElement>(null);
 	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
 
-	// 弹层打开时刷新一次，保证列表新鲜
+	// 挂载时刷新一次，保证列表新鲜（外层 Popover 每次打开都会重新挂载本面板）
 	useEffect(() => {
-		if (open) void refetchTags();
-	}, [open, refetchTags]);
+		void refetchTags();
+		onMount?.();
+	}, [refetchTags, onMount]);
 
-	// > 重算滚动进度：弹层打开/数据到达时容器可见高度被 max-h 钉死，需双 rAF 跨过布局后再测量
-	// biome-ignore lint/correctness/useExhaustiveDependencies: open/rawTags 作为触发信号，effect body 不读它们但需响应其变化
+	// > 重算滚动进度：数据到达时容器可见高度被 max-h 钉死，需双 rAF 跨过布局后再测量
+	// biome-ignore lint/correctness/useExhaustiveDependencies: rawTags 作为触发信号，effect body 不读它但需响应其变化
 	useEffect(() => {
-		if (!open) return;
 		const id = requestAnimationFrame(() => {
 			requestAnimationFrame(() => updateScrollProgress());
 		});
 		return () => cancelAnimationFrame(id);
-	}, [open, rawTags, updateScrollProgress]);
+	}, [rawTags, updateScrollProgress]);
 
 	// onChange 传了走回调，没传改 URL（写回 id 列表）
 	const handleChange = useCallback(
@@ -136,13 +133,7 @@ export function TagCombobox({
 		[value, handleChange, selectedIds],
 	);
 
-	// Popover 关闭时同步关闭创建对话框，避免 Dialog 的 open state 残留
-	const handlePopoverOpenChange = (next: boolean): void => {
-		setOpen(next);
-		if (!next) setCreateDialogOpen(false);
-	};
-
-	// > 新建标签：全量校验后落库，成功后刷新缓存、自动选中、关闭弹层
+	// > 新建标签：全量校验后落库，成功后刷新缓存、自动选中、关闭创建对话框
 	const handleCreate = async (input: { name: string; color: string }): Promise<void> => {
 		// 拼上当前组件实例的 resourceType 一起校验（input 来自 CreateTagDialog，只有 name+color）
 		const parsed = createTagDtoSchema.safeParse({ ...input, resourceType });
@@ -154,7 +145,6 @@ export function TagCombobox({
 			const created = await createTag(parsed.data);
 			await refetchTags();
 			handleChange([...value, created]);
-			setOpen(false);
 			setCreateDialogOpen(false);
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "创建标签失败");
@@ -162,135 +152,96 @@ export function TagCombobox({
 	};
 
 	return (
-		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
-			{/* // 触发器外壳：父 div 仅做布局，左过滤按钮和右已选区各自带框、视觉独立 */}
-			<div className={cn("flex items-center gap-2", className)}>
-				{/* // 左侧「过滤」按钮：filter 图标 + 文本 + 下箭头，点击开 Popover */}
-				<PopoverTrigger
-					render={
-						<Button
-							variant="outline"
-							size="sm"
-							className="h-9 shrink-0 gap-1 text-muted-foreground"
-						>
-							<Icons.filter2 className="size-4" />
-							过滤
-							<Icons.chevronDown className="size-4" />
-						</Button>
-					}
-				/>
-				{/* // 右侧已选标签区：有标签才渲染，横向排列 chips，溢出滚动 */}
-				{value.length > 0 && (
-					<div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-						{value.map((tag) => (
-							<TagChip
-								key={tag.id}
-								name={tag.name}
-								color={tag.color}
-								removable
-								onRemove={() => handleChange(value.filter((t) => t.id !== tag.id))}
-							/>
-						))}
-					</div>
-				)}
-			</div>
-
-			<PopoverContent className="w-56 p-0" align="start">
-				<Command>
-					<CommandInput placeholder="搜索标签..." />
-					<div className="relative">
-						{/* // scrollbar-thin：macOS 风格透明滚动条（hover 淡入），覆盖 CommandList 默认无效的 no-scrollbar */}
-						<CommandList
-							ref={listRef}
-							onScroll={updateScrollProgress}
-							className="scrollbar-thin max-h-72"
-						>
-							<CommandEmpty>
-								<CreateButtonOnEmpty
-									onSelect={(name) => {
-										setCreateInitialName(name);
-										setCreateDialogOpen(true);
-									}}
-								/>
-							</CommandEmpty>
-
-							{isLoading ? (
-								<CommandGroup>
-									{["a", "b", "c"].map((k) => (
-										<div key={k} className="flex items-center gap-2 px-2 py-1.5">
-											<Skeleton className="size-4 shrink-0 rounded-full" />
-											<Skeleton className="h-4 flex-1" />
-										</div>
-									))}
-								</CommandGroup>
-							) : allTags.length === 0 ? (
-								<CommandGroup>
-									<div className="px-2 py-1.5 text-muted-foreground text-sm">
-										还没有标签，新建一个吧
-									</div>
-								</CommandGroup>
-							) : (
-								<CommandGroup>
-									{allTags.map((tag) => {
-										const selected = selectedIds.has(tag.id);
-										return (
-											<CommandItem
-												key={tag.id}
-												value={tag.name}
-												onSelect={() => toggleTag(tag)}
-												className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
-											>
-												<span
-													className="size-2 shrink-0 rounded-full"
-													style={{ backgroundColor: tag.color }}
-													aria-hidden
-												/>
-												<span className="min-w-0 flex-1 truncate">{tag.name}</span>
-												<Icons.check
-													className={cn("ml-auto size-4", selected ? "opacity-100" : "opacity-0")}
-												/>
-											</CommandItem>
-										);
-									})}
-								</CommandGroup>
-							)}
-
-							<CommandSeparator />
-							<CommandGroup>
-								<CommandItem
-									value="新建标签 创建 new create"
-									onSelect={() => {
-										setCreateInitialName("");
-										setCreateDialogOpen(true);
-									}}
-									className="not-first:mt-2 cursor-pointer bg-transparent! text-muted-foreground hover:bg-accent! hover:text-accent-foreground!"
-								>
-									<span
-										className="flex size-7 shrink-0 items-center justify-center rounded-md"
-										style={{
-											backgroundColor: `color-mix(in srgb, ${TAG_NEUTRAL_COLOR} 15%, transparent)`,
-										}}
-									>
-										<Icons.plus className="size-4" style={{ color: TAG_NEUTRAL_COLOR }} />
-									</span>
-									<span>新建标签</span>
-								</CommandItem>
-							</CommandGroup>
-						</CommandList>
-						<CommandScrollMask
-							scrollProgress={scrollProgress}
-							onSearchChange={updateScrollProgress}
+		<Command>
+			<CommandInput placeholder="搜索标签..." />
+			<div className="relative">
+				{/* // scrollbar-thin：macOS 风格透明滚动条（hover 淡入），覆盖 CommandList 默认无效的 no-scrollbar */}
+				<CommandList
+					ref={listRef}
+					onScroll={updateScrollProgress}
+					className="scrollbar-thin max-h-72"
+				>
+					<CommandEmpty>
+						<CreateButtonOnEmpty
+							onSelect={(name) => {
+								setCreateInitialName(name);
+								setCreateDialogOpen(true);
+							}}
 						/>
-					</div>
-					<CreateTagDialog
-						open={createDialogOpen}
-						onOpenChange={setCreateDialogOpen}
-						initialName={createInitialName}
-						onSubmit={handleCreate}
-					/>
-				</Command>
-			</PopoverContent>
-		</Popover>
+					</CommandEmpty>
+
+					{isLoading ? (
+						<CommandGroup>
+							{["a", "b", "c"].map((k) => (
+								<div key={k} className="flex items-center gap-2 px-2 py-1.5">
+									<Skeleton className="size-4 shrink-0 rounded-full" />
+									<Skeleton className="h-4 flex-1" />
+								</div>
+							))}
+						</CommandGroup>
+					) : allTags.length === 0 ? (
+						<CommandGroup>
+							<div className="px-2 py-1.5 text-muted-foreground text-sm">
+								还没有标签，新建一个吧
+							</div>
+						</CommandGroup>
+					) : (
+						<CommandGroup>
+							{allTags.map((tag) => {
+								const selected = selectedIds.has(tag.id);
+								return (
+									<CommandItem
+										key={tag.id}
+										value={tag.name}
+										onSelect={() => toggleTag(tag)}
+										className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
+									>
+										<span
+											className="size-2 shrink-0 rounded-full"
+											style={{ backgroundColor: tag.color }}
+											aria-hidden
+										/>
+										<span className="min-w-0 flex-1 truncate">{tag.name}</span>
+										<Icons.check
+											className={cn("ml-auto size-4", selected ? "opacity-100" : "opacity-0")}
+										/>
+									</CommandItem>
+								);
+							})}
+						</CommandGroup>
+					)}
+
+					<CommandSeparator />
+					<CommandGroup>
+						<CommandItem
+							value="新建标签 创建 new create"
+							onSelect={() => {
+								setCreateInitialName("");
+								setCreateDialogOpen(true);
+							}}
+							className="not-first:mt-2 cursor-pointer bg-transparent! text-muted-foreground hover:bg-accent! hover:text-accent-foreground!"
+						>
+							<span
+								className="flex size-7 shrink-0 items-center justify-center rounded-md"
+								style={{
+									backgroundColor: `color-mix(in srgb, ${TAG_NEUTRAL_COLOR} 15%, transparent)`,
+								}}
+							>
+								<Icons.plus className="size-4" style={{ color: TAG_NEUTRAL_COLOR }} />
+							</span>
+							<span>新建标签</span>
+						</CommandItem>
+					</CommandGroup>
+				</CommandList>
+				<CommandScrollMask scrollProgress={scrollProgress} onSearchChange={updateScrollProgress} />
+			</div>
+			<CreateTagDialog
+				open={createDialogOpen}
+				onOpenChange={setCreateDialogOpen}
+				initialName={createInitialName}
+				onSubmit={handleCreate}
+			/>
+		</Command>
 	);
 }
 
