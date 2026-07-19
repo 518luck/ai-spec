@@ -24,6 +24,9 @@ export const FOLDERABLE_RESOURCE_KEYS = [
 	"plugins",
 ] as const satisfies readonly ResourceKey[];
 
+// @ 可打标签的内容资源子集；当前只有收录（PromptRecordTag 关联表已建），将来扩展在此追加
+export const TAGGABLE_RESOURCE_KEYS = ["promptRecord"] as const satisfies readonly ResourceKey[];
+
 // @ 资源中文展示信息：供 API Key 弹窗渲染，团队专属资源不在此列
 export const RESOURCES = [
 	{
