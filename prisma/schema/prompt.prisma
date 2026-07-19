@@ -101,6 +101,7 @@ model PromptDraft {
 }
 
 // 标签与收录的多对多关联
+// ! 刻意用显式 m-n（不用隐式）：将来团队权限场景要在中间表上加 createdBy/teamId/role 等字段，隐式不支持
 model PromptRecordTag {
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")

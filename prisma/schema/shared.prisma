@@ -1,12 +1,19 @@
 // # 共享域：跨域通用字典，存放被多个业务领域引用的通用资源
 
-// 全局标签定义，可被任意领域的实体通过各自的关联表引用
+// 标签定义：按"用户 + 团队 + 资源类型"三维隔离，与 Folder 对称
+// ! teamId 当前写死 null（个人空间），团队空间待 defaultWorkspace 基础设施上线后接通
 model Tag {
   // ① 主键
   id String @id @default(cuid())
 
   // ② 业务字段
-  name String @unique
+  name String // 标签名称（同用户同团队同资源下唯一，见下方复合唯一约束）
+  color String @default("#9ca3af") // 标签颜色（#RRGGBB），默认中性灰
+  resourceType String @map("resource_type") // > 标签归属的资源类型（promptDraft/promptRecord/...），与 Folder.resourceType 对称
+
+  // ④ 外键列
+  ownerId String @map("owner_id") // 创建者 ID（数据隔离，与 Folder.ownerId 对称）
+  teamId String? @map("team_id") // 所属团队 ID，null=个人空间（当前写死 null，团队功能未实现）
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")
@@ -15,5 +22,8 @@ model Tag {
   promptRecordTags PromptRecordTag[]
 
   // ⑥ 索引
+  // ! 不用 @@unique([ownerId, teamId, resourceType, name])：Prisma 复合唯一键要求所有字段 non-null，
+  // ! 但 teamId 为 null（个人空间），无法进复合键。唯一性由应用层 upsert 前的 findFirst 兜底
+  @@index([ownerId, resourceType, name]) // 加速 upsert 前的 findFirst 查询 + "我的某资源下的标签"
   @@schema("shared")
 }
