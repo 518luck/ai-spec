@@ -42,6 +42,8 @@ export function FilterCombobox({
 }: FilterComboboxProps): JSX.Element {
 	// TagSelectTrigger 受控 open：用户也可直接点 + 按钮单独打开标签面板
 	const [tagOpen, setTagOpen] = useState(false);
+	// 类型菜单 open：驱动触发按钮箭头翻转
+	const [typeOpen, setTypeOpen] = useState(false);
 
 	// 选「收藏」：仅 Toast 提示，等后端接口就绪后再实现
 	const handleSelectFavorite = useCallback((): void => {
@@ -50,8 +52,8 @@ export function FilterCombobox({
 
 	return (
 		<div className={cn("flex items-center gap-2", className)}>
-			{/* // 「过滤」按钮：filter 图标 + 文本 + 下箭头，点击开类型菜单 */}
-			<DropdownMenu>
+			{/* // 「过滤」按钮：filter 图标 + 文本 + 下箭头，点击开类型菜单；菜单展开时箭头翻转向上 */}
+			<DropdownMenu open={typeOpen} onOpenChange={setTypeOpen}>
 				<DropdownMenuTrigger
 					render={
 						<Button
@@ -61,7 +63,10 @@ export function FilterCombobox({
 						>
 							<Icons.filter2 className="size-4" />
 							过滤
-							<Icons.chevronDown className="size-4" />
+							<Icons.chevronDown
+								className="size-4 transition-transform duration-200"
+								style={{ transform: typeOpen ? "rotate(180deg)" : undefined }}
+							/>
 						</Button>
 					}
 				/>

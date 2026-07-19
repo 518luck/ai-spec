@@ -48,7 +48,10 @@ export function SearchFilterPopover({
 						aria-label="筛选"
 						className={cn("shrink-0", open && "bg-accent text-accent-foreground")}
 					>
-						<Icons.chevronDown className="size-4" />
+						<Icons.chevronDown
+							className="size-4 transition-transform duration-200"
+							style={{ transform: open ? "rotate(180deg)" : undefined }}
+						/>
 					</Button>
 				}
 			/>
