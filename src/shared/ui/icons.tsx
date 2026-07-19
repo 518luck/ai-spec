@@ -17,6 +17,7 @@ import {
 	IconCamera,
 	IconCheck,
 	IconChevronDown,
+	IconChevronRight,
 	IconCode,
 	IconCompass,
 	IconCopy,
@@ -58,7 +59,9 @@ import {
 	IconSettings,
 	IconShield,
 	IconSparkleHighlight,
+	IconStar,
 	IconSun,
+	IconTag,
 	IconTrash,
 	IconUpload,
 	IconUserCircle,
@@ -131,11 +134,14 @@ export const Icons = {
 	// 表单/选择控件
 	check: IconCheck,
 	chevronDown: IconChevronDown,
+	chevronRight: IconChevronRight,
 	selector: IconSelector,
 	folderClosed: IconFolder,
 	folderX: IconFolderX,
 	folderPlus: IconFolderPlus,
 	squares: SquaresIcon,
+	tag: IconTag,
+	star: IconStar,
 
 	// Markdown 编辑器快捷操作
 	bold: IconBold,
