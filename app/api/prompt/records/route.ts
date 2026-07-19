@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import { Prisma } from "@/shared/db/generator/client";
+import { decodeFilters } from "@/shared/lib/search-filter";
 import type { RecordVo } from "@/shared/lib/zod/schemas/prompt/record";
 import {
 	createRecordDtoSchema,
@@ -12,7 +13,7 @@ import {
 	updateRecordDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/record";
 
-// # 提示词收录：列表查询 + 创建（API Key 接入需 promptRecord.read / .write 权限）
+// # 提示词收录：列表查询（文件夹 + 标签 + 搜索）+ 创建（API Key 接入需 promptRecord.read / .write 权限）
 
 // 分页大小，由列表接口固定，前端不控制
 const PAGE_SIZE = 30;
@@ -20,25 +21,76 @@ const PAGE_SIZE = 30;
 // 列表预览的截断长度（字符数），列表接口不返回 content 全文
 const PREVIEW_LENGTH = 120;
 
-// > 按更新时间倒序查询当前用户收录（按文件夹筛选 + 分页），返回 { data, total }
+// 把 Prisma 嵌套形态的关联记录规整为 VO 期望的扁平数组（剥掉中间表外壳）
+const mapTags = (
+	tags: Array<{ tag: { id: string; name: string; color: string; resourceType: string } }>,
+) => tags.map((t) => ({ ...t.tag }));
+
+// > 按更新时间倒序查询当前用户收录（文件夹 + 标签 + 搜索筛选 + 分页），返回 { data, total }
 export const GET = withPersonal(
 	async ({ session, searchParams }) => {
 		const parsed = listRecordsDtoSchema.safeParse(searchParams);
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { folderId, offset = 0 } = parsed.data;
+		const { folderId, tagIds: tagIdsParam, q, filter: filterEncoded, offset = 0 } = parsed.data;
+		const trimmedQuery = q?.trim() ?? "";
+
+		// > 解析搜索字段开关：filter 为 base64 JSON（{title:true,content:true}）；解码失败或无 filter 参数时默认只搜 name
+		const filter = decodeFilters(filterEncoded) ?? { title: true };
+		const searchTitle = filter.title === true;
+		const searchContent = filter.content === true;
 
 		// folderId 为空（空串/undefined）表示"未分类"，统一映射为 null 查询
 		const targetFolderId = folderId || null;
-		// 列表按 owner + folderId 筛选；Prisma where 给 count 用，raw SQL where 给列表预览截断用，两者必须同步
+		// tagIds 为逗号分隔字符串，解析成数组；为空表示不按标签筛选
+		const tagIds = (tagIdsParam ?? "")
+			.split(",")
+			.map((s) => s.trim())
+			.filter(Boolean);
+
+		// 按开关动态拼搜索条件（给 count 的 Prisma where 用）
+		const searchConditions: Prisma.PromptRecordWhereInput[] = [];
+		if (trimmedQuery && searchTitle) {
+			searchConditions.push({ name: { contains: trimmedQuery, mode: "insensitive" } });
+		}
+		if (trimmedQuery && searchContent) {
+			searchConditions.push({ content: { contains: trimmedQuery, mode: "insensitive" } });
+		}
+		// 列表按 owner + folderId + tagIds 筛选；Prisma where 给 count 用，raw SQL where 给列表预览截断用，两者必须同步
 		const where: Prisma.PromptRecordWhereInput = {
 			ownerId: session.user.id,
 			folderId: targetFolderId,
+			...(tagIds.length > 0 && { tags: { some: { tagId: { in: tagIds } } } }),
+			...(searchConditions.length > 0 && { OR: searchConditions }),
 		};
-		const whereSql = Prisma.sql`WHERE owner_id = ${session.user.id} AND folder_id ${
-			targetFolderId ? Prisma.sql`= ${targetFolderId}` : Prisma.sql`IS NULL`
-		}`;
+
+		// 构造 SQL WHERE 片段（Prisma 的 select 不支持字符串截断，用原生查询在数据库层完成）
+		const whereConditions: Prisma.Sql[] = [
+			Prisma.sql`owner_id = ${session.user.id}`,
+			targetFolderId ? Prisma.sql`folder_id = ${targetFolderId}` : Prisma.sql`folder_id IS NULL`,
+		];
+		// > tag 多对多筛选：EXISTS 子查询避免 JOIN 产生重复行（一条 record 挂多个 tag 时不会被计多次）
+		if (tagIds.length > 0) {
+			whereConditions.push(
+				Prisma.sql`EXISTS(SELECT 1 FROM prompt."PromptRecordTag" prt WHERE prt.record_id = prompt."PromptRecord".id AND prt.tag_id IN (${Prisma.join(
+					tagIds,
+				)}))`,
+			);
+		}
+		// > raw SQL 按同样开关拼搜索条件（必须和上面 Prisma where 同步，否则 total 和列表对不上）
+		if (trimmedQuery) {
+			const pattern = `%${trimmedQuery}%`;
+			const sqlParts: Prisma.Sql[] = [];
+			if (searchTitle) sqlParts.push(Prisma.sql`name ILIKE ${pattern}`);
+			if (searchContent) sqlParts.push(Prisma.sql`content ILIKE ${pattern}`);
+			if (sqlParts.length === 1) {
+				whereConditions.push(sqlParts[0]);
+			} else if (sqlParts.length > 1) {
+				whereConditions.push(Prisma.sql`(${Prisma.join(sqlParts, " OR ")})`);
+			}
+		}
+		const whereSql = Prisma.sql`WHERE ${Prisma.join(whereConditions, " AND ")}`;
 		const orderBySql = Prisma.sql`ORDER BY updated_at DESC`;
 
 		// 列表用原生查询在数据库层截取 preview；count 仍用 Prisma 安全计数
@@ -77,7 +129,7 @@ export const POST = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { name, content, images, folderId } = parsed.data;
+		const { name, content, images, folderId, tags } = parsed.data;
 
 		const record = await prisma.promptRecord.create({
 			data: {
@@ -87,6 +139,8 @@ export const POST = withPersonal(
 				ownerId: session.user.id,
 				folderId: folderId || null,
 				visibility: "private",
+				// 标签关联：tags 为 id 数组，直接 create 关联表行；id 不存在时外键约束抛 P2025
+				tags: { create: (tags ?? []).map((tagId) => ({ tagId })) },
 			},
 			select: {
 				id: true,
@@ -94,13 +148,15 @@ export const POST = withPersonal(
 				content: true,
 				visibility: true,
 				folderId: true,
+				tags: { include: { tag: true } },
 				updatedAt: true,
 			},
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null（VO schema 已为 nullable）
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null；tags 关联记录映射为扁平 {id,name,color} 数组
 		const out = {
 			...record,
+			tags: mapTags(record.tags),
 			updatedAt: record.updatedAt.toISOString(),
 		};
 		const result = createRecordVoSchema.safeParse(out);
@@ -120,7 +176,7 @@ export const PATCH = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { id, name, content, images, folderId } = parsed.data;
+		const { id, name, content, images, folderId, tags } = parsed.data;
 
 		// 构建部分更新数据：只更新传入的字段
 		const data: Record<string, unknown> = {};
@@ -129,6 +185,10 @@ export const PATCH = withPersonal(
 		if (images !== undefined) data.images = images;
 		// folderId 收到 null/"" 表示清空为未分类（落到 DB 的 NULL），收到有效字符串表示归属该文件夹
 		if (folderId !== undefined) data.folderId = folderId || null;
+		// 标签关联全量替换：tags === undefined 时不更新；传数组（含空数组）时 set 全量替换
+		if (tags !== undefined) {
+			data.tags = { set: tags.map((tagId) => ({ tagId })) };
+		}
 
 		const updated = await prisma.promptRecord.update({
 			where: { id, ownerId: session.user.id },
@@ -139,13 +199,15 @@ export const PATCH = withPersonal(
 				content: true,
 				visibility: true,
 				folderId: true,
+				tags: { include: { tag: true } },
 				updatedAt: true,
 			},
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null（VO schema 已为 nullable）
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null；tags 关联记录映射为扁平 {id,name,color} 数组
 		const out = {
 			...updated,
+			tags: mapTags(updated.tags),
 			updatedAt: updated.updatedAt.toISOString(),
 		};
 		const result = createRecordVoSchema.safeParse(out);
