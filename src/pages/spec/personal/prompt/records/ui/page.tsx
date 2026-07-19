@@ -108,19 +108,15 @@ export function PersonalRecordsPage({ folderId, tagIds, q, filter }: ListRecords
 				}
 			>
 				<PageWidthWrapper fill>
-					{/* // @ 筛选条带：标签贴左、搜索框贴右，justify-between 两端对齐
-					    // > 放在 renderRecordsBody 外面，避免"选中标签筛空列表"时条带跟着 EmptyState 一起消失，用户无法取消筛选
-					    // > loading 时不显示（数据还没到，筛选没意义） */}
-					{!isLoading && (
-						<div className="mb-6 flex items-center justify-between gap-3">
-							<TagCombobox resourceType="promptRecord" />
-							<SearchInput
-								className="max-w-80"
-								filters={["title", "content"]}
-								defaultFilter="title"
-							/>
-						</div>
-					)}
+					{/* // @ 筛选条带：标签贴左、搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
+					<div className="mb-6 flex items-center justify-between gap-3">
+						<TagCombobox resourceType="promptRecord" />
+						<SearchInput
+							className="max-w-80"
+							filters={["title", "content"]}
+							defaultFilter="title"
+						/>
+					</div>
 					{renderRecordsBody()}
 				</PageWidthWrapper>
 			</ToolbarPageShell>
