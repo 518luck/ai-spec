@@ -21,7 +21,7 @@ import {
 	CommandList,
 	CommandSeparator,
 } from "@/shared/ui/command";
-import { Icons } from "@/shared/ui/icons";
+import { type Icon, Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
@@ -38,6 +38,18 @@ export type FolderOption = {
 	color: string; // 文件夹颜色值（#RRGGBB），驱动 FolderIcon 底色
 };
 
+// value=null 时若指定 URL param 存在，trigger 用这套覆盖展示（如收藏视图显示★+收藏）
+type EmptyOverride = {
+	// 触发条件：URL 中该 param 值为 "true" 时启用覆盖
+	param: string;
+	// 覆盖显示的标签
+	label: string;
+	// 覆盖显示的图标
+	icon: Icon;
+	// 覆盖图标的底色（#RRGGBB），驱动 FolderIcon 底色
+	color: string;
+};
+
 type FolderComboboxProps = {
 	// 文件夹归属的资源类型（如 "promptDraft"），决定拉取哪类文件夹 + 创建时归属
 	resourceType: string;
@@ -47,6 +59,8 @@ type FolderComboboxProps = {
 	onChange?: (folderId: string | null) => void;
 	// 图标模式：只显示图标不显示文字，hover 时 Tooltip 显示文件夹名
 	iconOnly?: boolean;
+	// value=null 时若 URL 指定 param 为 "true"，trigger 显示这套覆盖（如收藏视图）；URL 模式下选文件夹会顺带清掉该 param
+	emptyOverride?: EmptyOverride;
 	className?: string;
 };
 
@@ -57,6 +71,7 @@ export function FolderCombobox({
 	value: controlledValue,
 	onChange: controlledOnChange,
 	iconOnly = false,
+	emptyOverride,
 	className,
 }: FolderComboboxProps): JSX.Element {
 	const router = useRouter();
@@ -64,21 +79,29 @@ export function FolderCombobox({
 
 	// value 传了（含 null = 未分类）用受控；只有 props 完全没传（undefined）时才从 URL 读
 	// ! 不能用 ?? 链：null 是"受控 + 未分类"的有效值，?? 会把它当成没传值、错误地回退到 URL
-	const value =
-		controlledValue !== undefined ? controlledValue : (searchParams?.get("folderId") ?? null);
-	// onChange 传了走回调，没传改 URL
+	const urlFolderId = searchParams?.get("folderId") ?? null;
+	const value = controlledValue !== undefined ? controlledValue : urlFolderId;
+	// emptyOverride 命中条件：value 为空（未分类）且 URL 中指定 param 为 "true"
+	const overrideActive = Boolean(
+		emptyOverride && value === null && searchParams?.get(emptyOverride.param) === "true",
+	);
+	// onChange 传了走回调，没传改 URL；选任何文件夹时若启用 emptyOverride，同时清掉对应 param（互斥）
 	const handleChange = useCallback(
 		(folderId: string | null) => {
 			if (controlledOnChange) {
 				controlledOnChange(folderId);
-			} else {
-				const params = new URLSearchParams(searchParams?.toString() ?? "");
-				if (folderId) params.set("folderId", folderId);
-				else params.delete("folderId");
-				router.replace(`?${params.toString()}`, { scroll: false });
+				return;
 			}
+			const params = new URLSearchParams(searchParams?.toString() ?? "");
+			if (folderId) params.set("folderId", folderId);
+			else params.delete("folderId");
+			// > 切到具体文件夹/未分类时退出覆盖视图（如收藏视图），清掉对应 param
+			if (emptyOverride && params.get(emptyOverride.param) === "true") {
+				params.delete(emptyOverride.param);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
 		},
-		[controlledOnChange, searchParams, router],
+		[controlledOnChange, emptyOverride, searchParams, router],
 	);
 	const [open, setOpen] = useState(false);
 	// 创建文件夹对话框：点击「新建文件夹」列表项或搜索无结果时打开
@@ -159,9 +182,16 @@ export function FolderCombobox({
 		if (!next) setCreateDialogOpen(false);
 	};
 
-	// 触发器标签文案与图标颜色：未选中时给中性灰
-	const triggerLabel = selectedOption ? selectedOption.label : "未分类";
-	const triggerColor = selectedOption?.color ?? FOLDER_NEUTRAL_COLOR;
+	// 触发器标签文案与图标颜色：覆盖视图优先于"未分类"占位
+	const triggerLabel = overrideActive
+		? (emptyOverride?.label ?? "未分类")
+		: selectedOption
+			? selectedOption.label
+			: "未分类";
+	const triggerColor = overrideActive
+		? (emptyOverride?.color ?? FOLDER_NEUTRAL_COLOR)
+		: (selectedOption?.color ?? FOLDER_NEUTRAL_COLOR);
+	const triggerIcon: Icon | undefined = overrideActive ? emptyOverride?.icon : undefined;
 
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
@@ -169,6 +199,7 @@ export function FolderCombobox({
 			{iconOnly ? (
 				<IconOnlyTrigger
 					iconColor={triggerColor}
+					icon={triggerIcon}
 					label={triggerLabel}
 					open={open}
 					className={className}
@@ -176,8 +207,9 @@ export function FolderCombobox({
 			) : (
 				<FullTrigger
 					iconColor={triggerColor}
+					icon={triggerIcon}
 					label={triggerLabel}
-					hasSelection={Boolean(selectedOption)}
+					hasSelection={Boolean(selectedOption) || overrideActive}
 					open={open}
 					className={className}
 				/>
@@ -283,11 +315,13 @@ export function FolderCombobox({
 // > 图标模式触发器：只显示图标，hover 时 Tooltip 显示文件夹名
 function IconOnlyTrigger({
 	iconColor,
+	icon,
 	label,
 	open,
 	className,
 }: {
 	iconColor: string;
+	icon?: Icon;
 	label: string;
 	open: boolean;
 	className?: string;
@@ -308,7 +342,7 @@ function IconOnlyTrigger({
 					/>
 				}
 			>
-				<FolderIcon color={iconColor} />
+				<FolderIcon color={iconColor} icon={icon} />
 			</TooltipTrigger>
 			<TooltipContent showArrow={false}>{label}</TooltipContent>
 		</Tooltip>
@@ -318,12 +352,14 @@ function IconOnlyTrigger({
 // > 完整模式触发器：图标 + 文字 + 箭头
 function FullTrigger({
 	iconColor,
+	icon,
 	label,
 	hasSelection,
 	open,
 	className,
 }: {
 	iconColor: string;
+	icon?: Icon;
 	label: string;
 	hasSelection: boolean;
 	open: boolean;
@@ -340,7 +376,7 @@ function FullTrigger({
 				/>
 			}
 		>
-			<FolderIcon color={iconColor} />
+			<FolderIcon color={iconColor} icon={icon} />
 			<span className={cn("min-w-0 truncate", !hasSelection && "text-muted-foreground")}>
 				{label}
 			</span>
