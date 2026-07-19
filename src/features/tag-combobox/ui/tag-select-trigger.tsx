@@ -139,11 +139,19 @@ export function TagSelectTrigger({
 		el.scrollLeft += e.deltaY;
 	}, []);
 
+	// 箭头点击：按一屏宽度横向滚动，方向由 ScrollMask 回调给出
+	const handleArrowClick = useCallback((side: "start" | "end") => {
+		const el = chipsScrollRef.current;
+		if (!el) return;
+		const delta = (side === "start" ? -1 : 1) * el.clientWidth;
+		el.scrollBy({ left: delta, behavior: "smooth" });
+	}, []);
+
 	return (
 		<div className={cn("flex items-center gap-1.5", className)}>
 			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位；左右两侧用 ScrollMask 弥散遮罩代替硬截断 */}
 			{chips.length > 0 && (
-				<div className="relative min-w-0 max-w-md flex-1">
+				<div className="group relative min-w-0 max-w-md flex-1">
 					<div
 						ref={chipsScrollRef}
 						onWheel={handleChipsWheel}
@@ -160,7 +168,12 @@ export function TagSelectTrigger({
 							/>
 						))}
 					</div>
-					<ScrollMask scrollProgress={chipsProgress} direction="horizontal" sides="both" />
+					<ScrollMask
+						scrollProgress={chipsProgress}
+						direction="horizontal"
+						sides="both"
+						onArrowClick={handleArrowClick}
+					/>
 				</div>
 			)}
 			{/* // 添加标签按钮：打开标签面板，搜索/勾选/新建 */}
