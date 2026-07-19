@@ -90,16 +90,15 @@ export function FilterCombobox({
 				</DropdownMenuContent>
 			</DropdownMenu>
 
-			{/* // 右侧标签选择器：仅在已有选中标签时展示，未选时通过「过滤 → 标签」入口进入；受控 open 用于类型菜单联动 */}
-			{value && value.length > 0 ? (
-				<TagSelectTrigger
-					resourceType={resourceType}
-					value={value}
-					onChange={onChange}
-					open={tagOpen}
-					onOpenChange={setTagOpen}
-				/>
-			) : null}
+			{/* // 右侧标签选择器：未选时不展示（顶部「过滤 → 标签」入口兜底）；选中后展示 chips + 触发器；受控 open 用于类型菜单联动 */}
+			<TagSelectTrigger
+				resourceType={resourceType}
+				value={value}
+				onChange={onChange}
+				open={tagOpen}
+				onOpenChange={setTagOpen}
+				hideWhenEmpty
+			/>
 		</div>
 	);
 }

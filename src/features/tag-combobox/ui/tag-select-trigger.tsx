@@ -45,6 +45,8 @@ type TagSelectTriggerProps = {
 	triggerVariant?: "outline" | "ghost";
 	// PopoverContent 对齐方式，默认 start
 	align?: "start" | "center" | "end";
+	// 无选中标签时是否整体隐藏（默认 false：编辑器等场景未选也要能点 + 添加）
+	hideWhenEmpty?: boolean;
 	// 外层 className（控制最大宽度等）
 	className?: string;
 };
@@ -58,8 +60,9 @@ export function TagSelectTrigger({
 	onOpenChange: controlledOnOpenChange,
 	triggerVariant = "outline",
 	align = "start",
+	hideWhenEmpty = false,
 	className,
-}: TagSelectTriggerProps): JSX.Element {
+}: TagSelectTriggerProps): JSX.Element | null {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
@@ -146,6 +149,9 @@ export function TagSelectTrigger({
 		const delta = (side === "start" ? -1 : 1) * el.clientWidth;
 		el.scrollBy({ left: delta, behavior: "smooth" });
 	}, []);
+
+	// 开启 hideWhenEmpty 且无选中标签时不渲染：放在所有 hooks 之后，保持 hooks 调用顺序稳定
+	if (hideWhenEmpty && chips.length === 0) return null;
 
 	return (
 		<div className={cn("flex items-center gap-1.5", className)}>
