@@ -90,8 +90,9 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 				filter={<DraftFolderFilter />}
 				search={
 					// // > max-w-80 上限 320px、w-full 跟随父级弹性收缩，避免窄窗口标题栏溢出
+					// // > -translate-x-10 纯视觉偏移，让搜索框整体向左挪一点，不改变 flex 布局
 					<SearchInput
-						className="w-full max-w-80"
+						className="w-full max-w-80 -translate-x-20"
 						filters={["title", "content"]}
 						defaultFilter="title"
 					/>
