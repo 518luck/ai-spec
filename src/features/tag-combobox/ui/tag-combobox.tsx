@@ -163,8 +163,9 @@ export function TagCombobox({
 
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
-			{/* // 触发器：已选 chips 水平排列 + 末尾「+ 标签」按钮 */}
+			{/* // 触发器：已选 chips 水平排列 + 末尾「+ 标签」按钮；render 是带嵌套 Button 的容器，关掉 nativeButton 避免非法嵌套 */}
 			<PopoverTrigger
+				nativeButton={false}
 				render={
 					<div
 						className={cn(
