@@ -6,14 +6,24 @@
 // > URL 模式：不传 value/onChange，自动读写 ?tagIds=（导航栏筛选用）
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useCallback, useMemo, useRef, useState, type WheelEvent } from "react";
+import {
+	type JSX,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+	type WheelEvent,
+} from "react";
 import useSWR from "swr";
 import { getTags } from "@/entities/tag";
+import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { ScrollMask } from "@/shared/ui/scroll-mask";
 import { TagChip } from "./tag-chip";
 import { TagCombobox } from "./tag-combobox";
 
@@ -88,6 +98,9 @@ export function TagSelectTrigger({
 		return allTags.filter((t) => idSet.has(t.id));
 	}, [controlledValue, urlTagIds, allTags]);
 
+	// chips 数量：用于驱动 fade 遮罩重算，单独抽出来作为 effect 依赖
+	const chipsCount = chips.length;
+
 	// 移除某个已选 tag：受控透传回调，URL 模式重写参数
 	const handleRemove = useCallback(
 		(tagId: string) => {
@@ -104,8 +117,20 @@ export function TagSelectTrigger({
 		[controlledOnChange, controlledValue, urlTagIds, searchParams, router],
 	);
 
-	// chips 区是横向滚动容器：浏览器默认对垂直滚轮无反应（需按 Shift 才行），这里手动转成水平滚动
+	// chips 区横滚容器：滚轮转横向 + 进度驱动 ScrollMask
 	const chipsScrollRef = useRef<HTMLDivElement>(null);
+	const { scrollProgress: chipsProgress, updateScrollProgress: updateChipsProgress } =
+		useScrollProgress(chipsScrollRef, { direction: "horizontal" });
+
+	// chips 增删后跨布局帧重算进度
+	// biome-ignore lint/correctness/useExhaustiveDependencies: chipsCount 是内容变化信号，body 不直接读
+	useEffect(() => {
+		const id = requestAnimationFrame(() => {
+			requestAnimationFrame(() => updateChipsProgress());
+		});
+		return () => cancelAnimationFrame(id);
+	}, [chipsCount, updateChipsProgress]);
+
 	const handleChipsWheel = useCallback((e: WheelEvent<HTMLDivElement>) => {
 		const el = chipsScrollRef.current;
 		if (!el) return;
@@ -116,22 +141,26 @@ export function TagSelectTrigger({
 
 	return (
 		<div className={cn("flex items-center gap-1.5", className)}>
-			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位 */}
+			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位；左右两侧用 ScrollMask 弥散遮罩代替硬截断 */}
 			{chips.length > 0 && (
-				<div
-					ref={chipsScrollRef}
-					onWheel={handleChipsWheel}
-					className="flex min-w-0 max-w-md flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-				>
-					{chips.map((tag) => (
-						<TagChip
-							key={tag.id}
-							name={tag.name}
-							color={tag.color}
-							removable
-							onRemove={() => handleRemove(tag.id)}
-						/>
-					))}
+				<div className="relative min-w-0 max-w-md flex-1">
+					<div
+						ref={chipsScrollRef}
+						onWheel={handleChipsWheel}
+						onScroll={updateChipsProgress}
+						className="flex items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+					>
+						{chips.map((tag) => (
+							<TagChip
+								key={tag.id}
+								name={tag.name}
+								color={tag.color}
+								removable
+								onRemove={() => handleRemove(tag.id)}
+							/>
+						))}
+					</div>
+					<ScrollMask scrollProgress={chipsProgress} direction="horizontal" sides="both" />
 				</div>
 			)}
 			{/* // 「+」按钮：打开标签面板，搜索/勾选/新建 */}
