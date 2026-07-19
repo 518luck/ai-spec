@@ -3,11 +3,12 @@
 // # 筛选容器：「过滤」按钮打开类型菜单（标签 SubMenu 在右侧展开面板），右侧标签选择器
 // > 类型菜单用 DropdownMenu + SubMenu：两个面板同时可见，避免 Popover 切换闪烁
 // > chips/触发器/Popover 全部由 TagSelectTrigger 内聚，本组件只负责类型菜单 + 组装
+// > 「收藏」是布尔筛选：开启后写 URL ?favorite=true 并清掉 folderId，跨文件夹返回当前用户收藏的收录
 
+import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useState } from "react";
 import { TagCombobox } from "@/features/tag-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
-import { toast } from "@/features/toast";
 import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
@@ -40,15 +41,27 @@ export function FilterCombobox({
 	onChange,
 	className,
 }: FilterComboboxProps): JSX.Element {
+	const router = useRouter();
+	const searchParams = useSearchParams();
 	// TagSelectTrigger 受控 open：用户也可直接点 + 按钮单独打开标签面板
 	const [tagOpen, setTagOpen] = useState(false);
 	// 类型菜单 open：驱动触发按钮箭头翻转
 	const [typeOpen, setTypeOpen] = useState(false);
 
-	// 选「收藏」：仅 Toast 提示，等后端接口就绪后再实现
-	const handleSelectFavorite = useCallback((): void => {
-		toast.info("收藏筛选功能即将推出");
-	}, []);
+	// 当前是否处于收藏视图（URL ?favorite=true）
+	const favoriteActive = searchParams?.get("favorite") === "true";
+
+	// 切换收藏筛选：开启时写 favorite=true 并清掉 folderId（互斥），关闭时仅删 favorite
+	const handleToggleFavorite = useCallback((): void => {
+		const params = new URLSearchParams(searchParams?.toString() ?? "");
+		if (favoriteActive) {
+			params.delete("favorite");
+		} else {
+			params.set("favorite", "true");
+			params.delete("folderId");
+		}
+		router.replace(`?${params.toString()}`, { scroll: false });
+	}, [favoriteActive, searchParams, router]);
 
 	return (
 		<div className={cn("flex items-center gap-2", className)}>
@@ -81,11 +94,20 @@ export function FilterCombobox({
 							<TagCombobox resourceType={resourceType} value={value} onChange={onChange} />
 						</DropdownMenuSubContent>
 					</DropdownMenuSub>
-					{/* // 收藏筛选：仅 Toast 提示，待后端实现 */}
-					<DropdownMenuItem onClick={handleSelectFavorite} className="mt-1 gap-2">
+					{/* // 收藏切换：点击 on/off 不关菜单，激活时显示对勾占位保持文字位置稳定 */}
+					<DropdownMenuItem
+						closeOnClick={false}
+						onClick={handleToggleFavorite}
+						className="mt-1 gap-2"
+					>
 						<Icons.star className="size-4 text-foreground" />
 						<span>收藏</span>
-						<Icons.chevronRight className="ml-auto size-4 text-muted-foreground" />
+						<Icons.check
+							className={cn(
+								"ml-auto size-4 shrink-0",
+								favoriteActive ? "opacity-100" : "opacity-0",
+							)}
+						/>
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
