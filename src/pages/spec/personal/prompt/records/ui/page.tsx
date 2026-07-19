@@ -9,6 +9,7 @@ import { useInView } from "@/shared/hooks";
 import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
 import { CenteredLoader } from "@/shared/ui/centered-loader";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { Kbd } from "@/shared/ui/kbd";
 import { EmptyState } from "@/widgets/empty-state";
@@ -81,6 +82,7 @@ export function PersonalRecordsPage({ folderId }: ListRecordsDto): JSX.Element {
 		<RecordsMutateProvider mutate={() => mutateRecords()}>
 			<ToolbarPageShell
 				title="收录"
+				help={<HelpTooltip content="高频提示词归档处，一点即复制发给 AI" />}
 				filter={<RecordFolderFilter />}
 				actions={
 					status === "authenticated" ? (
