@@ -6,7 +6,7 @@ import useSWRInfinite from "swr/infinite";
 
 import { getRecords } from "@/entities/prompt";
 import { useInView } from "@/shared/hooks";
-import type { RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
+import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
 import { CenteredLoader } from "@/shared/ui/centered-loader";
 import { Icons } from "@/shared/ui/icons";
@@ -16,19 +16,20 @@ import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { RecordsMutateProvider } from "../model/records-mutate-context";
 import { CreateRecordDialog } from "./create-record-dialog";
+import { RecordFolderFilter } from "./record-folder-filter";
 import { RecordsGrid } from "./records-grid";
 
 // # 个人收录页：SWR Infinite 拉取 GET /api/prompt/records，底部哨兵进入视口时自动加载下一页
-export function PersonalRecordsPage(): JSX.Element {
+export function PersonalRecordsPage({ folderId }: ListRecordsDto): JSX.Element {
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
 
-	// SWR Infinite key：上一页无更多数据时返回 null 停止加载
+	// SWR Infinite key：folderId 变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: RecordListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["records", offset] as const;
+		return ["records", folderId, offset] as const;
 	};
 
 	const {
@@ -37,7 +38,7 @@ export function PersonalRecordsPage(): JSX.Element {
 		isValidating,
 		setSize,
 		mutate: mutateRecords,
-	} = useSWRInfinite(getKey, async ([, offset]) => getRecords({ offset }));
+	} = useSWRInfinite(getKey, async ([, folderId, offset]) => getRecords({ folderId, offset }));
 
 	const records = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
 	const total = data?.[0]?.total ?? 0;
@@ -80,6 +81,7 @@ export function PersonalRecordsPage(): JSX.Element {
 		<RecordsMutateProvider mutate={() => mutateRecords()}>
 			<ToolbarPageShell
 				title="收录"
+				filter={<RecordFolderFilter />}
 				actions={
 					status === "authenticated" ? (
 						<>

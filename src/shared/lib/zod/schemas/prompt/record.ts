@@ -54,8 +54,9 @@ export const updateRecordDtoSchema = z
 // 更新收录入参类型
 export type UpdateRecordDto = z.infer<typeof updateRecordDtoSchema>;
 
-// 收录列表查询入参：仅分页（无搜索/文件夹筛选）
+// 收录列表查询入参：文件夹筛选 + 分页（无搜索）
 export const listRecordsDtoSchema = z.object({
+	folderId: z.string().optional(),
 	offset: z.coerce.number().int().min(0).optional(),
 });
 

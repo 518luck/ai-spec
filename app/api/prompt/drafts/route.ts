@@ -86,8 +86,9 @@ export const GET = withPersonal(
 			prisma.promptDraft.count({ where }),
 		]);
 
-		// 是否还有下一页：本次返回满一页则认为还有
+		// 是否还有下一页：本次返回满一页（=PAGE_SIZE）说明数据库可能还有更多，认为 hasMore=true；不足一页说明到底了
 		const hasMore = rows.length === PAGE_SIZE;
+		// 下一页起点：有下一页时，用"当前起点 + 本次实际返回条数"算出下一页的 offset；到底了则不提供
 		const nextOffset = hasMore ? offset + rows.length : undefined;
 
 		// 经 Vo schema 校验，确保响应形状与前端类型一致

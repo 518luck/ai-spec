@@ -20,18 +20,25 @@ const PAGE_SIZE = 30;
 // 列表预览的截断长度（字符数），列表接口不返回 content 全文
 const PREVIEW_LENGTH = 120;
 
-// > 按更新时间倒序查询当前用户收录（仅分页，无搜索/文件夹筛选），返回 { data, total }
+// > 按更新时间倒序查询当前用户收录（按文件夹筛选 + 分页），返回 { data, total }
 export const GET = withPersonal(
 	async ({ session, searchParams }) => {
 		const parsed = listRecordsDtoSchema.safeParse(searchParams);
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { offset = 0 } = parsed.data;
+		const { folderId, offset = 0 } = parsed.data;
 
-		// 列表仅按 owner 隔离；查询条件简单，直接用 Prisma where 配合原生查询做预览截断
-		const where: Prisma.PromptRecordWhereInput = { ownerId: session.user.id };
-		const whereSql = Prisma.sql`WHERE owner_id = ${session.user.id}`;
+		// folderId 为空（空串/undefined）表示"未分类"，统一映射为 null 查询
+		const targetFolderId = folderId || null;
+		// 列表按 owner + folderId 筛选；Prisma where 给 count 用，raw SQL where 给列表预览截断用，两者必须同步
+		const where: Prisma.PromptRecordWhereInput = {
+			ownerId: session.user.id,
+			folderId: targetFolderId,
+		};
+		const whereSql = Prisma.sql`WHERE owner_id = ${session.user.id} AND folder_id ${
+			targetFolderId ? Prisma.sql`= ${targetFolderId}` : Prisma.sql`IS NULL`
+		}`;
 		const orderBySql = Prisma.sql`ORDER BY updated_at DESC`;
 
 		// 列表用原生查询在数据库层截取 preview；count 仍用 Prisma 安全计数
@@ -47,8 +54,9 @@ export const GET = withPersonal(
 			prisma.promptRecord.count({ where }),
 		]);
 
-		// 是否还有下一页：本次返回满一页则认为还有
+		// 是否还有下一页：本次返回满一页（=PAGE_SIZE）说明数据库可能还有更多，认为 hasMore=true；不足一页说明到底了
 		const hasMore = rows.length === PAGE_SIZE;
+		// 下一页起点：有下一页时，用"当前起点 + 本次实际返回条数"算出下一页的 offset；到底了则不提供
 		const nextOffset = hasMore ? offset + rows.length : undefined;
 
 		// 经 Vo schema 校验，确保响应形状与前端类型一致

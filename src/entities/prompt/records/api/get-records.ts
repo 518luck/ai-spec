@@ -3,9 +3,10 @@
 import { resolveErrorMessage } from "@/entities/lib/fetch-error";
 import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
 
-// > 查询收录列表（GET /api/prompt/records），仅按 offset 分页；非 2xx 时解析后端统一错误体并抛出
+// > 查询收录列表（GET /api/prompt/records），按文件夹筛选 + 分页；非 2xx 时解析后端统一错误体并抛出
 export const getRecords = async (params: ListRecordsDto = {}): Promise<RecordListVo> => {
 	const qs = new URLSearchParams();
+	if (params.folderId) qs.set("folderId", params.folderId);
 	if (params.offset !== undefined) qs.set("offset", String(params.offset));
 
 	const response = await fetch(`/api/prompt/records?${qs.toString()}`);
