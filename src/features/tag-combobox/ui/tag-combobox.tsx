@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import { createTag, getTags } from "@/entities/tag";
+import { CommandScrollMask } from "@/features/command-scroll-mask";
 import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
@@ -23,7 +24,6 @@ import {
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { ScrollMask } from "@/shared/ui/scroll-mask";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { TAG_NEUTRAL_COLOR } from "../config/tag-colors";
 import { CreateTagDialog } from "./create-tag-dialog";
@@ -206,6 +206,7 @@ export function TagCombobox({
 				<Command>
 					<CommandInput placeholder="搜索标签..." />
 					<div className="relative">
+						{/* // scrollbar-thin：macOS 风格透明滚动条（hover 淡入），覆盖 CommandList 默认无效的 no-scrollbar */}
 						<CommandList
 							ref={listRef}
 							onScroll={updateScrollProgress}
@@ -283,7 +284,10 @@ export function TagCombobox({
 								</CommandItem>
 							</CommandGroup>
 						</CommandList>
-						<ScrollMask scrollProgress={scrollProgress} />
+						<CommandScrollMask
+							scrollProgress={scrollProgress}
+							onSearchChange={updateScrollProgress}
+						/>
 					</div>
 					<CreateTagDialog
 						open={createDialogOpen}

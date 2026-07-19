@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import { createFolder, getFolders } from "@/entities/folder/api/folder";
+import { CommandScrollMask } from "@/features/command-scroll-mask";
 import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
@@ -22,7 +23,6 @@ import {
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { ScrollMask } from "@/shared/ui/scroll-mask";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { FOLDER_NEUTRAL_COLOR } from "../config/folder-colors";
@@ -262,8 +262,11 @@ export function FolderCombobox({
 								</CommandItem>
 							</CommandGroup>
 						</CommandList>
-						{/* // > 底部渐变遮罩：滚到底自动淡出，提示下方还有更多内容 */}
-						<ScrollMask scrollProgress={scrollProgress} />
+						{/* // 底部渐变遮罩：滚到底自动淡出，订阅 cmdk 搜索词避免过滤时闪烁 */}
+						<CommandScrollMask
+							scrollProgress={scrollProgress}
+							onSearchChange={updateScrollProgress}
+						/>
 					</div>
 					<CreateFolderDialog
 						open={createDialogOpen}

@@ -41,6 +41,8 @@ export function useScrollProgress(
 // 从容器读取滚动进度（0~1）：已滚动距离 / 可滚动总距离；内容不溢出时返回 1
 // el	要读尺寸的 DOM 元素
 // direction	监听竖向（vertical）还是横向（horizontal）滚动
+// ! 容差 1px：scrollHeight 受 box-sizing/sub-pixel 影响，内容刚铺满时常有 ±0.x px 抖动，
+// ! 严格相等判断会让分母接近 0，算出荒诞的进度值，导致 ScrollMask 在不可滚动状态下误显示
 const readProgress = (el: HTMLElement, direction: "vertical" | "horizontal"): number => {
 	// 已滚动的距离
 	const scroll = direction === "vertical" ? el.scrollTop : el.scrollLeft;
@@ -48,5 +50,8 @@ const readProgress = (el: HTMLElement, direction: "vertical" | "horizontal"): nu
 	const scrollSize = direction === "vertical" ? el.scrollHeight : el.scrollWidth;
 	// 视口尺寸（容器可见区域大小）
 	const clientSize = direction === "vertical" ? el.clientHeight : el.clientWidth;
-	return scrollSize === clientSize ? 1 : Math.min(scroll / (scrollSize - clientSize), 1);
+	// 可滚动总距离，<=1px 视为不可滚动（避免 sub-pixel 抖动放大成巨大进度）
+	const scrollableDistance = scrollSize - clientSize;
+	if (scrollableDistance <= 1) return 1;
+	return Math.min(scroll / scrollableDistance, 1);
 };
