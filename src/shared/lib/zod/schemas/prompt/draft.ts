@@ -18,8 +18,8 @@ export const draftContentSchema = z
 // 草稿图片列表：可选，默认空数组
 export const draftImagesSchema = z.array(z.string().max(2048)).default([]);
 
-// 草稿所属文件夹：可选，空串或 undefined 表示不加入任何文件夹
-export const draftFolderIdSchema = z.string().optional().or(z.literal(""));
+// 草稿所属文件夹：null/空串表示不加入任何文件夹（PATCH 局部更新时靠"不传该字段"表达"不更新"，不依赖 undefined 值）
+export const draftFolderIdSchema = z.string().nullable().or(z.literal(""));
 
 // @ 入参
 // 创建草稿入参
@@ -43,11 +43,7 @@ export const updateDraftDtoSchema = z
 		folderId: draftFolderIdSchema,
 	})
 	.refine(
-		(data) =>
-			data.name !== undefined ||
-			data.content !== undefined ||
-			data.images !== undefined ||
-			data.folderId !== undefined,
+		(data) => data.name !== undefined || data.content !== undefined || data.images !== undefined,
 		{ error: "至少需要更新一个字段" },
 	);
 
@@ -79,7 +75,7 @@ export const createDraftVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	content: z.string(),
-	folderId: z.string().optional(),
+	folderId: z.string().nullable(),
 	updatedAt: z.iso.datetime(),
 });
 
@@ -91,7 +87,7 @@ export const draftContentVoSchema = z.object({
 	id: z.string(),
 	name: z.string().nullable(),
 	content: z.string(),
-	folderId: z.string().optional(),
+	folderId: z.string().nullable(),
 });
 
 // 单条草稿全文响应类型
