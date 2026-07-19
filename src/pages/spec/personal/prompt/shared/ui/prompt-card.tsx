@@ -20,6 +20,8 @@ type PromptCardProps = {
 	isCopying?: boolean;
 	// 底部 hover 遮罩内的操作按钮；遮罩层永远渲染以保持 hover 视觉一致，按钮可有可无
 	actions?: ReactNode;
+	// 标题行右侧的常驻插槽（如收藏★按钮）；浮在透明复制层 z-0 之上，z-10 保证可点击
+	headerExtra?: ReactNode;
 	// 附加内容（弹窗等非视觉 DOM），渲染在主体之后
 	children?: ReactNode;
 };
@@ -30,6 +32,7 @@ export function PromptCard({
 	onCopy,
 	isCopying = false,
 	actions,
+	headerExtra,
 	children,
 }: PromptCardProps): JSX.Element {
 	return (
@@ -45,6 +48,7 @@ export function PromptCard({
 			{/* 标题行 */}
 			<div className="flex items-start justify-between gap-2">
 				<h3 className="line-clamp-2 flex-1 font-medium text-sm leading-snug">{name}</h3>
+				{headerExtra ? <div className="relative z-10 shrink-0">{headerExtra}</div> : null}
 			</div>
 
 			{/* 内容预览 */}

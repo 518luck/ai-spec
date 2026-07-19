@@ -23,16 +23,22 @@ import { CreateRecordDialog } from "./create-record-dialog";
 import { RecordsGrid } from "./records-grid";
 
 // # 个人收录页：SWR Infinite 拉取 GET /api/prompt/records，底部哨兵进入视口时自动加载下一页
-export function PersonalRecordsPage({ folderId, tagIds, q, filter }: ListRecordsDto): JSX.Element {
+export function PersonalRecordsPage({
+	folderId,
+	tagIds,
+	q,
+	filter,
+	favorite,
+}: ListRecordsDto): JSX.Element {
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
 
-	// SWR Infinite key：folderId/tagIds/q/filter 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
+	// SWR Infinite key：folderId/tagIds/q/filter/favorite 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: RecordListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["records", folderId, tagIds, q, filter, offset] as const;
+		return ["records", folderId, tagIds, q, filter, favorite, offset] as const;
 	};
 
 	const {
@@ -41,8 +47,8 @@ export function PersonalRecordsPage({ folderId, tagIds, q, filter }: ListRecords
 		isValidating,
 		setSize,
 		mutate: mutateRecords,
-	} = useSWRInfinite(getKey, async ([, folderId, tagIds, q, filter, offset]) =>
-		getRecords({ folderId, tagIds, q, filter, offset }),
+	} = useSWRInfinite(getKey, async ([, folderId, tagIds, q, filter, favorite, offset]) =>
+		getRecords({ folderId, tagIds, q, filter, favorite, offset }),
 	);
 
 	const records = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
@@ -87,7 +93,12 @@ export function PersonalRecordsPage({ folderId, tagIds, q, filter }: ListRecords
 			<ToolbarPageShell
 				title="收录"
 				help={<HelpTooltip content="高频提示词归档处，一点即复制发给 AI" />}
-				filter={<FolderCombobox resourceType="promptRecord" />}
+				filter={
+					<FolderCombobox
+						resourceType="promptRecord"
+						emptyOverride={{ param: "favorite", label: "收藏", icon: Icons.star, color: "#eab308" }}
+					/>
+				}
 				actions={
 					status === "authenticated" ? (
 						<>

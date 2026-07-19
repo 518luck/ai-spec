@@ -14,7 +14,13 @@ export function RecordsGrid({ records }: RecordsGridProps): JSX.Element {
 	return (
 		<div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 xl:gap-4 2xl:gap-6">
 			{records.map((record) => (
-				<RecordCard key={record.id} id={record.id} name={record.name} preview={record.preview} />
+				<RecordCard
+					key={record.id}
+					id={record.id}
+					name={record.name}
+					preview={record.preview}
+					favorite={record.favorite}
+				/>
 			))}
 		</div>
 	);
