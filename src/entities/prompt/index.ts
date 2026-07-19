@@ -1,2 +1,9 @@
 export { createDraft, deleteDraft, getDraft, getDrafts, updateDraft } from "./drafts";
-export { createRecord, getRecord, getRecords, updateRecord } from "./records";
+export {
+	createRecord,
+	favoriteRecord,
+	getRecord,
+	getRecords,
+	unfavoriteRecord,
+	updateRecord,
+} from "./records";
