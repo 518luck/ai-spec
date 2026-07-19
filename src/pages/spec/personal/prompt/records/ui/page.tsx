@@ -5,6 +5,9 @@ import { type JSX, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getRecords } from "@/entities/prompt";
+import { FolderCombobox } from "@/features/folder-combobox";
+import { SearchInput } from "@/features/search-input";
+import { TagCombobox } from "@/features/tag-combobox";
 import { useInView } from "@/shared/hooks";
 import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
@@ -17,20 +20,19 @@ import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { RecordsMutateProvider } from "../model/records-mutate-context";
 import { CreateRecordDialog } from "./create-record-dialog";
-import { RecordFolderFilter } from "./record-folder-filter";
 import { RecordsGrid } from "./records-grid";
 
 // # 个人收录页：SWR Infinite 拉取 GET /api/prompt/records，底部哨兵进入视口时自动加载下一页
-export function PersonalRecordsPage({ folderId }: ListRecordsDto): JSX.Element {
+export function PersonalRecordsPage({ folderId, tagIds, q, filter }: ListRecordsDto): JSX.Element {
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
 
-	// SWR Infinite key：folderId 变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
+	// SWR Infinite key：folderId/tagIds/q/filter 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: RecordListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["records", folderId, offset] as const;
+		return ["records", folderId, tagIds, q, filter, offset] as const;
 	};
 
 	const {
@@ -39,7 +41,9 @@ export function PersonalRecordsPage({ folderId }: ListRecordsDto): JSX.Element {
 		isValidating,
 		setSize,
 		mutate: mutateRecords,
-	} = useSWRInfinite(getKey, async ([, folderId, offset]) => getRecords({ folderId, offset }));
+	} = useSWRInfinite(getKey, async ([, folderId, tagIds, q, filter, offset]) =>
+		getRecords({ folderId, tagIds, q, filter, offset }),
+	);
 
 	const records = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
 	const total = data?.[0]?.total ?? 0;
@@ -83,7 +87,7 @@ export function PersonalRecordsPage({ folderId }: ListRecordsDto): JSX.Element {
 			<ToolbarPageShell
 				title="收录"
 				help={<HelpTooltip content="高频提示词归档处，一点即复制发给 AI" />}
-				filter={<RecordFolderFilter />}
+				filter={<FolderCombobox resourceType="promptRecord" />}
 				actions={
 					status === "authenticated" ? (
 						<>
@@ -103,7 +107,22 @@ export function PersonalRecordsPage({ folderId }: ListRecordsDto): JSX.Element {
 					) : undefined
 				}
 			>
-				<PageWidthWrapper fill>{renderRecordsBody()}</PageWidthWrapper>
+				<PageWidthWrapper fill>
+					{/* // @ 筛选条带：标签贴左、搜索框贴右，justify-between 两端对齐
+					    // > 放在 renderRecordsBody 外面，避免"选中标签筛空列表"时条带跟着 EmptyState 一起消失，用户无法取消筛选
+					    // > loading 时不显示（数据还没到，筛选没意义） */}
+					{!isLoading && (
+						<div className="mb-6 flex items-center justify-between gap-3">
+							<TagCombobox resourceType="promptRecord" />
+							<SearchInput
+								className="max-w-80"
+								filters={["title", "content"]}
+								defaultFilter="title"
+							/>
+						</div>
+					)}
+					{renderRecordsBody()}
+				</PageWidthWrapper>
 			</ToolbarPageShell>
 		</RecordsMutateProvider>
 	);

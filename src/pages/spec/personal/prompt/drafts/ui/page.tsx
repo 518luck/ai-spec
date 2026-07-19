@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getDrafts } from "@/entities/prompt";
+import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
 import { useInView } from "@/shared/hooks";
 import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
@@ -19,7 +20,6 @@ import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { DraftsMutateProvider } from "../model/drafts-mutate-context";
 import { CreateDraftDialog } from "./create-draft-dialog";
-import { DraftFolderFilter } from "./draft-folder-filter";
 import { DraftsGrid } from "./drafts-grid";
 
 // # 个人草稿页：SWR Infinite 拉取 GET /api/prompt/drafts，底部哨兵进入视口时自动加载下一页
@@ -87,7 +87,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 			<ToolbarPageShell
 				title="草稿"
 				help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
-				filter={<DraftFolderFilter />}
+				filter={<FolderCombobox resourceType="promptDraft" />}
 				search={
 					// // > max-w-80 上限 320px、w-full 跟随父级弹性收缩，避免窄窗口标题栏溢出
 					// // > -translate-x-20 纯视觉偏移，让搜索框整体向左挪一点，不改变 flex 布局

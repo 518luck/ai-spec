@@ -6,6 +6,7 @@ import type { JSX } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { getRecord, updateRecord } from "@/entities/prompt";
+import { areTagsEqual } from "@/features/tag-combobox/lib";
 import { toast } from "@/features/toast";
 import {
 	type CreateRecordVo,
@@ -40,13 +41,17 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
-		// name/content/folderId 都没变就不发请求（name 从全文响应取，不依赖外部传入）
+		// name/content/folderId/tags 都没变就不发请求（name 从全文响应取，不依赖外部传入）
 		const originalFolderId = fullRecord?.folderId ?? null;
+		const originalTags = fullRecord?.tags ?? [];
+		// data.tags === undefined 表示用户本次没传 tags 字段（不更新标签），视为不变
+		const tagsUnchanged = data.tags === undefined || areTagsEqual(data.tags, originalTags);
 		if (
 			fullRecord &&
 			data.content === fullRecord.content &&
 			data.name === fullRecord.name &&
-			data.folderId === originalFolderId
+			data.folderId === originalFolderId &&
+			tagsUnchanged
 		) {
 			return;
 		}
@@ -56,6 +61,7 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 			name: data.name,
 			content: data.content,
 			folderId: data.folderId,
+			...(data.tags !== undefined && { tags: data.tags.map((t) => t.id) }),
 		});
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请输入收录内容");
@@ -80,6 +86,9 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 			resourceType="promptRecord"
 			initialContent={fullRecord?.content ?? ""}
 			initialFolderId={fullRecord?.folderId}
+			// > tagsEnabled 必须独立传：创建场景没 initialTags 但也要能选标签
+			tagsEnabled
+			initialTags={fullRecord?.tags}
 			emptyTitle="无标题收录"
 			savingText="更新中..."
 		/>

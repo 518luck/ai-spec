@@ -35,6 +35,7 @@ export function CreateRecordDialog({ open, onOpenChange }: CreateRecordDialogPro
 			name: data.name || "无标题收录",
 			content: data.content,
 			folderId: data.folderId,
+			...(data.tags !== undefined && { tags: data.tags.map((t) => t.id) }),
 		});
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请输入收录内容");
@@ -53,6 +54,8 @@ export function CreateRecordDialog({ open, onOpenChange }: CreateRecordDialogPro
 			onSave={handleSave}
 			isSaving={isMutating}
 			resourceType="promptRecord"
+			// > 启用标签：创建模式即可给新收录打标签
+			tagsEnabled
 			emptyTitle="无标题收录"
 		/>
 	);
