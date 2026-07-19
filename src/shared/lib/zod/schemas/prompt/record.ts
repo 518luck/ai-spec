@@ -18,8 +18,8 @@ export const recordContentSchema = z
 // 收录图片列表：可选，默认空数组
 export const recordImagesSchema = z.array(z.string().max(2048)).default([]);
 
-// 收录所属文件夹：可选，空串或 undefined 表示不加入任何文件夹
-export const recordFolderIdSchema = z.string().optional().or(z.literal(""));
+// 收录所属文件夹：null/空串表示不加入任何文件夹（PATCH 局部更新时靠"不传该字段"表达"不更新"，不依赖 undefined 值）
+export const recordFolderIdSchema = z.string().nullable().or(z.literal(""));
 
 // @ 入参
 // 创建收录入参
@@ -43,11 +43,7 @@ export const updateRecordDtoSchema = z
 		folderId: recordFolderIdSchema,
 	})
 	.refine(
-		(data) =>
-			data.name !== undefined ||
-			data.content !== undefined ||
-			data.images !== undefined ||
-			data.folderId !== undefined,
+		(data) => data.name !== undefined || data.content !== undefined || data.images !== undefined,
 		{ error: "至少需要更新一个字段" },
 	);
 
@@ -70,7 +66,7 @@ export const createRecordVoSchema = z.object({
 	name: z.string(),
 	content: z.string(),
 	visibility: z.enum(["private", "public"]),
-	folderId: z.string().optional(),
+	folderId: z.string().nullable(),
 	updatedAt: z.iso.datetime(),
 });
 
@@ -82,7 +78,7 @@ export const recordContentVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	content: z.string(),
-	folderId: z.string().optional(),
+	folderId: z.string().nullable(),
 });
 
 // 单条收录全文响应类型

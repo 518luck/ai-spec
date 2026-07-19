@@ -128,6 +128,7 @@ export const PATCH = withPersonal(
 		if (name !== undefined) data.name = name;
 		if (content !== undefined) data.content = content;
 		if (images !== undefined) data.images = images;
+		// folderId 收到 null/"" 表示清空为未分类（落到 DB 的 NULL），收到有效字符串表示归属该文件夹
 		if (folderId !== undefined) data.folderId = folderId || null;
 
 		const updated = await prisma.promptRecord.update({
