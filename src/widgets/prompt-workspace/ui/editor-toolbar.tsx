@@ -5,7 +5,8 @@ import { AnimatePresence, Reorder } from "motion/react";
 import type { JSX } from "react";
 import { useRef } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
-import { TagCombobox } from "@/features/tag-combobox";
+import { TagChip } from "@/features/tag-combobox/ui/tag-chip";
+import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
@@ -138,14 +139,31 @@ export function EditorToolbar({
 				iconOnly={!isExpanded}
 			/>
 
-			{/* // @ 标签选择：仅收录启用；放大模式下显示完整 chips，缩小模式下收起避免挤占标题栏 */}
+			{/* // @ 标签选择：仅收录启用；放大模式下显示 chips + 触发器，缩小模式下收起避免挤占标题栏 */}
 			{tags && isExpanded ? (
-				<TagCombobox
-					resourceType={folder.resourceType}
-					value={tags.value}
-					onChange={tags.onChange}
-					className="min-w-40 max-w-64"
-				/>
+				<div className="flex min-w-40 max-w-64 items-center gap-1.5">
+					{/* // 已选 chips：横向排列，溢出滚动 */}
+					{tags.value.length > 0 && (
+						<div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+							{tags.value.map((tag) => (
+								<TagChip
+									key={tag.id}
+									name={tag.name}
+									color={tag.color}
+									removable
+									onRemove={() => tags.onChange(tags.value.filter((t) => t.id !== tag.id))}
+								/>
+							))}
+						</div>
+					)}
+					{/* // 标签选择触发器：ghost 风格融入标题栏 */}
+					<TagSelectTrigger
+						resourceType={folder.resourceType}
+						value={tags.value}
+						onChange={tags.onChange}
+						triggerVariant="ghost"
+					/>
+				</div>
 			) : null}
 
 			<div className="ml-auto flex items-center gap-2">
