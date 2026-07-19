@@ -128,10 +128,9 @@ export const POST = withPersonal(
 			},
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串，folderId null → undefined，后经 Vo schema 校验
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null（VO schema 已为 nullable）
 		const out = {
 			...draft,
-			folderId: draft.folderId ?? undefined,
 			updatedAt: draft.updatedAt.toISOString(),
 		};
 		const result = createDraftVoSchema.safeParse(out);
@@ -166,10 +165,9 @@ export const PATCH = withPersonal(
 			select: { id: true, name: true, content: true, folderId: true, updatedAt: true },
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串，folderId null → undefined，后经 Vo schema 校验
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null（VO schema 已为 nullable）
 		const out = {
 			...updated,
-			folderId: updated.folderId ?? undefined,
 			updatedAt: updated.updatedAt.toISOString(),
 		};
 		const result = createDraftVoSchema.safeParse(out);

@@ -29,12 +29,9 @@ export const GET = withPersonal(
 			throw new AiSpecError({ code: "NOT_FOUND", message: "草稿不存在" });
 		}
 
-		// ownerId 仅用于权限校验，不返回给前端；folderId null → undefined（前端约定）
+		// ownerId 仅用于权限校验，不返回给前端；folderId 直接透传 null（VO schema 已为 nullable）
 		const { ownerId: _ownerId, ...rest } = draft;
-		const result = draftContentVoSchema.safeParse({
-			...rest,
-			folderId: draft.folderId ?? undefined,
-		});
+		const result = draftContentVoSchema.safeParse(rest);
 		if (!result.success) {
 			throw result.error;
 		}

@@ -98,10 +98,9 @@ export const POST = withPersonal(
 			},
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串，folderId null → undefined，后经 Vo schema 校验
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null（VO schema 已为 nullable）
 		const out = {
 			...record,
-			folderId: record.folderId ?? undefined,
 			updatedAt: record.updatedAt.toISOString(),
 		};
 		const result = createRecordVoSchema.safeParse(out);
@@ -144,10 +143,9 @@ export const PATCH = withPersonal(
 			},
 		});
 
-		// updatedAt 由 Date 转 ISO 字符串，folderId null → undefined，后经 Vo schema 校验
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null（VO schema 已为 nullable）
 		const out = {
 			...updated,
-			folderId: updated.folderId ?? undefined,
 			updatedAt: updated.updatedAt.toISOString(),
 		};
 		const result = createRecordVoSchema.safeParse(out);
