@@ -21,10 +21,10 @@ export function TagOptionItem({
 	const [truncated, setTruncated] = useState(false);
 
 	// hover 时检测文字是否溢出：scrollWidth > clientWidth 说明被 truncate 了
-    const handleMouseEnter = (): void => {
-      const el = labelRef.current;
-      if (el) setTruncated(el.scrollWidth > el.clientWidth);
-    };
+	const handleMouseEnter = (): void => {
+		const el = labelRef.current;
+		if (el) setTruncated(el.scrollWidth > el.clientWidth);
+	};
 
 	const content = (
 		<>

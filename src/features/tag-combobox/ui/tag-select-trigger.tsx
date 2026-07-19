@@ -6,7 +6,7 @@
 // > URL 模式：不传 value/onChange，自动读写 ?tagIds=（导航栏筛选用）
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useCallback, useMemo, useState } from "react";
+import { type JSX, useCallback, useMemo, useRef, useState, type WheelEvent } from "react";
 import useSWR from "swr";
 import { getTags } from "@/entities/tag";
 import { cn } from "@/shared/lib/utils";
@@ -104,11 +104,25 @@ export function TagSelectTrigger({
 		[controlledOnChange, controlledValue, urlTagIds, searchParams, router],
 	);
 
+	// chips 区是横向滚动容器：浏览器默认对垂直滚轮无反应（需按 Shift 才行），这里手动转成水平滚动
+	const chipsScrollRef = useRef<HTMLDivElement>(null);
+	const handleChipsWheel = useCallback((e: WheelEvent<HTMLDivElement>) => {
+		const el = chipsScrollRef.current;
+		if (!el) return;
+		// 垂直滚轮为主时才转：避免抢走真正横向滚轮（触控板）的事件
+		if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+		el.scrollLeft += e.deltaY;
+	}, []);
+
 	return (
 		<div className={cn("flex items-center gap-1.5", className)}>
 			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位 */}
 			{chips.length > 0 && (
-				<div className="flex min-w-0 max-w-md flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+				<div
+					ref={chipsScrollRef}
+					onWheel={handleChipsWheel}
+					className="flex min-w-0 max-w-md flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+				>
 					{chips.map((tag) => (
 						<TagChip
 							key={tag.id}
