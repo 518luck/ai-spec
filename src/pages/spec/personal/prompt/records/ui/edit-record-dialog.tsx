@@ -41,7 +41,7 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		// name/content/folderId 都没变就不发请求（name 从全文响应取，不依赖外部传入）
-		const originalFolderId = fullRecord?.folderId ?? undefined;
+		const originalFolderId = fullRecord?.folderId ?? null;
 		if (
 			fullRecord &&
 			data.content === fullRecord.content &&

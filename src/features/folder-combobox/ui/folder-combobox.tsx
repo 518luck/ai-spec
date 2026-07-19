@@ -41,10 +41,10 @@ export type FolderOption = {
 type FolderComboboxProps = {
 	// 文件夹归属的资源类型（如 "promptDraft"），决定拉取哪类文件夹 + 创建时归属
 	resourceType: string;
-	// 当前选中的 folderId；传了走受控模式，没传自动从 URL ?folder=xxx 读写
-	value?: string;
+	// 当前选中的 folderId；传了（含 null = 未分类）走受控模式，没传自动从 URL ?folder=xxx 读写
+	value?: string | null;
 	// 选中回调；传了走受控模式，没传自动写入 URL
-	onChange?: (folderId: string | undefined) => void;
+	onChange?: (folderId: string | null) => void;
 	// 图标模式：只显示图标不显示文字，hover 时 Tooltip 显示文件夹名
 	iconOnly?: boolean;
 	className?: string;
@@ -62,11 +62,11 @@ export function FolderCombobox({
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	// value 传了用受控，没传从 URL 读
-	const value = controlledValue ?? searchParams?.get("folderId") ?? undefined;
+	// value 传了（含 null）用受控，没传从 URL 读
+	const value = controlledValue ?? searchParams?.get("folderId") ?? null;
 	// onChange 传了走回调，没传改 URL
 	const handleChange = useCallback(
-		(folderId: string | undefined) => {
+		(folderId: string | null) => {
 			if (controlledOnChange) {
 				controlledOnChange(folderId);
 			} else {
@@ -205,7 +205,7 @@ export function FolderCombobox({
 								<CommandItem
 									value="未分类 无文件夹 不加入 none"
 									onSelect={() => {
-										handleChange(undefined);
+										handleChange(null);
 										setOpen(false);
 									}}
 									className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
@@ -213,10 +213,7 @@ export function FolderCombobox({
 									<FolderIcon color={FOLDER_NEUTRAL_COLOR} icon={Icons.folderX} />
 									<span className="text-muted-foreground">未分类</span>
 									<Icons.check
-										className={cn(
-											"ml-auto size-4",
-											value === undefined ? "opacity-100" : "opacity-0",
-										)}
+										className={cn("ml-auto size-4", value === null ? "opacity-100" : "opacity-0")}
 									/>
 								</CommandItem>
 							</CommandGroup>

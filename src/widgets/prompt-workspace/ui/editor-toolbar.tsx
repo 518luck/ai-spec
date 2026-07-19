@@ -62,8 +62,8 @@ export type QuickToolbarProps = {
 // 文件夹选择：resourceType 决定拉取哪类文件夹 + 创建时归属
 export type FolderConfigProps = {
 	resourceType: string;
-	value: string | undefined;
-	onChange: (folderId: string | undefined) => void;
+	value: string | null;
+	onChange: (folderId: string | null) => void;
 };
 
 type EditorToolbarProps = {

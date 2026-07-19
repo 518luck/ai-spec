@@ -41,7 +41,7 @@ export function EditDraftDialog({ id, open, onOpenChange }: EditDraftDialogProps
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		// name/content/folderId 都没变就不发请求（name 从全文响应取，不依赖外部传入；draft 的 name 可能为 null）
-		const originalFolderId = fullDraft?.folderId ?? undefined;
+		const originalFolderId = fullDraft?.folderId ?? null;
 		if (
 			fullDraft &&
 			data.content === fullDraft.content &&

@@ -30,7 +30,7 @@ import { MarkdownPreview } from "./markdown-preview";
 export type PromptEditorSaveData = {
 	name?: string;
 	content: string;
-	folderId?: string;
+	folderId: string | null;
 };
 
 type PromptWorkspaceDialogProps = {
@@ -52,7 +52,7 @@ type PromptWorkspaceDialogProps = {
 	savingText?: string;
 	// 编辑模式才需要：初始内容和文件夹
 	initialContent?: string;
-	initialFolderId?: string;
+	initialFolderId?: string | null;
 };
 
 // 从语法树解析光标位置处于哪些格式内，返回活跃的工具 id 集合
@@ -114,10 +114,11 @@ export function PromptWorkspaceDialog({
 
 	// 文件夹归属：弹窗打开时从 URL ?folderId=xxx 同步（和导航栏筛选同步），用户在弹窗内可自由修改
 	const searchParams = useSearchParams();
-	const [folderId, setFolderId] = useState<string | undefined>(undefined);
+	// null 表示未分类，全链路统一为 string | null（避免 undefined 中间态被 JSON.stringify 丢弃）
+	const [folderId, setFolderId] = useState<string | null>(null);
 	// 弹窗打开时从 URL 读取最新的 folderId（组件始终挂载，useState 初始值只在首次执行，需手动同步）
 	useEffect(() => {
-		if (open) setFolderId(searchParams?.get("folderId") ?? initialFolderId);
+		if (open) setFolderId(searchParams?.get("folderId") ?? initialFolderId ?? null);
 	}, [open, searchParams, initialFolderId]);
 
 	// > 编辑器偏好：持久化到 localStorage，所有场景共用同一套偏好
@@ -260,7 +261,7 @@ export function PromptWorkspaceDialog({
 		if (!isEditMode) {
 			setContent("");
 			setIsPreview(false);
-			setFolderId(undefined);
+			setFolderId(null);
 		}
 		onOpenChange(false);
 	};
