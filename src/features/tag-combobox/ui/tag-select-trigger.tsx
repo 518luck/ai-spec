@@ -1,6 +1,6 @@
 "use client";
 
-// # 标签选择器：已选 chips + 「+」按钮 + Popover（内嵌纯面板 TagCombobox）
+// # 标签选择器：已选 chips + 添加标签按钮 + Popover（内嵌纯面板 TagCombobox）
 // > 完整的标签选择单元，FilterCombobox、editor-toolbar 等场景直接复用
 // > 受控模式：传 value/onChange，由父组件管理选中状态
 // > URL 模式：不传 value/onChange，自动读写 ?tagIds=（导航栏筛选用）
@@ -163,7 +163,7 @@ export function TagSelectTrigger({
 					<ScrollMask scrollProgress={chipsProgress} direction="horizontal" sides="both" />
 				</div>
 			)}
-			{/* // 「+」按钮：打开标签面板，搜索/勾选/新建 */}
+			{/* // 添加标签按钮：打开标签面板，搜索/勾选/新建 */}
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger
 					render={

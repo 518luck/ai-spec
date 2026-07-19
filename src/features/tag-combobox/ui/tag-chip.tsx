@@ -36,12 +36,12 @@ export function TagChip({
 		<span
 			style={style}
 			className={cn(
-				"inline-flex h-6 shrink-0 items-center gap-1 rounded-full px-2 font-medium text-xs",
+				"inline-flex h-6 shrink-0 cursor-default select-none items-center gap-1 rounded-full px-2 font-medium text-xs",
 				className,
 			)}
 		>
 			<span className="size-1.5 rounded-full" style={{ backgroundColor: color }} aria-hidden />
-			<span className="max-w-24 truncate">{name}</span>
+			<span className="max-w-24 select-none truncate">{name}</span>
 			{removable && (
 				<button
 					type="button"
