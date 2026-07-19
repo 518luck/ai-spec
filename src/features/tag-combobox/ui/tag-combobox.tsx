@@ -12,7 +12,6 @@ import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import { createTagDtoSchema, type TagOptionVo } from "@/shared/lib/zod/schemas/tag";
-import { Button } from "@/shared/ui/button";
 import {
 	Command,
 	CommandEmpty,
@@ -163,38 +162,42 @@ export function TagCombobox({
 
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
-			{/* // 触发器：已选 chips 水平排列 + 末尾「+ 标签」按钮；render 是带嵌套 Button 的容器，关掉 nativeButton 避免非法嵌套 */}
+			{/* // 触发器：左「过滤」按钮 + 右已选 chips 区，整块容器可点击开 Popover；render 非 button 故关掉 nativeButton */}
 			<PopoverTrigger
 				nativeButton={false}
 				render={
 					<div
 						className={cn(
-							"flex h-9 min-h-9 flex-wrap items-center gap-1.5 rounded-md border border-input bg-transparent px-2 transition-[color,box-shadow]",
+							"flex h-9 min-h-9 items-center gap-1 rounded-md border border-input bg-transparent p-0.5 transition-[color,box-shadow]",
 							"focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 hover:border-ring/50",
 							className,
 						)}
 					>
-						{value.length === 0 ? (
-							<span className="text-muted-foreground text-sm">添加标签</span>
-						) : (
-							value.map((tag) => (
-								<TagChip
-									key={tag.id}
-									name={tag.name}
-									color={tag.color}
-									removable
-									onRemove={() => handleChange(value.filter((t) => t.id !== tag.id))}
-								/>
-							))
-						)}
-						<Button
-							variant="ghost"
-							size="icon-sm"
-							aria-label="添加标签"
-							className="shrink-0 text-muted-foreground"
+						{/* // 左侧「过滤」按钮：filter 图标 + 文本 + 下箭头，纯视觉装饰，点击交给外层 trigger */}
+						<span
+							className="flex h-8 shrink-0 items-center gap-1 rounded-(calc(var(--radius)-2px)) px-2 text-muted-foreground text-sm"
+							aria-hidden
 						>
-							<Icons.plus className="size-4" />
-						</Button>
+							<Icons.filter2 className="size-4" />
+							<span>过滤</span>
+							<Icons.chevronDown className="size-4" />
+						</span>
+						{/* // 右侧已选标签区：空态占位，否则横向排列 chips，溢出滚动 */}
+						<div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto px-1.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+							{value.length === 0 ? (
+								<span className="text-muted-foreground text-sm">未选择标签</span>
+							) : (
+								value.map((tag) => (
+									<TagChip
+										key={tag.id}
+										name={tag.name}
+										color={tag.color}
+										removable
+										onRemove={() => handleChange(value.filter((t) => t.id !== tag.id))}
+									/>
+								))
+							)}
+						</div>
 					</div>
 				}
 			/>

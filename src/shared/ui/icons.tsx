@@ -28,6 +28,7 @@ import {
 	IconFileAi,
 	IconFiles,
 	IconFileText,
+	IconFilter2,
 	IconFolder,
 	IconFolderX,
 	IconFolderPlus,
@@ -159,6 +160,7 @@ export const Icons = {
 	minimize: IconArrowsDiagonalMinimize2,
 	search: IconSearch,
 	filter: IconAdjustmentsHorizontal,
+	filter2: IconFilter2,
 	x: IconX,
 
 	themeLight: IconSun,

@@ -46,7 +46,11 @@ export function TagChip({
 				<button
 					type="button"
 					className="ml-0.5 flex shrink-0 items-center rounded-full hover:bg-foreground/10"
-					onClick={onRemove}
+					onClick={(e) => {
+						// 阻止冒泡，避免 chip 嵌在可点击容器（如 PopoverTrigger）里时误触发外层
+						e.stopPropagation();
+						onRemove?.();
+					}}
 					aria-label={`移除标签 ${name}`}
 				>
 					<Icons.x className="size-3" />
