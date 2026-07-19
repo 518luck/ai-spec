@@ -27,6 +27,7 @@ import { Icons } from "@/shared/ui/icons";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { TAG_NEUTRAL_COLOR } from "../config/tag-colors";
 import { CreateTagDialog } from "./create-tag-dialog";
+import { TagOptionItem } from "./tag-option-item";
 
 // URL 参数名：与 folderId 对称的短名风格，不同资源的 tag 筛选在不同页面（不同 URL），不会冲突
 const TAG_IDS_PARAM = "tagIds";
@@ -190,27 +191,14 @@ export function TagCombobox({
 						</CommandGroup>
 					) : (
 						<CommandGroup>
-							{allTags.map((tag) => {
-								const selected = selectedIds.has(tag.id);
-								return (
-									<CommandItem
-										key={tag.id}
-										value={tag.name}
-										onSelect={() => toggleTag(tag)}
-										className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
-									>
-										<span
-											className="size-2 shrink-0 rounded-full"
-											style={{ backgroundColor: tag.color }}
-											aria-hidden
-										/>
-										<span className="min-w-0 flex-1 truncate">{tag.name}</span>
-										<Icons.check
-											className={cn("ml-auto size-4", selected ? "opacity-100" : "opacity-0")}
-										/>
-									</CommandItem>
-								);
-							})}
+							{allTags.map((tag) => (
+								<TagOptionItem
+									key={tag.id}
+									tag={tag}
+									selected={selectedIds.has(tag.id)}
+									onSelect={() => toggleTag(tag)}
+								/>
+							))}
 						</CommandGroup>
 					)}
 
