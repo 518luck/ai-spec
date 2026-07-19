@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalStorage } from "@/shared/hooks";
+import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import {
@@ -31,6 +32,8 @@ export type PromptEditorSaveData = {
 	name?: string;
 	content: string;
 	folderId: string | null;
+	// 标签：仅收录支持，草稿不传；undefined 表示本次未启用标签、不更新该字段
+	tags?: TagOptionVo[];
 };
 
 type PromptWorkspaceDialogProps = {
@@ -53,6 +56,10 @@ type PromptWorkspaceDialogProps = {
 	// 编辑模式才需要：初始内容和文件夹
 	initialContent?: string;
 	initialFolderId?: string | null;
+	// > 是否启用标签（收录 true，草稿不传）；必须独立于 initialTags，因为创建场景没 initialTags 也要能选标签
+	tagsEnabled?: boolean;
+	// 编辑模式的初始标签（回填用），仅 tagsEnabled 时生效
+	initialTags?: TagOptionVo[];
 };
 
 // 从语法树解析光标位置处于哪些格式内，返回活跃的工具 id 集合
@@ -95,6 +102,8 @@ export function PromptWorkspaceDialog({
 	savingText = "保存中...",
 	initialContent,
 	initialFolderId,
+	tagsEnabled = false,
+	initialTags,
 }: PromptWorkspaceDialogProps): JSX.Element {
 	const { resolvedTheme } = useTheme();
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
@@ -120,6 +129,12 @@ export function PromptWorkspaceDialog({
 	useEffect(() => {
 		if (open) setFolderId(searchParams?.get("folderId") ?? initialFolderId ?? null);
 	}, [open, searchParams, initialFolderId]);
+
+	// 标签：仅收录启用；编辑模式从 initialTags 回填，创建模式从空开始
+	const [tags, setTags] = useState<TagOptionVo[]>([]);
+	useEffect(() => {
+		if (open && tagsEnabled) setTags(initialTags ?? []);
+	}, [open, tagsEnabled, initialTags]);
 
 	// > 编辑器偏好：持久化到 localStorage，所有场景共用同一套偏好
 	const [activeTools, setActiveTools] = useLocalStorage<string[]>("prompt-workspace.toolbar", [
@@ -251,6 +266,8 @@ export function PromptWorkspaceDialog({
 					name: extractTitle(content) ?? emptyTitle,
 					content,
 					folderId,
+					// tagsEnabled 时才传 tags（草稿不启用，传 undefined 让 record 的 Dto 走"不更新"分支）
+					...(tagsEnabled && { tags }),
 				});
 			} catch {
 				return; // 错误处理由 onSave 内部完成（toast 等），这里只阻止关闭
@@ -262,6 +279,7 @@ export function PromptWorkspaceDialog({
 			setContent("");
 			setIsPreview(false);
 			setFolderId(null);
+			setTags([]);
 		}
 		onOpenChange(false);
 	};
@@ -343,6 +361,15 @@ export function PromptWorkspaceDialog({
 						value: folderId,
 						onChange: setFolderId,
 					}}
+					// > 标签：仅收录启用时传入（草稿不传，EditorToolbar 不渲染 tag 区）
+					tags={
+						tagsEnabled
+							? {
+									value: tags,
+									onChange: setTags,
+								}
+							: undefined
+					}
 				/>
 
 				{/* 保存中遮罩 */}

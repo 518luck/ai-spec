@@ -5,6 +5,8 @@ import { AnimatePresence, Reorder } from "motion/react";
 import type { JSX } from "react";
 import { useRef } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
+import { TagCombobox } from "@/features/tag-combobox";
+import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -66,6 +68,12 @@ export type FolderConfigProps = {
 	onChange: (folderId: string | null) => void;
 };
 
+// 标签选择（仅收录启用）：value/onChange 全量对象，TagCombobox 内部处理多选 + 创建
+export type TagsConfigProps = {
+	value: TagOptionVo[];
+	onChange: (tags: TagOptionVo[]) => void;
+};
+
 type EditorToolbarProps = {
 	// 从内容首行提取的标题
 	title: string;
@@ -75,6 +83,8 @@ type EditorToolbarProps = {
 	quickToolbar: QuickToolbarProps;
 	// 文件夹选择
 	folder: FolderConfigProps;
+	// 标签选择（可选，仅收录传入；草稿不传则不渲染 tag 区）
+	tags?: TagsConfigProps;
 };
 
 // > 按当前模式（编辑/预览）过滤菜单项的可见性
@@ -83,6 +93,7 @@ export function EditorToolbar({
 	editorState,
 	quickToolbar,
 	folder,
+	tags,
 }: EditorToolbarProps): JSX.Element {
 	const {
 		editorBgColor,
@@ -126,6 +137,16 @@ export function EditorToolbar({
 				className="shrink-0"
 				iconOnly={!isExpanded}
 			/>
+
+			{/* // @ 标签选择：仅收录启用；放大模式下显示完整 chips，缩小模式下收起避免挤占标题栏 */}
+			{tags && isExpanded ? (
+				<TagCombobox
+					resourceType={folder.resourceType}
+					value={tags.value}
+					onChange={tags.onChange}
+					className="min-w-40 max-w-64"
+				/>
+			) : null}
 
 			<div className="ml-auto flex items-center gap-2">
 				{/* // @ 快捷操作工具栏：可拖拽排序，宽度跟随内容伸缩；box-content 避免图标贴圆角 */}

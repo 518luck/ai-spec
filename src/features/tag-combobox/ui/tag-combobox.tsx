@@ -1,16 +1,17 @@
 "use client";
 
 // # 标签多选下拉：chips 水平排列展示已选，末尾「+」按钮打开 Popover 搜索/勾选/内联创建
+// > 传 value/onChange 时走受控模式（弹窗用），没传时自动读写 URL ?tagIds=a,b,c（导航栏筛选用）
 
 import { useCommandState } from "cmdk";
+import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import { createTag, getTags } from "@/entities/tag";
 import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
-import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
-import { createTagDtoSchema } from "@/shared/lib/zod/schemas/tag";
+import { createTagDtoSchema, type TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import {
 	Command,
@@ -29,25 +30,58 @@ import { TAG_NEUTRAL_COLOR } from "../config/tag-colors";
 import { CreateTagDialog } from "./create-tag-dialog";
 import { TagChip } from "./tag-chip";
 
+// URL 参数名：与 folderId 对称的短名风格，不同资源的 tag 筛选在不同页面（不同 URL），不会冲突
+const TAG_IDS_PARAM = "tagIds";
+
 type TagComboboxProps = {
-	// 已选标签（完整对象：编辑回填与 chips 展示都需要 name/color）
-	value: TagOptionVo[];
-	// 选中变化回调：返回新的完整已选数组
-	onChange: (tags: TagOptionVo[]) => void;
+	// 标签归属的资源类型（如 "promptRecord"）；仅用于 SWR key 隔离缓存，为将来按资源过滤 tag 列表预留
+	resourceType: string;
+	// 已选标签（完整对象：编辑回填与 chips 展示都需要 name/color）；传了走受控，没传自动从 URL 读 id 反查
+	value?: TagOptionVo[];
+	// 选中变化回调：传了走受控，没传自动写入 URL
+	onChange?: (tags: TagOptionVo[]) => void;
 	// 外层容器 className（控制最大宽度等）
 	className?: string;
 };
 
 // > 标签多选：chips 展示已选 + 「+」触发 Popover，弹层内搜索/勾选/新建，选中不关弹层可连续选
-export function TagCombobox({ value, onChange, className }: TagComboboxProps): JSX.Element {
+export function TagCombobox({
+	resourceType,
+	value: controlledValue,
+	onChange: controlledOnChange,
+	className,
+}: TagComboboxProps): JSX.Element {
+	const router = useRouter();
+	const searchParams = useSearchParams();
+
 	const [open, setOpen] = useState(false);
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	const [createInitialName, setCreateInitialName] = useState("");
 
-	// 全局标签列表（Tag 是共享字典，无 resourceType），SWR 托管缓存
-	const { data: rawTags, isLoading, mutate: refetchTags } = useSWR(["tags"], () => getTags());
-
+	// 标签列表：按 resourceType 拉取当前用户的标签（后端按 ownerId+resourceType 隔离），SWR 托管缓存
+	const {
+		data: rawTags,
+		isLoading,
+		mutate: refetchTags,
+	} = useSWR(["tags", resourceType], () => getTags(resourceType));
 	const allTags = useMemo<TagOptionVo[]>(() => rawTags ?? [], [rawTags]);
+
+	// URL 模式下从 ?tagIds= 解析出 id 列表（用 useMemo 稳定引用，避免每次渲染新建数组）
+	const urlTagIds = useMemo(() => {
+		if (controlledValue !== undefined) return [];
+		const param = searchParams?.get(TAG_IDS_PARAM) ?? "";
+		return param
+			.split(",")
+			.map((s) => s.trim())
+			.filter(Boolean);
+	}, [controlledValue, searchParams]);
+
+	// 实际生效的已选值：受控模式直接用 controlledValue；URL 模式从 allTags 反查出完整对象
+	const value = useMemo<TagOptionVo[]>(() => {
+		if (controlledValue !== undefined) return controlledValue;
+		const idSet = new Set(urlTagIds);
+		return allTags.filter((t) => idSet.has(t.id));
+	}, [controlledValue, urlTagIds, allTags]);
 
 	// 已选 id 集合：快速判断勾选状态
 	const selectedIds = useMemo(() => new Set(value.map((t) => t.id)), [value]);
@@ -71,16 +105,35 @@ export function TagCombobox({ value, onChange, className }: TagComboboxProps): J
 		return () => cancelAnimationFrame(id);
 	}, [open, rawTags, updateScrollProgress]);
 
-	// 切换某个 tag 的选中态：已选则移除，未选则从全局列表里查到完整对象追加
+	// onChange 传了走回调，没传改 URL（写回 id 列表）
+	const handleChange = useCallback(
+		(tags: TagOptionVo[]) => {
+			if (controlledOnChange) {
+				controlledOnChange(tags);
+				return;
+			}
+			// URL 模式：用 id 列表写回，空则删除参数（保持 URL 干净）
+			const params = new URLSearchParams(searchParams?.toString() ?? "");
+			if (tags.length > 0) {
+				params.set(TAG_IDS_PARAM, tags.map((t) => t.id).join(","));
+			} else {
+				params.delete(TAG_IDS_PARAM);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		},
+		[controlledOnChange, searchParams, router],
+	);
+
+	// 切换某个 tag 的选中态：已选则移除，未选则追加
 	const toggleTag = useCallback(
 		(tag: TagOptionVo) => {
 			if (selectedIds.has(tag.id)) {
-				onChange(value.filter((t) => t.id !== tag.id));
+				handleChange(value.filter((t) => t.id !== tag.id));
 			} else {
-				onChange([...value, tag]);
+				handleChange([...value, tag]);
 			}
 		},
-		[value, onChange, selectedIds],
+		[value, handleChange, selectedIds],
 	);
 
 	// Popover 关闭时同步关闭创建对话框，避免 Dialog 的 open state 残留
@@ -91,15 +144,16 @@ export function TagCombobox({ value, onChange, className }: TagComboboxProps): J
 
 	// > 新建标签：全量校验后落库，成功后刷新缓存、自动选中、关闭弹层
 	const handleCreate = async (input: { name: string; color: string }): Promise<void> => {
-		const parsed = createTagDtoSchema.safeParse(input);
+		// 拼上当前组件实例的 resourceType 一起校验（input 来自 CreateTagDialog，只有 name+color）
+		const parsed = createTagDtoSchema.safeParse({ ...input, resourceType });
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "创建标签失败");
 			return;
 		}
 		try {
-			const created = await createTag({ name: parsed.data.name, color: parsed.data.color });
+			const created = await createTag(parsed.data);
 			await refetchTags();
-			onChange([...value, created]);
+			handleChange([...value, created]);
 			setOpen(false);
 			setCreateDialogOpen(false);
 		} catch (error) {
@@ -128,7 +182,7 @@ export function TagCombobox({ value, onChange, className }: TagComboboxProps): J
 									name={tag.name}
 									color={tag.color}
 									removable
-									onRemove={() => onChange(value.filter((t) => t.id !== tag.id))}
+									onRemove={() => handleChange(value.filter((t) => t.id !== tag.id))}
 								/>
 							))
 						)}
