@@ -15,7 +15,13 @@ export const GET = withPersonal(
 
 		const record = await prisma.promptRecord.findUnique({
 			where: { id },
-			select: { id: true, name: true, content: true, folderId: true, ownerId: true },
+			select: {
+				id: true,
+				name: true,
+				content: true,
+				folderId: true,
+				ownerId: true,
+			},
 		});
 
 		// 收录不存在或不是当前用户所有，统一返回 404（避免暴露资源归属）
