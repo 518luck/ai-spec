@@ -1,7 +1,8 @@
 "use client";
 
-// # 筛选容器：「过滤」按钮打开类型菜单，标签作为子菜单在右侧展开面板，收藏 Toast 提示
+// # 筛选容器：「过滤」按钮打开类型菜单（标签 SubMenu 在右侧展开面板），右侧标签选择器
 // > 类型菜单用 DropdownMenu + SubMenu：两个面板同时可见，避免 Popover 切换闪烁
+// > chips/触发器/Popover 全部由 TagSelectTrigger 内聚，本组件只负责类型菜单 + 组装
 
 import { type JSX, useCallback, useState } from "react";
 import { TagCombobox } from "@/features/tag-combobox";
@@ -22,24 +23,24 @@ import {
 import { Icons } from "@/shared/ui/icons";
 
 type FilterComboboxProps = {
-	// 标签归属的资源类型（如 "promptRecord"），透传给内嵌的 TagCombobox
+	// 标签归属的资源类型（如 "promptRecord"），透传给内嵌的 TagCombobox / TagSelectTrigger
 	resourceType: string;
-	// 已选标签：透传给内嵌的 TagCombobox
+	// 已选标签：透传给内嵌的 TagSelectTrigger
 	value?: TagOptionVo[];
-	// 选中变化回调：透传给内嵌的 TagCombobox
+	// 选中变化回调：透传给内嵌的 TagSelectTrigger
 	onChange?: (tags: TagOptionVo[]) => void;
 	// 外层容器 className（控制最大宽度等）
 	className?: string;
 };
 
-// > 筛选容器：过滤按钮 + 类型菜单（标签 SubMenu 展开面板 / 收藏 Toast 提示）
+// > 筛选容器：过滤按钮 + 类型菜单 + 标签选择器
 export function FilterCombobox({
 	resourceType,
 	value,
 	onChange,
 	className,
 }: FilterComboboxProps): JSX.Element {
-	// TagSelectTrigger 受控 open：用户也可直接点 + 按钮单独打开标签面板（与类型菜单并列）
+	// TagSelectTrigger 受控 open：用户也可直接点 + 按钮单独打开标签面板
 	const [tagOpen, setTagOpen] = useState(false);
 
 	// 选「收藏」：仅 Toast 提示，等后端接口就绪后再实现
@@ -84,7 +85,7 @@ export function FilterCombobox({
 				</DropdownMenuContent>
 			</DropdownMenu>
 
-			{/* // 右侧标签触发器：用户可直接点 + 按钮打开标签 Popover（与类型菜单解耦） */}
+			{/* // 右侧标签选择器：chips + 触发器 + Popover 一体化；受控 open 用于类型菜单联动 */}
 			<TagSelectTrigger
 				resourceType={resourceType}
 				value={value}

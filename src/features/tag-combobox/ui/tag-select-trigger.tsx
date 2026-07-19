@@ -1,46 +1,59 @@
 "use client";
 
-// # 标签选择触发器：「+」图标按钮 + Popover（内嵌纯面板 TagCombobox）
-// > 只负责打开/关闭和面板嵌入，不渲染 chips；chips 由调用方按需自行展示
-// > open 受控可选：传了由外层管理（FilterCombobox 需要跨 Popover 切换），没传自动管理
+// # 标签选择器：已选 chips + 「+」按钮 + Popover（内嵌纯面板 TagCombobox）
+// > 完整的标签选择单元，FilterCombobox、editor-toolbar 等场景直接复用
+// > 受控模式：传 value/onChange，由父组件管理选中状态
+// > URL 模式：不传 value/onChange，自动读写 ?tagIds=（导航栏筛选用）
 
-import { type JSX, useCallback, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { type JSX, useCallback, useMemo, useState } from "react";
+import useSWR from "swr";
+import { getTags } from "@/entities/tag";
+import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { TagChip } from "./tag-chip";
 import { TagCombobox } from "./tag-combobox";
+
+// URL 参数名：与 TagCombobox 内部一致，URL 模式下读写已选 tag id 列表
+const TAG_IDS_PARAM = "tagIds";
 
 type TagSelectTriggerProps = {
 	// 标签归属的资源类型（如 "promptRecord"），透传给内嵌面板
 	resourceType: string;
-	// 已选标签：透传给内嵌面板
+	// 已选标签：传了走受控模式，没传自动从 URL 读 id 反查
 	value?: TagOptionVo[];
-	// 选中变化回调：透传给内嵌面板
+	// 选中变化回调：传了走受控，没传自动写入 URL
 	onChange?: (tags: TagOptionVo[]) => void;
-	// 弹层打开状态：传了走受控，没传自动管理
+	// 弹层打开状态：传了走受控（外层需要主动触发打开时使用），没传自动管理
 	open?: boolean;
 	// 弹层打开状态变化回调：与 open 配套
 	onOpenChange?: (open: boolean) => void;
-	// 触发按钮样式（如 ghost/outline、size 等），默认 outline + icon-sm
+	// 触发按钮样式：默认 outline，编辑器标题栏等场景可用 ghost 融入背景
 	triggerVariant?: "outline" | "ghost";
 	// PopoverContent 对齐方式，默认 start
 	align?: "start" | "center" | "end";
-	// 外层 className
+	// 外层 className（控制最大宽度等）
 	className?: string;
 };
 
-// > 标签选择触发器：+ 按钮 → Popover → 内嵌 TagCombobox 面板
+// > 标签选择器：chips + + 按钮 + Popover（内嵌 TagCombobox 面板）
 export function TagSelectTrigger({
 	resourceType,
-	value,
-	onChange,
+	value: controlledValue,
+	onChange: controlledOnChange,
 	open: controlledOpen,
 	onOpenChange: controlledOnOpenChange,
 	triggerVariant = "outline",
 	align = "start",
 	className,
 }: TagSelectTriggerProps): JSX.Element {
+	const router = useRouter();
+	const searchParams = useSearchParams();
+
+	// 弹层 open 状态：受控时透传，非受控时自管
 	const [internalOpen, setInternalOpen] = useState(false);
 	const open = controlledOpen ?? internalOpen;
 	const setOpen = useCallback(
@@ -54,23 +67,81 @@ export function TagSelectTrigger({
 		[controlledOpen, controlledOnOpenChange],
 	);
 
+	// 全量标签：URL 模式下用于从 id 反查 name/color 给 chips；SWR key 与 TagCombobox 一致，共享缓存
+	const { data: rawTags } = useSWR(["tags", resourceType], () => getTags(resourceType));
+	const allTags = useMemo<TagOptionVo[]>(() => rawTags ?? [], [rawTags]);
+
+	// URL 模式下读出已选 tagIds（受控模式不用）
+	const urlTagIds = useMemo(() => {
+		if (controlledValue !== undefined) return [];
+		const param = searchParams?.get(TAG_IDS_PARAM) ?? "";
+		return param
+			.split(",")
+			.map((s) => s.trim())
+			.filter(Boolean);
+	}, [controlledValue, searchParams]);
+
+	// 实际生效的已选值：受控模式直接用 controlledValue；URL 模式从 allTags 反查
+	const chips = useMemo<TagOptionVo[]>(() => {
+		if (controlledValue !== undefined) return controlledValue;
+		const idSet = new Set(urlTagIds);
+		return allTags.filter((t) => idSet.has(t.id));
+	}, [controlledValue, urlTagIds, allTags]);
+
+	// 移除某个已选 tag：受控透传回调，URL 模式重写参数
+	const handleRemove = useCallback(
+		(tagId: string) => {
+			if (controlledOnChange && controlledValue !== undefined) {
+				controlledOnChange(controlledValue.filter((t) => t.id !== tagId));
+				return;
+			}
+			const next = urlTagIds.filter((id) => id !== tagId);
+			const params = new URLSearchParams(searchParams?.toString() ?? "");
+			if (next.length > 0) params.set(TAG_IDS_PARAM, next.join(","));
+			else params.delete(TAG_IDS_PARAM);
+			router.replace(`?${params.toString()}`, { scroll: false });
+		},
+		[controlledOnChange, controlledValue, urlTagIds, searchParams, router],
+	);
+
 	return (
-		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger
-				render={
-					<Button
-						variant={triggerVariant}
-						size="icon-sm"
-						className="size-7 shrink-0 text-muted-foreground"
-						aria-label="选择标签"
+		<div className={cn("flex items-center gap-1.5", className)}>
+			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位 */}
+			{chips.length > 0 && (
+				<div className="flex min-w-0 flex-1 items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+					{chips.map((tag) => (
+						<TagChip
+							key={tag.id}
+							name={tag.name}
+							color={tag.color}
+							removable
+							onRemove={() => handleRemove(tag.id)}
+						/>
+					))}
+				</div>
+			)}
+			{/* // 「+」按钮：打开标签面板，搜索/勾选/新建 */}
+			<Popover open={open} onOpenChange={setOpen}>
+				<PopoverTrigger
+					render={
+						<Button
+							variant={triggerVariant}
+							size="icon-sm"
+							className="size-7 shrink-0 text-muted-foreground"
+							aria-label="选择标签"
+						/>
+					}
+				>
+					<Icons.plus className="size-4" />
+				</PopoverTrigger>
+				<PopoverContent className="w-44 p-0" align={align}>
+					<TagCombobox
+						resourceType={resourceType}
+						value={controlledValue}
+						onChange={controlledOnChange}
 					/>
-				}
-			>
-				<Icons.plus className="size-4" />
-			</PopoverTrigger>
-			<PopoverContent className={`w-44 p-0 ${className ?? ""}`} align={align}>
-				<TagCombobox resourceType={resourceType} value={value} onChange={onChange} />
-			</PopoverContent>
-		</Popover>
+				</PopoverContent>
+			</Popover>
+		</div>
 	);
 }
