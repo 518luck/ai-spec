@@ -62,8 +62,10 @@ export function FolderCombobox({
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	// value 传了（含 null）用受控，没传从 URL 读
-	const value = controlledValue ?? searchParams?.get("folderId") ?? null;
+	// value 传了（含 null = 未分类）用受控；只有 props 完全没传（undefined）时才从 URL 读
+	// ! 不能用 ?? 链：null 是"受控 + 未分类"的有效值，?? 会把它当成没传值、错误地回退到 URL
+	const value =
+		controlledValue !== undefined ? controlledValue : searchParams?.get("folderId") ?? null;
 	// onChange 传了走回调，没传改 URL
 	const handleChange = useCallback(
 		(folderId: string | null) => {
