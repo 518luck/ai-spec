@@ -68,7 +68,7 @@ export function TagSelectTrigger({
 			>
 				<Icons.plus className="size-4" />
 			</PopoverTrigger>
-			<PopoverContent className={`w-56 p-0 ${className ?? ""}`} align={align}>
+			<PopoverContent className={`w-44 p-0 ${className ?? ""}`} align={align}>
 				<TagCombobox resourceType={resourceType} value={value} onChange={onChange} />
 			</PopoverContent>
 		</Popover>

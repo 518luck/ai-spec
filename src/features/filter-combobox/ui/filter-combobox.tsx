@@ -71,7 +71,7 @@ export function FilterCombobox({
 							<Icons.tag className="size-4 text-foreground" />
 							标签
 						</DropdownMenuSubTrigger>
-						<DropdownMenuSubContent className="w-56 p-0" sideOffset={8}>
+						<DropdownMenuSubContent className="p-0" sideOffset={8}>
 							<TagCombobox resourceType={resourceType} value={value} onChange={onChange} />
 						</DropdownMenuSubContent>
 					</DropdownMenuSub>

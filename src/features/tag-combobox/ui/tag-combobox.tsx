@@ -40,6 +40,8 @@ type TagComboboxProps = {
 	onChange?: (tags: TagOptionVo[]) => void;
 	// 挂载完成回调：外层 Popover 打开后用其触发 SWR 刷新（面板本身不再自管 open）
 	onMount?: () => void;
+	// 外层 className：默认 w-44，可覆盖宽度
+	className?: string;
 };
 
 // > 标签选择面板：搜索 + 勾选 + 新建，纯内容组件；选中不关弹层可连续选
@@ -48,6 +50,7 @@ export function TagCombobox({
 	value: controlledValue,
 	onChange: controlledOnChange,
 	onMount,
+	className,
 }: TagComboboxProps): JSX.Element {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -152,14 +155,14 @@ export function TagCombobox({
 	};
 
 	return (
-		<Command>
+		<Command className={cn("w-44", className)}>
 			<CommandInput placeholder="搜索标签..." />
 			<div className="relative">
 				{/* // scrollbar-thin：macOS 风格透明滚动条（hover 淡入），覆盖 CommandList 默认无效的 no-scrollbar */}
 				<CommandList
 					ref={listRef}
 					onScroll={updateScrollProgress}
-					className="scrollbar-thin max-h-72"
+					className="scrollbar-thin max-h-64"
 				>
 					<CommandEmpty>
 						<CreateButtonOnEmpty
