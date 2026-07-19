@@ -23,9 +23,12 @@ export const GET = withPersonal(
 			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
 		}
 
-		// ownerId 仅用于权限校验，不返回给前端
+		// ownerId 仅用于权限校验，不返回给前端；folderId null → undefined（前端约定，schema 的 optional 不接受 null）
 		const { ownerId: _ownerId, ...rest } = record;
-		const result = recordContentVoSchema.safeParse(rest);
+		const result = recordContentVoSchema.safeParse({
+			...rest,
+			folderId: record.folderId ?? undefined,
+		});
 		if (!result.success) {
 			throw result.error;
 		}
