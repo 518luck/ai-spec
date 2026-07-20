@@ -10,7 +10,7 @@ const OWNER_ID = "cmrjdu92f0001099de7h2zu5p";
 // 测试账号配置：邮箱、明文密码、显示名（仅本地开发填充，勿在生产环境使用）
 const USER_PROFILE = {
 	email: "zhangluck59811@gmail.com",
-	password: "kAb&bI8;IhHUI&Sw1",
+	password: "kAbbI8IhHUISw1",
 	name: "luck2 zhang",
 } as const;
 
