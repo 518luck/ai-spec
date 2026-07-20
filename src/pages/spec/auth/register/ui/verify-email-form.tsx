@@ -1,9 +1,11 @@
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { useAction } from "next-safe-action/hooks";
 import { useRef, useState } from "react";
 import { toast } from "@/features/toast";
 import { createUserAccountAction } from "@/server/actions/auth/create-user-account";
 import { useMediaQuery } from "@/shared/hooks";
+import { AUTH_REDIRECT_HOME } from "@/shared/lib/auth/constants";
 import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Spinner } from "@/shared/ui/spinner";
@@ -26,12 +28,29 @@ export function VerifyEmailForm() {
 		onExecute() {
 			toastIdRef.current = toast.loading("正在创建账户...");
 		},
-		onSuccess() {
+		// > 账户创建成功后调用 NextAuth 建立 session，再跳转受保护页面
+		async onSuccess() {
 			toast.success("账户创建成功  (^u^)", {
 				id: toastIdRef.current,
 			});
 			setIsRedirecting(true);
-			router.replace("/");
+
+			// ! 必须显式 signIn 换取 session cookie，否则跳转后所有接口都会 401
+			const signInResult = await signIn("credentials", {
+				email,
+				password,
+				redirect: false,
+				callbackUrl: AUTH_REDIRECT_HOME,
+			});
+
+			if (!signInResult?.ok) {
+				setIsRedirecting(false);
+				toast.error("账户已创建，但自动登录失败，请手动登录");
+				router.replace("/spec/login");
+				return;
+			}
+
+			router.replace(signInResult.url ?? AUTH_REDIRECT_HOME);
 		},
 		onError({ error }) {
 			toast.error(error.serverError ?? "创建账户失败", {

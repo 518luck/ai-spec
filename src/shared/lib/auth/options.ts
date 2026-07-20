@@ -46,7 +46,11 @@ export const authOptions: NextAuthConfig = {
 			},
 			// > 邮箱密码登录验证流程：限流 → 查用户 → 锁定检查 → 密码校验
 			authorize: async (credentials) => {
-				const { email, password } = signInDtoSchema.parse(credentials);
+				// ! NextAuth 会自动注入 csrfToken、callbackUrl 等字段，必须先 pick 出 email/password 再交给 schema，否则严格模式会抛 unrecognized_keys
+				const { email, password } = signInDtoSchema.parse({
+					email: credentials?.email,
+					password: credentials?.password,
+				});
 
 				// > 没有启用跳过认证限流时，对登录尝试限流（每分钟最多 5 次）
 				if (!skipAuthThrottling) {
