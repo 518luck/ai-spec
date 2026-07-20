@@ -98,7 +98,7 @@ export function FilterCombobox({
 					<DropdownMenuItem
 						closeOnClick={false}
 						onClick={handleToggleFavorite}
-						className="mt-1 gap-2"
+						className="mt-1 cursor-pointer gap-2"
 					>
 						<Icons.star className="size-4 text-foreground" />
 						<span>收藏</span>
