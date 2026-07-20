@@ -117,11 +117,14 @@ export type MenuItem = {
 export const TOOL_IDS = ["bold", "italic", "heading1", "quote", "code", "link"] as const;
 export type ToolId = (typeof TOOL_IDS)[number];
 
-// 菜单分组：type 决定点击文字时的行为（tool=格式工具 / display=显示设置 / preview=视图切换）
-export const MENU_GROUPS: readonly {
+// 菜单分组类型：type 决定点击文字时的行为（tool=格式工具 / display=显示设置 / preview=视图切换）
+export type MenuGroup = {
 	type: "tool" | "display" | "preview";
 	items: readonly MenuItem[];
-}[] = [
+};
+
+// 菜单分组：type 决定点击文字时的行为（tool=格式工具 / display=显示设置 / preview=视图切换）
+export const MENU_GROUPS: readonly MenuGroup[] = [
 	{
 		type: "tool",
 		items: [

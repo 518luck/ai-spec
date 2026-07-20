@@ -7,6 +7,7 @@ import { useRef } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
+import { cn } from "@/shared/lib/utils";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -26,6 +27,7 @@ import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { EDITOR_THEMES, MENU_GROUPS, type MenuItem } from "../config/editor";
+import { isItemActive } from "../model/is-item-active";
 
 // 编辑器展示状态 + 主题/展开回调：状态与其对应回调同组，方便后续扩展（如版本处理）
 export type EditorState = {
@@ -129,15 +131,6 @@ export function EditorToolbar({
 				{title}
 			</span>
 
-			{/* // @ 文件夹选择：缩小空间时只显示图标，放大后显示完整文字 */}
-			<FolderCombobox
-				resourceType={folder.resourceType}
-				value={folder.value}
-				onChange={folder.onChange}
-				className="shrink-0"
-				iconOnly={!isExpanded}
-			/>
-
 			{/* // @ 标签选择：仅收录启用；放大模式下显示 chips + 触发器，缩小模式下收起避免挤占标题栏 */}
 			{tags && isExpanded ? (
 				<TagSelectTrigger
@@ -148,6 +141,15 @@ export function EditorToolbar({
 					className="min-w-40 max-w-64"
 				/>
 			) : null}
+
+			{/* // @ 文件夹选择：缩小空间时只显示图标，放大后显示完整文字 */}
+			<FolderCombobox
+				resourceType={folder.resourceType}
+				value={folder.value}
+				onChange={folder.onChange}
+				className="shrink-0"
+				iconOnly={!isExpanded}
+			/>
 
 			<div className="ml-auto flex items-center gap-2">
 				{/* // @ 快捷操作工具栏：可拖拽排序，宽度跟随内容伸缩；box-content 避免图标贴圆角 */}
@@ -266,16 +268,16 @@ export function EditorToolbar({
 										/>
 										<button
 											type="button"
-											className={`flex flex-1 cursor-pointer items-center rounded-sm px-1 py-0.5 ${
-												group.type === "tool" && activeFormats.has(item.id)
-													? "bg-accent"
-													: group.type === "display" &&
-															editorSettings[item.id as keyof typeof editorSettings]
-														? "bg-accent"
-														: group.type === "preview" && isPreview
-															? "bg-accent"
-															: ""
-											}`}
+											className={cn(
+												"flex flex-1 cursor-pointer items-center rounded-sm px-1 py-0.5",
+												isItemActive({
+													group,
+													item,
+													activeFormats,
+													editorSettings,
+													isPreview,
+												}) && "bg-accent",
+											)}
 											onClick={() => onItemAction(group.type, item.id)}
 										>
 											<item.icon className="mr-2 size-4" />
