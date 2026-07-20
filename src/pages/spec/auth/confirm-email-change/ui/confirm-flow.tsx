@@ -77,23 +77,26 @@ export async function ConfirmEmailChangeFlow({
 		);
 	}
 
-	await prisma.user.update({
-		where: { id: userId },
-		data: {
-			email: resolved.context.newEmail,
-			emailVerified: new Date(),
-		},
+	// > 事务保证原子性：改邮箱 + 删 token 必须同生共死，否则链接可被重复使用
+	await prisma.$transaction(async (tx) => {
+		await tx.user.update({
+			where: { id: userId },
+			data: {
+				email: resolved.context.newEmail,
+				emailVerified: new Date(),
+			},
+		});
+		await tx.verificationToken.delete({
+			where: {
+				identifier_token: {
+					identifier: resolved.record.identifier,
+					token: resolved.record.token,
+				},
+			},
+		});
 	});
 
-	// 清理已消费的 token 与 Redis 上下文，使链接不可重复使用
-	await prisma.verificationToken.delete({
-		where: {
-			identifier_token: {
-				identifier: resolved.record.identifier,
-				token: resolved.record.token,
-			},
-		},
-	});
+	// Redis 跨系统，不进 Prisma 事务；即使失败 token 也已被 DB 删，链接已失效
 	await kvDel(`email-change:${resolved.record.token}`);
 
 	// 异步通知老邮箱地址已变更，防止非本人操作时用户不知情
