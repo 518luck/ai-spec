@@ -3,9 +3,14 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
-import { recordContentVoSchema } from "@/shared/lib/zod/schemas/prompt/record";
+import {
+	createRecordVoSchema,
+	recordContentVoSchema,
+	updateRecordDtoSchema,
+} from "@/shared/lib/zod/schemas/prompt/record";
+import { mapTags } from "../lib/map-tags";
 
-// # 单条收录全文：按 id 拉取 content（供卡片复制全文），归属隔离统一走 ownerId 进 where
+// # 单条收录详情：全文拉取 / 部分更新，归属隔离统一走 ownerId 进 where
 
 // > 按 id 获取收录全文（where 含 ownerId 防止越权读取他人收录）
 export const GET = withPersonal(
@@ -43,4 +48,58 @@ export const GET = withPersonal(
 		return NextResponse.json(result.data);
 	},
 	{ permissions: ["promptRecord.read"] },
+);
+
+// > 部分更新收录：id 走路径，body 字段全部可选；where 含 ownerId 防止越权修改他人收录。不写版本快照，后续接入版本管理时再补
+export const PATCH = withPersonal(
+	async ({ req, ctx, session }) => {
+		const { id: rawId } = await ctx.params;
+		const id = Array.isArray(rawId) ? rawId[0] : rawId;
+
+		const parsed = updateRecordDtoSchema.safeParse(await req.json());
+		if (!parsed.success) {
+			throw parsed.error;
+		}
+		const { name, content, images, folderId, tags } = parsed.data;
+
+		// 构建部分更新数据：只更新传入的字段
+		const data: Record<string, unknown> = {};
+		if (name !== undefined) data.name = name;
+		if (content !== undefined) data.content = content;
+		if (images !== undefined) data.images = images;
+		// folderId 收到 null/"" 表示清空为未分类（落到 DB 的 NULL），收到有效字符串表示归属该文件夹
+		if (folderId !== undefined) data.folderId = folderId || null;
+		// 标签关联全量替换：tags === undefined 时不更新；传数组（含空数组）时 set 全量替换
+		if (tags !== undefined) {
+			data.tags = { set: tags.map((tagId) => ({ tagId })) };
+		}
+
+		// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
+		const updated = await prisma.promptRecord.update({
+			where: { id, ownerId: session.user.id },
+			data,
+			select: {
+				id: true,
+				name: true,
+				content: true,
+				visibility: true,
+				folderId: true,
+				tags: { include: { tag: true } },
+				updatedAt: true,
+			},
+		});
+
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null；tags 关联记录映射为扁平 {id,name,color} 数组
+		const result = createRecordVoSchema.safeParse({
+			...updated,
+			tags: mapTags(updated.tags),
+			updatedAt: updated.updatedAt.toISOString(),
+		});
+		if (!result.success) {
+			throw result.error;
+		}
+
+		return NextResponse.json(result.data);
+	},
+	{ permissions: ["promptRecord.write"] },
 );

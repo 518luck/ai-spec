@@ -6,13 +6,10 @@ import type { JSX } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { getRecord, updateRecord } from "@/entities/prompt";
+import type { UpdateRecordArgs } from "@/entities/prompt/records/api/update-record";
 import { areTagsEqual } from "@/features/tag-combobox/lib";
 import { toast } from "@/features/toast";
-import {
-	type CreateRecordVo,
-	type UpdateRecordDto,
-	updateRecordDtoSchema,
-} from "@/shared/lib/zod/schemas/prompt/record";
+import { type CreateRecordVo, updateRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 import { useRecordsMutate } from "../model/records-mutate-context";
 
@@ -30,13 +27,13 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 		async ([, recordId]) => getRecord(recordId),
 	);
 
-	// 更新收录 mutation
+	// 更新收录 mutation：arg 形如 { id, ...payload }，id 走 URL 路径，其余字段进 body
 	const mutateRecords = useRecordsMutate();
 	const { trigger: triggerUpdateRecord, isMutating } = useSWRMutation<
 		CreateRecordVo,
 		Error,
 		string,
-		UpdateRecordDto
+		UpdateRecordArgs
 	>("update-record", async (_key, { arg }) => updateRecord(arg));
 
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
@@ -56,8 +53,8 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 			return;
 		}
 
+		// id 走 URL，body 只校验需要更新的字段
 		const parsed = updateRecordDtoSchema.safeParse({
-			id,
 			name: data.name,
 			content: data.content,
 			folderId: data.folderId,
@@ -68,7 +65,7 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 			return;
 		}
 
-		await triggerUpdateRecord(parsed.data);
+		await triggerUpdateRecord({ id, ...parsed.data });
 		await mutateRecords();
 		toast.success("收录已更新");
 	};

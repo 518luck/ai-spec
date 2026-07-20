@@ -36,14 +36,14 @@ export const createRecordDtoSchema = z.object({
 // 创建收录入参类型
 export type CreateRecordDto = z.infer<typeof createRecordDtoSchema>;
 
-// 更新收录入参：id 必填，其余字段可选，至少更新一个
+// 更新收录入参：id 走 URL 路径，body 内所有字段可选（部分更新），至少更新一个
 export const updateRecordDtoSchema = z
 	.object({
-		id: z.string().min(1, { error: "缺少收录 id" }),
-		name: recordNameSchema,
-		content: recordContentSchema,
-		images: recordImagesSchema,
-		folderId: recordFolderIdSchema,
+		name: recordNameSchema.optional(),
+		content: recordContentSchema.optional(),
+		images: recordImagesSchema.optional(),
+		folderId: recordFolderIdSchema.optional(),
+		// 标签传 id 数组；undefined 表示不更新，空数组表示清空标签
 		tags: z.array(z.string()).optional(),
 	})
 	.refine(
@@ -51,6 +51,7 @@ export const updateRecordDtoSchema = z
 			data.name !== undefined ||
 			data.content !== undefined ||
 			data.images !== undefined ||
+			data.folderId !== undefined ||
 			data.tags !== undefined,
 		{ error: "至少需要更新一个字段" },
 	);
