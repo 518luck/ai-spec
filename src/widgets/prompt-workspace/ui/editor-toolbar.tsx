@@ -144,6 +144,7 @@ export function EditorToolbar({
 					onChange={tags.onChange}
 					triggerVariant="ghost"
 					iconOnly
+					maskColor={editorBgColor}
 					className="min-w-40 max-w-40"
 				/>
 			) : null}

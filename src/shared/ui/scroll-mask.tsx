@@ -22,6 +22,8 @@ type ScrollMaskProps = {
 	sides?: ScrollMaskSides;
 	// 传入则在能继续滚动的侧渲染箭头按钮，点击触发回调；不传则纯遮罩（默认）
 	onArrowClick?: (side: ScrollMaskSide) => void;
+	// 遮罩与箭头底色：默认 var(--background)；编辑器主题色场景传入对应主题色避免遮罩与背景不一致
+	maskColor?: string;
 	className?: string;
 };
 
@@ -36,6 +38,7 @@ export function ScrollMask({
 	direction = "vertical",
 	sides = "end",
 	onArrowClick,
+	maskColor = "var(--background)",
 	className,
 }: ScrollMaskProps): JSX.Element | null {
 	// 内容不可滚动时整体不渲染（避免「progress=1 但实际没东西可滚」被误判）
@@ -51,30 +54,37 @@ export function ScrollMask({
 	const showStartArrow = Boolean(onArrowClick) && scrollProgress > 0;
 	const showEndArrow = Boolean(onArrowClick) && scrollProgress < 1;
 
+	// > 遮罩渐变（start 侧）：从 maskColor 到透明，方向由 direction 决定
+	const startGradient =
+		direction === "vertical"
+			? `linear-gradient(to bottom, ${maskColor}, transparent)`
+			: `linear-gradient(to right, ${maskColor}, transparent)`;
+	// > 遮罩渐变（end 侧）：从透明到 maskColor
+	const endGradient =
+		direction === "vertical"
+			? `linear-gradient(to top, ${maskColor}, transparent)`
+			: `linear-gradient(to left, ${maskColor}, transparent)`;
+
 	return (
 		<>
 			{showStart && (
 				<div
 					className={cn(
 						"pointer-events-none absolute z-10 transition-opacity",
-						direction === "vertical"
-							? "inset-x-0 top-0 h-16 bg-linear-to-b from-background to-transparent"
-							: "inset-y-0 left-0 w-6 bg-linear-to-r from-background to-transparent",
+						direction === "vertical" ? "inset-x-0 top-0 h-16" : "inset-y-0 left-0 w-6",
 						className,
 					)}
-					style={{ opacity: startOpacity }}
+					style={{ opacity: startOpacity, backgroundImage: startGradient }}
 				/>
 			)}
 			{showEnd && (
 				<div
 					className={cn(
 						"pointer-events-none absolute z-10 transition-opacity",
-						direction === "vertical"
-							? "inset-x-0 bottom-0 h-16 bg-linear-to-t from-background to-transparent"
-							: "inset-y-0 right-0 w-6 bg-linear-to-l from-background to-transparent",
+						direction === "vertical" ? "inset-x-0 bottom-0 h-16" : "inset-y-0 right-0 w-6",
 						className,
 					)}
-					style={{ opacity: endOpacity }}
+					style={{ opacity: endOpacity, backgroundImage: endGradient }}
 				/>
 			)}
 			{/* // 悬停父级（需带 group 类）时浮现箭头，点击按一屏滚动；到边自动隐藏 */}

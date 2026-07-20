@@ -43,6 +43,8 @@ type TagSelectTriggerProps = {
 	iconOnly?: boolean;
 	// 是否显示「添加标签」+ 按钮（默认 true）；只读展示场景（如卡片上展示已选标签）传 false 隐藏整个 Popover
 	showAddButton?: boolean;
+	// chips 横滚遮罩颜色：默认 var(--background)；放在带主题色背景的容器（如编辑器标题栏）时传入对应颜色保持一致
+	maskColor?: string;
 	// 外层 className（控制最大宽度等）
 	className?: string;
 };
@@ -59,6 +61,7 @@ export function TagSelectTrigger({
 	hideWhenEmpty = false,
 	iconOnly = false,
 	showAddButton = true,
+	maskColor,
 	className,
 }: TagSelectTriggerProps): JSX.Element | null {
 	const router = useRouter();
@@ -204,6 +207,7 @@ export function TagSelectTrigger({
 						direction="horizontal"
 						sides="both"
 						onArrowClick={handleArrowClick}
+						maskColor={maskColor}
 					/>
 				</div>
 			)}
