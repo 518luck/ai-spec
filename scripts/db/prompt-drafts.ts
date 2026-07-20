@@ -274,7 +274,9 @@ const generateDraft = (
 	id: string;
 	name: string;
 	content: string;
+	images: string[];
 	ownerId: string;
+	folderId: null;
 	createdAt: Date;
 	updatedAt: Date;
 } => {
@@ -288,7 +290,9 @@ const generateDraft = (
 		id: generateCuidLike(),
 		name: `${template.name}-${serial}`,
 		content: template.content,
+		images: [],
 		ownerId: OWNER_ID,
+		folderId: null,
 		createdAt,
 		updatedAt,
 	};

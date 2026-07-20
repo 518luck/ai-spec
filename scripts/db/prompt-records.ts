@@ -281,9 +281,9 @@ const generateRecord = (
 	images: string[];
 	visibility: "private";
 	teamId: null;
-	sourceRecordId: null;
 	useCount: number;
 	ownerId: string;
+	contributedBy: null;
 	lastEditorId: null;
 	folderId: null;
 	createdAt: Date;
@@ -302,9 +302,9 @@ const generateRecord = (
 		images: [],
 		visibility: "private",
 		teamId: null,
-		sourceRecordId: null,
 		useCount: randomInt(0, 50),
 		ownerId: OWNER_ID,
+		contributedBy: null,
 		lastEditorId: null,
 		folderId: null,
 		createdAt,
