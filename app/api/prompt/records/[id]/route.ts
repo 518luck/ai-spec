@@ -35,11 +35,11 @@ export const GET = withPersonal(
 			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
 		}
 
-		// ownerId 仅用于权限校验，不返回给前端；folderId 直接透传 null；tags 关联映射为扁平 {id,name,color} 数组
+		// ownerId 仅用于权限校验，不返回给前端；folderId 直接透传 null；tags 关联映射为扁平 {id,name,color,resourceType} 数组
 		const { ownerId: _ownerId, ...rest } = record;
 		const result = recordContentVoSchema.safeParse({
 			...rest,
-			tags: rest.tags.map((t) => ({ ...t.tag })),
+			tags: mapTags(rest.tags),
 		});
 		if (!result.success) {
 			throw result.error;

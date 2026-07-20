@@ -1,6 +1,13 @@
-// # 收录关联标签映射：剥掉中间表外壳，规整为扁平 {id,name,color} 数组
+// # 收录关联标签映射：剥掉中间表外壳，挑出 VO 所需的扁平字段
 
-// Prisma 嵌套形态 { tag: {...} } → 扁平 {...tag}
 export const mapTags = (
-	tags: Array<{ tag: { id: string; name: string; color: string; resourceType: string } }>,
-) => tags.map((t) => ({ ...t.tag }));
+	tags: Array<{
+		tag: { id: string; name: string; color: string; resourceType: string };
+	}>,
+) =>
+	tags.map((t) => ({
+		id: t.tag.id,
+		name: t.tag.name,
+		color: t.tag.color,
+		resourceType: t.tag.resourceType,
+	}));
