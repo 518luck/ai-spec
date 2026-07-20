@@ -6,6 +6,7 @@ import type { JSX } from "react";
 import { useRef } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
+import { useInertialScroll } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
@@ -24,7 +25,6 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { EDITOR_THEMES, MENU_GROUPS, type MenuItem } from "../config/editor";
 import { isItemActive } from "../model/is-item-active";
@@ -120,6 +120,11 @@ export function EditorToolbar({
 		!item.showIn || item.showIn === "both" || item.showIn === currentMode;
 	// 记录鼠标按下的起点，用于区分点击和拖拽
 	const startPos = useRef<{ x: number; y: number } | null>(null);
+	// 快捷栏横滚容器：wheel 转横向 + 惯性缓动；拖拽排序走 Reorder.Group 的 pointer 事件，互不干扰
+	const toolbarScrollRef = useRef<HTMLDivElement>(null);
+	const { handleWheel: handleToolbarWheel } = useInertialScroll(toolbarScrollRef, {
+		direction: "horizontal",
+	});
 
 	return (
 		<div
@@ -161,10 +166,13 @@ export function EditorToolbar({
 						style={{ backgroundColor: toolbarBgColor }}
 						transition={{ type: "spring", duration: 0.5, bounce: 0.25 }}
 					>
-						<ScrollArea
-							orientation="horizontal"
-							className={isExpanded ? "" : "max-w-42"}
-							scrollbarClassName="mx-4"
+						<div
+							ref={toolbarScrollRef}
+							onWheel={handleToolbarWheel}
+							className={cn(
+								"overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+								!isExpanded && "max-w-42",
+							)}
 						>
 							<Reorder.Group
 								axis="x"
@@ -231,7 +239,7 @@ export function EditorToolbar({
 									})}
 								</AnimatePresence>
 							</Reorder.Group>
-						</ScrollArea>
+						</div>
 					</AnimatedSizeContainer>
 				)}
 
