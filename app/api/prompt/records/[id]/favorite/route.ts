@@ -21,11 +21,17 @@ export const POST = withPersonal(
 			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
 		}
 
-		await prisma.promptFavorite.upsert({
-			where: { userId_recordId: { userId: session.user.id, recordId } },
-			create: { userId: session.user.id, recordId },
-			update: {},
+		// 加入收藏：当前阶段（团队未实现）所有收藏都是个人空间收藏，teamMemberId 固定为 null
+		// ? 未来团队场景接通后，按当前请求的团队身份填 teamMemberId
+		const existing = await prisma.promptFavorite.findFirst({
+			where: { userId: session.user.id, recordId, teamMemberId: null },
+			select: { id: true },
 		});
+		if (!existing) {
+			await prisma.promptFavorite.create({
+				data: { userId: session.user.id, recordId, teamMemberId: null },
+			});
+		}
 
 		return NextResponse.json({ favorite: true });
 	},

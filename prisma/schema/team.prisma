@@ -21,6 +21,7 @@ model Team {
   memberships    TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
   folders        Folder[] @relation("TeamFolders") // 团队空间下的全部文件夹
   promptRecords  PromptRecord[] @relation("TeamPromptRecords") // 团队空间内的全部收录记录
+  teamFavorites  TeamFavorite[] // 团队的共享收藏（成员共用）
 
   // ⑤ 索引
   @@schema("team") // 归属 team 域
@@ -42,8 +43,9 @@ model TeamMember {
   userId String @map("user_id") // 成员用户 id
 
   // ⑤ 关联关系
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其成员关系）
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade) // 成员用户（用户删除→级联删其所有成员关系）；跨域引用 auth.User
+  team            Team             @relation(fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其成员关系）
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade) // 成员用户（用户删除→级联删其所有成员关系）；跨域引用 auth.User
+  promptFavorites PromptFavorite[] // 该成员在团队身份下的私人收藏（退出团队时 Cascade 删除）
 
   // ⑥ 索引
   @@unique([teamId, userId]) // 同一用户在同一团队只能有一条记录，防止角色矛盾

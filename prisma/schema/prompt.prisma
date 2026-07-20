@@ -30,15 +30,16 @@ model PromptRecord {
   folderId      String? @map("folder_id") // 所属文件夹 ID，null=未分类
 
   // ⑤ 关联关系
-  owner       User?                 @relation("PromptRecordOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删除个人收录）
+  owner         User?                 @relation("PromptRecordOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删除个人收录）
   // 贡献者（复制原件到团队的人）；贡献者注销→contributedBy 置空，副本保留
-  contributor User?                 @relation("PromptRecordContributor", fields: [contributedBy], references: [id], onDelete: SetNull)
-  lastEditor  User?                 @relation("PromptRecordEditor", fields: [lastEditorId], references: [id], onDelete: SetNull) // 最近编辑人（用户注销→仅清空记录）
-  folder      Folder?               @relation("FolderItems_PromptRecord", fields: [folderId], references: [id], onDelete: SetNull) // 所属文件夹（文件夹删除→资源保留，folderId 置空）
-  team        Team?                 @relation("TeamPromptRecords", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删除其空间内的收录；null=个人空间）
-  versions    PromptRecordVersion[] // 版本历史
-  tags        PromptRecordTag[] // 标签关联
-  favoritedBy PromptFavorite[] // 收藏记录
+  contributor   User?                 @relation("PromptRecordContributor", fields: [contributedBy], references: [id], onDelete: SetNull)
+  lastEditor    User?                 @relation("PromptRecordEditor", fields: [lastEditorId], references: [id], onDelete: SetNull) // 最近编辑人（用户注销→仅清空记录）
+  folder        Folder?               @relation("FolderItems_PromptRecord", fields: [folderId], references: [id], onDelete: SetNull) // 所属文件夹（文件夹删除→资源保留，folderId 置空）
+  team          Team?                 @relation("TeamPromptRecords", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删除其空间内的收录；null=个人空间）
+  versions      PromptRecordVersion[] // 版本历史
+  tags          PromptRecordTag[] // 标签关联
+  favoritedBy   PromptFavorite[] // 个人收藏记录
+  teamFavorites TeamFavorite[] // 团队共享收藏记录
 
   // ⑥ 索引
   @@index([ownerId]) // 加速"我的收录"查询
@@ -125,23 +126,59 @@ model PromptRecordTag {
   @@schema("prompt")
 }
 
-// 用户收藏的提示词收录，驱动"收集"排序
+// 用户的私人收藏：包括纯个人空间收藏（teamMemberId=null）和在团队身份下的私人收藏（teamMemberId 非空）
+// ! 团队身份下的收藏仍属于用户个人，团队其他成员看不到；与团队共享收藏（TeamFavorite）是两套独立机制
 model PromptFavorite {
+  // ① 主键
+  id String @id @default(cuid()) // 私人收藏主键
+
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")
 
   // ④ 外键列
-  userId   String @map("user_id")
-  recordId String @map("record_id")
+  userId       String  @map("user_id")
+  recordId     String  @map("record_id")
+  // 在哪个团队身份下收藏的；null=纯个人空间收藏，非空=在团队空间以个人身份收藏（退出团队时 Cascade 删除）
+  teamMemberId String? @map("team_member_id")
 
   // ⑤ 关联关系
-  user   User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  record PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  record     PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  teamMember TeamMember?  @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
 
   // ⑥ 索引
-  @@id([userId, recordId])
+  // > 唯一约束三元组：允许"个人身份 + 团队身份"同时收藏同一条记录（PostgreSQL 多 NULL 唯一约束天然支持）
+  @@unique([userId, recordId, teamMemberId])
   @@index([userId]) // 加速"我的收藏"查询
   @@index([recordId])
+  @@index([teamMemberId]) // 加速"某团队成员的私人收藏"查询
+  @@schema("prompt")
+}
+
+// 团队共享收藏：整个团队共用的收藏夹，团队成员都能看到；与个人收藏（PromptFavorite）独立
+// ! 添加/删除权限由业务层按 TeamMember.role 控制，schema 不强制约束
+model TeamFavorite {
+  // ① 主键
+  id String @id @default(cuid()) // 团队收藏主键
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // ④ 外键列
+  teamId    String  @map("team_id") // 所属团队
+  recordId  String  @map("record_id") // 被收藏的收录
+  // 添加者：谁把这个收录加进团队收藏的；注销时置空（团队收藏保留，仅清贡献者信息）
+  addedById String? @map("added_by_id")
+
+  // ⑤ 关联关系
+  team    Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  record  PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  addedBy User?        @relation("TeamFavoriteAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  // ⑥ 索引
+  @@unique([teamId, recordId]) // 同一团队对同一收录只收藏一次
+  @@index([teamId]) // 加速"某团队的共享收藏"查询
+  @@index([recordId]) // 加速"某收录被哪些团队收藏"反查
   @@schema("prompt")
 }
 

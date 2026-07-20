@@ -45,6 +45,7 @@ model User {
   promptRecordVersions     PromptRecordVersion[] @relation("VersionEditor")
   promptDrafts             PromptDraft[]         @relation("PromptDraftOwner")
   promptFavorites          PromptFavorite[]
+  teamFavoritesAdded       TeamFavorite[]       @relation("TeamFavoriteAddedBy") // 该用户添加进团队共享收藏的项
 
   // 文件夹反向关系
   folders            Folder[]       @relation("FolderOwner") // 用户创建的全部文件夹
