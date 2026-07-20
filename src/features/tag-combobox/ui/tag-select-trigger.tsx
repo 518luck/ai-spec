@@ -6,18 +6,10 @@
 // > URL 模式：不传 value/onChange，自动读写 ?tagIds=（导航栏筛选用）
 
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-	type JSX,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-	type WheelEvent,
-} from "react";
+import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
 import { getTags } from "@/entities/tag";
-import { useScrollProgress } from "@/shared/hooks";
+import { useInertialScroll, useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
@@ -127,6 +119,11 @@ export function TagSelectTrigger({
 	const chipsScrollRef = useRef<HTMLDivElement>(null);
 	const { scrollProgress: chipsProgress, updateScrollProgress: updateChipsProgress } =
 		useScrollProgress(chipsScrollRef, { direction: "horizontal" });
+	// 横向惯性滚动：wheel 直接绑 handleWheel，箭头点击走 scrollTo，都走 rAF + lerp 缓动
+	const { handleWheel: handleChipsWheel, scrollTo: scrollChipsTo } = useInertialScroll(
+		chipsScrollRef,
+		{ direction: "horizontal" },
+	);
 
 	// chips 增删后跨布局帧重算进度
 	// biome-ignore lint/correctness/useExhaustiveDependencies: chipsCount 是内容变化信号，body 不直接读
@@ -137,21 +134,15 @@ export function TagSelectTrigger({
 		return () => cancelAnimationFrame(id);
 	}, [chipsCount, updateChipsProgress]);
 
-	const handleChipsWheel = useCallback((e: WheelEvent<HTMLDivElement>) => {
-		const el = chipsScrollRef.current;
-		if (!el) return;
-		// 垂直滚轮为主时才转：避免抢走真正横向滚轮（触控板）的事件
-		if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-		el.scrollLeft += e.deltaY;
-	}, []);
-
 	// 箭头点击：按一屏宽度横向滚动，方向由 ScrollMask 回调给出
-	const handleArrowClick = useCallback((side: "start" | "end") => {
-		const el = chipsScrollRef.current;
-		if (!el) return;
-		const delta = (side === "start" ? -1 : 1) * el.clientWidth;
-		el.scrollBy({ left: delta, behavior: "smooth" });
-	}, []);
+	const handleArrowClick = useCallback(
+		(side: "start" | "end") => {
+			const el = chipsScrollRef.current;
+			if (!el) return;
+			scrollChipsTo((side === "start" ? -1 : 1) * el.clientWidth);
+		},
+		[scrollChipsTo],
+	);
 
 	// 开启 hideWhenEmpty 且无选中标签时不渲染：放在所有 hooks 之后，保持 hooks 调用顺序稳定
 	if (hideWhenEmpty && chips.length === 0) return null;

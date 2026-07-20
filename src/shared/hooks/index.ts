@@ -3,7 +3,7 @@
 // @ 第三方 hook 转发
 export { useInView } from "react-intersection-observer"; // 监听元素与视口/滚动容器的交叉状态
 export { default as useDebounce } from "react-use/lib/useDebounce"; // 回调式防抖：延迟 ms 后执行 fn，返回 [isPending, cancel]
-
+export { useInertialScroll } from "./use-inertial-scroll"; // 滚动容器惯性缓动（rAF + lerp），wheel/scrollTo 都走动画
 // @ 自实现 hook
 export { useLocalStorage } from "./use-local-storage"; // 读写 localStorage，setter 支持函数式更新（无 stale closure）
 export { useMediaQuery } from "./use-media-query"; // 设备类型（mobile/tablet/desktop）+ 窗口尺寸
