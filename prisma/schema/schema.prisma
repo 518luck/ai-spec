@@ -39,11 +39,12 @@ model User {
   tokens   Token[]
 
   // 提示词反向关系
-  promptRecords        PromptRecord[]        @relation("PromptRecordOwner")
-  promptRecordEdited   PromptRecord[]        @relation("PromptRecordEditor")
-  promptRecordVersions PromptRecordVersion[] @relation("VersionEditor")
-  promptDrafts         PromptDraft[]         @relation("PromptDraftOwner")
-  promptFavorites      PromptFavorite[]
+  promptRecordsOwned       PromptRecord[]        @relation("PromptRecordOwner") // 该用户拥有的个人收录
+  promptRecordsContributed PromptRecord[]        @relation("PromptRecordContributor") // 该用户贡献到团队的副本
+  promptRecordsEdited      PromptRecord[]        @relation("PromptRecordEditor") // 该用户最近编辑过的收录
+  promptRecordVersions     PromptRecordVersion[] @relation("VersionEditor")
+  promptDrafts             PromptDraft[]         @relation("PromptDraftOwner")
+  promptFavorites          PromptFavorite[]
 
   // 文件夹反向关系
   folders            Folder[]       @relation("FolderOwner") // 用户创建的全部文件夹

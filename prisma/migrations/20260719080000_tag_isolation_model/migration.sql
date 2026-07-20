@@ -13,4 +13,4 @@ ADD COLUMN "resource_type" TEXT NOT NULL,
 ADD COLUMN "team_id" TEXT;
 
 -- CreateIndex
-CREATE INDEX shared."Tag_owner_id_resource_type_name_idx" ON shared."Tag"("owner_id", "resource_type", "name");
+CREATE INDEX "Tag_owner_id_resource_type_name_idx" ON shared."Tag"("owner_id", "resource_type", "name");
