@@ -97,6 +97,17 @@
 			}
 		},
 		{
+			// 一次性 seed/orchestration 脚本目录：终端脚本本就以 console 输出为主，与应用日志器无关
+			"includes": ["scripts/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noConsole": "off"
+					}
+				}
+			}
+		},
+		{
 			// shadcn/ui 组件目录：第三方代码，a11y 模式（div+role、label 包裹等）由 shadcn 官方维护，
 			// 改动会被下次 npx shadcn add 覆盖；biome 的 a11y 规则与 shadcn 设计模式存在已知冲突（shadcn-ui/ui#7639）。
 			// 业务代码（src/pages/、src/widgets/、src/app/）仍受这些规则保护，仅在第三方组件目录豁免。

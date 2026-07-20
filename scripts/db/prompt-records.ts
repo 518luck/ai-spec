@@ -324,7 +324,6 @@ const main = async (): Promise<void> => {
 		data: records,
 	});
 
-	// biome-ignore lint/suspicious/noConsole: seed 脚本需要向终端反馈执行结果
 	console.log(`已清理 ${deleted.count} 条旧收录，成功写入 ${result.count} 条新收录`);
 };
 
