@@ -120,8 +120,11 @@ export function TagSelectTrigger({
 
 	// chips 区横滚容器：滚轮转横向 + 进度驱动 ScrollMask
 	const chipsScrollRef = useRef<HTMLDivElement>(null);
-	const { scrollProgress: chipsProgress, updateScrollProgress: updateChipsProgress } =
-		useScrollProgress(chipsScrollRef, { direction: "horizontal" });
+	const {
+		scrollProgress: chipsProgress,
+		scrollable: chipsScrollable,
+		updateScrollProgress: updateChipsProgress,
+	} = useScrollProgress(chipsScrollRef, { direction: "horizontal" });
 	// 横向惯性滚动：wheel 直接绑 handleWheel，箭头点击走 scrollTo，都走 rAF + lerp 缓动
 	const { handleWheel: handleChipsWheel, scrollTo: scrollChipsTo } = useInertialScroll(
 		chipsScrollRef,
@@ -197,6 +200,7 @@ export function TagSelectTrigger({
 					</div>
 					<ScrollMask
 						scrollProgress={chipsProgress}
+						enabled={chipsScrollable}
 						direction="horizontal"
 						sides="both"
 						onArrowClick={handleArrowClick}

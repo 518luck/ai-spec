@@ -14,6 +14,8 @@ type ScrollMaskSide = "start" | "end";
 type ScrollMaskProps = {
 	// 滚动进度（0~1），通常来自 useScrollProgress；end 侧按 progress 平方衰减，start 侧按 progress>0 切换
 	scrollProgress: number;
+	// 是否启用：内容不可滚动时传 false 整体不渲染（避免 progress=1 被误判为「滚到底」而画出 start 侧遮罩）
+	enabled?: boolean;
 	// 渐变方向：vertical=纵向（默认，底部淡出），horizontal=横向（左右淡出）
 	direction?: ScrollMaskDirection;
 	// 显示哪一侧：默认 "end"（底部/右侧），chips 横向双侧淡出用 "both"
@@ -30,11 +32,14 @@ type ScrollMaskProps = {
 // > 搭配 useScrollProgress 使用：hook 算进度，本组件根据进度渲染遮罩
 export function ScrollMask({
 	scrollProgress,
+	enabled = true,
 	direction = "vertical",
 	sides = "end",
 	onArrowClick,
 	className,
-}: ScrollMaskProps): JSX.Element {
+}: ScrollMaskProps): JSX.Element | null {
+	// 内容不可滚动时整体不渲染（避免「progress=1 但实际没东西可滚」被误判）
+	if (!enabled) return null;
 	// end 侧（底部/右侧）：进度越大越透明，平方衰减更自然
 	const endOpacity = 1 - scrollProgress ** 2;
 	// start 侧（顶部/左侧）：已滚动（progress > 0）即显示，到边即隐藏
