@@ -66,7 +66,7 @@ export function TagChip({
 				className,
 			)}
 		>
-			<span className="size-1.5 rounded-full" style={{ backgroundColor: color }} aria-hidden />
+			{/* <span className="size-1.5 rounded-full" style={{ backgroundColor: color }} aria-hidden /> */}
 			<span className="max-w-24 select-none truncate">{name}</span>
 			{removable && (
 				<button

@@ -41,6 +41,8 @@ type TagSelectTriggerProps = {
 	hideWhenEmpty?: boolean;
 	// chips 是否只显示色点：空间紧凑场景（如编辑器标题栏）开启，hover 出 Tooltip 看名称；移除走面板内取消勾选
 	iconOnly?: boolean;
+	// 是否显示「添加标签」+ 按钮（默认 true）；只读展示场景（如卡片上展示已选标签）传 false 隐藏整个 Popover
+	showAddButton?: boolean;
 	// 外层 className（控制最大宽度等）
 	className?: string;
 };
@@ -56,6 +58,7 @@ export function TagSelectTrigger({
 	align = "start",
 	hideWhenEmpty = false,
 	iconOnly = false,
+	showAddButton = true,
 	className,
 }: TagSelectTriggerProps): JSX.Element | null {
 	const router = useRouter();
@@ -150,27 +153,29 @@ export function TagSelectTrigger({
 	return (
 		<div className={cn("flex items-center gap-1.5", className)}>
 			{/* // 添加标签按钮：打开标签面板，搜索/勾选/新建；固定在最左侧，避免选中 chips 后整体布局推动 */}
-			<Popover open={open} onOpenChange={setOpen}>
-				<PopoverTrigger
-					render={
-						<Button
-							variant={triggerVariant}
-							size="icon-sm"
-							className="size-7 shrink-0 text-muted-foreground"
-							aria-label="选择标签"
+			{showAddButton && (
+				<Popover open={open} onOpenChange={setOpen}>
+					<PopoverTrigger
+						render={
+							<Button
+								variant={triggerVariant}
+								size="icon-sm"
+								className="size-7 shrink-0 text-muted-foreground"
+								aria-label="选择标签"
+							/>
+						}
+					>
+						<Icons.tagAdd className="size-4" />
+					</PopoverTrigger>
+					<PopoverContent className="w-44 p-0" align={align}>
+						<TagCombobox
+							resourceType={resourceType}
+							value={controlledValue}
+							onChange={controlledOnChange}
 						/>
-					}
-				>
-					<Icons.tagAdd className="size-4" />
-				</PopoverTrigger>
-				<PopoverContent className="w-44 p-0" align={align}>
-					<TagCombobox
-						resourceType={resourceType}
-						value={controlledValue}
-						onChange={controlledOnChange}
-					/>
-				</PopoverContent>
-			</Popover>
+					</PopoverContent>
+				</Popover>
+			)}
 			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位；左右两侧用 ScrollMask 弥散遮罩代替硬截断 */}
 			{chips.length > 0 && (
 				<div className="group relative min-w-0 flex-1">
