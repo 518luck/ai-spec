@@ -42,7 +42,11 @@ export const updateDraftDtoSchema = z
 		folderId: draftFolderIdSchema.optional(),
 	})
 	.refine(
-		(data) => data.name !== undefined || data.content !== undefined || data.images !== undefined,
+		(data) =>
+			data.name !== undefined ||
+			data.content !== undefined ||
+			data.images !== undefined ||
+			data.folderId !== undefined,
 		{ error: "至少需要更新一个字段" },
 	);
 
