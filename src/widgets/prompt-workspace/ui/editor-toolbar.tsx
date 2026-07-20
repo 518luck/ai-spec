@@ -6,7 +6,7 @@ import type { JSX } from "react";
 import { useRef } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
-import { useInertialScroll } from "@/shared/hooks";
+import { useInertialScroll, useScrollProgress } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
@@ -125,6 +125,11 @@ export function EditorToolbar({
 	const { handleWheel: handleToolbarWheel } = useInertialScroll(toolbarScrollRef, {
 		direction: "horizontal",
 	});
+	const {
+		scrollProgress: toolbarProgress,
+		scrollable: toolbarScrollable,
+		updateScrollProgress: updateToolbarProgress,
+	} = useScrollProgress(toolbarScrollRef, { direction: "horizontal" });
 
 	return (
 		<div
@@ -161,87 +166,106 @@ export function EditorToolbar({
 			<div className="ml-auto flex items-center gap-2">
 				{/* // @ 快捷操作工具栏：可拖拽排序，宽度跟随内容伸缩；box-content 避免图标贴圆角 */}
 				{activeToolbarItems.length > 0 && (
-					<AnimatedSizeContainer
-						width
-						className="box-content rounded-full p-0.5"
-						style={{ backgroundColor: toolbarBgColor }}
-						transition={{ type: "spring", duration: 0.5, bounce: 0.25 }}
-					>
-						<div
-							ref={toolbarScrollRef}
-							onWheel={handleToolbarWheel}
-							className={cn(
-								"overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-								!isExpanded && "max-w-42",
-							)}
+					<div className="relative">
+						<AnimatedSizeContainer
+							width
+							className="box-content rounded-full p-0.5"
+							style={{ backgroundColor: toolbarBgColor }}
+							transition={{ type: "spring", duration: 0.5, bounce: 0.25 }}
 						>
-							<Reorder.Group
-								axis="x"
-								values={activeToolbarItems}
-								onReorder={(newItems) => onReorder(newItems.map((i) => i.id))}
-								className="flex items-center gap-0.5"
+							<div
+								ref={toolbarScrollRef}
+								onWheel={handleToolbarWheel}
+								onScroll={updateToolbarProgress}
+								className={cn(
+									"overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+									!isExpanded && "max-w-42",
+								)}
 							>
-								<AnimatePresence mode="popLayout">
-									{activeToolbarItems.map((item) => {
-										const isActive =
-											item.type === "tool"
-												? activeFormats.has(item.id)
-												: item.type === "preview"
-													? isPreview
-													: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
-										return (
-											<Tooltip key={item.id}>
-												<TooltipTrigger
-													render={
-														<Reorder.Item
-															value={item}
-															layout
-															initial={{ opacity: 0, scale: 0 }}
-															animate={{ opacity: 1, scale: 1 }}
-															exit={{ opacity: 0, scale: 0 }}
-															transition={{ type: "spring", stiffness: 400, damping: 32 }}
-															whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
-															className="shrink-0 cursor-pointer"
-															onPointerDown={(e) =>
-																(startPos.current = { x: e.clientX, y: e.clientY })
-															}
-															onPointerUp={(e) => {
-																if (!startPos.current) return;
-																const dx = Math.abs(e.clientX - startPos.current.x);
-																const dy = Math.abs(e.clientY - startPos.current.y);
-																// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
-																if (dx < 5 && dy < 5) {
-																	onItemAction(
-																		item.type as "tool" | "display" | "preview",
-																		item.id,
-																	);
+								<Reorder.Group
+									axis="x"
+									values={activeToolbarItems}
+									onReorder={(newItems) => onReorder(newItems.map((i) => i.id))}
+									className="flex items-center gap-0.5"
+								>
+									<AnimatePresence mode="popLayout">
+										{activeToolbarItems.map((item) => {
+											const isActive =
+												item.type === "tool"
+													? activeFormats.has(item.id)
+													: item.type === "preview"
+														? isPreview
+														: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
+											return (
+												<Tooltip key={item.id}>
+													<TooltipTrigger
+														render={
+															<Reorder.Item
+																value={item}
+																layout
+																initial={{ opacity: 0, scale: 0 }}
+																animate={{ opacity: 1, scale: 1 }}
+																exit={{ opacity: 0, scale: 0 }}
+																transition={{ type: "spring", stiffness: 400, damping: 32 }}
+																whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
+																className="shrink-0 cursor-pointer"
+																onPointerDown={(e) =>
+																	(startPos.current = { x: e.clientX, y: e.clientY })
 																}
-																startPos.current = null;
-															}}
-														/>
-													}
-												>
-													<Button
-														variant="ghost"
-														size="icon-sm"
-														aria-label={item.label}
-														className={`pointer-events-none rounded-full ${
-															isActive
-																? "bg-primary/15! text-primary hover:bg-primary/25"
-																: "hover:bg-foreground/20!"
-														}`}
+																onPointerUp={(e) => {
+																	if (!startPos.current) return;
+																	const dx = Math.abs(e.clientX - startPos.current.x);
+																	const dy = Math.abs(e.clientY - startPos.current.y);
+																	// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
+																	if (dx < 5 && dy < 5) {
+																		onItemAction(
+																			item.type as "tool" | "display" | "preview",
+																			item.id,
+																		);
+																	}
+																	startPos.current = null;
+																}}
+															/>
+														}
 													>
-														<item.icon className="size-4" />
-													</Button>
-												</TooltipTrigger>
-												<TooltipContent>{item.label}</TooltipContent>
-											</Tooltip>
-										);
-									})}
-								</AnimatePresence>
-							</Reorder.Group>
-						</div>
-					</AnimatedSizeContainer>
+														<Button
+															variant="ghost"
+															size="icon-sm"
+															aria-label={item.label}
+															className={`pointer-events-none rounded-full ${
+																isActive
+																	? "bg-primary/15! text-primary hover:bg-primary/25"
+																	: "hover:bg-foreground/20!"
+															}`}
+														>
+															<item.icon className="size-4" />
+														</Button>
+													</TooltipTrigger>
+													<TooltipContent>{item.label}</TooltipContent>
+												</Tooltip>
+											);
+										})}
+									</AnimatePresence>
+								</Reorder.Group>
+							</div>
+						</AnimatedSizeContainer>
+						{/* // 左右渐变遮罩：与胶囊同色，仅可滚动且对应方向有更多内容时显示；放在滚动容器外，不跟着滚走 */}
+						{/* > 始终挂载，靠 opacity 控制可见性以触发 transition；3-stop 渐变让中段更实，比纯线性衰减更显眼 */}
+						<div
+							className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 rounded-l-full opacity-0 transition-opacity duration-200"
+							style={{
+								backgroundImage: `linear-gradient(to right, ${toolbarBgColor}, color-mix(in srgb, ${toolbarBgColor} 70%, transparent) 50%, transparent)`,
+								opacity: toolbarScrollable && toolbarProgress > 0 ? 1 : 0,
+							}}
+						/>
+						<div
+							className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 rounded-r-full opacity-0 transition-opacity duration-200"
+							style={{
+								backgroundImage: `linear-gradient(to left, ${toolbarBgColor}, color-mix(in srgb, ${toolbarBgColor} 70%, transparent) 50%, transparent)`,
+								opacity: toolbarScrollable && toolbarProgress < 1 ? 1 : 0,
+							}}
+						/>
+					</div>
 				)}
 
 				{/* // @ 更多操作：Checkbox 控制是否加入快捷栏，点击文字执行对应操作 */}
