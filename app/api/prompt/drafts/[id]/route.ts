@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
-import { deleteDraftDtoSchema, draftContentVoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import {
+	createDraftVoSchema,
+	deleteDraftDtoSchema,
+	draftContentVoSchema,
+	updateDraftDtoSchema,
+} from "@/shared/lib/zod/schemas/prompt/draft";
 
 // # 单条草稿详情 / 删除：按 id 拉取全文或硬删除，归属隔离统一走 ownerId 进 where
 
@@ -39,6 +44,46 @@ export const GET = withPersonal(
 		return NextResponse.json(result.data);
 	},
 	{ permissions: ["promptDraft.read"] },
+);
+
+// > 部分更新草稿：id 走路径，body 字段全部可选；where 含 ownerId 防止越权修改他人草稿
+export const PATCH = withPersonal(
+	async ({ req, ctx, session }) => {
+		const { id: rawId } = await ctx.params;
+		const id = Array.isArray(rawId) ? rawId[0] : rawId;
+
+		const parsed = updateDraftDtoSchema.safeParse(await req.json());
+		if (!parsed.success) {
+			throw parsed.error;
+		}
+		const { name, content, images, folderId } = parsed.data;
+
+		// 构建部分更新数据：只更新传入的字段
+		const data: Record<string, unknown> = {};
+		if (name !== undefined) data.name = name;
+		if (content !== undefined) data.content = content;
+		if (images !== undefined) data.images = images;
+		if (folderId !== undefined) data.folderId = folderId || null;
+
+		// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
+		const updated = await prisma.promptDraft.update({
+			where: { id, ownerId: session.user.id },
+			data,
+			select: { id: true, name: true, content: true, folderId: true, updatedAt: true },
+		});
+
+		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null（VO schema 已为 nullable）
+		const result = createDraftVoSchema.safeParse({
+			...updated,
+			updatedAt: updated.updatedAt.toISOString(),
+		});
+		if (!result.success) {
+			throw result.error;
+		}
+
+		return NextResponse.json(result.data);
+	},
+	{ permissions: ["promptDraft.write"] },
 );
 
 // > 硬删除草稿：where 含 ownerId，删除他人草稿时 Prisma P2025 自动映射为 404，不暴露归属

@@ -6,12 +6,9 @@ import type { JSX } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { getDraft, updateDraft } from "@/entities/prompt";
+import type { UpdateDraftArgs } from "@/entities/prompt/drafts/api/update-draft";
 import { toast } from "@/features/toast";
-import {
-	type CreateDraftVo,
-	type UpdateDraftDto,
-	updateDraftDtoSchema,
-} from "@/shared/lib/zod/schemas/prompt/draft";
+import { type CreateDraftVo, updateDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 import { useDraftsMutate } from "../model/drafts-mutate-context";
 
@@ -29,13 +26,13 @@ export function EditDraftDialog({ id, open, onOpenChange }: EditDraftDialogProps
 		async ([, draftId]) => getDraft(draftId),
 	);
 
-	// 更新草稿 mutation
+	// 更新草稿 mutation：arg 形如 { id, ...payload }，id 走 URL 路径，其余字段进 body
 	const mutateDrafts = useDraftsMutate();
 	const { trigger: triggerUpdateDraft, isMutating } = useSWRMutation<
 		CreateDraftVo,
 		Error,
 		string,
-		UpdateDraftDto
+		UpdateDraftArgs
 	>("update-draft", async (_key, { arg }) => updateDraft(arg));
 
 	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
@@ -51,8 +48,8 @@ export function EditDraftDialog({ id, open, onOpenChange }: EditDraftDialogProps
 			return;
 		}
 
+		// id 走 URL，body 只校验需要更新的字段
 		const parsed = updateDraftDtoSchema.safeParse({
-			id,
 			name: data.name,
 			content: data.content,
 			folderId: data.folderId,
@@ -62,7 +59,7 @@ export function EditDraftDialog({ id, open, onOpenChange }: EditDraftDialogProps
 			return;
 		}
 
-		await triggerUpdateDraft(parsed.data);
+		await triggerUpdateDraft({ id, ...parsed.data });
 		await mutateDrafts();
 		toast.success("草稿已更新");
 	};
