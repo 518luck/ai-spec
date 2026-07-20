@@ -173,7 +173,7 @@ export function TagSelectTrigger({
 			</Popover>
 			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位；左右两侧用 ScrollMask 弥散遮罩代替硬截断 */}
 			{chips.length > 0 && (
-				<div className="group relative min-w-0 max-w-md flex-1">
+				<div className="group relative min-w-0 flex-1">
 					<div
 						ref={chipsScrollRef}
 						onWheel={handleChipsWheel}

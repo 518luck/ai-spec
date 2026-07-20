@@ -120,6 +120,7 @@ export function FilterCombobox({
 				open={tagOpen}
 				onOpenChange={setTagOpen}
 				hideWhenEmpty
+				className="max-w-md"
 			/>
 		</div>
 	);
