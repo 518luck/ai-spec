@@ -47,6 +47,8 @@ type TagSelectTriggerProps = {
 	align?: "start" | "center" | "end";
 	// 无选中标签时是否整体隐藏（默认 false：编辑器等场景未选也要能点 + 添加）
 	hideWhenEmpty?: boolean;
+	// chips 是否只显示色点：空间紧凑场景（如编辑器标题栏）开启，hover 出 Tooltip 看名称；移除走面板内取消勾选
+	iconOnly?: boolean;
 	// 外层 className（控制最大宽度等）
 	className?: string;
 };
@@ -61,6 +63,7 @@ export function TagSelectTrigger({
 	triggerVariant = "outline",
 	align = "start",
 	hideWhenEmpty = false,
+	iconOnly = false,
 	className,
 }: TagSelectTriggerProps): JSX.Element | null {
 	const router = useRouter();
@@ -169,8 +172,8 @@ export function TagSelectTrigger({
 								key={tag.id}
 								name={tag.name}
 								color={tag.color}
-								removable
-								onRemove={() => handleRemove(tag.id)}
+								iconOnly={iconOnly}
+								{...(!iconOnly && { removable: true, onRemove: () => handleRemove(tag.id) })}
 							/>
 						))}
 					</div>

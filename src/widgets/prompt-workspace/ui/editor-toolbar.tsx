@@ -138,6 +138,7 @@ export function EditorToolbar({
 					value={tags.value}
 					onChange={tags.onChange}
 					triggerVariant="ghost"
+					iconOnly
 					className="min-w-40 max-w-64"
 				/>
 			) : null}
