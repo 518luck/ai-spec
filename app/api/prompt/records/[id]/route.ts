@@ -69,24 +69,32 @@ export const PATCH = withPersonal(
 		if (images !== undefined) data.images = images;
 		// folderId 收到 null/"" 表示清空为未分类（落到 DB 的 NULL），收到有效字符串表示归属该文件夹
 		if (folderId !== undefined) data.folderId = folderId || null;
-		// 标签关联全量替换：tags === undefined 时不更新；传数组（含空数组）时 set 全量替换
+		// 标签关联全量替换：tags === undefined 时不动
+		// ! 不能用 set：PromptRecordTag 是复合主键 (recordId, tagId)，set 要求 unique 定位，会报 P2009
+		// ! deleteMany + create 必须放进事务：否则中途失败会丢标签（旧关联已删、新关联未建）
 		if (tags !== undefined) {
-			data.tags = { set: tags.map((tagId) => ({ tagId })) };
+			data.tags = { create: tags.map((tagId) => ({ tagId })) };
 		}
 
+		// > 事务保证原子性：deleteMany + update（含 tags.create）要么全成要么全败
 		// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
-		const updated = await prisma.promptRecord.update({
-			where: { id, ownerId: session.user.id },
-			data,
-			select: {
-				id: true,
-				name: true,
-				content: true,
-				visibility: true,
-				folderId: true,
-				tags: { include: { tag: true } },
-				updatedAt: true,
-			},
+		const updated = await prisma.$transaction(async (tx) => {
+			if (tags !== undefined) {
+				await tx.promptRecordTag.deleteMany({ where: { recordId: id } });
+			}
+			return tx.promptRecord.update({
+				where: { id, ownerId: session.user.id },
+				data,
+				select: {
+					id: true,
+					name: true,
+					content: true,
+					visibility: true,
+					folderId: true,
+					tags: { include: { tag: true } },
+					updatedAt: true,
+				},
+			});
 		});
 
 		// updatedAt 由 Date 转 ISO 字符串，folderId 直接透传 null；tags 关联记录映射为扁平 {id,name,color} 数组
