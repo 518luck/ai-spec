@@ -149,6 +149,28 @@ export function TagSelectTrigger({
 
 	return (
 		<div className={cn("flex items-center gap-1.5", className)}>
+			{/* // 添加标签按钮：打开标签面板，搜索/勾选/新建；固定在最左侧，避免选中 chips 后整体布局推动 */}
+			<Popover open={open} onOpenChange={setOpen}>
+				<PopoverTrigger
+					render={
+						<Button
+							variant={triggerVariant}
+							size="icon-sm"
+							className="size-7 shrink-0 text-muted-foreground"
+							aria-label="选择标签"
+						/>
+					}
+				>
+					<Icons.tagAdd className="size-4" />
+				</PopoverTrigger>
+				<PopoverContent className="w-44 p-0" align={align}>
+					<TagCombobox
+						resourceType={resourceType}
+						value={controlledValue}
+						onChange={controlledOnChange}
+					/>
+				</PopoverContent>
+			</Popover>
 			{/* // 已选 chips 区：横向排列，溢出滚动；未选时不占位；左右两侧用 ScrollMask 弥散遮罩代替硬截断 */}
 			{chips.length > 0 && (
 				<div className="group relative min-w-0 max-w-md flex-1">
@@ -176,28 +198,6 @@ export function TagSelectTrigger({
 					/>
 				</div>
 			)}
-			{/* // 添加标签按钮：打开标签面板，搜索/勾选/新建 */}
-			<Popover open={open} onOpenChange={setOpen}>
-				<PopoverTrigger
-					render={
-						<Button
-							variant={triggerVariant}
-							size="icon-sm"
-							className="size-7 shrink-0 text-muted-foreground"
-							aria-label="选择标签"
-						/>
-					}
-				>
-					<Icons.tagAdd className="size-4" />
-				</PopoverTrigger>
-				<PopoverContent className="w-44 p-0" align={align}>
-					<TagCombobox
-						resourceType={resourceType}
-						value={controlledValue}
-						onChange={controlledOnChange}
-					/>
-				</PopoverContent>
-			</Popover>
 		</div>
 	);
 }
