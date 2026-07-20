@@ -127,7 +127,7 @@ function DropdownMenuSubContent({
 	align = "start",
 	alignOffset = -3,
 	side = "right",
-	sideOffset = 0,
+	sideOffset = 10,
 	className,
 	...props
 }: React.ComponentProps<typeof DropdownMenuContent>) {
