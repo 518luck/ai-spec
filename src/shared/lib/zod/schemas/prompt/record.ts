@@ -59,15 +59,17 @@ export const updateRecordDtoSchema = z
 // 更新收录入参类型
 export type UpdateRecordDto = z.infer<typeof updateRecordDtoSchema>;
 
-// 收录列表查询入参：文件夹筛选 + 标签筛选 + 搜索（q + filter）+ 收藏筛选 + 分页
+// 收录列表查询入参：文件夹筛选 + 标签筛选 + 搜索（q + filter）+ 收藏筛选 + 排序 + 分页
 // filter 为 base64 编码的 JSON，形如 {title:true,content:true}，决定 q 搜哪些字段
 // favorite=true 时忽略 folderId，跨文件夹返回当前用户收藏的收录
+// sort=mostCopied 时按 copy_count 倒序（常用），不传或 sort=recent 走 updated_at 倒序（默认）
 export const listRecordsDtoSchema = z.object({
 	folderId: z.string().optional(),
 	tagIds: z.string().optional(), // 逗号分隔的 tag id 列表，多选时 AND 关系
 	q: z.string().optional(),
 	filter: z.string().optional(),
 	favorite: z.coerce.boolean().optional(),
+	sort: z.enum(["recent", "mostCopied"]).optional(),
 	offset: z.coerce.number().int().min(0).optional(),
 });
 
