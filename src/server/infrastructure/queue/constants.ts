@@ -20,4 +20,5 @@ export const JOB_NAMES = {
 	avatarCleanup: "avatar-cleanup",
 	emailChange: "email-change",
 	emailChangedNotice: "email-changed-notice",
+	flushCopyCount: "flush-copy-count",
 } as const;

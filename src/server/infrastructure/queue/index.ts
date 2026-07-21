@@ -4,6 +4,7 @@ export {
 	enqueueEmailChange,
 	enqueueEmailChangedNotice,
 } from "./operations/email";
+export { enqueueFlushCopyCount } from "./operations/prompt";
 export {
 	enqueueAvatarSync,
 	enqueueDeleteUserAvatar,
