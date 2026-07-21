@@ -4,6 +4,7 @@ export {
 	favoriteRecord,
 	getRecord,
 	getRecords,
+	recordCopy,
 	unfavoriteRecord,
 	updateRecord,
 } from "./records";
