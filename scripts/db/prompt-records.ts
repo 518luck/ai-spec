@@ -271,7 +271,7 @@ const generateCuidLike = (): string => {
 const randomInt = (min: number, max: number): number =>
 	Math.floor(Math.random() * (max - min + 1)) + min;
 
-// 生成单条收录数据：使用次数取随机值以驱动常用排序，时间按索引递增避免集中
+// 生成单条收录数据：复制次数取随机值以驱动常用排序，时间按索引递增避免集中
 const generateRecord = (
 	index: number,
 ): {
@@ -281,7 +281,7 @@ const generateRecord = (
 	images: string[];
 	visibility: "private";
 	teamId: null;
-	useCount: number;
+	copyCount: number;
 	ownerId: string;
 	contributedBy: null;
 	lastEditorId: null;
@@ -302,7 +302,7 @@ const generateRecord = (
 		images: [],
 		visibility: "private",
 		teamId: null,
-		useCount: randomInt(0, 50),
+		copyCount: randomInt(0, 50),
 		ownerId: OWNER_ID,
 		contributedBy: null,
 		lastEditorId: null,
