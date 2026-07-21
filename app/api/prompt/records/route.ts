@@ -34,6 +34,7 @@ export const GET = withPersonal(
 			q,
 			filter: filterEncoded,
 			favorite,
+			sort,
 			offset = 0,
 		} = parsed.data;
 		const trimmedQuery = q?.trim() ?? "";
@@ -104,7 +105,11 @@ export const GET = withPersonal(
 			}
 		}
 		const whereSql = Prisma.sql`WHERE ${Prisma.join(whereConditions, " AND ")}`;
-		const orderBySql = Prisma.sql`ORDER BY updated_at DESC`;
+		// > 排序：mostCopied 走 copy_count DESC（copy_count 相同时回退到 updated_at）；不传或 recent 走 updated_at DESC
+		const orderBySql =
+			sort === "mostCopied"
+				? Prisma.sql`ORDER BY copy_count DESC, updated_at DESC`
+				: Prisma.sql`ORDER BY updated_at DESC`;
 
 		// 列表用原生查询在数据库层截取 preview；count 仍用 Prisma 安全计数
 		const [rows, total] = await Promise.all([
