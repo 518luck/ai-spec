@@ -3,7 +3,6 @@ import type { Job } from "bullmq";
 import { JOB_NAMES } from "../constants";
 import type { BackgroundJobData } from "../types";
 import { processEmailChange, processEmailChangedNotice } from "./email";
-import { processFlushCopyCount } from "./prompt";
 import { processDeleteUserAvatar, processSyncOauthAvatar } from "./user";
 
 // # 后台任务总路由：按 job.name 从注册表查处理器执行
@@ -15,7 +14,6 @@ const JOB_REGISTRY = {
 	[JOB_NAMES.avatarCleanup]: processDeleteUserAvatar,
 	[JOB_NAMES.emailChange]: processEmailChange,
 	[JOB_NAMES.emailChangedNotice]: processEmailChangedNotice,
-	[JOB_NAMES.flushCopyCount]: processFlushCopyCount,
 } as const;
 
 // 后台任务总路由：按 job.name 从注册表查处理器执行，未知类型抛错

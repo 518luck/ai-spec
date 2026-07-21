@@ -271,7 +271,7 @@ const generateCuidLike = (): string => {
 const randomInt = (min: number, max: number): number =>
 	Math.floor(Math.random() * (max - min + 1)) + min;
 
-// 生成单条收录数据：复制次数取随机值以驱动常用排序，时间按索引递增避免集中
+// 生成单条收录数据：copyCount + lastCopiedAt 共同驱动 HN 幂律热度排序
 const generateRecord = (
 	index: number,
 ): {
@@ -282,6 +282,7 @@ const generateRecord = (
 	visibility: "private";
 	teamId: null;
 	copyCount: number;
+	lastCopiedAt: Date | null;
 	ownerId: string;
 	contributedBy: null;
 	lastEditorId: null;
@@ -295,6 +296,11 @@ const generateRecord = (
 	const createdAt = new Date(baseDate.getTime() + index * 7 * 60 * 1000);
 	const updatedAt = new Date(createdAt.getTime() + randomInt(0, 60) * 1000);
 
+	// copyCount 为 0 时 lastCopiedAt 为 null（从未复制过）；否则随机分布在最近 30 天内
+	const copyCount = randomInt(0, 50);
+	const lastCopiedAt =
+		copyCount === 0 ? null : new Date(Date.now() - randomInt(0, 30 * 24 * 60) * 60 * 1000);
+
 	return {
 		id: generateCuidLike(),
 		name: `${template.name}-${serial}`,
@@ -302,7 +308,8 @@ const generateRecord = (
 		images: [],
 		visibility: "private",
 		teamId: null,
-		copyCount: randomInt(0, 50),
+		copyCount,
+		lastCopiedAt,
 		ownerId: OWNER_ID,
 		contributedBy: null,
 		lastEditorId: null,

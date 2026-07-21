@@ -15,7 +15,8 @@ model PromptRecord {
   visibility Visibility @default(private) // 可见性：private=私有，public=公开广场
   // 空间位置：null=个人空间（个人收录原件），非 null=团队空间（独立副本，与原件生命周期解耦）
   teamId     String?    @map("team_id")
-  copyCount  Int        @default(0) @map("copy_count") // 复制次数，驱动"常用"排序
+  copyCount     Int       @default(0) @map("copy_count") // 累计复制次数，用于热度排序的权重项
+  lastCopiedAt  DateTime? @map("last_copied_at") // 最近一次复制时间，驱动热度衰减（NULL 表示从未复制过）
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
@@ -47,7 +48,8 @@ model PromptRecord {
   @@index([teamId]) // 加速团队空间内查询
   @@index([visibility]) // 加速公开广场筛选
   @@index([updatedAt]) // 加速"最近"排序
-  @@index([copyCount]) // 加速"常用"排序
+  @@index([copyCount]) // 加速"累计复制次数"榜
+  @@index([lastCopiedAt]) // 加速"最近复制"查询
   @@index([folderId]) // 加速"文件夹内资源"查询
   @@schema("prompt")
 }

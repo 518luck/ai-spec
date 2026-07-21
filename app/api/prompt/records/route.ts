@@ -105,11 +105,12 @@ export const GET = withPersonal(
 			}
 		}
 		const whereSql = Prisma.sql`WHERE ${Prisma.join(whereConditions, " AND ")}`;
-		// > 排序：mostCopied 走 copy_count DESC（copy_count 相同时回退到 updated_at）；不传或 recent 走 updated_at DESC
-		// ! 必须以 id 作为最终 tie-breaker：前两列同值记录多时，PostgreSQL 排序不稳定会导致翻页重复（offset 分页的已知陷阱）
+		// > 排序：mostCopied 走 HN 幂律热度公式 copy_count / (age+2)^1.8，鼓励持续使用、老内容自然下沉
+		// ! age 基于 last_copied_at（参考 Stack Overflow QupdatedInHours 设计）：每次复制刷新 age，持续使用的 prompt 保持靠前
+		// ! NULLS LAST 把从未复制过的记录沉到底部；id 作为最终 tie-breaker 避免分页重复
 		const orderBySql =
 			sort === "mostCopied"
-				? Prisma.sql`ORDER BY copy_count DESC, updated_at DESC, id ASC`
+				? Prisma.sql`ORDER BY copy_count / POW(EXTRACT(EPOCH FROM (NOW() - last_copied_at)) / 3600 + 2, 1.8) DESC NULLS LAST, last_copied_at DESC NULLS LAST, id ASC`
 				: Prisma.sql`ORDER BY updated_at DESC, id ASC`;
 
 		// 列表用原生查询在数据库层截取 preview；count 仍用 Prisma 安全计数

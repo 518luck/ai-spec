@@ -6,14 +6,12 @@ export type {
 	EmailChangeData,
 	EmailChangedNoticeData,
 } from "./operations/email/types";
-export type { FlushCopyCountData } from "./operations/prompt/types";
 export type {
 	DeleteUserAvatarData,
 	SyncOauthAvatarData,
 } from "./operations/user/types";
 
 import type { EmailChangeData, EmailChangedNoticeData } from "./operations/email/types";
-import type { FlushCopyCountData } from "./operations/prompt/types";
 // 后台任务数据的联合类型，供 Worker 路由时类型收窄
 import type { DeleteUserAvatarData, SyncOauthAvatarData } from "./operations/user/types";
 
@@ -21,5 +19,4 @@ export type BackgroundJobData =
 	| SyncOauthAvatarData
 	| DeleteUserAvatarData
 	| EmailChangeData
-	| EmailChangedNoticeData
-	| FlushCopyCountData;
+	| EmailChangedNoticeData;
