@@ -3,7 +3,7 @@
 import copy from "copy-to-clipboard";
 import { type JSX, useState } from "react";
 import useSWRMutation from "swr/mutation";
-import { favoriteRecord, getRecord, unfavoriteRecord } from "@/entities/prompt";
+import { favoriteRecord, getRecord, recordCopy, unfavoriteRecord } from "@/entities/prompt";
 import { toast } from "@/features/toast";
 import { cn } from "@/shared/lib/utils";
 import type { FavoriteToggleVo } from "@/shared/lib/zod/schemas/prompt/record";
@@ -39,6 +39,8 @@ export function RecordCard({ id, name, preview, favorite }: RecordCardProps): JS
 			const { content } = await getRecord(id);
 			copy(content);
 			toast.success("已复制");
+			// 记一次使用：fire-and-forget，不 await，失败不影响复制体验
+			recordCopy(id);
 		} catch {
 			toast.error("复制失败");
 		} finally {

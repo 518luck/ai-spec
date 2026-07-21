@@ -29,16 +29,17 @@ export function PersonalRecordsPage({
 	q,
 	filter,
 	favorite,
+	sort,
 }: ListRecordsDto): JSX.Element {
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
 
-	// SWR Infinite key：folderId/tagIds/q/filter/favorite 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
+	// SWR Infinite key：folderId/tagIds/q/filter/favorite/sort 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: RecordListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["records", folderId, tagIds, q, filter, favorite, offset] as const;
+		return ["records", folderId, tagIds, q, filter, favorite, sort, offset] as const;
 	};
 
 	const {
@@ -47,8 +48,8 @@ export function PersonalRecordsPage({
 		isValidating,
 		setSize,
 		mutate: mutateRecords,
-	} = useSWRInfinite(getKey, async ([, folderId, tagIds, q, filter, favorite, offset]) =>
-		getRecords({ folderId, tagIds, q, filter, favorite, offset }),
+	} = useSWRInfinite(getKey, async ([, folderId, tagIds, q, filter, favorite, sort, offset]) =>
+		getRecords({ folderId, tagIds, q, filter, favorite, sort, offset }),
 	);
 
 	const records = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);

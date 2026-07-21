@@ -50,8 +50,10 @@ export function FilterCombobox({
 
 	// 当前是否处于收藏视图（URL ?favorite=true）
 	const favoriteActive = searchParams?.get("favorite") === "true";
+	// 当前是否处于「常用」排序（URL ?sort=mostCopied）
+	const mostCopiedActive = searchParams?.get("sort") === "mostCopied";
 
-	// 切换收藏筛选：开启时写 favorite=true 并清掉 folderId（互斥），关闭时仅删 favorite
+	// 切换收藏筛选：开启时写 favorite=true 并清掉 folderId 和 sort（互斥），关闭时仅删 favorite
 	const handleToggleFavorite = useCallback((): void => {
 		const params = new URLSearchParams(searchParams?.toString() ?? "");
 		if (favoriteActive) {
@@ -59,9 +61,21 @@ export function FilterCombobox({
 		} else {
 			params.set("favorite", "true");
 			params.delete("folderId");
+			params.delete("sort");
 		}
 		router.replace(`?${params.toString()}`, { scroll: false });
 	}, [favoriteActive, searchParams, router]);
+
+	// 切换「常用」排序：开启时写 sort=mostCopied，关闭时仅删 sort；不影响 folderId/favorite，后端支持组合筛选
+	const handleToggleMostCopied = useCallback((): void => {
+		const params = new URLSearchParams(searchParams?.toString() ?? "");
+		if (mostCopiedActive) {
+			params.delete("sort");
+		} else {
+			params.set("sort", "mostCopied");
+		}
+		router.replace(`?${params.toString()}`, { scroll: false });
+	}, [mostCopiedActive, searchParams, router]);
 
 	return (
 		<div className={cn("flex items-center gap-2", className)}>
@@ -106,6 +120,21 @@ export function FilterCombobox({
 							className={cn(
 								"ml-auto size-4 shrink-0",
 								favoriteActive ? "opacity-100" : "opacity-0",
+							)}
+						/>
+					</DropdownMenuItem>
+					{/* // 常用切换：按 copy_count 排序，与「收藏」「文件夹」互斥 */}
+					<DropdownMenuItem
+						closeOnClick={false}
+						onClick={handleToggleMostCopied}
+						className="mt-1 cursor-pointer gap-2"
+					>
+						<Icons.trending className="size-4 text-foreground" />
+						<span>常用</span>
+						<Icons.check
+							className={cn(
+								"ml-auto size-4 shrink-0",
+								mostCopiedActive ? "opacity-100" : "opacity-0",
 							)}
 						/>
 					</DropdownMenuItem>
