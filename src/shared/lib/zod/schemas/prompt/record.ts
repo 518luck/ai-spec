@@ -45,6 +45,8 @@ export const updateRecordDtoSchema = z
 		folderId: recordFolderIdSchema.optional(),
 		// 标签传 id 数组；undefined 表示不更新，空数组表示清空标签
 		tags: z.array(z.string()).optional(),
+		// 版本说明，类似 commit message
+		message: z.string().max(200, { error: "版本说明长度不能超过 200 个字符" }).optional(),
 	})
 	.refine(
 		(data) =>
@@ -134,3 +136,73 @@ export const recordListVoSchema = z.object({
 
 // 收录列表响应类型
 export type RecordListVo = z.infer<typeof recordListVoSchema>;
+
+// @ 版本历史相关 schema
+
+// @ 拼装件
+// 版本编辑者信息
+export const versionEditorSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	image: z.string().nullable(),
+});
+
+// @ 入参
+// 版本历史列表查询入参
+export const listVersionsDtoSchema = z.object({
+	offset: z.coerce.number().int().min(0).optional(),
+	limit: z.coerce.number().int().min(1).max(50).optional(),
+});
+
+// 版本历史列表查询入参类型
+export type ListVersionsDto = z.infer<typeof listVersionsDtoSchema>;
+
+// @ 出参
+// 版本列表项
+export const versionVoSchema = z.object({
+	id: z.string(),
+	versionNumber: z.number(),
+	message: z.string().nullable(),
+	isSnapshot: z.boolean(),
+	createdAt: z.iso.datetime(),
+	editor: versionEditorSchema,
+});
+
+// 版本列表项类型
+export type VersionVo = z.infer<typeof versionVoSchema>;
+
+// 版本历史列表响应（分页元信息 + 数据）
+export const versionListVoSchema = z.object({
+	data: z.array(versionVoSchema),
+	total: z.number(),
+	hasMore: z.boolean(),
+	nextOffset: z.number().int().min(0).optional(),
+});
+
+// 版本历史列表响应类型
+export type VersionListVo = z.infer<typeof versionListVoSchema>;
+
+// 版本详情响应
+export const versionDetailVoSchema = z.object({
+	id: z.string(),
+	versionNumber: z.number(),
+	message: z.string().nullable(),
+	isSnapshot: z.boolean(),
+	content: z.string(),
+	createdAt: z.iso.datetime(),
+	editor: versionEditorSchema,
+});
+
+// 版本详情响应类型
+export type VersionDetailVo = z.infer<typeof versionDetailVoSchema>;
+
+// 版本回滚响应
+export const rollbackVersionVoSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	content: z.string(),
+	updatedAt: z.iso.datetime(),
+});
+
+// 版本回滚响应类型
+export type RollbackVersionVo = z.infer<typeof rollbackVersionVoSchema>;

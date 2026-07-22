@@ -9,14 +9,14 @@ model PromptRecord {
   id String @id @default(cuid()) // 收录主键
 
   // ② 业务字段
-  name       String // 名称
-  content    String     @db.Text // 提示词正文
-  images     String[]   @default([]) // 图片 URL 列表，预留扩展
-  visibility Visibility @default(private) // 可见性：private=私有，public=公开广场
+  name         String // 名称
+  content      String     @db.Text // 提示词正文
+  images       String[]   @default([]) // 图片 URL 列表，预留扩展
+  visibility   Visibility @default(private) // 可见性：private=私有，public=公开广场
   // 空间位置：null=个人空间（个人收录原件），非 null=团队空间（独立副本，与原件生命周期解耦）
-  teamId     String?    @map("team_id")
-  copyCount     Int       @default(0) @map("copy_count") // 累计复制次数，用于热度排序的权重项
-  lastCopiedAt  DateTime? @map("last_copied_at") // 最近一次复制时间，驱动热度衰减（NULL 表示从未复制过）
+  teamId       String?    @map("team_id")
+  copyCount    Int        @default(0) @map("copy_count") // 累计复制次数，用于热度排序的权重项
+  lastCopiedAt DateTime?  @map("last_copied_at") // 最近一次复制时间，驱动热度衰减（NULL 表示从未复制过）
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
@@ -54,30 +54,33 @@ model PromptRecord {
   @@schema("prompt")
 }
 
-// 提示词版本快照，线性版本历史，每次编辑前存一份快照
+// 提示词版本记录，支持增量 diff + 周期性快照锚点
 model PromptRecordVersion {
   // ① 主键
-  id String @id @default(cuid()) // 版本快照主键
+  id String @id @default(cuid()) // 版本记录主键
 
   // ② 业务字段
-  name          String // 该版本的名称快照
-  content       String  @db.Text // 该版本的内容快照
   versionNumber Int     @map("version_number") // 版本序号，递增
   message       String? // 版本说明，类似 commit message
+  isSnapshot    Boolean @default(false) @map("is_snapshot") // 是否为快照锚点（每 10 版本存一次完整快照）
 
-  // ③ 时间戳
+  // ③ 内容存储（二选一：快照存完整内容，增量存 diff）
+  snapshot String? @db.Text // 完整快照（isSnapshot=true 时有值）
+  diff     String? @db.Text // 行级 diff JSON（isSnapshot=false 时有值）
+
+  // ④ 时间戳
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
 
-  // ④ 外键列
+  // ⑤ 外键列
   recordId String @map("record_id") // 所属收录记录 ID
   editorId String @map("editor_id") // 编辑人 ID
 
-  // ⑤ 关联关系
+  // ⑥ 关联关系
   record PromptRecord @relation(fields: [recordId], references: [id], onDelete: Cascade) // 归属的收录记录（收录删除→级联删除所有版本）
   editor User         @relation("VersionEditor", fields: [editorId], references: [id], onDelete: Cascade) // 编辑人（用户删除→级联删除其创建的版本）
 
-  // ⑥ 索引
-  @@index([recordId]) // 加速"查询某收录的全部版本历史"
+  // ⑦ 索引
+  @@index([recordId, versionNumber]) // 加速"查询某收录的版本历史"
   @@schema("prompt")
 }
 

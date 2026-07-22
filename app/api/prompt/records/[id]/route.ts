@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
+import { calculateDiff, serializeDiff } from "@/shared/lib/diff";
 import {
 	createRecordVoSchema,
 	recordContentVoSchema,
@@ -50,7 +51,7 @@ export const GET = withPersonal(
 	{ permissions: ["promptRecord.read"] },
 );
 
-// > 部分更新收录：id 走路径，body 字段全部可选；where 含 ownerId 防止越权修改他人收录。不写版本快照，后续接入版本管理时再补
+// > 部分更新收录：id 走路径，body 字段全部可选；where 含 ownerId 防止越权修改他人收录。保存时自动创建版本记录
 export const PATCH = withPersonal(
 	async ({ req, ctx, session }) => {
 		const { id: rawId } = await ctx.params;
@@ -60,7 +61,17 @@ export const PATCH = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { name, content, images, folderId, tags } = parsed.data;
+		const { name, content, images, folderId, tags, message } = parsed.data;
+
+		// > 获取当前收录内容，用于计算 diff
+		const currentRecord = await prisma.promptRecord.findUnique({
+			where: { id, ownerId: session.user.id },
+			select: { name: true, content: true },
+		});
+
+		if (!currentRecord) {
+			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
+		}
 
 		// 构建部分更新数据：只更新传入的字段
 		const data: Record<string, unknown> = {};
@@ -76,12 +87,50 @@ export const PATCH = withPersonal(
 			data.tags = { create: tags.map((tagId) => ({ tagId })) };
 		}
 
-		// > 事务保证原子性：deleteMany + update（含 tags.create）要么全成要么全败
+		// > 计算新旧内容的 diff
+		const newContent = content ?? currentRecord.content;
+		const hasContentChange = name !== undefined || content !== undefined;
+
+		// > 事务保证原子性：deleteMany + update（含 tags.create）+ 版本记录创建要么全成要么全败
 		// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
 		const updated = await prisma.$transaction(async (tx) => {
 			if (tags !== undefined) {
 				await tx.promptRecordTag.deleteMany({ where: { recordId: id } });
 			}
+
+			// > 如果有内容变更，创建版本记录
+			if (hasContentChange) {
+				// 获取最新版本号
+				const latestVersion = await tx.promptRecordVersion.findFirst({
+					where: { recordId: id },
+					orderBy: { versionNumber: "desc" },
+					select: { versionNumber: true },
+				});
+
+				const nextVersionNumber = (latestVersion?.versionNumber ?? 0) + 1;
+				// 每 10 个版本存一次快照锚点；v1 强制为快照，保证任意版本都能向前找到基准
+				const isSnapshot = nextVersionNumber === 1 || nextVersionNumber % 10 === 0;
+
+				// 计算 diff
+				const diff = calculateDiff({
+					oldText: currentRecord.content,
+					newText: newContent,
+				});
+
+				// 创建版本记录
+				await tx.promptRecordVersion.create({
+					data: {
+						recordId: id,
+						editorId: session.user.id,
+						versionNumber: nextVersionNumber,
+						message: message ?? null,
+						isSnapshot,
+						snapshot: isSnapshot ? newContent : null,
+						diff: isSnapshot ? null : serializeDiff(diff),
+					},
+				});
+			}
+
 			return tx.promptRecord.update({
 				where: { id, ownerId: session.user.id },
 				data,
