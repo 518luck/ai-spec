@@ -21,6 +21,7 @@ import {
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 
 type FilterComboboxProps = {
@@ -123,7 +124,7 @@ export function FilterCombobox({
 							)}
 						/>
 					</DropdownMenuItem>
-					{/* // 常用切换：按 copy_count 排序，与「收藏」「文件夹」互斥 */}
+					{/* // 常用切换：按 HN 幂律热度公式排序，持续使用的 prompt 靠前、长期未用的下沉 */}
 					<DropdownMenuItem
 						closeOnClick={false}
 						onClick={handleToggleMostCopied}
@@ -131,6 +132,8 @@ export function FilterCombobox({
 					>
 						<Icons.trending className="size-4 text-foreground" />
 						<span>常用</span>
+						{/* // 帮助气泡：解释"常用"的排序原理，hover 显示，不会触发菜单项点击 */}
+						<HelpTooltip content="按近期热度排序：复制越多越靠前，长期没用会自然下沉。" />
 						<Icons.check
 							className={cn(
 								"ml-auto size-4 shrink-0",

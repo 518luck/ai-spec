@@ -21,7 +21,11 @@ export function HelpTooltip({ content, alignWithText = false }: HelpTooltipProps
 			<TooltipTrigger
 				render={
 					<Icon
-						className={cn("size-4 text-muted-foreground", alignWithText && "-translate-y-px")}
+						// !important：强制覆盖父级 DropdownMenuItem 的 [&_svg]:pointer-events-none，让 hover 能触发
+						className={cn(
+							"pointer-events-auto! size-4 text-muted-foreground",
+							alignWithText && "-translate-y-px",
+						)}
 					/>
 				}
 			/>
