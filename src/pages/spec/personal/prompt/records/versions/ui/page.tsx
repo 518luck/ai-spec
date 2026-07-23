@@ -16,6 +16,7 @@ export function RecordVersionsPage({ recordId }: RecordVersionsPageProps): JSX.E
 	// > 注入 prompt records 的版本数据源与行为给通用版本页
 	const handlers = useMemo<VersionPageHandlers>(
 		() => ({
+			resourceId: recordId,
 			fetchVersions: async () => {
 				const result = await getVersions({ recordId });
 				return result.data;

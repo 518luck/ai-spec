@@ -1,15 +1,18 @@
 import "dotenv/config";
 
-import { randomBytes } from "node:crypto";
 import prisma from "@/shared/db";
+import { calculateDiff, serializeDiff } from "@/shared/lib/diff";
 
 // 模拟当前用户（luck2 zhang / zhangluck598@gmail.com）在数据库中的 ID
 const OWNER_ID = "cmrjdu92f0001099de7h2zu5p";
 
-// 生成目标数量
-const RECORD_COUNT = 250;
+// 普通收录生成数量
+const NORMAL_RECORD_COUNT = 150;
 
-// 收录模板，按业务主题分组，复用草稿侧的正式段落内容以保持风格一致
+// 超多版本测试的版本数（跨过 v1/v10/v20 三个快照锚点）
+const MULTI_VERSION_COUNT = 25;
+
+// @ 普通收录模板，按业务主题分组，复用草稿侧的正式段落内容以保持风格一致
 const recordTemplates = [
 	{
 		name: "API 接口规范",
@@ -253,29 +256,15 @@ const recordTemplates = [
 	},
 ];
 
-// 自增计数器，用于保证 ID 片段唯一
-let idCounter = 0;
-
-// 生成类似 CUID 的 25 位标识符，格式为 c + 8位时间 + 4位计数 + 12位随机
-const generateCuidLike = (): string => {
-	const timestamp = Date.now().toString(36).slice(-8).padStart(8, "m");
-	const counter = (idCounter++).toString(36).padStart(4, "0");
-	const randomPart = Array.from(randomBytes(9))
-		.map((b) => b.toString(36).padStart(2, "0"))
-		.join("")
-		.slice(0, 12);
-	return `c${timestamp}${counter}${randomPart}`;
-};
-
 // 返回 [min, max] 闭区间内的随机整数
 const randomInt = (min: number, max: number): number =>
 	Math.floor(Math.random() * (max - min + 1)) + min;
 
-// 生成单条收录数据：copyCount + lastCopiedAt 共同驱动 HN 幂律热度排序
+// > 生成单条普通收录数据：copyCount + lastCopiedAt 共同驱动 HN 幅律热度排序
+// id 不在脚本侧生成，由数据库 schema 的 @default(cuid()) 保证唯一，避免自制 id 发生碰撞
 const generateRecord = (
 	index: number,
 ): {
-	id: string;
 	name: string;
 	content: string;
 	images: string[];
@@ -302,7 +291,6 @@ const generateRecord = (
 		copyCount === 0 ? null : new Date(Date.now() - randomInt(0, 30 * 24 * 60) * 60 * 1000);
 
 	return {
-		id: generateCuidLike(),
 		name: `${template.name}-${serial}`,
 		content: template.content,
 		images: [],
@@ -319,19 +307,345 @@ const generateRecord = (
 	};
 };
 
-// 主流程：先清空当前用户个人空间内的全部收录，再批量写入固定数量的新收录
+// @ 特殊测试收录数据构造
+
+// > 超长名称：正好 64 字符（name schema 上限），测试卡片/标题栏截断
+const LONG_NAME =
+	"前端工程化最佳实践与性能优化完全指南涵盖模块化构建打包代码分割懒加载按需加载".slice(0, 64);
+
+// > 超大文本：约 5 万字符，重复 Markdown 段落，测试渲染性能与复制全文
+const buildLargeContent = (): string => {
+	const section = [
+		"## 章节标题",
+		"",
+		"这是一段用于压力测试的正文内容。包含较长的描述性文字，",
+		"目的是测试前端 Markdown 渲染组件在大文本场景下的性能表现，",
+		"以及复制全文功能在超长内容时的响应速度。",
+		"",
+		"- 列表项一：核心模块加载策略",
+		"- 列表项二：按需引入与 Tree Shaking",
+		"- 列表项三：运行时性能监控指标",
+		"",
+		"> 引用块：性能优化的核心在于测量而非猜测，先建立基线再逐项优化。",
+		"",
+		"| 指标 | 目标值 | 当前值 | 状态 |",
+		"| --- | --- | --- | --- |",
+		"| 首屏 | 1.5s | 1.2s | ✅ |",
+		"| 交互 | 200ms | 180ms | ✅ |",
+		"| 包体 | 200KB | 240KB | ❌ |",
+		"",
+		"",
+	].join("\n");
+	// 约 500 字/段，重复 100 次约 5 万字符
+	return Array.from({ length: 100 }, (_, i) => `### 第 ${i + 1} 段\n${section}`).join("\n");
+};
+
+// > 代码块富文本：多语言代码块 + 行内代码 + 嵌套列表，测试语法高亮
+const CODE_RICH_CONTENT = [
+	"# 代码块渲染测试",
+	"",
+	"本文档包含多种语言的代码块，用于测试 `react-markdown` + `rehype-highlight` 的语法高亮。",
+	"",
+	"## JavaScript",
+	"",
+	"```javascript",
+	"// 异步获取用户数据并处理错误",
+	"async function fetchUser(id) {",
+	"  try {",
+	"    const res = await fetch(`/api/users/${id}`);",
+	"    if (!res.ok) throw new Error(`HTTP ${res.status}`);",
+	"    const data = await res.json();",
+	"    return data;",
+	"  } catch (err) {",
+	"    console.error('获取用户失败:', err.message);",
+	"    return null;",
+	"  }",
+	"}",
+	"```",
+	"",
+	"## Python",
+	"",
+	"```python",
+	"# 列表推导式与生成器表达式对比",
+	"def process_items(items):",
+	"    # 列表推导式：立即生成全部",
+	"    squares = [x ** 2 for x in items if x > 0]",
+	"    # 生成器表达式：惰性求值",
+	"    squares_gen = (x ** 2 for x in items if x > 0)",
+	"    return squares, list(squares_gen)",
+	"```",
+	"",
+	"## SQL",
+	"",
+	"```sql",
+	"-- 查询每个分类下销量前三的商品",
+	"SELECT category_id, product_name, sales_count",
+	"FROM (",
+	"    SELECT category_id, product_name, sales_count,",
+	"           ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY sales_count DESC) AS rn",
+	"    FROM products",
+	") ranked",
+	"WHERE rn <= 3",
+	"ORDER BY category_id, rn;",
+	"```",
+	"",
+	"## Bash",
+	"",
+	"```bash",
+	"#!/bin/bash",
+	"# 批量重命名当前目录下的 .jpeg 文件为 .jpg",
+	"for file in *.jpeg; do",
+	'    if [ -f "$file" ]; then',
+	'        mv "$file" "${file%.jpeg}.jpg"',
+	"    fi",
+	"done",
+	"echo 'Done'",
+	"```",
+	"",
+	"## JSON",
+	"",
+	"```json",
+	"{",
+	'  "name": "ai-spec",',
+	'  "version": "1.0.0",',
+	'  "scripts": {',
+	'    "dev": "next dev",',
+	'    "build": "next build"',
+	"  },",
+	'  "dependencies": {',
+	'    "next": "^15.0.0",',
+	'    "react": "^19.0.0"',
+	"  }",
+	"}",
+	"```",
+	"",
+	"## 行内代码与嵌套列表",
+	"",
+	"使用 `useEffect` 时注意依赖数组，避免无限重渲染。常见场景：",
+	"",
+	"1. 基础用法",
+	"   - 依赖项为空数组 `[]`：仅挂载时执行一次",
+	"   - 依赖项含状态：状态变化时重新执行",
+	"2. 清理函数",
+	"   - 返回的函数在组件卸载或下次 effect 执行前调用",
+	"   - 常用于取消订阅、清除定时器",
+	"",
+	"更多细节参考 [React 官方文档](https://react.dev)。",
+].join("\n");
+
+// > 超多版本收录的基础内容：v1 起始正文
+const MULTI_VERSION_BASE_CONTENT = [
+	"# 版本历史压力测试",
+	"",
+	"本收录用于测试版本列表的滚动加载、diff 重建和快照锚点机制。",
+	"",
+	"## 初始内容（v1）",
+	"",
+	"这是第一版的内容，作为后续版本 diff 的基准。",
+	"- 项目背景说明",
+	"- 核心功能列表",
+	"- 验收标准定义",
+].join("\n");
+
+// > 版本内容微调：模拟真实编辑，每次追加一行修订记录，制造可追踪的 diff
+const mutateContent = (content: string, version: number): string => {
+	const edits = [
+		`- [v${version}] 补充了异常处理流程`,
+		`- [v${version}] 新增性能基准数据`,
+		`- [v${version}] 修正了术语表述`,
+		`- [v${version}] 增加了架构示意图说明`,
+		`- [v${version}] 完善了安全注意事项`,
+	];
+	return `${content}\n${edits[version % edits.length]}`;
+};
+
+// > 构造超多版本收录：v1 强制快照，之后每 10 版存快照，其余存增量 diff
+// 直接复用项目的 calculateDiff/serializeDiff，保证与真实保存接口生成的 diff 格式一致
+const buildMultiVersionData = (ownerId: string, baseTimestamp: Date) => {
+	let currentContent = MULTI_VERSION_BASE_CONTENT;
+	const versions: {
+		editorId: string;
+		versionNumber: number;
+		message: string;
+		isSnapshot: boolean;
+		snapshot: string | null;
+		diff: string | null;
+		createdAt: Date;
+	}[] = [];
+
+	for (let v = 1; v <= MULTI_VERSION_COUNT; v++) {
+		// v1 强制快照；之后每 10 版（v10、v20）存一次完整快照锚点
+		const isSnapshot = v === 1 || v % 10 === 0;
+		const prevContent = currentContent;
+
+		// v>=2 时微调内容，制造与前版本的差异
+		if (v >= 2) {
+			currentContent = mutateContent(currentContent, v);
+		}
+
+		versions.push({
+			editorId: ownerId,
+			versionNumber: v,
+			message: `第 ${v} 版${isSnapshot ? "（快照锚点）" : ""}`,
+			isSnapshot,
+			snapshot: isSnapshot ? currentContent : null,
+			// 增量版用项目 diff 工具计算与上一版的差异
+			diff: isSnapshot
+				? null
+				: serializeDiff(calculateDiff({ oldText: prevContent, newText: currentContent })),
+			createdAt: new Date(baseTimestamp.getTime() + v * 60 * 1000),
+		});
+	}
+
+	return { content: currentContent, versions };
+};
+
+// @ 特殊测试收录定义：前置 4 条边界用例，各自带 v1 版本记录
+const buildSpecialRecords = (ownerId: string) => {
+	const baseDate = new Date(2026, 6, 1, 9, 0, 0, 0);
+	const largeContent = buildLargeContent();
+	const multiVersion = buildMultiVersionData(ownerId, baseDate);
+
+	return [
+		// ① 超长名称：64 字符极限，测试卡片与标题栏截断
+		{
+			record: {
+				name: LONG_NAME,
+				content: "测试超长名称在列表卡片、详情标题栏和版本页的截断表现。",
+				createdAt: new Date(baseDate.getTime() + 0 * 60 * 1000),
+			},
+			versionContent: "测试超长名称在列表卡片、详情标题栏和版本页的截断表现。",
+			versionMessage: "初始版本",
+		},
+		// ② 超大文本：约 5 万字符，测试 Markdown 渲染性能与复制全文
+		{
+			record: {
+				name: "超大文本压力测试",
+				content: largeContent,
+				createdAt: new Date(baseDate.getTime() + 1 * 60 * 1000),
+			},
+			versionContent: largeContent,
+			versionMessage: "初始版本",
+		},
+		// ③ 代码块富文本：多语言代码块 + 行内代码 + 嵌套列表，测试语法高亮
+		{
+			record: {
+				name: "代码块渲染测试",
+				content: CODE_RICH_CONTENT,
+				createdAt: new Date(baseDate.getTime() + 2 * 60 * 1000),
+			},
+			versionContent: CODE_RICH_CONTENT,
+			versionMessage: "初始版本",
+		},
+		// ④ 超多版本：25 版本，v1/v10/v20 为快照，其余增量 diff
+		{
+			record: {
+				name: "版本历史压力测试",
+				content: multiVersion.content,
+				createdAt: new Date(baseDate.getTime() + 3 * 60 * 1000),
+			},
+			versionContent: null,
+			versionMessage: null,
+			customVersions: multiVersion.versions,
+		},
+	];
+};
+
+// > 写入特殊测试收录：逐条 create，嵌套 versions + favoritedBy 关联创建
+// 同时把每条特殊收录加入个人收藏，方便在收藏列表直接定位
+const writeSpecialRecords = async (
+	ownerId: string,
+): Promise<{ versions: number; favorites: number }> => {
+	const specials = buildSpecialRecords(ownerId);
+	let totalVersions = 0;
+
+	for (const item of specials) {
+		// customVersions 存在时用自定义版本数组（超多版本用例），否则建单个 v1 快照
+		const versions = item.customVersions ?? [
+			{
+				editorId: ownerId,
+				versionNumber: 1,
+				message: item.versionMessage,
+				isSnapshot: true,
+				snapshot: item.versionContent,
+				diff: null,
+				createdAt: new Date(item.record.createdAt.getTime() + 1000),
+			},
+		];
+
+		await prisma.promptRecord.create({
+			data: {
+				name: item.record.name,
+				content: item.record.content,
+				images: [],
+				visibility: "private",
+				teamId: null,
+				copyCount: randomInt(0, 50),
+				lastCopiedAt: null,
+				ownerId,
+				contributedBy: null,
+				lastEditorId: null,
+				folderId: null,
+				createdAt: item.record.createdAt,
+				updatedAt: item.record.createdAt,
+				versions: { create: versions },
+				// 个人空间收藏：teamMemberId 为 null 表示纯个人身份收藏
+				favoritedBy: {
+					create: { userId: ownerId, teamMemberId: null },
+				},
+			},
+		});
+		totalVersions += versions.length;
+	}
+
+	return { versions: totalVersions, favorites: specials.length };
+};
+
+// > 写入普通收录：先 createMany 写收录，再查回数据库生成的 id，批量补建各自的 v1 快照版本
+const writeNormalRecords = async (ownerId: string): Promise<number> => {
+	const records = Array.from({ length: NORMAL_RECORD_COUNT }, (_, index) => generateRecord(index));
+
+	// 1. 批量写入收录主记录（id 由数据库 @default(cuid()) 生成，避免脚本侧自制 id 碰撞）
+	await prisma.promptRecord.createMany({ data: records });
+
+	// 2. 查回刚写入的收录（按创建时间正序，与生成顺序一致），用真实 id 建 v1 快照版本
+	const created = await prisma.promptRecord.findMany({
+		where: { ownerId, createdAt: { gte: records[0].createdAt } },
+		orderBy: { createdAt: "asc" },
+		select: { id: true, content: true, createdAt: true },
+	});
+
+	const versionRecords = created.map((record) => ({
+		// 版本记录 id 同样交由数据库生成，不传
+		recordId: record.id,
+		editorId: ownerId,
+		versionNumber: 1,
+		message: "初始版本",
+		isSnapshot: true,
+		snapshot: record.content,
+		diff: null,
+		createdAt: new Date(record.createdAt.getTime() + 1000),
+	}));
+
+	await prisma.promptRecordVersion.createMany({ data: versionRecords });
+	return versionRecords.length;
+};
+
+// 主流程：先清空当前用户个人空间内的全部收录（级联删版本和收藏），再依次写入特殊数据与普通数据
 const main = async (): Promise<void> => {
-	const deleted = await prisma.promptRecord.deleteMany({
-		where: { ownerId: OWNER_ID },
-	});
+	const deleted = await prisma.promptRecord.deleteMany({ where: { ownerId: OWNER_ID } });
 
-	const records = Array.from({ length: RECORD_COUNT }, (_, index) => generateRecord(index));
+	const special = await writeSpecialRecords(OWNER_ID);
+	const normalVersions = await writeNormalRecords(OWNER_ID);
 
-	const result = await prisma.promptRecord.createMany({
-		data: records,
-	});
-
-	console.log(`已清理 ${deleted.count} 条旧收录，成功写入 ${result.count} 条新收录`);
+	console.log(`已清理 ${deleted.count} 条旧收录`);
+	console.log(
+		`✓ 特殊测试收录 4 条（含 25 版本的版本历史压力测试），${special.versions} 个版本记录，${special.favorites} 条收藏`,
+	);
+	console.log(`✓ 普通收录 ${NORMAL_RECORD_COUNT} 条（各含 v1 快照），${normalVersions} 个版本记录`);
+	console.log(
+		`共写入 ${4 + NORMAL_RECORD_COUNT} 条收录，${special.versions + normalVersions} 个版本记录`,
+	);
 };
 
 main()

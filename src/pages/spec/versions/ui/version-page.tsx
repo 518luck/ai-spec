@@ -26,6 +26,8 @@ export interface VersionListItem {
 
 // @ 注入给通用版本页的数据源与行为
 export interface VersionPageHandlers {
+	// 当前资源 id（如 recordId）：版本数据归属的资源，用于区分不同收录的 SWR 缓存
+	resourceId: string;
 	// 拉版本列表（按时间倒序，第一条最新）
 	fetchVersions: () => Promise<VersionListItem[]>;
 	// 拉指定版本的标题与内容全文（标题用于内容区上方独立渲染，避免依赖 content 首行 markdown 语法）
@@ -54,27 +56,32 @@ function MarkdownView({ children }: { children: string }): JSX.Element {
 }
 
 export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JSX.Element {
+	const { resourceId } = handlers;
 	const router = useRouter();
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	// 视图模式：普通内容或 diff 比较
 	const [viewMode, setViewMode] = useState<ViewMode>("content");
 
-	// > 版本列表 —— 客户端 SWR 拉取
-	const { data: versions, isLoading: listLoading } = useSWR("versions", handlers.fetchVersions, {
-		// 首次加载完自动选中最新版
-		onSuccess: (data) => {
-			if (!selectedId && data.length > 0) {
-				setSelectedId(data[0].id);
-			}
+	// > 版本列表 —— 客户端 SWR 拉取（key 带 resourceId 隔离不同收录的缓存）
+	const { data: versions, isLoading: listLoading } = useSWR(
+		["versions", resourceId],
+		handlers.fetchVersions,
+		{
+			// 首次加载完自动选中最新版
+			onSuccess: (data) => {
+				if (!selectedId && data.length > 0) {
+					setSelectedId(data[0].id);
+				}
+			},
 		},
-	});
+	);
 
 	// > 最新版本 id（列表第一条）
 	const latestId = versions?.[0]?.id ?? null;
 
 	// > 选中版本的标题与内容（客户端异步拉取）
 	const { data: versionData, isLoading: contentLoading } = useSWR(
-		selectedId ? ["version-content", selectedId] : null,
+		selectedId ? ["version-content", resourceId, selectedId] : null,
 		() =>
 			selectedId
 				? handlers.fetchVersionContent(selectedId)
@@ -87,7 +94,7 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 
 	// > 最新版本内容（用于 diff 比较，只取 content 部分）
 	const { data: latestVersionData } = useSWR(
-		latestId ? ["version-content", latestId] : null,
+		latestId ? ["version-content", resourceId, latestId] : null,
 		() =>
 			latestId
 				? handlers.fetchVersionContent(latestId)
@@ -101,7 +108,10 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 		if (viewMode !== "diff" || !content || !latestContent) {
 			return null;
 		}
-		return diffLines(latestContent, content);
+		// ! 归一化尾随换行：diffLines 在末行无换行符时会把边界行同时计入删除/新增块，
+		// 导致该行在渲染时重复显示。统一补尾换行后按行干净比较。
+		const normalize = (text: string) => (text.endsWith("\n") ? text : `${text}\n`);
+		return diffLines(normalize(latestContent), normalize(content));
 	}, [viewMode, content, latestContent]);
 
 	// > 恢复此记录：跳转到 handler 给出的 URL

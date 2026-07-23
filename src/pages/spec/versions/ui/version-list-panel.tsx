@@ -2,6 +2,7 @@
 
 import dayjs from "dayjs";
 import type { JSX } from "react";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Skeleton } from "@/shared/ui/skeleton";
 import type { VersionListItem } from "./version-page";
 
@@ -51,12 +52,16 @@ export function VersionListPanel({
 	};
 
 	return (
-		<div className="flex h-screen w-52 shrink-0 flex-col overflow-hidden border-l shadow-lg">
+		<div className="flex w-52 shrink-0 flex-col overflow-hidden border-l shadow-lg">
 			{/* // @ 标题：固定在顶部不随列表滚动 */}
-			<div className="flex items-center px-3 py-2 text-muted-foreground text-xs">全部版本</div>
-			<div className="flex-1 overflow-y-auto p-2">
-				<div className="space-y-1">{renderContent()}</div>
+			<div className="flex shrink-0 items-center px-3 py-2 text-muted-foreground text-xs">
+				全部版本
 			</div>
+			{/* ScrollArea 的 Viewport 靠 max-h-[inherit] 撑高度：直接给定 max-height，
+			   使其继承到明确高度上限，父级 fixed 容器距顶 6rem，故列表区最高 calc(100vh - 6rem - 标题高) */}
+			<ScrollArea className="max-h-[calc(100vh-7.5rem)]">
+				<div className="space-y-1 p-2">{renderContent()}</div>
+			</ScrollArea>
 		</div>
 	);
 }
