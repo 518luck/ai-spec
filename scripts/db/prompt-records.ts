@@ -9,8 +9,8 @@ const OWNER_ID = "cmrjdu92f0001099de7h2zu5p";
 // 普通收录生成数量
 const NORMAL_RECORD_COUNT = 150;
 
-// 超多版本测试的版本数（跨过 v1/v10/v20 三个快照锚点）
-const MULTI_VERSION_COUNT = 25;
+// 超多版本测试的版本数（跨过 v1/v10/v20/.../v100 共 11 个快照锚点）
+const MULTI_VERSION_COUNT = 100;
 
 // @ 普通收录模板，按业务主题分组，复用草稿侧的正式段落内容以保持风格一致
 const recordTemplates = [
@@ -537,7 +537,7 @@ const buildSpecialRecords = (ownerId: string) => {
 			versionContent: CODE_RICH_CONTENT,
 			versionMessage: "初始版本",
 		},
-		// ④ 超多版本：25 版本，v1/v10/v20 为快照，其余增量 diff
+		// ④ 超多版本：100 版本，v1/v10/v20/.../v100 为快照，其余增量 diff
 		{
 			record: {
 				name: "版本历史压力测试",
@@ -640,7 +640,7 @@ const main = async (): Promise<void> => {
 
 	console.log(`已清理 ${deleted.count} 条旧收录`);
 	console.log(
-		`✓ 特殊测试收录 4 条（含 25 版本的版本历史压力测试），${special.versions} 个版本记录，${special.favorites} 条收藏`,
+		`✓ 特殊测试收录 4 条（含 100 版本的版本历史压力测试），${special.versions} 个版本记录，${special.favorites} 条收藏`,
 	);
 	console.log(`✓ 普通收录 ${NORMAL_RECORD_COUNT} 条（各含 v1 快照），${normalVersions} 个版本记录`);
 	console.log(

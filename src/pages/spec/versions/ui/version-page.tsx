@@ -4,13 +4,15 @@
 
 import { type Change, diffLines } from "diff";
 import { useRouter } from "next/navigation";
-import { type JSX, useCallback, useMemo, useState } from "react";
+import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import Markdown from "react-markdown";
 import rehypeExternalLinks from "rehype-external-links";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import useSWR from "swr";
+import useSWRInfinite from "swr/infinite";
+import { useInView } from "@/shared/hooks";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
@@ -24,12 +26,19 @@ export interface VersionListItem {
 	createdAt: string;
 }
 
+// @ 版本列表分页响应（与后端 VersionListVo 同构，调用方透传即可）
+export interface VersionListPage {
+	data: VersionListItem[];
+	hasMore: boolean;
+	nextOffset?: number;
+}
+
 // @ 注入给通用版本页的数据源与行为
 export interface VersionPageHandlers {
 	// 当前资源 id（如 recordId）：版本数据归属的资源，用于区分不同收录的 SWR 缓存
 	resourceId: string;
-	// 拉版本列表（按时间倒序，第一条最新）
-	fetchVersions: () => Promise<VersionListItem[]>;
+	// 按分页拉版本列表（按时间倒序，第一条最新）；offset 为本次请求的起始偏移
+	fetchVersions: (offset: number) => Promise<VersionListPage>;
 	// 拉指定版本的标题与内容全文（标题用于内容区上方独立渲染，避免依赖 content 首行 markdown 语法）
 	fetchVersionContent: (versionId: string) => Promise<{ title: string; content: string }>;
 	// 恢复此记录：返回跳转目标 URL（带上 versionId 等），由通用页执行 router.push
@@ -62,22 +71,42 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 	// 视图模式：普通内容或 diff 比较
 	const [viewMode, setViewMode] = useState<ViewMode>("content");
 
-	// > 版本列表 —— 客户端 SWR 拉取（key 带 resourceId 隔离不同收录的缓存）
-	const { data: versions, isLoading: listLoading } = useSWR(
-		["versions", resourceId],
-		handlers.fetchVersions,
-		{
-			// 首次加载完自动选中最新版
-			onSuccess: (data) => {
-				if (!selectedId && data.length > 0) {
-					setSelectedId(data[0].id);
-				}
-			},
-		},
-	);
+	// > 版本列表 —— 分页拉取（useSWRInfinite + getKey 控制翻页停止）
+	// getKey：resourceId 变化时从头开始；上一页 hasMore=false 时返回 null 停止加载
+	const getKey = (_pageIndex: number, previousPageData: VersionListPage | null) => {
+		if (previousPageData && !previousPageData.hasMore) return null;
+		const offset = previousPageData?.nextOffset ?? 0;
+		return ["versions", resourceId, offset] as const;
+	};
+	const {
+		data: pages,
+		isLoading: listLoading,
+		isValidating,
+		setSize,
+	} = useSWRInfinite(getKey, ([, , offset]) => handlers.fetchVersions(offset));
+
+	// 扁平化所有分页数据为单一版本列表；hasMore/hasPaged 从最后一页取
+	const versions = useMemo(() => pages?.flatMap((page) => page.data) ?? [], [pages]);
+	const hasMore = pages?.[pages.length - 1]?.hasMore ?? false;
+	const hasPaged = (pages?.length ?? 0) > 1;
+
+	// 首次加载完自动选中最新版（替代 useSWR 的 onSuccess，infinite 场景用 useEffect 监听）
+	useEffect(() => {
+		if (!selectedId && versions.length > 0) {
+			setSelectedId(versions[0].id);
+		}
+	}, [versions, selectedId]);
+
+	// 哨兵进入视口时加载下一页（复用首页收录列表的无限滚动模式）
+	const { ref: sentinelRef, inView } = useInView({ threshold: 0 });
+	useEffect(() => {
+		if (inView && hasMore && !isValidating) {
+			void setSize((size) => size + 1);
+		}
+	}, [inView, hasMore, isValidating, setSize]);
 
 	// > 最新版本 id（列表第一条）
-	const latestId = versions?.[0]?.id ?? null;
+	const latestId = versions[0]?.id ?? null;
 
 	// > 选中版本的标题与内容（客户端异步拉取）
 	const { data: versionData, isLoading: contentLoading } = useSWR(
@@ -121,7 +150,7 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 	}, [router, selectedId, handlers]);
 
 	// > 是否已有版本数据（用于区分"尚未加载"与"加载后确无版本"）
-	const hasVersions = !!versions && versions.length > 0;
+	const hasVersions = versions.length > 0;
 
 	// > 渲染左侧内容区（不自带滚动，由外壳的单一滚动区接管）
 	const renderContent = () => {
@@ -236,6 +265,10 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 					isLoading={listLoading}
 					selectedId={selectedId}
 					onSelect={setSelectedId}
+					hasMore={hasMore}
+					hasPaged={hasPaged}
+					isValidating={isValidating}
+					sentinelRef={sentinelRef}
 				/>
 			</div>
 		</TitlePageShell>

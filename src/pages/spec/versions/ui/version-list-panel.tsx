@@ -1,7 +1,8 @@
 // # 版本列表面板：右侧时间列表，显示版本历史供选择（由父级 sticky 钉住常驻）
 
 import dayjs from "dayjs";
-import type { JSX } from "react";
+import type { JSX, Ref } from "react";
+import { InfiniteListFooter } from "@/pages/spec/personal/prompt/shared/ui/infinite-list-footer";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Skeleton } from "@/shared/ui/skeleton";
 import type { VersionListItem } from "./version-page";
@@ -11,10 +12,15 @@ const formatTime = (dateString: string): string => dayjs(dateString).format("MM-
 
 // @ 版本列表面板的 Props
 interface VersionListPanelProps {
-	versions: VersionListItem[] | undefined;
+	versions: VersionListItem[];
 	isLoading: boolean;
 	selectedId: string | null;
 	onSelect: (id: string) => void;
+	// 无限滚动分页：透传给 InfiniteListFooter
+	hasMore: boolean;
+	hasPaged: boolean;
+	isValidating: boolean;
+	sentinelRef: Ref<HTMLDivElement>;
 }
 
 export function VersionListPanel({
@@ -22,6 +28,10 @@ export function VersionListPanel({
 	isLoading,
 	selectedId,
 	onSelect,
+	hasMore,
+	hasPaged,
+	isValidating,
+	sentinelRef,
 }: VersionListPanelProps): JSX.Element {
 	// > 渲染版本列表内容
 	const renderContent = () => {
@@ -33,7 +43,7 @@ export function VersionListPanel({
 			));
 		}
 		// 有数据：把每个版本渲染为可点击的时间按钮，选中项高亮
-		return versions?.map((version) => (
+		return versions.map((version) => (
 			<button
 				key={version.id}
 				type="button"
@@ -56,7 +66,17 @@ export function VersionListPanel({
 			{/* ScrollArea 的 Viewport 靠 max-h-[inherit] 撑高度：直接给定 max-height，
 			   使其继承到明确高度上限，父级 fixed 容器距顶 6rem，故列表区最高 calc(100vh - 6rem - 标题高) */}
 			<ScrollArea className="max-h-[calc(100vh-7.5rem)]">
-				<div className="space-y-1 p-2">{renderContent()}</div>
+				<div className="space-y-1 p-2">
+					{renderContent()}
+					{/* 无限滚动底部：哨兵 + 翻页 loader + 到底提示 */}
+					<InfiniteListFooter
+						hasMore={hasMore}
+						hasPaged={hasPaged}
+						isValidating={isValidating}
+						sentinelRef={sentinelRef}
+						endText="到底了"
+					/>
+				</div>
 			</ScrollArea>
 		</div>
 	);

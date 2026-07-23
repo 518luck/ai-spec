@@ -17,9 +17,14 @@ export function RecordVersionsPage({ recordId }: RecordVersionsPageProps): JSX.E
 	const handlers = useMemo<VersionPageHandlers>(
 		() => ({
 			resourceId: recordId,
-			fetchVersions: async () => {
-				const result = await getVersions({ recordId });
-				return result.data;
+			fetchVersions: async (offset) => {
+				const result = await getVersions({ recordId, offset });
+				// 透传分页元信息，通用版本页据此控制翻页停止与哨兵加载
+				return {
+					data: result.data.map((v) => ({ id: v.id, createdAt: v.createdAt })),
+					hasMore: result.hasMore,
+					nextOffset: result.nextOffset,
+				};
 			},
 			fetchVersionContent: async (versionId) => {
 				const detail = await getVersionDetail({ recordId, versionId });
