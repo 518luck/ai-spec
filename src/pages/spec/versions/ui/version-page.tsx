@@ -125,24 +125,23 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 
 	// > 渲染左侧内容区（不自带滚动，由外壳的单一滚动区接管）
 	const renderContent = () => {
+		// 加载态容器：与内容态保持相同的 p-6 + min-h-60，避免切换时高度跳变抖动
+		const renderLoading = () => (
+			<div className="flex min-h-60 items-center justify-center p-6 text-muted-foreground">
+				<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
+			</div>
+		);
 		// 初始加载态：列表拉取中 / 有版本但尚未选中 / 内容拉取中 → 统一显示 ScaleLoader，避免误判为"暂无内容"
 		if (listLoading || (hasVersions && selectedId === null) || contentLoading) {
-			return (
-				<div className="flex min-h-60 items-center justify-center text-muted-foreground">
-					<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-				</div>
-			);
+			return renderLoading();
 		}
 		if (viewMode === "diff") {
 			// diff 结果尚未就绪（如最新版内容还在拉取）→ 加载态
 			if (!diffChanges) {
-				return (
-					<div className="flex min-h-60 items-center justify-center text-muted-foreground">
-						<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-					</div>
-				);
+				return renderLoading();
 			}
 			// 渲染 diff：正文按差异分块用 Markdown 渲染，新增绿色、删除红色背景
+			// 色块结构与普通视图保持一致（article > MarkdownView），仅在 change 块外层加背景色，不引入额外间距
 			return (
 				<div className="p-6">
 					<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent">
@@ -161,7 +160,7 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 								<div
 									// biome-ignore lint/suspicious/noArrayIndexKey: diff 分块按索引渲染，顺序稳定
 									key={index}
-									className={`-mx-6 my-2 px-6 py-1 ${diffClass}`}
+									className={diffClass}
 								>
 									<div className={textClass}>
 										<MarkdownView>{change.value}</MarkdownView>
@@ -195,7 +194,7 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 						<Button variant="ghost" size="icon-sm" aria-label="返回" onClick={() => router.back()}>
 							<Icons.chevronLeft className="size-4" />
 						</Button>
-						<h1 className="shrink-0 font-semibold text-lg">版本历史</h1>
+						<h1 className="shrink-0 font-semibold text-lg">历史记录</h1>
 						{/* 收录标题：与"版本历史"用竖线分隔，min-w-0 + truncate 防止过长标题撑爆标题栏 */}
 						<div className="h-4 w-px shrink-0 bg-border" />
 						<span className="truncate text-muted-foreground text-sm">{title || "加载中…"}</span>
