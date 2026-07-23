@@ -291,57 +291,64 @@ export function EditorToolbar({
 							<span className="flex-1 text-muted-foreground text-xs">操作</span>
 						</div>
 						<DropdownMenuSeparator />
-						{MENU_GROUPS.map((group, groupIndex) => (
-							<DropdownMenuGroup key={group.type}>
-								{groupIndex > 0 && <DropdownMenuSeparator />}
-								{group.items.filter(isVisible).map((item) => (
-									<div key={item.id} className="flex items-center rounded-sm px-2 py-1.5 text-sm">
-										<Checkbox
-											checked={activeToolbarItems.some((t) => t.id === item.id)}
-											onCheckedChange={() => onCheckboxToggle(item.id)}
-											className="mr-10 w-4 shrink-0 cursor-pointer"
-										/>
-										<button
-											type="button"
-											className={cn(
-												"flex flex-1 cursor-pointer items-center rounded-sm px-1 py-0.5",
-												isItemActive({
-													group,
-													item,
-													activeFormats,
-													editorSettings,
-													isPreview,
-												}) && "bg-accent",
-											)}
-											onClick={() => onItemAction(group.type, item.id)}
-										>
-											<item.icon className="mr-2 size-4" />
-											{item.label}
-											{item.description && (
-												<span className="ml-1.5">
-													<HelpTooltip content={item.description} />
-												</span>
-											)}
-										</button>
-									</div>
-								))}
-							</DropdownMenuGroup>
-						))}
-						{/* 主题选择：子菜单 */}
-						<DropdownMenuSeparator />
-						<DropdownMenuGroup>
-							<DropdownMenuSub>
-								<DropdownMenuSubTrigger>主题</DropdownMenuSubTrigger>
-								<DropdownMenuSubContent>
-									{EDITOR_THEMES.map((theme) => (
-										<DropdownMenuItem key={theme.id} onClick={() => onThemeChange(theme.id)}>
-											{theme.label}
-											{theme.id === editorThemeId && <Icons.check className="ml-auto size-4" />}
-										</DropdownMenuItem>
+						{/* // 先过滤出当前模式下有可见项的组，避免空组叠加出多余分隔线（预览模式下 tool/display 组为空） */}
+						{MENU_GROUPS.map((group) => ({ group, items: group.items.filter(isVisible) }))
+							.filter((g) => g.items.length > 0)
+							.map(({ group, items }, groupIndex) => (
+								<DropdownMenuGroup key={group.type}>
+									{groupIndex > 0 && <DropdownMenuSeparator />}
+									{items.map((item) => (
+										<div key={item.id} className="flex items-center rounded-sm px-2 py-1.5 text-sm">
+											<Checkbox
+												checked={activeToolbarItems.some((t) => t.id === item.id)}
+												onCheckedChange={() => onCheckboxToggle(item.id)}
+												className="mr-10 w-4 shrink-0 cursor-pointer"
+											/>
+											<button
+												type="button"
+												className={cn(
+													"flex flex-1 cursor-pointer items-center rounded-sm px-1 py-0.5",
+													isItemActive({
+														group,
+														item,
+														activeFormats,
+														editorSettings,
+														isPreview,
+													}) && "bg-accent",
+												)}
+												onClick={() => onItemAction(group.type, item.id)}
+											>
+												<item.icon className="mr-2 size-4" />
+												{item.label}
+												{item.description && (
+													<span className="ml-1.5">
+														<HelpTooltip content={item.description} />
+													</span>
+												)}
+											</button>
+										</div>
 									))}
-								</DropdownMenuSubContent>
-							</DropdownMenuSub>
-						</DropdownMenuGroup>
+								</DropdownMenuGroup>
+							))}
+						{/* // 主题选择：仅编辑模式显示（预览是 Markdown 渲染，与编辑器主题无关） */}
+						{!isPreview && (
+							<>
+								<DropdownMenuSeparator />
+								<DropdownMenuGroup>
+									<DropdownMenuSub>
+										<DropdownMenuSubTrigger>主题</DropdownMenuSubTrigger>
+										<DropdownMenuSubContent>
+											{EDITOR_THEMES.map((theme) => (
+												<DropdownMenuItem key={theme.id} onClick={() => onThemeChange(theme.id)}>
+													{theme.label}
+													{theme.id === editorThemeId && <Icons.check className="ml-auto size-4" />}
+												</DropdownMenuItem>
+											))}
+										</DropdownMenuSubContent>
+									</DropdownMenuSub>
+								</DropdownMenuGroup>
+							</>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 
