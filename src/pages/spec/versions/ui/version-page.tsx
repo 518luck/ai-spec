@@ -12,9 +12,9 @@ import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
 import useSWR from "swr";
 import { Button } from "@/shared/ui/button";
-import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { Spinner } from "@/shared/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { TitlePageShell } from "@/widgets/page-shell";
 import { VersionListPanel } from "./version-list-panel";
 
@@ -86,16 +86,13 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 		{ revalidateOnFocus: false },
 	);
 
-	// > 是否选中最新版本（最新版无需 diff）
-	const isLatestSelected = selectedId === latestId;
-
-	// > diff 结果（仅在 diff 模式且选中非最新版本时计算）
+	// > diff 结果（diff 模式下计算，无差异时返回整段未变化块，渲染为无色块内容）
 	const diffChanges: Change[] | null = useMemo(() => {
-		if (viewMode !== "diff" || isLatestSelected || !content || !latestContent) {
+		if (viewMode !== "diff" || !content || !latestContent) {
 			return null;
 		}
 		return diffLines(latestContent, content);
-	}, [viewMode, isLatestSelected, content, latestContent]);
+	}, [viewMode, content, latestContent]);
 
 	// > 恢复此记录：跳转到 handler 给出的 URL
 	const handleUse = useCallback(() => {
@@ -103,9 +100,13 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 		router.push(handlers.buildUseUrl(selectedId));
 	}, [router, selectedId, handlers]);
 
+	// > 是否已有版本数据（用于区分"尚未加载"与"加载后确无版本"）
+	const hasVersions = !!versions && versions.length > 0;
+
 	// > 渲染左侧内容区（不自带滚动，由外壳的单一滚动区接管）
 	const renderContent = () => {
-		if (contentLoading) {
+		// 初始加载态：列表拉取中 / 有版本但尚未选中 / 内容拉取中 → 统一显示 Spinner，避免误判为"暂无内容"
+		if (listLoading || (hasVersions && selectedId === null) || contentLoading) {
 			return (
 				<div className="flex min-h-60 items-center justify-center">
 					<Spinner className="size-5" />
@@ -113,12 +114,12 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 			);
 		}
 		if (viewMode === "diff") {
-			// 无 diff 结果（选中最新版）：提示无需对比
+			// diff 结果尚未就绪（如最新版内容还在拉取）→ 加载态
 			if (!diffChanges) {
 				return (
-					<p className="flex min-h-60 items-center justify-center text-muted-foreground text-sm">
-						当前已是最新版本，无需对比
-					</p>
+					<div className="flex min-h-60 items-center justify-center">
+						<Spinner className="size-5" />
+					</div>
 				);
 			}
 			// 渲染 diff：按差异分块，每块用 Markdown 渲染，新增绿色、删除红色背景
@@ -156,6 +157,7 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 				</article>
 			);
 		}
+		// 一切加载完毕仍无内容：真正无数据
 		return (
 			<p className="flex min-h-60 items-center justify-center text-muted-foreground text-sm">
 				暂无内容
@@ -174,33 +176,33 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 						<h1 className="font-semibold text-lg">版本历史</h1>
 					</div>
 					<div className="flex items-center gap-1.5">
-						<Button
-							variant={viewMode === "diff" ? "secondary" : "outline"}
-							size="sm"
-							disabled={isLatestSelected}
-							onClick={() => setViewMode(viewMode === "diff" ? "content" : "diff")}
-						>
-							<Icons.compare className="size-4" />
-							Diff
-						</Button>
-						<HelpTooltip content="查看与最新版本的差异" />
-					</div>
-				</div>
-			}
-		>
-			{/* // @ 左右分栏：左栏随页面滚动，右栏用 fixed 始终钉在视口右侧 */}
-			<div className="flex min-h-[calc(100vh-4rem)] items-start">
-				{/* 左侧：选中版本的只读内容 + 底部操作栏，随页面滚动；右侧留出 fixed 面板的占位宽度 */}
-				<div className="flex min-w-0 flex-1 flex-col pr-[15rem]">
-					<div className="flex-1">{renderContent()}</div>
-
-					{/* 底部操作栏：恢复此记录，sticky 钉在视口底部常驻 */}
-					<div className="sticky bottom-0 flex justify-end border-t bg-linear-to-t from-background/80 to-background/5 px-6 py-3 backdrop-blur-sm">
+						<Tooltip>
+							<TooltipTrigger
+								delay={500}
+								render={
+									<Button
+										variant={viewMode === "diff" ? "secondary" : "outline"}
+										size="sm"
+										onClick={() => setViewMode(viewMode === "diff" ? "content" : "diff")}
+									>
+										<Icons.compare className="size-4" />
+										Diff
+									</Button>
+								}
+							/>
+							<TooltipContent showArrow={false}>查看与最新版本的差异</TooltipContent>
+						</Tooltip>
 						<Button size="sm" disabled={!selectedId || !content} onClick={handleUse}>
 							恢复此记录
 						</Button>
 					</div>
 				</div>
+			}
+		>
+			{/* // @ 左右分栏：左栏随页面滚动，右栏用 fixed 始终钉在视口右侧 */}
+			<div className="flex min-h-[calc(100vh-4rem)]">
+				{/* 左侧：选中版本的只读内容，随页面滚动；右侧留出 fixed 面板的占位宽度 */}
+				<div className="min-w-0 flex-1 pr-60">{renderContent()}</div>
 			</div>
 
 			{/* 右侧：版本时间列表，fixed 浮窗，始终钉在视口右侧不随页面滚动 */}
