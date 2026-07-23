@@ -9,10 +9,12 @@ import { type JSX, useCallback, useMemo, useState } from "react";
 import useSWR from "swr";
 import { toast } from "@/features/toast";
 import { Button } from "@/shared/ui/button";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Skeleton } from "@/shared/ui/skeleton";
 import { Spinner } from "@/shared/ui/spinner";
+import { TitlePageShell } from "@/widgets/page-shell";
 
 // @ 版本列表项（通用形状：调用方按此返回即可复用本页）
 export interface VersionListItem {
@@ -112,37 +114,34 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 	);
 
 	return (
-		<div className="flex h-full min-h-0 flex-col">
-			{/* // # 顶栏：返回 + 标题 */}
-			<div className="flex h-16 shrink-0 items-center gap-3 border-b px-6">
-				<Button variant="ghost" size="icon-sm" aria-label="返回" onClick={() => router.back()}>
-					<Icons.chevronLeft className="size-4" />
-				</Button>
-				<h1 className="font-semibold text-lg">版本历史</h1>
-			</div>
-
+		<TitlePageShell
+			title={
+				<div className="flex w-full items-center justify-between">
+					<div className="flex items-center gap-3">
+						<Button variant="ghost" size="icon-sm" aria-label="返回" onClick={() => router.back()}>
+							<Icons.chevronLeft className="size-4" />
+						</Button>
+						<h1 className="font-semibold text-lg">版本历史</h1>
+					</div>
+					<div className="flex items-center gap-1.5">
+						<Button
+							variant={viewMode === "diff" ? "secondary" : "outline"}
+							size="sm"
+							disabled={isLatestSelected}
+							onClick={() => setViewMode(viewMode === "diff" ? "content" : "diff")}
+						>
+							<Icons.compare className="size-4" />
+							Diff
+						</Button>
+						<HelpTooltip content="使用当前版本和最新版本做对比" />
+					</div>
+				</div>
+			}
+		>
 			{/* // @ 左右分栏：左侧版本内容，右侧时间列表 */}
 			<div className="flex min-h-0 flex-1">
 				{/* 左侧：选中版本的只读内容 */}
 				<div className="flex min-w-0 flex-1 flex-col border-r">
-					{/* 视图模式切换 */}
-					<div className="flex items-center gap-1 border-b px-4 py-2">
-						<Button
-							variant={viewMode === "content" ? "secondary" : "ghost"}
-							size="sm"
-							onClick={() => setViewMode("content")}
-						>
-							内容
-						</Button>
-						<Button
-							variant={viewMode === "diff" ? "secondary" : "ghost"}
-							size="sm"
-							disabled={isLatestSelected}
-							onClick={() => setViewMode("diff")}
-						>
-							与最新版本对比
-						</Button>
-					</div>
 					{contentLoading ? (
 						<div className="flex flex-1 items-center justify-center">
 							<Spinner className="size-5" />
@@ -237,6 +236,6 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 					</ScrollArea>
 				</div>
 			</div>
-		</div>
+		</TitlePageShell>
 	);
 }

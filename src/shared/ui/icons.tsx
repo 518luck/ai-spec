@@ -7,6 +7,7 @@ import {
 	IconArrowBarLeft,
 	IconArrowsDiagonal,
 	IconArrowsDiagonalMinimize2,
+	IconArrowsLeftRight,
 	IconArrowUpRight,
 	IconBold,
 	IconBook,
@@ -183,4 +184,5 @@ export const Icons = {
 
 	// 版本历史
 	history: IconClock,
+	compare: IconArrowsLeftRight,
 };
