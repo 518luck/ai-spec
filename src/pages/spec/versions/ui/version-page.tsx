@@ -2,19 +2,21 @@
 
 // # 通用版本页：纯 UI + 交互，数据源和行为通过 props 注入，不耦合任何具体资源 API
 
-import dayjs from "dayjs";
 import { type Change, diffLines } from "diff";
 import { useRouter } from "next/navigation";
 import { type JSX, useCallback, useMemo, useState } from "react";
+import Markdown from "react-markdown";
+import rehypeExternalLinks from "rehype-external-links";
+import rehypeHighlight from "rehype-highlight";
+import rehypeSlug from "rehype-slug";
+import remarkGfm from "remark-gfm";
 import useSWR from "swr";
-import { toast } from "@/features/toast";
 import { Button } from "@/shared/ui/button";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
-import { ScrollArea } from "@/shared/ui/scroll-area";
-import { Skeleton } from "@/shared/ui/skeleton";
 import { Spinner } from "@/shared/ui/spinner";
 import { TitlePageShell } from "@/widgets/page-shell";
+import { VersionListPanel } from "./version-list-panel";
 
 // @ 版本列表项（通用形状：调用方按此返回即可复用本页）
 export interface VersionListItem {
@@ -28,32 +30,37 @@ export interface VersionPageHandlers {
 	fetchVersions: () => Promise<VersionListItem[]>;
 	// 拉指定版本的内容全文
 	fetchVersionContent: (versionId: string) => Promise<string>;
-	// 回滚到指定版本（立即落库）
-	rollback: (versionId: string) => Promise<void>;
-	// 使用此版本：返回跳转目标 URL（带上 versionId 等），由通用页执行 router.push
+	// 恢复此记录：返回跳转目标 URL（带上 versionId 等），由通用页执行 router.push
 	buildUseUrl: (versionId: string) => string;
 }
-
-// > 格式化时间为「MM-DD HH:mm」
-const formatTime = (dateString: string): string => dayjs(dateString).format("MM-DD HH:mm");
 
 // @ 视图模式：普通视图或 diff 视图
 type ViewMode = "content" | "diff";
 
+// @ 统一 Markdown 渲染器：GFM + 代码高亮 + 外链新窗口，普通视图与 diff 视图共用
+function MarkdownView({ children }: { children: string }): JSX.Element {
+	return (
+		<Markdown
+			remarkPlugins={[remarkGfm]}
+			rehypePlugins={[
+				rehypeSlug,
+				[rehypeExternalLinks, { target: "_blank", rel: ["noopener", "noreferrer"] }],
+				rehypeHighlight,
+			]}
+		>
+			{children}
+		</Markdown>
+	);
+}
+
 export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JSX.Element {
 	const router = useRouter();
 	const [selectedId, setSelectedId] = useState<string | null>(null);
-	// 回滚中的版本 id（禁用按钮防重复点击）
-	const [rollingBackId, setRollingBackId] = useState<string | null>(null);
 	// 视图模式：普通内容或 diff 比较
 	const [viewMode, setViewMode] = useState<ViewMode>("content");
 
 	// > 版本列表 —— 客户端 SWR 拉取
-	const {
-		data: versions,
-		isLoading: listLoading,
-		mutate: mutateVersions,
-	} = useSWR("versions", handlers.fetchVersions, {
+	const { data: versions, isLoading: listLoading } = useSWR("versions", handlers.fetchVersions, {
 		// 首次加载完自动选中最新版
 		onSuccess: (data) => {
 			if (!selectedId && data.length > 0) {
@@ -90,28 +97,71 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 		return diffLines(latestContent, content);
 	}, [viewMode, isLatestSelected, content, latestContent]);
 
-	// > 使用此版本：跳转到 handler 给出的 URL
+	// > 恢复此记录：跳转到 handler 给出的 URL
 	const handleUse = useCallback(() => {
 		if (!selectedId) return;
 		router.push(handlers.buildUseUrl(selectedId));
 	}, [router, selectedId, handlers]);
 
-	// > 回滚：调注入的 rollback + 刷新列表
-	const handleRollback = useCallback(
-		async (versionId: string) => {
-			try {
-				setRollingBackId(versionId);
-				await handlers.rollback(versionId);
-				toast.success("回滚成功");
-				await mutateVersions();
-			} catch (error) {
-				toast.error(error instanceof Error ? error.message : "回滚失败");
-			} finally {
-				setRollingBackId(null);
+	// > 渲染左侧内容区（不自带滚动，由外壳的单一滚动区接管）
+	const renderContent = () => {
+		if (contentLoading) {
+			return (
+				<div className="flex min-h-60 items-center justify-center">
+					<Spinner className="size-5" />
+				</div>
+			);
+		}
+		if (viewMode === "diff") {
+			// 无 diff 结果（选中最新版）：提示无需对比
+			if (!diffChanges) {
+				return (
+					<p className="flex min-h-60 items-center justify-center text-muted-foreground text-sm">
+						当前已是最新版本，无需对比
+					</p>
+				);
 			}
-		},
-		[handlers, mutateVersions],
-	);
+			// 渲染 diff：按差异分块，每块用 Markdown 渲染，新增绿色、删除红色背景
+			return (
+				<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent p-6">
+					{diffChanges.map((change, index) => {
+						// 新增/删除块着色，未变化块保持默认背景
+						const diffClass = change.added
+							? "bg-green-100 dark:bg-green-900/30"
+							: change.removed
+								? "bg-red-100 dark:bg-red-900/30"
+								: "";
+						// 删除块用删除线弱化，仅提示历史内容
+						const textClass = change.removed ? "text-muted-foreground line-through opacity-70" : "";
+						return (
+							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: diff 分块按索引渲染，顺序稳定
+								key={index}
+								className={`-mx-6 my-2 px-6 py-1 ${diffClass}`}
+							>
+								<div className={textClass}>
+									<MarkdownView>{change.value}</MarkdownView>
+								</div>
+							</div>
+						);
+					})}
+				</article>
+			);
+		}
+		if (content) {
+			// 普通视图：Markdown 渲染（与编辑窗预览一致）
+			return (
+				<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent p-6">
+					<MarkdownView>{content}</MarkdownView>
+				</article>
+			);
+		}
+		return (
+			<p className="flex min-h-60 items-center justify-center text-muted-foreground text-sm">
+				暂无内容
+			</p>
+		);
+	};
 
 	return (
 		<TitlePageShell
@@ -133,108 +183,34 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 							<Icons.compare className="size-4" />
 							Diff
 						</Button>
-						<HelpTooltip content="使用当前版本和最新版本做对比" />
+						<HelpTooltip content="查看与最新版本的差异" />
 					</div>
 				</div>
 			}
 		>
-			{/* // @ 左右分栏：左侧版本内容，右侧时间列表 */}
-			<div className="flex min-h-0 flex-1">
-				{/* 左侧：选中版本的只读内容 */}
-				<div className="flex min-w-0 flex-1 flex-col border-r">
-					{contentLoading ? (
-						<div className="flex flex-1 items-center justify-center">
-							<Spinner className="size-5" />
-						</div>
-					) : viewMode === "diff" && diffChanges ? (
-						<ScrollArea className="min-h-0 flex-1">
-							<pre className="p-6 font-mono text-sm leading-relaxed">
-								{diffChanges.map((change, index) => {
-									const lines = change.value.split("\n");
-									// 移除最后一个空行（split 产生）
-									const trimmedLines = lines[lines.length - 1] === "" ? lines.slice(0, -1) : lines;
-									return trimmedLines.map((line, lineIndex) => (
-										<div
-											// biome-ignore lint/suspicious/noArrayIndexKey: diff 行索引组合唯一
-											key={`${index}-${lineIndex}`}
-											className={`${
-												change.added
-													? "bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-300"
-													: change.removed
-														? "bg-red-100 text-red-900 line-through dark:bg-red-900/30 dark:text-red-300"
-														: ""
-											}`}
-										>
-											<span className="mr-2 select-none text-muted-foreground">
-												{change.added ? "+" : change.removed ? "-" : " "}
-											</span>
-											{line}
-										</div>
-									));
-								})}
-							</pre>
-						</ScrollArea>
-					) : viewMode === "diff" && isLatestSelected ? (
-						<p className="flex flex-1 items-center justify-center text-muted-foreground text-sm">
-							当前已是最新版本，无需对比
-						</p>
-					) : content ? (
-						<ScrollArea className="min-h-0 flex-1">
-							<pre className="whitespace-pre-wrap break-words p-6 font-mono text-sm leading-relaxed">
-								{content}
-							</pre>
-						</ScrollArea>
-					) : (
-						<p className="flex flex-1 items-center justify-center text-muted-foreground text-sm">
-							暂无内容
-						</p>
-					)}
-					{/* 底部操作栏：使用此版本 + 回滚 */}
-					<div className="flex justify-end gap-2 border-t px-6 py-3">
-						<Button
-							variant="outline"
-							size="sm"
-							disabled={!selectedId || rollingBackId === selectedId}
-							onClick={() => selectedId && handleRollback(selectedId)}
-						>
-							{rollingBackId === selectedId ? "回滚中..." : "回滚"}
-						</Button>
+			{/* // @ 左右分栏：左栏随页面滚动，右栏用 fixed 始终钉在视口右侧 */}
+			<div className="flex min-h-[calc(100vh-4rem)] items-start">
+				{/* 左侧：选中版本的只读内容 + 底部操作栏，随页面滚动；右侧留出 fixed 面板的占位宽度 */}
+				<div className="flex min-w-0 flex-1 flex-col pr-[15rem]">
+					<div className="flex-1">{renderContent()}</div>
+
+					{/* 底部操作栏：恢复此记录，sticky 钉在视口底部常驻 */}
+					<div className="sticky bottom-0 flex justify-end border-t bg-linear-to-t from-background/80 to-background/5 px-6 py-3 backdrop-blur-sm">
 						<Button size="sm" disabled={!selectedId || !content} onClick={handleUse}>
-							使用此版本
+							恢复此记录
 						</Button>
 					</div>
 				</div>
+			</div>
 
-				{/* 右侧：版本时间列表 */}
-				<div className="flex w-48 shrink-0 flex-col">
-					<ScrollArea className="min-h-0 flex-1">
-						<div className="space-y-1 p-2">
-							{listLoading ? (
-								Array.from({ length: 5 }).map((_, i) => (
-									// biome-ignore lint/suspicious/noArrayIndexKey: 静态骨架屏列表
-									<Skeleton key={i} className="h-9 w-full" />
-								))
-							) : !versions || versions.length === 0 ? (
-								<p className="px-2 py-4 text-center text-muted-foreground text-xs">暂无版本</p>
-							) : (
-								versions.map((version) => (
-									<button
-										key={version.id}
-										type="button"
-										onClick={() => setSelectedId(version.id)}
-										className={`w-full rounded-md px-3 py-2 text-left text-sm transition-colors ${
-											selectedId === version.id
-												? "bg-accent text-accent-foreground"
-												: "hover:bg-accent/50"
-										}`}
-									>
-										{formatTime(version.createdAt)}
-									</button>
-								))
-							)}
-						</div>
-					</ScrollArea>
-				</div>
+			{/* 右侧：版本时间列表，fixed 浮窗，始终钉在视口右侧不随页面滚动 */}
+			<div className="fixed top-20 right-4 z-30 m-4 shrink-0">
+				<VersionListPanel
+					versions={versions}
+					isLoading={listLoading}
+					selectedId={selectedId}
+					onSelect={setSelectedId}
+				/>
 			</div>
 		</TitlePageShell>
 	);

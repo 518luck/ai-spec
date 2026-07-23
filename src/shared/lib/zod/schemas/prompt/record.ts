@@ -195,14 +195,3 @@ export const versionDetailVoSchema = z.object({
 
 // 版本详情响应类型
 export type VersionDetailVo = z.infer<typeof versionDetailVoSchema>;
-
-// 版本回滚响应
-export const rollbackVersionVoSchema = z.object({
-	id: z.string(),
-	name: z.string(),
-	content: z.string(),
-	updatedAt: z.iso.datetime(),
-});
-
-// 版本回滚响应类型
-export type RollbackVersionVo = z.infer<typeof rollbackVersionVoSchema>;

@@ -5,7 +5,6 @@
 import { type JSX, useMemo } from "react";
 import { getVersionDetail } from "@/entities/prompt/records/api/get-version-detail";
 import { getVersions } from "@/entities/prompt/records/api/get-versions";
-import { rollbackVersion } from "@/entities/prompt/records/api/rollback-version";
 import { VersionPage, type VersionPageHandlers } from "@/pages/spec/versions";
 
 // @ 组件 Props
@@ -25,10 +24,7 @@ export function RecordVersionsPage({ recordId }: RecordVersionsPageProps): JSX.E
 				const detail = await getVersionDetail({ recordId, versionId });
 				return detail.content;
 			},
-			rollback: async (versionId) => {
-				await rollbackVersion({ recordId, versionId });
-			},
-			// 使用此版本：带 recordId + versionId 回记录页，目标卡片自动开编辑器载入版本内容（不落库）
+			// 恢复此记录：带 recordId + versionId 回记录页，目标卡片自动开编辑器载入版本内容（不落库）
 			buildUseUrl: (versionId) =>
 				`/spec/personal/prompt/records?useRecordId=${recordId}&useVersionId=${versionId}`,
 		}),
