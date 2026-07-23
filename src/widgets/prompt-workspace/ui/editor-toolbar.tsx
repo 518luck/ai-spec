@@ -1,9 +1,9 @@
 "use client";
 // # 编辑器顶部导航栏 —— 标题 + 快捷工具栏 + 更多操作下拉 + 主题切换 + 放大
 
-import { AnimatePresence, Reorder } from "motion/react";
+import { Reorder } from "motion/react";
 import type { JSX } from "react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import { useInertialScroll, useScrollProgress } from "@/shared/hooks";
@@ -131,6 +131,13 @@ export function EditorToolbar({
 		updateScrollProgress: updateToolbarProgress,
 	} = useScrollProgress(toolbarScrollRef, { direction: "horizontal" });
 
+	// ! 项数变化时元素直接卸载（无 exit 动画），commit 后 DOM 立刻准确；
+	// ! 但项数变化不触发 scroll 也不改容器 border-box，需主动重算一次进度，否则遮罩停在旧状态
+	// biome-ignore lint/correctness/useExhaustiveDependencies: activeToolbarItems 作为项数变化的触发信号，effect body 不读它但需响应其变化
+	useEffect(() => {
+		updateToolbarProgress();
+	}, [activeToolbarItems, updateToolbarProgress]);
+
 	return (
 		<div
 			className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 px-4 backdrop-blur-[1.5px]"
@@ -188,64 +195,58 @@ export function EditorToolbar({
 									onReorder={(newItems) => onReorder(newItems.map((i) => i.id))}
 									className="flex items-center gap-0.5"
 								>
-									<AnimatePresence mode="popLayout">
-										{activeToolbarItems.map((item) => {
-											const isActive =
-												item.type === "tool"
-													? activeFormats.has(item.id)
-													: item.type === "preview"
-														? isPreview
-														: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
-											return (
-												<Tooltip key={item.id}>
-													<TooltipTrigger
-														render={
-															<Reorder.Item
-																value={item}
-																layout
-																initial={{ opacity: 0, scale: 0 }}
-																animate={{ opacity: 1, scale: 1 }}
-																exit={{ opacity: 0, scale: 0 }}
-																transition={{ type: "spring", stiffness: 400, damping: 32 }}
-																whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
-																className="shrink-0 cursor-pointer"
-																onPointerDown={(e) =>
-																	(startPos.current = { x: e.clientX, y: e.clientY })
+									{activeToolbarItems.map((item) => {
+										const isActive =
+											item.type === "tool"
+												? activeFormats.has(item.id)
+												: item.type === "preview"
+													? isPreview
+													: Boolean(editorSettings[item.id as keyof typeof editorSettings]);
+										return (
+											<Tooltip key={item.id}>
+												<TooltipTrigger
+													render={
+														<Reorder.Item
+															value={item}
+															layout
+															whileDrag={{ scale: 1.15, zIndex: 10, cursor: "grabbing" }}
+															className="shrink-0 cursor-pointer"
+															onPointerDown={(e) =>
+																(startPos.current = { x: e.clientX, y: e.clientY })
+															}
+															onPointerUp={(e) => {
+																if (!startPos.current) return;
+																const dx = Math.abs(e.clientX - startPos.current.x);
+																const dy = Math.abs(e.clientY - startPos.current.y);
+																// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
+																if (dx < 5 && dy < 5) {
+																	onItemAction(
+																		item.type as "tool" | "display" | "preview",
+																		item.id,
+																	);
 																}
-																onPointerUp={(e) => {
-																	if (!startPos.current) return;
-																	const dx = Math.abs(e.clientX - startPos.current.x);
-																	const dy = Math.abs(e.clientY - startPos.current.y);
-																	// 位移 < 5px 视为点击，触发对应操作；否则视为拖拽
-																	if (dx < 5 && dy < 5) {
-																		onItemAction(
-																			item.type as "tool" | "display" | "preview",
-																			item.id,
-																		);
-																	}
-																	startPos.current = null;
-																}}
-															/>
-														}
+																startPos.current = null;
+															}}
+														/>
+													}
+												>
+													<Button
+														variant="ghost"
+														size="icon-sm"
+														aria-label={item.label}
+														className={`pointer-events-none rounded-full ${
+															isActive
+																? "bg-primary/15! text-primary hover:bg-primary/25"
+																: "hover:bg-foreground/20!"
+														}`}
 													>
-														<Button
-															variant="ghost"
-															size="icon-sm"
-															aria-label={item.label}
-															className={`pointer-events-none rounded-full ${
-																isActive
-																	? "bg-primary/15! text-primary hover:bg-primary/25"
-																	: "hover:bg-foreground/20!"
-															}`}
-														>
-															<item.icon className="size-4" />
-														</Button>
-													</TooltipTrigger>
-													<TooltipContent>{item.label}</TooltipContent>
-												</Tooltip>
-											);
-										})}
-									</AnimatePresence>
+														<item.icon className="size-4" />
+													</Button>
+												</TooltipTrigger>
+												<TooltipContent>{item.label}</TooltipContent>
+											</Tooltip>
+										);
+									})}
 								</Reorder.Group>
 							</div>
 						</AnimatedSizeContainer>
