@@ -6,6 +6,7 @@ import type { JSX } from "react";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 import { getRecord, updateRecord } from "@/entities/prompt";
+import { getVersionDetail } from "@/entities/prompt/records/api/get-version-detail";
 import type { UpdateRecordArgs } from "@/entities/prompt/records/api/update-record";
 import { areTagsEqual } from "@/features/tag-combobox/lib";
 import { toast } from "@/features/toast";
@@ -18,13 +19,25 @@ type EditRecordDialogProps = {
 	id: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	// 版本页「使用此版本」带回的 versionId，有值时编辑器用该版本内容初始化（不落库）
+	useVersionId?: string | null;
 };
 
-export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogProps): JSX.Element {
+export function EditRecordDialog({
+	id,
+	open,
+	onOpenChange,
+	useVersionId,
+}: EditRecordDialogProps): JSX.Element {
 	// 打开弹窗时拉取收录全文（列表只有截断预览），用 SWR 缓存避免重复请求；错误提示走全局 SWRConfig
 	const { data: fullRecord, isLoading } = useSWR(
 		open ? (["record", id] as const) : null,
 		async ([, recordId]) => getRecord(recordId),
+	);
+	// 有 useVersionId 时拉取该版本内容，作为编辑器初始内容（不落库，待编辑）
+	const { data: versionContent } = useSWR(
+		open && useVersionId ? (["version-detail", id, useVersionId] as const) : null,
+		async ([, recordId, versionId]) => getVersionDetail({ recordId, versionId }),
 	);
 
 	// 更新收录 mutation：arg 形如 { id, ...payload }，id 走 URL 路径，其余字段进 body
@@ -70,8 +83,10 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 		toast.success("收录已更新");
 	};
 
-	// 加载完成前用弹窗自带 loading 占位，避免用 preview 渲染编辑器
-	const isLoadingState = isLoading || !fullRecord;
+	// useVersionId 优先：版本页「使用此版本」带回时用该版本内容初始化，否则用收录全文
+	const effectiveContent = versionContent?.content ?? fullRecord?.content ?? "";
+	// 有 useVersionId 时等版本内容拉完；否则等收录全文拉完
+	const isLoadingState = useVersionId ? !versionContent : isLoading || !fullRecord;
 
 	return (
 		<PromptWorkspaceDialog
@@ -81,7 +96,7 @@ export function EditRecordDialog({ id, open, onOpenChange }: EditRecordDialogPro
 			isSaving={isMutating}
 			isLoading={isLoadingState}
 			resourceType="promptRecord"
-			initialContent={fullRecord?.content ?? ""}
+			initialContent={effectiveContent}
 			initialFolderId={fullRecord?.folderId}
 			// > tagsEnabled 必须独立传：创建场景没 initialTags 但也要能选标签
 			tagsEnabled

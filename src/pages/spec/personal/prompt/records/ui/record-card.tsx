@@ -1,6 +1,7 @@
 "use client";
 
 import copy from "copy-to-clipboard";
+import { useRouter } from "next/navigation";
 import { type JSX, useState } from "react";
 import useSWRMutation from "swr/mutation";
 import { favoriteRecord, getRecord, recordCopy, unfavoriteRecord } from "@/entities/prompt";
@@ -12,7 +13,6 @@ import { Icons } from "@/shared/ui/icons";
 import { Spinner } from "@/shared/ui/spinner";
 import { PromptCard } from "../../shared/ui/prompt-card";
 import { useRecordsMutate } from "../model/records-mutate-context";
-import { EditRecordDialog } from "./edit-record-dialog";
 
 type RecordCardProps = {
 	// 收录 ID
@@ -23,12 +23,13 @@ type RecordCardProps = {
 	preview: string;
 	// 当前用户是否已收藏，驱动★按钮激活态
 	favorite: boolean;
+	// 点击编辑按钮时触发，由顶层全局编辑器接管打开
+	onEdit: () => void;
 };
 
-// # 收录卡片：基于 PromptCard，注入收藏★ + 编辑操作 + 编辑弹窗
-export function RecordCard({ id, name, preview, favorite }: RecordCardProps): JSX.Element {
-	// 编辑弹窗开关
-	const [editOpen, setEditOpen] = useState(false);
+// # 收录卡片：基于 PromptCard，注入收藏★ + 编辑/版本入口（编辑器由顶层全局管理）
+export function RecordCard({ id, name, preview, favorite, onEdit }: RecordCardProps): JSX.Element {
+	const router = useRouter();
 	// 复制进行中标志：拉全文期间禁用按钮 + 触发卡片 loading 蒙层
 	const [isCopying, setIsCopying] = useState(false);
 
@@ -56,16 +57,23 @@ export function RecordCard({ id, name, preview, favorite }: RecordCardProps): JS
 			isCopying={isCopying}
 			// > 标题行右侧常驻★按钮：浮在透明复制层之上，可独立点击
 			headerExtra={<FavoriteButton id={id} favorite={favorite} />}
-			// > 底部 hover 遮罩的操作：编辑
+			// > 底部 hover 遮罩的操作：编辑（交给顶层全局编辑器）+ 版本历史
 			actions={
-				<Button variant="ghost" size="icon-sm" aria-label="编辑" onClick={() => setEditOpen(true)}>
-					<Icons.pencil className="size-4" />
-				</Button>
+				<>
+					<Button variant="ghost" size="icon-sm" aria-label="编辑" onClick={onEdit}>
+						<Icons.pencil className="size-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						aria-label="版本历史"
+						onClick={() => router.push(`/spec/personal/prompt/records/${id}/versions`)}
+					>
+						<Icons.history className="size-4" />
+					</Button>
+				</>
 			}
-		>
-			{/* 编辑弹窗 */}
-			<EditRecordDialog id={id} open={editOpen} onOpenChange={setEditOpen} />
-		</PromptCard>
+		></PromptCard>
 	);
 }
 

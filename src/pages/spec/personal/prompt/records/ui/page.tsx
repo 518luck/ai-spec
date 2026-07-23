@@ -1,7 +1,8 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { type JSX, useEffect, useMemo, useState } from "react";
+import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getRecords } from "@/entities/prompt";
@@ -20,6 +21,7 @@ import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { RecordsMutateProvider } from "../model/records-mutate-context";
 import { CreateRecordDialog } from "./create-record-dialog";
+import { EditRecordDialog } from "./edit-record-dialog";
 import { RecordsGrid } from "./records-grid";
 
 // # 个人收录页：SWR Infinite 拉取 GET /api/prompt/records，底部哨兵进入视口时自动加载下一页
@@ -30,9 +32,42 @@ export function PersonalRecordsPage({
 	filter,
 	favorite,
 	sort,
-}: ListRecordsDto): JSX.Element {
+	useRecordId,
+	useVersionId,
+}: ListRecordsDto & {
+	useRecordId?: string;
+	useVersionId?: string;
+}): JSX.Element {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
+	// 全局编辑器：当前正在编辑的收录 id（null = 关闭）；不依赖卡片是否在当前分页内
+	const [editingId, setEditingId] = useState<string | null>(null);
+	// 版本页「使用此版本」带回的 versionId，有值时编辑器载入该版本内容（不落库）
+	const [pendingVersionId, setPendingVersionId] = useState<string | null>(null);
+
+	// > 版本页「使用此版本」跳回时（URL 带 useRecordId），打开全局编辑器并载入版本内容；用后清 URL 避免刷新重复触发
+	useEffect(() => {
+		if (useRecordId) {
+			setEditingId(useRecordId);
+			setPendingVersionId(useVersionId ?? null);
+			// 清除 URL 中的版本使用参数，保留其余筛选参数
+			const params = new URLSearchParams(searchParams?.toString() ?? "");
+			params.delete("useRecordId");
+			params.delete("useVersionId");
+			router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`);
+		}
+	}, [useRecordId, useVersionId, router, pathname, searchParams]);
+
+	// > 关闭编辑器时清空 versionId，避免下次打开残留上次版本内容
+	const handleEditOpenChange = useCallback((open: boolean) => {
+		if (!open) {
+			setEditingId(null);
+			setPendingVersionId(null);
+		}
+	}, []);
 
 	// SWR Infinite key：folderId/tagIds/q/filter/favorite/sort 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: RecordListVo | null) => {
@@ -76,7 +111,7 @@ export function PersonalRecordsPage({
 		}
 		return (
 			<>
-				<RecordsGrid records={records} />
+				<RecordsGrid records={records} onEdit={setEditingId} />
 				<InfiniteListFooter
 					hasMore={hasMore}
 					hasPaged={hasPaged}
@@ -89,8 +124,15 @@ export function PersonalRecordsPage({
 	};
 
 	return (
-		// > 包裹 RecordsMutateProvider：让子树（创建弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
+		// > 包裹 RecordsMutateProvider：让子树（创建弹窗、编辑弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
 		<RecordsMutateProvider mutate={() => mutateRecords()}>
+			{/* // @ 全局编辑器：唯一实例，由 editingId 驱动打开，不依赖卡片是否在当前分页内 */}
+			<EditRecordDialog
+				id={editingId ?? ""}
+				open={editingId !== null}
+				onOpenChange={handleEditOpenChange}
+				useVersionId={pendingVersionId}
+			/>
 			<ToolbarPageShell
 				title="收录"
 				help={<HelpTooltip content="高频提示词归档处，一点即复制发给 AI" />}
