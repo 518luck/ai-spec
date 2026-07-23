@@ -15,10 +15,10 @@ export const GET = withPersonal(
 		const id = Array.isArray(rawId) ? rawId[0] : rawId;
 		const versionId = Array.isArray(rawVersionId) ? rawVersionId[0] : rawVersionId;
 
-		// > 验证收录存在且归属当前用户
+		// > 验证收录存在且归属当前用户，同时取 name 作为版本详情的标题
 		const record = await prisma.promptRecord.findUnique({
 			where: { id },
-			select: { ownerId: true },
+			select: { ownerId: true, name: true },
 		});
 
 		if (!record || record.ownerId !== session.user.id) {
@@ -107,6 +107,7 @@ export const GET = withPersonal(
 			versionNumber: targetVersion.versionNumber,
 			message: targetVersion.message,
 			isSnapshot: targetVersion.isSnapshot,
+			name: record.name,
 			content,
 			createdAt: targetVersion.createdAt.toISOString(),
 			editor: targetVersion.editor,

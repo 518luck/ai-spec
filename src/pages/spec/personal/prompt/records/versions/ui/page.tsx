@@ -22,7 +22,8 @@ export function RecordVersionsPage({ recordId }: RecordVersionsPageProps): JSX.E
 			},
 			fetchVersionContent: async (versionId) => {
 				const detail = await getVersionDetail({ recordId, versionId });
-				return detail.content;
+				// name 作为标题独立展示，content 原样渲染，互不干扰
+				return { title: detail.name, content: detail.content };
 			},
 			// 恢复此记录：带 recordId + versionId 回记录页，目标卡片自动开编辑器载入版本内容（不落库）
 			buildUseUrl: (versionId) =>

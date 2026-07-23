@@ -188,6 +188,8 @@ export const versionDetailVoSchema = z.object({
 	versionNumber: z.number(),
 	message: z.string().nullable(),
 	isSnapshot: z.boolean(),
+	// 收录名称：作为版本详情的标题展示（版本详情接口已验证 record 归属当前用户，name 来自所属 record）
+	name: z.string(),
 	content: z.string(),
 	createdAt: z.iso.datetime(),
 	editor: versionEditorSchema,

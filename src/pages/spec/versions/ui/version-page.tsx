@@ -28,8 +28,8 @@ export interface VersionListItem {
 export interface VersionPageHandlers {
 	// 拉版本列表（按时间倒序，第一条最新）
 	fetchVersions: () => Promise<VersionListItem[]>;
-	// 拉指定版本的内容全文
-	fetchVersionContent: (versionId: string) => Promise<string>;
+	// 拉指定版本的标题与内容全文（标题用于内容区上方独立渲染，避免依赖 content 首行 markdown 语法）
+	fetchVersionContent: (versionId: string) => Promise<{ title: string; content: string }>;
 	// 恢复此记录：返回跳转目标 URL（带上 versionId 等），由通用页执行 router.push
 	buildUseUrl: (versionId: string) => string;
 }
@@ -72,19 +72,29 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 	// > 最新版本 id（列表第一条）
 	const latestId = versions?.[0]?.id ?? null;
 
-	// > 最新版本内容（用于 diff 比较）
-	const { data: latestContent } = useSWR(
-		latestId ? ["version-content", latestId] : null,
-		() => (latestId ? handlers.fetchVersionContent(latestId) : Promise.resolve("")),
-		{ revalidateOnFocus: false },
-	);
-
-	// > 选中版本的完整内容（客户端异步拉取）
-	const { data: content, isLoading: contentLoading } = useSWR(
+	// > 选中版本的标题与内容（客户端异步拉取）
+	const { data: versionData, isLoading: contentLoading } = useSWR(
 		selectedId ? ["version-content", selectedId] : null,
-		() => (selectedId ? handlers.fetchVersionContent(selectedId) : Promise.resolve("")),
+		() =>
+			selectedId
+				? handlers.fetchVersionContent(selectedId)
+				: Promise.resolve({ title: "", content: "" }),
 		{ revalidateOnFocus: false },
 	);
+	// 解构出标题与正文：标题单独渲染到内容区上方，正文走 Markdown
+	const title = versionData?.title ?? "";
+	const content = versionData?.content ?? "";
+
+	// > 最新版本内容（用于 diff 比较，只取 content 部分）
+	const { data: latestVersionData } = useSWR(
+		latestId ? ["version-content", latestId] : null,
+		() =>
+			latestId
+				? handlers.fetchVersionContent(latestId)
+				: Promise.resolve({ title: "", content: "" }),
+		{ revalidateOnFocus: false },
+	);
+	const latestContent = latestVersionData?.content ?? "";
 
 	// > diff 结果（diff 模式下计算，无差异时返回整段未变化块，渲染为无色块内容）
 	const diffChanges: Change[] | null = useMemo(() => {
@@ -122,39 +132,47 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 					</div>
 				);
 			}
-			// 渲染 diff：按差异分块，每块用 Markdown 渲染，新增绿色、删除红色背景
+			// 渲染 diff：标题独立展示，正文按差异分块用 Markdown 渲染，新增绿色、删除红色背景
 			return (
-				<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent p-6">
-					{diffChanges.map((change, index) => {
-						// 新增/删除块着色，未变化块保持默认背景
-						const diffClass = change.added
-							? "bg-green-100 dark:bg-green-900/30"
-							: change.removed
-								? "bg-red-100 dark:bg-red-900/30"
+				<div className="p-6">
+					<h1 className="mb-4 font-semibold text-2xl">{title}</h1>
+					<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent">
+						{diffChanges.map((change, index) => {
+							// 新增/删除块着色，未变化块保持默认背景
+							const diffClass = change.added
+								? "bg-green-100 dark:bg-green-900/30"
+								: change.removed
+									? "bg-red-100 dark:bg-red-900/30"
+									: "";
+							// 删除块用删除线弱化，仅提示历史内容
+							const textClass = change.removed
+								? "text-muted-foreground line-through opacity-70"
 								: "";
-						// 删除块用删除线弱化，仅提示历史内容
-						const textClass = change.removed ? "text-muted-foreground line-through opacity-70" : "";
-						return (
-							<div
-								// biome-ignore lint/suspicious/noArrayIndexKey: diff 分块按索引渲染，顺序稳定
-								key={index}
-								className={`-mx-6 my-2 px-6 py-1 ${diffClass}`}
-							>
-								<div className={textClass}>
-									<MarkdownView>{change.value}</MarkdownView>
+							return (
+								<div
+									// biome-ignore lint/suspicious/noArrayIndexKey: diff 分块按索引渲染，顺序稳定
+									key={index}
+									className={`-mx-6 my-2 px-6 py-1 ${diffClass}`}
+								>
+									<div className={textClass}>
+										<MarkdownView>{change.value}</MarkdownView>
+									</div>
 								</div>
-							</div>
-						);
-					})}
-				</article>
+							);
+						})}
+					</article>
+				</div>
 			);
 		}
 		if (content) {
-			// 普通视图：Markdown 渲染（与编辑窗预览一致）
+			// 普通视图：标题独立渲染到内容区上方（不依赖 content 首行的 markdown 语法），正文走 Markdown
 			return (
-				<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent p-6">
-					<MarkdownView>{content}</MarkdownView>
-				</article>
+				<div className="p-6">
+					<h1 className="mb-4 font-semibold text-2xl">{title}</h1>
+					<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent">
+						<MarkdownView>{content}</MarkdownView>
+					</article>
+				</div>
 			);
 		}
 		// 一切加载完毕仍无内容：真正无数据
