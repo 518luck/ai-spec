@@ -13,6 +13,7 @@ import { EMAIL_OTP_EXPIRY_IN } from "@/shared/lib/auth/constants";
 import { generateOTP } from "@/shared/lib/auth/utils";
 import { z } from "@/shared/lib/zod";
 import { emailSchema, passwordSchema } from "@/shared/lib/zod/schemas/auth";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
 // # 发送注册验证码 Action：向未注册邮箱发送 OTP，并落库待校验
@@ -46,7 +47,7 @@ export const sendOtpAction = actionClient
 
 		if (isExistingUser) {
 			throw new ActionError({
-				code: "CONFLICT",
+				code: ErrorCode.CONFLICT,
 				message: "用户已存在，请登录，或使用忘记密码功能",
 			});
 		}

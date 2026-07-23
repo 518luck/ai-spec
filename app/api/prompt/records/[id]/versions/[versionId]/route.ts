@@ -6,6 +6,7 @@ import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import { deserializeDiff, reconstructContent } from "@/shared/lib/diff";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { versionDetailVoSchema } from "@/shared/lib/zod/schemas/prompt/record";
 
 // > 获取版本详情：重建该版本的完整内容
@@ -22,7 +23,7 @@ export const GET = withPersonal(
 		});
 
 		if (!record || record.ownerId !== session.user.id) {
-			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
+			throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "收录不存在" });
 		}
 
 		// > 获取目标版本
@@ -47,7 +48,7 @@ export const GET = withPersonal(
 		});
 
 		if (!targetVersion) {
-			throw new AiSpecError({ code: "NOT_FOUND", message: "版本不存在" });
+			throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "版本不存在" });
 		}
 
 		// > 重建完整内容
@@ -74,7 +75,7 @@ export const GET = withPersonal(
 
 			if (!nearestSnapshot?.snapshot) {
 				throw new AiSpecError({
-					code: "INTERNAL_ERROR",
+					code: ErrorCode.INTERNAL_ERROR,
 					message: "无法重建版本：找不到基准快照",
 				});
 			}

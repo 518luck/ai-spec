@@ -4,6 +4,7 @@ import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import { calculateDiff, serializeDiff } from "@/shared/lib/diff";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import {
 	createRecordVoSchema,
 	recordContentVoSchema,
@@ -33,7 +34,7 @@ export const GET = withPersonal(
 
 		// 收录不存在或不是当前用户所有，统一返回 404（避免暴露资源归属）
 		if (!record || record.ownerId !== session.user.id) {
-			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
+			throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "收录不存在" });
 		}
 
 		// ownerId 仅用于权限校验，不返回给前端；folderId 直接透传 null；tags 关联映射为扁平 {id,name,color,resourceType} 数组
@@ -70,7 +71,7 @@ export const PATCH = withPersonal(
 		});
 
 		if (!currentRecord) {
-			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
+			throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "收录不存在" });
 		}
 
 		// 构建部分更新数据：只更新传入的字段

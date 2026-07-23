@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // > 加入收藏：校验收录归属当前用户后 upsert PromptFavorite（复合唯一键防止重复）
 export const POST = withPersonal(
@@ -18,7 +19,7 @@ export const POST = withPersonal(
 			select: { ownerId: true },
 		});
 		if (!record || record.ownerId !== session.user.id) {
-			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
+			throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "收录不存在" });
 		}
 
 		// 加入收藏：当前阶段（团队未实现）所有收藏都是个人空间收藏，teamMemberId 固定为 null

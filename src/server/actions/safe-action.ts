@@ -3,6 +3,7 @@ import { createSafeActionClient } from "next-safe-action";
 import { ActionError } from "@/server/errors/action-error";
 import { createLogger, serializeError } from "@/server/infrastructure/axiom/server";
 import { auth } from "@/shared/lib/auth/auth";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // # Safe Action 客户端：统一封装 Server Action 的异常处理与鉴权上下文
 
@@ -32,7 +33,7 @@ export const authUserActionClient = actionClient.use(async ({ next }) => {
 
 	// ! 未登录会话直接拒绝，所有依赖此客户端的 action 都受保护
 	if (!session?.user.id) {
-		throw new ActionError({ code: "UNAUTHORIZED", message: "请先登录" });
+		throw new ActionError({ code: ErrorCode.UNAUTHORIZED, message: "请先登录" });
 	}
 
 	return next({

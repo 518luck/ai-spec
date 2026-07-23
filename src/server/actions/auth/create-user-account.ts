@@ -10,6 +10,7 @@ import prisma from "@/shared/db";
 import { hashPassword } from "@/shared/lib/utils";
 import { z } from "@/shared/lib/zod";
 import { signUpDtoSchema } from "@/shared/lib/zod/schemas/auth";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { throwIfAuthenticated } from "./throw-if-authenticated";
 
 // # 创建用户账户 Action：通过邮箱验证码校验注册请求，完成账户创建
@@ -59,7 +60,7 @@ export const createUserAccountAction = actionClient
 
 			// 验证码不匹配时终止注册。
 			throw new ActionError({
-				code: "VALIDATION_ERROR",
+				code: ErrorCode.VALIDATION_ERROR,
 				message: "输入无效的验证码",
 			});
 		}
@@ -75,7 +76,7 @@ export const createUserAccountAction = actionClient
 
 			// 验证码过期时提示用户重新获取。
 			throw new ActionError({
-				code: "VALIDATION_ERROR",
+				code: ErrorCode.VALIDATION_ERROR,
 				message: "验证码已经过期，请重新发送",
 			});
 		}

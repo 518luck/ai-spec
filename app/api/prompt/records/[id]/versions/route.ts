@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { listVersionsDtoSchema, versionListVoSchema } from "@/shared/lib/zod/schemas/prompt/record";
 
 // > 获取版本历史列表：按版本号倒序返回，支持分页
@@ -27,7 +28,7 @@ export const GET = withPersonal(
 		});
 
 		if (!record || record.ownerId !== session.user.id) {
-			throw new AiSpecError({ code: "NOT_FOUND", message: "收录不存在" });
+			throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "收录不存在" });
 		}
 
 		// > 查询版本列表

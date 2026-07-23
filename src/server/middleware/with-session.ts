@@ -4,6 +4,7 @@ import type { RateLimiterRes } from "rate-limiter-flexible";
 import { AiSpecError, toErrorResponse } from "@/server/errors/http-error";
 import { withAxiom } from "@/server/infrastructure/axiom/server";
 import { getSearchParams } from "@/shared/lib/utils";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { RATE_LIMIT_MAX_POINTS, resolveContext } from "./resolve-context";
 
 // # withSession：带统一鉴权与限流响应头的高阶 route handler
@@ -44,7 +45,7 @@ export const withSession = (handler: SessionHandler) =>
 			applyRateLimitHeaders(
 				headers,
 				rateInfo,
-				e instanceof AiSpecError && e.code === "RATE_LIMITED",
+				e instanceof AiSpecError && e.code === ErrorCode.RATE_LIMITED,
 			);
 			return toErrorResponse(e, headers);
 		}

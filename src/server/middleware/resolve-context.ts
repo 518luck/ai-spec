@@ -12,6 +12,7 @@ import { type TokenCacheItem, tokenCache } from "@/server/infrastructure/redis/t
 import prisma from "@/shared/db";
 import { auth } from "@/shared/lib/auth/auth";
 import { hashToken } from "@/shared/lib/auth/hash-token";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // 认证解析结果：身份 session 与（API Key 分支独有的）限流信息、权限范围
 type ResolveResult = {
@@ -42,7 +43,7 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 		// ! 限流命中即拒绝，防止 API Key 被滥用做高频请求
 		if (!ok) {
 			throw new AiSpecError({
-				code: "RATE_LIMITED",
+				code: ErrorCode.RATE_LIMITED,
 				message: `请求过于频繁，请 ${Math.ceil(res.msBeforeNext / 1000)} 秒后重试`,
 			});
 		}
@@ -67,7 +68,7 @@ export const resolveContext = async (req: NextRequest): Promise<ResolveResult> =
 	// 未携带 API Key，走 web 端 cookies session 分支
 	const cookieSession = await auth();
 	if (!cookieSession) {
-		throw new AiSpecError({ code: "UNAUTHORIZED", message: "未登录" });
+		throw new AiSpecError({ code: ErrorCode.UNAUTHORIZED, message: "未登录" });
 	}
 	// cookies 接入不走 scope 校验：浏览器用户的权限由 ownerId 数据隔离兜底
 	return { session: cookieSession, rateInfo: null, scopes: null };
@@ -85,7 +86,7 @@ const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 		if (cached.expires && new Date(cached.expires) < new Date()) {
 			// 顺手清理过期项，避免后续请求继续命中过期缓存
 			await tokenCache.delete(hashedKey);
-			throw new AiSpecError({ code: "UNAUTHORIZED", message: "API Key 已过期" });
+			throw new AiSpecError({ code: ErrorCode.UNAUTHORIZED, message: "API Key 已过期" });
 		}
 		return cached;
 	}
@@ -103,10 +104,10 @@ const resolveApiKeyToken = async (rawKey: string): Promise<TokenCacheItem> => {
 	});
 
 	if (!token) {
-		throw new AiSpecError({ code: "UNAUTHORIZED", message: "无效的 API Key" });
+		throw new AiSpecError({ code: ErrorCode.UNAUTHORIZED, message: "无效的 API Key" });
 	}
 	if (token.expires && token.expires < new Date()) {
-		throw new AiSpecError({ code: "UNAUTHORIZED", message: "API Key 已过期" });
+		throw new AiSpecError({ code: ErrorCode.UNAUTHORIZED, message: "API Key 已过期" });
 	}
 
 	// 3. 回填缓存：把 Date 统一转成 ISO 字符串以保持 JSON 兼容

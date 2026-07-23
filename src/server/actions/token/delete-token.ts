@@ -5,6 +5,7 @@ import { authUserActionClient } from "@/server/actions/safe-action";
 import { ActionError } from "@/server/errors/action-error";
 import { tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { deleteTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 
 // # 删除 API 密钥 Action：校验归属后删除令牌并清除缓存
@@ -25,11 +26,11 @@ export const deleteTokenAction = authUserActionClient
 			select: { userId: true, hashedKey: true },
 		});
 		if (!token) {
-			throw new ActionError({ code: "NOT_FOUND", message: "令牌不存在" });
+			throw new ActionError({ code: ErrorCode.NOT_FOUND, message: "令牌不存在" });
 		}
 		// ! 归属校验：即便知道别人的令牌 id 也不能删除
 		if (token.userId !== userId) {
-			throw new ActionError({ code: "FORBIDDEN", message: "无权删除该令牌" });
+			throw new ActionError({ code: ErrorCode.FORBIDDEN, message: "无权删除该令牌" });
 		}
 
 		await prisma.token.delete({ where: { id } });

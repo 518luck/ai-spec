@@ -1,6 +1,7 @@
 import { createMiddleware } from "next-safe-action";
 import { ActionError } from "@/server/errors/action-error";
 import { auth } from "@/shared/lib/auth/auth";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // # 鉴权前置中间件：已登录用户禁止访问注册/登录等入口
 
@@ -20,7 +21,7 @@ export const throwIfAuthenticated = createMiddleware().define(
 
 		// ! 会话存在即拒绝，防止已登录用户重复注册/登录
 		if (session) {
-			throw new ActionError({ code: "FORBIDDEN", message: "您已经登录" });
+			throw new ActionError({ code: ErrorCode.FORBIDDEN, message: "您已经登录" });
 		}
 
 		return next({ ctx });

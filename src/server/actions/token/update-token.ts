@@ -5,6 +5,7 @@ import { authUserActionClient } from "@/server/actions/safe-action";
 import { ActionError } from "@/server/errors/action-error";
 import { tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { updateTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
 
 // # 更新 API 密钥 Action：校验归属后更新令牌元信息并清除缓存
@@ -25,11 +26,11 @@ export const updateTokenAction = authUserActionClient
 			select: { userId: true, hashedKey: true },
 		});
 		if (!token) {
-			throw new ActionError({ code: "NOT_FOUND", message: "令牌不存在" });
+			throw new ActionError({ code: ErrorCode.NOT_FOUND, message: "令牌不存在" });
 		}
 		// ! 归属校验：即便知道别人的令牌 id 也不能改
 		if (token.userId !== userId) {
-			throw new ActionError({ code: "FORBIDDEN", message: "无权修改该令牌" });
+			throw new ActionError({ code: ErrorCode.FORBIDDEN, message: "无权修改该令牌" });
 		}
 
 		// 落库：scopes 数组按空格拼接（与创建逻辑一致），空数组存为 null；空描述存为 null；expires 为 null 表示永不过期

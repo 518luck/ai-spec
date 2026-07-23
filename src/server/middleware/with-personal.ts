@@ -12,6 +12,7 @@ import type { Action } from "@/server/rbac/actions";
 import { formatScope } from "@/server/rbac/scopes";
 import type { UserPlan } from "@/shared/db/generator/client";
 import { getSearchParams } from "@/shared/lib/utils";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { resolveContext } from "./resolve-context";
 
 type RouteContext = { params: Promise<Record<string, string | string[]>> };
@@ -54,7 +55,7 @@ export const withPersonal = (handler: PersonalHandler, { permissions }: Personal
 					// 翻译成「中文名(scope 字符串)」格式，让调用方既看懂权限含义又能对照配置
 					const missingLabel = missing.map((s) => formatScope(s)).join("、");
 					throw new AiSpecError({
-						code: "FORBIDDEN",
+						code: ErrorCode.FORBIDDEN,
 						message: `当前 API Key 权限不足，缺少所需 scope：${missingLabel}`,
 					});
 				}

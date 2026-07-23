@@ -3,7 +3,7 @@ import { ZodError } from "zod/v4";
 import { fromZodError } from "zod-validation-error";
 import { createLogger, serializeError } from "@/server/infrastructure/axiom/server";
 import { Prisma } from "@/shared/db/generator/client";
-import type { ErrorCode } from "@/shared/lib/zod/schemas/error";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // # HTTP 错误处理：把各类原始错误归一化为带 code 的标准响应体
 
@@ -66,14 +66,14 @@ const toError = (e: unknown): ErrorResult => {
 		log.warn(message, serializeError(e));
 		after(log.flush());
 		return {
-			error: { message, code: "VALIDATION_ERROR" },
+			error: { message, code: ErrorCode.VALIDATION_ERROR },
 			status: ERROR_CODES.VALIDATION_ERROR,
 		};
 	}
 
 	// ③ Prisma 已知错误：P2025（记录不存在）→ NOT_FOUND，其余 → DATABASE_ERROR；原始 e.code 只进日志
 	if (e instanceof Prisma.PrismaClientKnownRequestError) {
-		const code: ErrorCode = e.code === "P2025" ? "NOT_FOUND" : "DATABASE_ERROR";
+		const code = e.code === "P2025" ? ErrorCode.NOT_FOUND : ErrorCode.DATABASE_ERROR;
 		log.error(e.message, { code: e.code, meta: e.meta, ...serializeError(e) });
 		after(log.flush());
 		return { error: { message: e.message, code }, status: ERROR_CODES[code] };
@@ -84,7 +84,7 @@ const toError = (e: unknown): ErrorResult => {
 	log.error(message, e instanceof Error ? serializeError(e) : undefined);
 	after(log.flush());
 	return {
-		error: { message, code: "INTERNAL_ERROR" },
+		error: { message, code: ErrorCode.INTERNAL_ERROR },
 		status: ERROR_CODES.INTERNAL_ERROR,
 	};
 };

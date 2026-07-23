@@ -6,6 +6,7 @@ import { uploadUserAvatar } from "@/server/infrastructure/storage";
 import { withSession } from "@/server/middleware/with-session";
 import prisma from "@/shared/db";
 import { requestEmailChange } from "@/shared/lib/auth/request-email-change";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { updateUserDtoSchema, userVoSchema } from "@/shared/lib/zod/schemas/user";
 
 // 用户资料更新路由的专用日志作用域，自动注入 module 字段
@@ -52,7 +53,7 @@ export const PATCH = withSession(async ({ req, session }) => {
 			});
 			if (taken) {
 				throw new AiSpecError({
-					code: "CONFLICT",
+					code: ErrorCode.CONFLICT,
 					message: "该邮箱已被其他账号使用",
 				});
 			}

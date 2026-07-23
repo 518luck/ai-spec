@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import {
 	createDraftVoSchema,
 	deleteDraftDtoSchema,
@@ -31,7 +32,7 @@ export const GET = withPersonal(
 
 		// 草稿不存在或不是当前用户所有，统一返回 404（避免暴露资源归属）
 		if (!draft || draft.ownerId !== session.user.id) {
-			throw new AiSpecError({ code: "NOT_FOUND", message: "草稿不存在" });
+			throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "草稿不存在" });
 		}
 
 		// ownerId 仅用于权限校验，不返回给前端；folderId 直接透传 null（VO schema 已为 nullable）
