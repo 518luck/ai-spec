@@ -14,12 +14,15 @@ export default async function Page({
 		filter?: string;
 		favorite?: string;
 		sort?: string;
+		useRecordId?: string;
+		useVersionId?: string;
 	}>;
 }) {
 	// Next.js 15 的 searchParams 是 Promise，必须先 await 再校验
 	const sp = await searchParams;
-	// 用 Zod 校验：合法值保留，非法值校验失败直接抛错
-	const { folderId, tagIds, q, filter, favorite, sort } = listRecordsDtoSchema.parse(sp);
+	// 先取出「使用此版本」带回的两个参数（不参与列表查询校验），剩余字段交给 schema 校验
+	const { useRecordId, useVersionId, ...listParams } = sp;
+	const { folderId, tagIds, q, filter, favorite, sort } = listRecordsDtoSchema.parse(listParams);
 	return (
 		<PersonalRecordsPage
 			folderId={folderId}
@@ -28,6 +31,8 @@ export default async function Page({
 			filter={filter}
 			favorite={favorite}
 			sort={sort}
+			useRecordId={useRecordId}
+			useVersionId={useVersionId}
 		/>
 	);
 }

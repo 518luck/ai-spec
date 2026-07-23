@@ -20,6 +20,7 @@ import {
 	IconChevronLeft,
 	IconChevronRight,
 	IconChevronUp,
+	IconClock,
 	IconCode,
 	IconCompass,
 	IconCopy,
@@ -179,4 +180,7 @@ export const Icons = {
 
 	themeLight: IconSun,
 	themeDark: IconMoonStars,
+
+	// 版本历史
+	history: IconClock,
 };
