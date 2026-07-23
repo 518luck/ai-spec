@@ -132,10 +132,9 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 					</div>
 				);
 			}
-			// 渲染 diff：标题独立展示，正文按差异分块用 Markdown 渲染，新增绿色、删除红色背景
+			// 渲染 diff：正文按差异分块用 Markdown 渲染，新增绿色、删除红色背景
 			return (
 				<div className="p-6">
-					<h1 className="mb-4 font-semibold text-2xl">{title}</h1>
 					<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent">
 						{diffChanges.map((change, index) => {
 							// 新增/删除块着色，未变化块保持默认背景
@@ -165,10 +164,9 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 			);
 		}
 		if (content) {
-			// 普通视图：标题独立渲染到内容区上方（不依赖 content 首行的 markdown 语法），正文走 Markdown
+			// 普通视图：正文走 Markdown 渲染（标题已提到顶部标题栏）
 			return (
 				<div className="p-6">
-					<h1 className="mb-4 font-semibold text-2xl">{title}</h1>
 					<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent">
 						<MarkdownView>{content}</MarkdownView>
 					</article>
@@ -187,11 +185,14 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 		<TitlePageShell
 			title={
 				<div className="flex w-full items-center justify-between">
-					<div className="flex items-center gap-3">
+					<div className="flex min-w-0 items-center gap-3">
 						<Button variant="ghost" size="icon-sm" aria-label="返回" onClick={() => router.back()}>
 							<Icons.chevronLeft className="size-4" />
 						</Button>
-						<h1 className="font-semibold text-lg">版本历史</h1>
+						<h1 className="shrink-0 font-semibold text-lg">版本历史</h1>
+						{/* 收录标题：与"版本历史"用竖线分隔，min-w-0 + truncate 防止过长标题撑爆标题栏 */}
+						<div className="h-4 w-px shrink-0 bg-border" />
+						<span className="truncate text-muted-foreground text-sm">{title || "加载中…"}</span>
 					</div>
 					<div className="flex items-center gap-1.5">
 						<Tooltip>
