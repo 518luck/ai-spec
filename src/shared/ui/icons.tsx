@@ -7,7 +7,6 @@ import {
 	IconArrowBarLeft,
 	IconArrowsDiagonal,
 	IconArrowsDiagonalMinimize2,
-	IconArrowsLeftRight,
 	IconArrowUpRight,
 	IconBold,
 	IconBook,
@@ -80,6 +79,7 @@ import type { ComponentType, SVGProps } from "react";
 
 import { LogoIcon } from "@/shared/assets/icons/logo";
 import { SquaresIcon } from "@/shared/assets/icons/squares";
+import { CompareDiffIcon } from "@/shared/assets/icons/compare-diff";
 
 // @ 图标组件类型：兼容 tabler 图标（TablerIcon）和自封装 SVG 图标组件
 export type Icon = TablerIcon | ComponentType<SVGProps<SVGSVGElement>>;
@@ -184,5 +184,5 @@ export const Icons = {
 
 	// 版本历史
 	history: IconClock,
-	compare: IconArrowsLeftRight,
+	compare: CompareDiffIcon,
 };

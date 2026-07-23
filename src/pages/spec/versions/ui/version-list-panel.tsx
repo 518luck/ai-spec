@@ -32,12 +32,8 @@ export function VersionListPanel({
 				<Skeleton key={i} className="h-9 w-full" />
 			));
 		}
-		// 数据为空：展示「暂无版本」提示
-		if (!versions || versions.length === 0) {
-			return <p className="px-2 py-4 text-center text-muted-foreground text-xs">暂无版本</p>;
-		}
 		// 有数据：把每个版本渲染为可点击的时间按钮，选中项高亮
-		return versions.map((version) => (
+		return versions?.map((version) => (
 			<button
 				key={version.id}
 				type="button"

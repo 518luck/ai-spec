@@ -13,7 +13,7 @@ import remarkGfm from "remark-gfm";
 import useSWR from "swr";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
-import { Spinner } from "@/shared/ui/spinner";
+import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { TitlePageShell } from "@/widgets/page-shell";
 import { VersionListPanel } from "./version-list-panel";
@@ -125,11 +125,11 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 
 	// > 渲染左侧内容区（不自带滚动，由外壳的单一滚动区接管）
 	const renderContent = () => {
-		// 初始加载态：列表拉取中 / 有版本但尚未选中 / 内容拉取中 → 统一显示 Spinner，避免误判为"暂无内容"
+		// 初始加载态：列表拉取中 / 有版本但尚未选中 / 内容拉取中 → 统一显示 ScaleLoader，避免误判为"暂无内容"
 		if (listLoading || (hasVersions && selectedId === null) || contentLoading) {
 			return (
-				<div className="flex min-h-60 items-center justify-center">
-					<Spinner className="size-5" />
+				<div className="flex min-h-60 items-center justify-center text-muted-foreground">
+					<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
 				</div>
 			);
 		}
@@ -137,8 +137,8 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 			// diff 结果尚未就绪（如最新版内容还在拉取）→ 加载态
 			if (!diffChanges) {
 				return (
-					<div className="flex min-h-60 items-center justify-center">
-						<Spinner className="size-5" />
+					<div className="flex min-h-60 items-center justify-center text-muted-foreground">
+						<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
 					</div>
 				);
 			}
@@ -183,12 +183,8 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 				</div>
 			);
 		}
-		// 一切加载完毕仍无内容：真正无数据
-		return (
-			<p className="flex min-h-60 items-center justify-center text-muted-foreground text-sm">
-				暂无内容
-			</p>
-		);
+		// 版本内容非空由 schema 保证，此分支业务上不可达；兜底返回 null 避免渲染异常
+		return null;
 	};
 
 	return (
@@ -214,7 +210,7 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 										size="sm"
 										onClick={() => setViewMode(viewMode === "diff" ? "content" : "diff")}
 									>
-										<Icons.compare className="size-4" />
+										<Icons.compare className="size-4" active={viewMode === "diff"} />
 										Diff
 									</Button>
 								}
