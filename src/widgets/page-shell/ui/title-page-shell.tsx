@@ -24,7 +24,7 @@ export function TitlePageShell({
 			{title ? (
 				<div
 					data-slot="title-page-shell-header"
-					className="sticky top-0 z-10 flex h-16 shrink-0 items-center border-b bg-transparent px-6"
+					className="sticky top-0 z-10 flex h-16 shrink-0 items-center border-b bg-linear-to-b from-background/80 to-background/5 px-6 backdrop-blur-sm"
 				>
 					{typeof title === "string" ? (
 						<h1 className="font-semibold text-lg leading-tight">{title}</h1>
