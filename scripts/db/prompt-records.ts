@@ -1,7 +1,7 @@
 import "dotenv/config";
 
+import { calculateDiff, serializeDiff } from "@/server/utils/diff";
 import prisma from "@/shared/db";
-import { calculateDiff, serializeDiff } from "@/shared/lib/diff";
 
 // 模拟当前用户（luck2 zhang / zhangluck598@gmail.com）在数据库中的 ID
 const OWNER_ID = "cmrjdu92f0001099de7h2zu5p";

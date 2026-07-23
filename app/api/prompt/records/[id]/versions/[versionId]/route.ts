@@ -4,8 +4,8 @@ import { NextResponse } from "next/server";
 
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
+import { deserializeDiff, reconstructContent } from "@/server/utils/diff";
 import prisma from "@/shared/db";
-import { deserializeDiff, reconstructContent } from "@/shared/lib/diff";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { versionDetailVoSchema } from "@/shared/lib/zod/schemas/prompt/record";
 

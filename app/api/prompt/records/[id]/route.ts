@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
+import { calculateDiff, serializeDiff } from "@/server/utils/diff";
 import prisma from "@/shared/db";
-import { calculateDiff, serializeDiff } from "@/shared/lib/diff";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import {
 	createRecordVoSchema,

@@ -1,6 +1,6 @@
 import { type Change, diffLines } from "diff";
 
-// # Diff 工具函数：基于行数的增量 diff 计算、应用与重建
+// # Diff 工具函数：基于行数的增量 diff 计算、应用与重建（服务端专用，版本存储与重建使用）
 
 // @ Diff 操作：keep/delete 只记行数（不携带内容），insert 才带新增文本
 export type DiffOp =
