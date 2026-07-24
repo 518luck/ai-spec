@@ -178,6 +178,16 @@ export const POST = withPersonal(
 				visibility: "private",
 				// 标签关联：tags 为 id 数组，直接 create 关联表行；id 不存在时外键约束抛 P2025
 				tags: { create: (tags ?? []).map((tagId) => ({ tagId })) },
+				// 创建初始版本（v1 快照），保证版本历史至少有一条记录
+				versions: {
+					create: {
+						versionNumber: 1,
+						message: "初始版本",
+						isSnapshot: true,
+						snapshot: content,
+						editorId: session.user.id,
+					},
+				},
 			},
 			select: {
 				id: true,
