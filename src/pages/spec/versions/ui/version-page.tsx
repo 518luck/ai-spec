@@ -173,31 +173,29 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 			// 色块结构与普通视图保持一致（article > MarkdownView），仅在 change 块外层加背景色，不引入额外间距
 			return (
 				<div className="p-6">
-					<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent">
-						{diffChanges.map((change, index) => {
-							// 新增/删除块着色，未变化块保持默认背景
-							const diffClass = change.added
-								? "bg-green-100 dark:bg-green-900/30"
-								: change.removed
-									? "bg-red-100 dark:bg-red-900/30"
-									: "";
-							// 删除块用删除线弱化，仅提示历史内容
-							const textClass = change.removed
-								? "text-muted-foreground line-through opacity-70"
+					{diffChanges.map((change, index) => {
+						// 新增/删除块着色，未变化块保持默认背景
+						const diffClass = change.added
+							? "bg-green-100 dark:bg-green-900/30"
+							: change.removed
+								? "bg-red-100 dark:bg-red-900/30"
 								: "";
-							return (
-								<div
-									// biome-ignore lint/suspicious/noArrayIndexKey: diff 分块按索引渲染，顺序稳定
-									key={index}
-									className={diffClass}
-								>
-									<div className={textClass}>
+						// 删除块用删除线弱化，仅提示历史内容
+						const textClass = change.removed ? "text-muted-foreground line-through opacity-70" : "";
+						return (
+							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: diff 分块按索引渲染，顺序稳定
+								key={index}
+								className={diffClass}
+							>
+								<div className={textClass}>
+									<article className="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-transparent">
 										<MarkdownView>{change.value}</MarkdownView>
-									</div>
+									</article>
 								</div>
-							);
-						})}
-					</article>
+							</div>
+						);
+					})}
 				</div>
 			);
 		}
