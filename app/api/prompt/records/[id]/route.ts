@@ -7,6 +7,7 @@ import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import {
 	createRecordVoSchema,
+	deleteRecordDtoSchema,
 	recordContentVoSchema,
 	updateRecordDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/record";
@@ -158,6 +159,29 @@ export const PATCH = withPersonal(
 		}
 
 		return NextResponse.json(result.data);
+	},
+	{ permissions: ["promptRecord.write"] },
+);
+
+// > 硬删除收录：where 含 ownerId 做归属隔离；不存在/非本人时 Prisma P2025 → 404。
+// > 关联子表（versions/tags/favorites）均为 onDelete: Cascade，数据库自动级联清理，无需事务
+export const DELETE = withPersonal(
+	async ({ ctx, session }) => {
+		const { id: rawId } = await ctx.params;
+		const id = Array.isArray(rawId) ? rawId[0] : rawId;
+
+		// 路径参数守卫：id 非空才放行
+		const parsed = deleteRecordDtoSchema.safeParse({ id });
+		if (!parsed.success) {
+			throw parsed.error;
+		}
+
+		// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
+		await prisma.promptRecord.delete({
+			where: { id: parsed.data.id, ownerId: session.user.id },
+		});
+
+		return NextResponse.json({ success: true });
 	},
 	{ permissions: ["promptRecord.write"] },
 );

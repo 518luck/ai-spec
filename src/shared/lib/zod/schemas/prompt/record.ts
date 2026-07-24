@@ -61,6 +61,14 @@ export const updateRecordDtoSchema = z
 // 更新收录入参类型
 export type UpdateRecordDto = z.infer<typeof updateRecordDtoSchema>;
 
+// 删除收录入参：仅校验 id 非空（作为路由/前端参数守卫）
+export const deleteRecordDtoSchema = z.object({
+	id: z.string().min(1, { error: "缺少收录 id" }),
+});
+
+// 删除收录入参类型
+export type DeleteRecordDto = z.infer<typeof deleteRecordDtoSchema>;
+
 // 收录列表查询入参：文件夹筛选 + 标签筛选 + 搜索（q + filter）+ 收藏筛选 + 排序 + 分页
 // filter 为 base64 编码的 JSON，形如 {title:true,content:true}，决定 q 搜哪些字段
 // favorite=true 时忽略 folderId，跨文件夹返回当前用户收藏的收录

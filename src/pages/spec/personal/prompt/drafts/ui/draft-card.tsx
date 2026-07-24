@@ -9,12 +9,6 @@ import { deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
 import { PromptCard } from "../../shared/ui/prompt-card";
 import { useDraftsMutate } from "../model/drafts-mutate-context";
@@ -55,7 +49,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 			preview={preview}
 			onCopy={handleCopy}
 			isCopying={isCopying}
-			// > 底部 hover 遮罩的操作：编辑 + 更多（收录/删除）
+			// > 底部 hover 遮罩的操作：编辑 + 收录 + 删除（各自独立子组件）
 			actions={
 				<>
 					<Button
@@ -66,7 +60,8 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 					>
 						<Icons.pencil className="size-4" />
 					</Button>
-					<DraftActions id={id} />
+					<PromoteDraftAction />
+					<DeleteDraftAction id={id} />
 				</>
 			}
 		>
@@ -76,8 +71,22 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	);
 }
 
-// 底部操作栏的"更多"菜单（收录/删除）；删除经 ConfirmDialog 二次确认
-function DraftActions({ id }: { id: string }): JSX.Element {
+// 收录（转正）按钮：功能待上线，目前仅占位提示
+function PromoteDraftAction(): JSX.Element {
+	return (
+		<Button
+			variant="ghost"
+			size="icon-sm"
+			aria-label="收录"
+			onClick={() => toast.info("转正功能即将上线")}
+		>
+			<Icons.promote className="size-4" />
+		</Button>
+	);
+}
+
+// 删除按钮 + 二次确认：确认后删除并重拉列表；失败时 toast 提示并 rethrow 让弹窗保持打开
+function DeleteDraftAction({ id }: { id: string }): JSX.Element {
 	const mutateDrafts = useDraftsMutate();
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	// 删除草稿 mutation；arg 为草稿 id
@@ -93,36 +102,21 @@ function DraftActions({ id }: { id: string }): JSX.Element {
 			toast.error(parsed.error.issues[0]?.message ?? "删除失败");
 			return;
 		}
-		await triggerDeleteDraft(parsed.data.id);
-		await mutateDrafts();
-		toast.success("已删除");
+		try {
+			await triggerDeleteDraft(parsed.data.id);
+			await mutateDrafts();
+			toast.success("已删除");
+		} catch (error) {
+			toast.error(error instanceof Error && error.message ? error.message : "删除失败");
+			throw error; // rethrow 让 ConfirmDialog 不关闭，保留弹窗供用户重试
+		}
 	};
 
 	return (
 		<>
-			<DropdownMenu>
-				<DropdownMenuTrigger
-					render={
-						<Button variant="ghost" size="icon-sm" aria-label="更多操作">
-							<Icons.more className="size-4" />
-						</Button>
-					}
-				>
-					<Icons.more className="size-4" />
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="end">
-					<DropdownMenuItem onClick={() => toast.info("转正功能即将上线")}>
-						<Icons.promote data-icon="inline-start" />
-						收录
-					</DropdownMenuItem>
-					{/* 点「删除」打开确认弹窗，不直接执行 */}
-					<DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
-						<Icons.trash data-icon="inline-start" />
-						删除
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
-
+			<Button variant="ghost" size="icon-sm" aria-label="删除" onClick={() => setDeleteOpen(true)}>
+				<Icons.trash className="size-4" />
+			</Button>
 			{/* 删除二次确认：草稿为高频低价值内容，简单确认即可，无需输入文字 */}
 			<ConfirmDialog
 				open={deleteOpen}
