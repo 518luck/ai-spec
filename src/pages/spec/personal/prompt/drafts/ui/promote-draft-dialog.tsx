@@ -12,6 +12,7 @@ import { toast } from "@/features/toast";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { Label } from "@/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -98,8 +99,9 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 				<div className="flex min-w-100">
 					{/* 左侧：资源类型列表 */}
 					<div className="w-40 border-r">
-						<div className="border-b px-3 py-2 font-medium text-muted-foreground text-sm">
+						<div className="flex items-center gap-1 border-b px-3 py-2 font-medium text-muted-foreground text-sm">
 							选择资源
+							<HelpTooltip content="选择要归档到的资源类型" />
 						</div>
 						<ScrollArea className="h-70">
 							{resourceOptions.map((option) => {
