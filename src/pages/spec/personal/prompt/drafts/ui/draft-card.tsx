@@ -13,6 +13,7 @@ import { Icons } from "@/shared/ui/icons";
 import { PromptCard } from "../../shared/ui/prompt-card";
 import { useDraftsMutate } from "../model/drafts-mutate-context";
 import { EditDraftDialog } from "./edit-draft-dialog";
+import { PromoteDraftPopover } from "./promote-draft-dialog";
 
 type DraftCardProps = {
 	// 草稿 ID
@@ -23,7 +24,7 @@ type DraftCardProps = {
 	preview: string;
 };
 
-// # 草稿卡片：基于 PromptCard，注入编辑 + 更多操作（收录/删除）+ 编辑弹窗
+// # 草稿卡片：基于 PromptCard，注入编辑 + 更多操作（复用/删除）+ 编辑弹窗
 export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	const [editOpen, setEditOpen] = useState(false);
 	// 复制进行中标志：拉全文期间禁用按钮 + 触发卡片 loading 蒙层
@@ -49,7 +50,7 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 			preview={preview}
 			onCopy={handleCopy}
 			isCopying={isCopying}
-			// > 底部 hover 遮罩的操作：编辑 + 收录 + 删除（各自独立子组件）
+			// > 底部 hover 遮罩的操作：编辑 + 复用 + 删除（各自独立子组件）
 			actions={
 				<>
 					<Button
@@ -60,7 +61,15 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 					>
 						<Icons.pencil className="size-4" />
 					</Button>
-					<PromoteDraftAction />
+					<PromoteDraftPopover
+						id={id}
+						name={name}
+						trigger={
+							<Button variant="ghost" size="icon-sm" aria-label="复用">
+								<Icons.promote className="size-4" />
+							</Button>
+						}
+					/>
 					<DeleteDraftAction id={id} />
 				</>
 			}
@@ -68,20 +77,6 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 			{/* 编辑弹窗 */}
 			<EditDraftDialog id={id} open={editOpen} onOpenChange={setEditOpen} />
 		</PromptCard>
-	);
-}
-
-// 复用按钮：功能待上线，目前仅占位提示
-function PromoteDraftAction(): JSX.Element {
-	return (
-		<Button
-			variant="ghost"
-			size="icon-sm"
-			aria-label="复用"
-			onClick={() => toast.info("复用功能即将上线")}
-		>
-			<Icons.promote className="size-4" />
-		</Button>
 	);
 }
 
