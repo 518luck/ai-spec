@@ -71,14 +71,14 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	);
 }
 
-// 收录（转正）按钮：功能待上线，目前仅占位提示
+// 复用按钮：功能待上线，目前仅占位提示
 function PromoteDraftAction(): JSX.Element {
 	return (
 		<Button
 			variant="ghost"
 			size="icon-sm"
-			aria-label="收录"
-			onClick={() => toast.info("转正功能即将上线")}
+			aria-label="复用"
+			onClick={() => toast.info("复用功能即将上线")}
 		>
 			<Icons.promote className="size-4" />
 		</Button>

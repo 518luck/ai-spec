@@ -86,7 +86,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 		<DraftsMutateProvider mutate={() => mutateDrafts()}>
 			<ToolbarPageShell
 				title="草稿"
-				help={<HelpTooltip content="随手记录灵感，转正后进入收录库管理版本与标签" />}
+				help={<HelpTooltip content="随手记录灵感，可复用到收录库、Agent.md 等位置" />}
 				filter={<FolderCombobox resourceType="promptDraft" />}
 				search={
 					// // > max-w-80 上限 320px、w-full 跟随父级弹性收缩，避免窄窗口标题栏溢出
