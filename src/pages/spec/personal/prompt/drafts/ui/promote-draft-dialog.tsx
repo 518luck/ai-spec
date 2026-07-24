@@ -4,16 +4,19 @@
 
 import { type JSX, useState } from "react";
 import useSWRMutation from "swr/mutation";
-import { getDraft } from "@/entities/prompt";
+import { deleteDraft, getDraft } from "@/entities/prompt";
 import { createRecord } from "@/entities/prompt/records/api/create-record";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import { toast } from "@/features/toast";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
+import { Checkbox } from "@/shared/ui/checkbox";
 import { Icons } from "@/shared/ui/icons";
+import { Label } from "@/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { ScrollArea } from "@/shared/ui/scroll-area";
+import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 // 资源类型选项
 const resourceOptions = [
@@ -43,6 +46,10 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 	const [folderId, setFolderId] = useState<string | null>(null);
 	// 选中的标签
 	const [tags, setTags] = useState<TagOptionVo[]>([]);
+	// 复用后是否删除草稿
+	const [deleteAfterPromote, setDeleteAfterPromote] = useState(false);
+	// 用于刷新草稿列表
+	const mutateDrafts = useDraftsMutate();
 
 	// 创建收录 mutation
 	const { trigger: triggerCreateRecord, isMutating } = useSWRMutation("promote-draft", async () => {
@@ -62,7 +69,12 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 	const handleConfirm = async (): Promise<void> => {
 		try {
 			await triggerCreateRecord();
-			toast.success("已复用到收录库");
+			// 如果勾选了复用后删除，则删除草稿并刷新列表
+			if (deleteAfterPromote) {
+				await deleteDraft(id);
+				await mutateDrafts();
+			}
+			toast.success(deleteAfterPromote ? "已复用到收录库并删除草稿" : "已复用到收录库");
 			setOpen(false);
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "复用失败");
@@ -75,6 +87,7 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 		if (!nextOpen) {
 			setFolderId(null);
 			setTags([]);
+			setDeleteAfterPromote(false);
 		}
 	};
 
@@ -131,11 +144,27 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 								</div>
 							</div>
 
-							{/* 底部确认按钮 */}
-							<div className="border-t p-3">
-								<Button className="w-full" onClick={handleConfirm} disabled={isMutating}>
-									{isMutating ? "复用中..." : "确认复用"}
-								</Button>
+							{/* 底部：删除选项 + 确认按钮 */}
+							<div className="border-t">
+								{/* 复用后删除草稿选项 */}
+								<div className="flex items-center gap-2 px-3 pt-3">
+									<Checkbox
+										id={`delete-after-promote-${id}`}
+										checked={deleteAfterPromote}
+										onCheckedChange={(checked) => setDeleteAfterPromote(checked === true)}
+									/>
+									<Label
+										htmlFor={`delete-after-promote-${id}`}
+										className="cursor-pointer text-muted-foreground text-xs"
+									>
+										是否需要连带删除草稿
+									</Label>
+								</div>
+								<div className="p-3">
+									<Button className="w-full" onClick={handleConfirm} disabled={isMutating}>
+										{isMutating ? "复用中..." : "确认复用"}
+									</Button>
+								</div>
 							</div>
 						</div>
 					</div>
