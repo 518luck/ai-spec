@@ -14,10 +14,10 @@ model Folder {
   // ② 业务字段
   name              String // 文件夹名称
   description       String? // 描述（可选）
-  color             String @default("#ef4444") // 文件夹颜色（#RRGGBB hex），驱动 FolderIcon 的方块底色
-  resourceType      String @map("resource_type") // > 文件夹归属的资源类型（promptDraft/promptRecord/rules...），故意不给默认值，强制调用方显式传入，防止归类错误
+  color             String           @default("#ef4444") // 文件夹颜色（#RRGGBB hex），驱动 FolderIcon 的方块底色
+  resourceType      String           @map("resource_type") // > 文件夹归属的资源类型（promptDraft/promptRecord/rules...），故意不给默认值，强制调用方显式传入，防止归类错误
   sortOrder         Int              @default(0) @map("sort_order") // 同级排序，驱动拖拽排序
-  teamId            String? @map("team_id") // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属，不决定权限）
+  teamId            String?          @map("team_id") // 所属团队 ID，null=个人空间，非 null=团队空间（仅标识归属，不决定权限）
   defaultMemberRole FolderMemberRole @default(viewer) @map("default_member_role") // 团队成员对此文件夹的默认角色（可被 FolderMember 表覆盖；仅团队文件夹生效）
 
   // ③ 时间戳
@@ -25,17 +25,17 @@ model Folder {
   updatedAt DateTime @updatedAt @map("updated_at") // 更新时间
 
   // ④ 外键列
-  ownerId String @map("owner_id") // 创建者 ID（拥有最高权限，不受 FolderMember 影响）
+  ownerId     String  @map("owner_id") // 创建者 ID（拥有最高权限，不受 FolderMember 影响）
   ruleSpaceId String? @map("rule_space_id") // 所属规约领域空间 ID（仅 resourceType="ruleFolder" 时有值；其他资源类型的文件夹此列为 null）
 
   // ⑤ 关联关系
-  owner          User           @relation("FolderOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文件夹）
-  team           Team?          @relation("TeamFolders", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其文件夹；null=个人空间）
-  ruleSpace      RuleSpace?     @relation("FolderItems_RuleFolder", fields: [ruleSpaceId], references: [id], onDelete: Cascade) // 所属规约空间（空间删除→级联删其文件夹；仅规约文件夹有值）
-  members        FolderMember[] // 文件夹的例外成员列表（叠加在团队默认权限之上）
-  promptDrafts   PromptDraft[]  @relation("FolderItems_PromptDraft") // 文件夹内的草稿（多态：文件夹删除→SetNull，资源保留）
-  promptRecords  PromptRecord[] @relation("FolderItems_PromptRecord") // 文件夹内的收录记录（多态：文件夹删除→SetNull，资源保留）
-  rules          Rule[]         @relation("FolderItems_Rule") // 文件夹内的规则（文件夹删除→规则保留，folderId 置空）
+  owner         User           @relation("FolderOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文件夹）
+  team          Team?          @relation("TeamFolders", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其文件夹；null=个人空间）
+  ruleSpace     RuleSpace?     @relation("FolderItems_RuleFolder", fields: [ruleSpaceId], references: [id], onDelete: Cascade) // 所属规约空间（空间删除→级联删其文件夹；仅规约文件夹有值）
+  members       FolderMember[] // 文件夹的例外成员列表（叠加在团队默认权限之上）
+  promptDrafts  PromptDraft[]  @relation("FolderItems_PromptDraft") // 文件夹内的草稿（多态：文件夹删除→SetNull，资源保留）
+  promptRecords PromptRecord[] @relation("FolderItems_PromptRecord") // 文件夹内的收录记录（多态：文件夹删除→SetNull，资源保留）
+  rules         Rule[]         @relation("FolderItems_Rule") // 文件夹内的规则（文件夹删除→规则保留，folderId 置空）
 
   // ⑥ 索引
   @@index([ownerId]) // 加速"我的文件夹"查询

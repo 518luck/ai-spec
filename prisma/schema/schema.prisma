@@ -45,11 +45,11 @@ model User {
   promptRecordVersions     PromptRecordVersion[] @relation("VersionEditor")
   promptDrafts             PromptDraft[]         @relation("PromptDraftOwner")
   promptFavorites          PromptFavorite[]
-  teamFavoritesAdded       TeamFavorite[]       @relation("TeamFavoriteAddedBy") // 该用户添加进团队共享收藏的项
+  teamFavoritesAdded       TeamFavorite[]        @relation("TeamFavoriteAddedBy") // 该用户添加进团队共享收藏的项
 
   // 文件夹反向关系
-  folders            Folder[]       @relation("FolderOwner") // 用户创建的全部文件夹
-  folderMemberships  FolderMember[] // 用户被授予例外权限的文件夹列表
+  folders           Folder[]       @relation("FolderOwner") // 用户创建的全部文件夹
+  folderMemberships FolderMember[] // 用户被授予例外权限的文件夹列表
 
   // 规约库反向关系：该用户创建的领域空间与规则
   ruleSpaces RuleSpace[] @relation("RuleSpaceOwner")
