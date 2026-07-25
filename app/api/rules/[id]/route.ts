@@ -27,10 +27,7 @@ export const GET = withPersonal(async ({ ctx, session }) => {
 	});
 
 	if (!rule) {
-		return NextResponse.json(
-			{ error: { message: "规约不存在" } },
-			{ status: 404 },
-		);
+		return NextResponse.json({ error: { message: "规约不存在" } }, { status: 404 });
 	}
 
 	// 转换时间格式
@@ -63,10 +60,7 @@ export const PUT = withPersonal(async ({ req, ctx, session }) => {
 	});
 
 	if (!existingRule) {
-		return NextResponse.json(
-			{ error: { message: "规约不存在" } },
-			{ status: 404 },
-		);
+		return NextResponse.json({ error: { message: "规约不存在" } }, { status: 404 });
 	}
 
 	// 更新规约
@@ -75,7 +69,7 @@ export const PUT = withPersonal(async ({ req, ctx, session }) => {
 		data: {
 			name: body.name ?? existingRule.name,
 			content: body.content ?? existingRule.content,
-			folderId: body.folderId !== undefined ? (body.folderId || null) : existingRule.folderId,
+			folderId: body.folderId !== undefined ? body.folderId || null : existingRule.folderId,
 		},
 		select: {
 			id: true,
@@ -116,10 +110,7 @@ export const DELETE = withPersonal(async ({ ctx, session }) => {
 	});
 
 	if (!existingRule) {
-		return NextResponse.json(
-			{ error: { message: "规约不存在" } },
-			{ status: 404 },
-		);
+		return NextResponse.json({ error: { message: "规约不存在" } }, { status: 404 });
 	}
 
 	// 删除规约

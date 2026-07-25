@@ -50,6 +50,7 @@ export const ruleListItemVoSchema = z.object({
 	name: z.string(),
 	preview: z.string(),
 	folderId: z.string().nullable(),
+	folderName: z.string().nullable(),
 	createdAt: z.iso.datetime(),
 	updatedAt: z.iso.datetime(),
 });

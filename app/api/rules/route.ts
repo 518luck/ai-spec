@@ -76,6 +76,11 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 				name: true,
 				content: true,
 				folderId: true,
+				folder: {
+					select: {
+						name: true,
+					},
+				},
 				createdAt: true,
 				updatedAt: true,
 			},
@@ -94,6 +99,7 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 				? `${rule.content.substring(0, PREVIEW_LENGTH)}...`
 				: rule.content,
 		folderId: rule.folderId,
+		folderName: rule.folder?.name ?? null,
 		createdAt: rule.createdAt.toISOString(),
 		updatedAt: rule.updatedAt.toISOString(),
 	}));
