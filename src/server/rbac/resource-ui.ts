@@ -25,7 +25,10 @@ export const FOLDERABLE_RESOURCE_KEYS = [
 ] as const satisfies readonly ResourceKey[];
 
 // @ 可打标签的内容资源子集；收录（PromptRecordTag）+ 规约（RuleTag），将来扩展在此追加
-export const TAGGABLE_RESOURCE_KEYS = ["promptRecord", "rules"] as const satisfies readonly ResourceKey[];
+export const TAGGABLE_RESOURCE_KEYS = [
+	"promptRecord",
+	"rules",
+] as const satisfies readonly ResourceKey[];
 
 // @ 资源中文展示信息：供 API Key 弹窗渲染，团队专属资源不在此列
 export const RESOURCES = [

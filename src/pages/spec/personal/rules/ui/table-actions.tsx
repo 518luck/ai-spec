@@ -12,16 +12,16 @@ import {
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import type { Rule } from "./page";
+import type { Rule } from "./table";
 
 // 删除前确认：规约被 AGENTS.md 引用后删除会影响引用方，文案强调需确认
 const DELETE_CONFIRM_TEXT = "确认删除规则";
 
-type RuleActionsProps = {
+type TableActionsProps = {
 	rule: Rule;
 };
 
-export function RuleActions({ rule }: RuleActionsProps): JSX.Element {
+export function TableActions({ rule }: TableActionsProps): JSX.Element {
 	const [deleteOpen, setDeleteOpen] = useState(false);
 
 	const handleEdit = (): void => {
