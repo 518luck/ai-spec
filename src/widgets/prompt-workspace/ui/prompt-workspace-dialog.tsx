@@ -322,16 +322,16 @@ export function PromptWorkspaceDialog({
 						<MarkdownPreview content={content} height={isExpanded ? "37rem" : "29rem"} />
 					) : (
 						<CodeMirror
-							ref={editorRef}
-							value={content}
-							onChange={setContent}
-							onUpdate={handleUpdate}
-							extensions={extensions}
-							theme={editorTheme}
-							placeholder={placeholder}
-							height="100%"
-							className="h-full text-sm"
-							basicSetup={editorSettings}
+							ref={editorRef} // 获取编辑器实例引用（用于执行格式化操作 + 解析语法树）
+							value={content} // 受控内容
+							onChange={setContent} // 内容变化回调
+							onUpdate={handleUpdate} // 视图更新回调（解析光标处活跃格式）
+							extensions={extensions} // Markdown 语法 + 首行标题装饰
+							theme={editorTheme} // 语法高亮主题（跟随明暗模式切换）
+							placeholder={placeholder} // 内容为空时的占位文案
+							height="100%" // 撑满父容器
+							className="h-full text-sm" // 样式补充
+							basicSetup={editorSettings} // 基础 UI 开关（行号/折叠/高亮行）
 						/>
 					)}
 				</div>
@@ -340,21 +340,21 @@ export function PromptWorkspaceDialog({
 				<EditorToolbar
 					title={title}
 					editorState={{
-						editorBgColor,
-						toolbarBgColor,
-						editorSettings,
-						editorThemeId,
-						activeFormats,
-						isPreview,
-						isExpanded,
-						onThemeChange: handleThemeChange,
-						onExpandToggle: toggleExpanded,
+						editorBgColor, // 编辑器背景色（跟随主题明暗）
+						toolbarBgColor, // 工具栏背景色（与编辑器区分层次）
+						editorSettings, // 基础视图设置（行号/折叠/高亮，localStorage 持久化）
+						editorThemeId, // 当前主题 id（决定高亮 + 配色方案）
+						activeFormats, // 光标处生效的格式集合（用于工具栏按钮高亮）
+						isPreview, // 是否为 Markdown 预览模式
+						isExpanded, // 是否放大（32rem² → 73×40rem）
+						onThemeChange: handleThemeChange, // 切换主题回调
+						onExpandToggle: toggleExpanded, // 切换放大/缩小回调
 					}}
 					quickToolbar={{
-						items: activeToolbarItems,
-						onAction: handleItemAction,
-						onToggle: toggleTool,
-						onReorder: reorderTools,
+						items: activeToolbarItems, // 胶囊中显示的操作项（按 activeTools 顺序 + showIn 过滤后的可见项）
+						onAction: handleItemAction, // 点击胶囊按钮或菜单文字时执行操作（格式化/切换设置/切换预览）
+						onToggle: toggleTool, // Checkbox 切换工具的显示/隐藏（加入或移出快捷栏）
+						onReorder: reorderTools, // 拖拽排序后更新 activeTools 顺序（不可见项追加到末尾）（不可见项追加到末尾）
 					}}
 					folder={{
 						resourceType,
