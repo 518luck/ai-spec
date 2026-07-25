@@ -1,31 +1,30 @@
 "use client";
-// # 通用提示词工作台弹窗 —— CodeMirror 编辑器 + 预览，偏好持久化到 localStorage
-// > 不含任何业务逻辑（创建/更新/校验），保存行为通过 onSave props 注入
 
-import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
-import { syntaxTree } from "@codemirror/language";
-import { languages } from "@codemirror/language-data";
-import { Decoration, EditorView, type ViewUpdate } from "@codemirror/view";
-import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
+// # 通用提示词工作台弹窗 —— 编排层：业务态 + 弹窗外壳 + 组合 markdown-editor
+// > 编辑器状态全在 useEditorStore（独立 store），编排层不持有任何编辑器内部状态、不包 Provider
+// > editorRef 是 DOM 句柄（非数据），编排层持有并传给 MarkdownEditor（挂 CodeMirror）+ QuickToolbar（执行格式化）
+// > 保存行为通过 onSave 注入，关闭时触发；对外 props 不变，4 个调用点零改动
+
+import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { motion } from "motion/react";
 import { useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
-import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import { type JSX, useEffect, useRef, useState } from "react";
+import { FolderCombobox } from "@/features/folder-combobox";
+import {
+	extractTitle,
+	MarkdownEditor,
+	QuickToolbar,
+	resolveEditorColors,
+	useEditorStore,
+} from "@/features/markdown-editor";
+import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import { useLocalStorage } from "@/shared/hooks";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
+import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
+import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
-import {
-	defaultEditorSettings,
-	EDITOR_THEMES,
-	executeFormat,
-	MENU_GROUPS,
-	NODE_NAME_TO_TOOL_ID,
-	type ToolId,
-} from "../config/editor";
-import "../styles/codemirror.css";
-import { EditorToolbar } from "./editor-toolbar";
-import { MarkdownPreview } from "./markdown-preview";
 
 // 保存时传给外部的数据形状
 export type PromptEditorSaveData = {
@@ -62,34 +61,6 @@ type PromptWorkspaceDialogProps = {
 	initialTags?: TagOptionVo[];
 };
 
-// 从语法树解析光标位置处于哪些格式内，返回活跃的工具 id 集合
-const resolveActiveFormats = (view: ReactCodeMirrorRef | null): Set<string> => {
-	if (!view?.state) return new Set();
-
-	const pos = view.state.selection.main.head;
-	const tree = syntaxTree(view.state);
-	const node = tree.resolveInner(pos);
-	const active = new Set<string>();
-
-	let current: typeof node | null = node;
-	while (current) {
-		const toolId = NODE_NAME_TO_TOOL_ID[current.name];
-		if (toolId) active.add(toolId);
-		current = current.parent;
-	}
-
-	return active;
-};
-
-// 从内容中提取第一个非空行作为标题；全为空白时返回 undefined（由调用方兜底）
-const extractTitle = (content: string): string | undefined => {
-	for (const line of content.split("\n")) {
-		const trimmed = line.trim();
-		if (trimmed) return trimmed;
-	}
-	return undefined;
-};
-
 export function PromptWorkspaceDialog({
 	open,
 	onOpenChange,
@@ -105,161 +76,47 @@ export function PromptWorkspaceDialog({
 	tagsEnabled = false,
 	initialTags,
 }: PromptWorkspaceDialogProps): JSX.Element {
-	const { resolvedTheme } = useTheme();
+	const isEditMode = initialContent !== undefined;
+	const [content, setContent] = useState(initialContent ?? "");
+	// editorRef：编排层持有，传给 MarkdownEditor（挂 CodeMirror）+ QuickToolbar（执行格式化）
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
 
-	// @ 状态定义
-
-	const isEditMode = initialContent !== undefined; // 是否为编辑模式（传了初始内容就是编辑）
-	const [content, setContent] = useState(initialContent ?? "");
-
-	// initialContent 从外部变化时同步编辑器内容（如编辑弹窗加载完成后从空内容切换到全文）
+	// initialContent 外部变化时同步（编辑弹窗加载完成后从空切换到全文）
 	useEffect(() => {
 		setContent(initialContent ?? "");
 	}, [initialContent]);
 
-	const [isPreview, setIsPreview] = useState(false); // 是否处于 Markdown 预览模式
-	const [activeFormats, setActiveFormats] = useState<Set<string>>(new Set()); // 光标位置正在使用的格式（加粗/斜体等）
-
-	// 文件夹归属：弹窗打开时从 URL ?folderId=xxx 同步（和导航栏筛选同步），用户在弹窗内可自由修改
+	// 文件夹归属：弹窗打开时从 URL ?folderId= 同步
 	const searchParams = useSearchParams();
-	// null 表示未分类，全链路统一为 string | null（避免 undefined 中间态被 JSON.stringify 丢弃）
 	const [folderId, setFolderId] = useState<string | null>(null);
-	// 弹窗打开时从 URL 读取最新的 folderId（组件始终挂载，useState 初始值只在首次执行，需手动同步）
 	useEffect(() => {
 		if (open) setFolderId(searchParams?.get("folderId") ?? initialFolderId ?? null);
 	}, [open, searchParams, initialFolderId]);
 
-	// 标签：仅收录启用；编辑模式从 initialTags 回填，创建模式从空开始
+	// 标签：仅 tagsEnabled 时启用；编辑模式从 initialTags 回填
 	const [tags, setTags] = useState<TagOptionVo[]>([]);
 	useEffect(() => {
 		if (open && tagsEnabled) setTags(initialTags ?? []);
 	}, [open, tagsEnabled, initialTags]);
 
-	// > 编辑器偏好：持久化到 localStorage，所有场景共用同一套偏好
-	const [activeTools, setActiveTools] = useLocalStorage<string[]>("prompt-workspace.toolbar", [
-		"bold",
-		"italic",
-	]);
-	const [editorSettings, setEditorSettings] = useLocalStorage(
-		"prompt-workspace.settings",
-		defaultEditorSettings,
-	);
-	const [editorThemeId, setEditorThemeId] = useLocalStorage<string>(
-		"prompt-workspace.theme",
-		"vscode",
-	);
+	// 放大/缩小：弹窗尺寸状态（驱动 motion），编排层持有
 	const [isExpanded, setIsExpanded] = useLocalStorage<boolean>(
 		"prompt-workspace.isExpanded",
 		false,
 	);
 
-	// 切换快捷操作的显示/隐藏（useLocalStorage 自动持久化）
-	const toggleTool = (id: string): void => {
-		setActiveTools((prev) => {
-			const tools = prev ?? [];
-			return tools.includes(id) ? tools.filter((t) => t !== id) : [...tools, id];
-		});
-	};
+	// 浮层背景色：从 store 订阅主题 id + 系统明暗派生（编排层只读这一项编辑器派生色）
+	const { resolvedTheme } = useTheme();
+	const editorThemeId = useEditorStore((s) => s.editorThemeId);
+	const resetView = useEditorStore((s) => s.resetView);
+	const { editorBgColor } = resolveEditorColors(editorThemeId, resolvedTheme === "dark");
 
-	// 拖拽排序后更新工具顺序：以可见项的新顺序为准，把当前不可见的项追加到末尾
-	const reorderTools = (newOrder: string[]): void => {
-		setActiveTools((prev) => {
-			const reordered = (prev ?? []).slice().sort((a, b) => {
-				const ia = newOrder.indexOf(a);
-				const ib = newOrder.indexOf(b);
-				// 不在 newOrder 里的（不可见项）排到最后，保持原相对顺序
-				if (ia === -1 && ib === -1) return 0;
-				if (ia === -1) return 1;
-				if (ib === -1) return -1;
-				return ia - ib;
-			});
-			return reordered;
-		});
-	};
-
-	// 更新视图设置（useLocalStorage 自动持久化）
-	const updateEditorSettings = (settings: typeof defaultEditorSettings): void => {
-		setEditorSettings(settings);
-	};
-
-	// 切换编辑器主题（useLocalStorage 自动持久化）
-	const handleThemeChange = (id: string): void => {
-		setEditorThemeId(id);
-	};
-
-	// 切换放大/缩小（useLocalStorage 自动持久化）
-	const toggleExpanded = (): void => {
-		setIsExpanded((prev) => !prev);
-	};
-
-	// @ 派生状态：主题变体及背景色
-
-	const currentTheme = EDITOR_THEMES.find((t) => t.id === editorThemeId) ?? EDITOR_THEMES[0];
-	const isDark = resolvedTheme === "dark";
-	const editorTheme = isDark ? currentTheme.dark : currentTheme.light;
-	const editorBgColor = isDark ? currentTheme.darkBg : currentTheme.lightBg;
-	const toolbarBgColor = isDark ? currentTheme.darkToolbarBg : currentTheme.lightToolbarBg;
-
-	// @ Markdown 扩展配置
-
-	// Markdown 语法扩展 + 首行标题装饰，用 useMemo 缓存避免每次渲染重建
-	const extensions = useMemo(
-		() => [
-			markdown({ base: markdownLanguage, codeLanguages: languages }),
-			EditorView.decorations.of(() =>
-				Decoration.set([Decoration.line({ class: "first-line-title" }).range(0)]),
-			),
-		],
-		[],
-	);
-
-	// 编辑器更新时重新解析光标位置的活跃格式
-	const handleUpdate = (viewUpdate: ViewUpdate): void => {
-		if (viewUpdate.docChanged || viewUpdate.selectionSet) {
-			setActiveFormats(resolveActiveFormats(editorRef.current));
-		}
-	};
-
-	// @ 派生状态：可见菜单项
-
-	// 当前模式下可见的菜单项
-	const currentMode = isPreview ? "preview" : "edit";
-	const isVisible = (item: { showIn?: string }): boolean =>
-		!item.showIn || item.showIn === "both" || item.showIn === currentMode;
-
-	// 胶囊中显示的操作项：按 activeTools 的顺序排列（支持拖拽排序），再按 showIn 过滤
-	const allItems = MENU_GROUPS.flatMap((group) =>
-		group.items.map((item) => ({ ...item, type: group.type })),
-	);
-	const activeToolbarItems = activeTools
-		.map((id) => allItems.find((item) => item.id === id))
-		.filter(
-			(item): item is { type: string } & typeof item => item !== undefined && isVisible(item),
-		);
-
-	// 点击胶囊按钮或菜单文字
-	const handleItemAction = (type: "tool" | "display" | "preview", id: string): void => {
-		if (type === "tool") {
-			executeFormat(editorRef.current, id as ToolId);
-		} else if (type === "display") {
-			updateEditorSettings({
-				...editorSettings,
-				[id]: !editorSettings[id as keyof typeof editorSettings],
-			});
-		} else if (type === "preview") {
-			setIsPreview((v) => !v);
-		}
-	};
-
-	// 从内容第一个非空行提取标题，全空白时回退到 emptyTitle
+	// 标题：从内容首行提取
 	const title = extractTitle(content) ?? emptyTitle;
 
-	// 关闭弹窗：有内容则保存后关闭，空内容直接关闭
-	// > 编辑模式保存后不清空内容（关闭弹窗即可），创建模式保存后清空以便下次使用
+	// 关闭即保存：有内容则保存后关闭；创建模式清空业务态 + 重置编辑器视图态（store.resetView）
 	const handleClose = async (): Promise<void> => {
 		const trimmed = content.trim();
-
 		if (trimmed) {
 			try {
 				await onSave({
@@ -270,16 +127,16 @@ export function PromptWorkspaceDialog({
 					...(tagsEnabled && { tags }),
 				});
 			} catch {
-				return; // 错误处理由 onSave 内部完成（toast 等），这里只阻止关闭
+				return; // 错误处理由 onSave 内部完成，这里只阻止关闭
 			}
 		}
-
 		// 创建模式清空状态以便下次使用，编辑模式保留内容
 		if (!isEditMode) {
 			setContent("");
-			setIsPreview(false);
 			setFolderId(null);
 			setTags([]);
+			// 重置编辑器视图态（isPreview/activeFormats）
+			resetView();
 		}
 		onOpenChange(false);
 	};
@@ -302,7 +159,7 @@ export function PromptWorkspaceDialog({
 					<motion.div
 						layout
 						transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
-						className="flex flex-col overflow-hidden p-0"
+						className="relative flex flex-col overflow-hidden p-0"
 						style={{ maxHeight: "85vh", maxWidth: "calc(100% - 2rem)" }}
 						initial={false}
 						animate={{
@@ -312,65 +169,68 @@ export function PromptWorkspaceDialog({
 					/>
 				}
 			>
-				{/* 编辑器/预览区域 */}
+				{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider */}
 				<div className="min-h-0 flex-1 overflow-hidden">
-					{isLoading ? (
-						<div className="flex h-full items-center justify-center text-muted-foreground">
-							<ScaleLoaderWrap />
-						</div>
-					) : isPreview ? (
-						<MarkdownPreview content={content} height={isExpanded ? "37rem" : "29rem"} />
-					) : (
-						<CodeMirror
-							ref={editorRef} // 获取编辑器实例引用（用于执行格式化操作 + 解析语法树）
-							value={content} // 受控内容
-							onChange={setContent} // 内容变化回调
-							onUpdate={handleUpdate} // 视图更新回调（解析光标处活跃格式）
-							extensions={extensions} // Markdown 语法 + 首行标题装饰
-							theme={editorTheme} // 语法高亮主题（跟随明暗模式切换）
-							placeholder={placeholder} // 内容为空时的占位文案
-							height="100%" // 撑满父容器
-							className="h-full text-sm" // 样式补充
-							basicSetup={editorSettings} // 基础 UI 开关（行号/折叠/高亮行）
-						/>
-					)}
+					<MarkdownEditor
+						ref={editorRef}
+						value={content}
+						onChange={setContent}
+						placeholder={placeholder}
+						isLoading={isLoading}
+					/>
 				</div>
 
-				{/* 顶部导航栏 */}
-				<EditorToolbar
-					title={title}
-					editorState={{
-						editorBgColor, // 编辑器背景色（跟随主题明暗）
-						toolbarBgColor, // 工具栏背景色（与编辑器区分层次）
-						editorSettings, // 基础视图设置（行号/折叠/高亮，localStorage 持久化）
-						editorThemeId, // 当前主题 id（决定高亮 + 配色方案）
-						activeFormats, // 光标处生效的格式集合（用于工具栏按钮高亮）
-						isPreview, // 是否为 Markdown 预览模式
-						isExpanded, // 是否放大（32rem² → 73×40rem）
-						onThemeChange: handleThemeChange, // 切换主题回调
-						onExpandToggle: toggleExpanded, // 切换放大/缩小回调
-					}}
-					quickToolbar={{
-						items: activeToolbarItems, // 胶囊中显示的操作项（按 activeTools 顺序 + showIn 过滤后的可见项）
-						onAction: handleItemAction, // 点击胶囊按钮或菜单文字时执行操作（格式化/切换设置/切换预览）
-						onToggle: toggleTool, // Checkbox 切换工具的显示/隐藏（加入或移出快捷栏）
-						onReorder: reorderTools, // 拖拽排序后更新 activeTools 顺序（不可见项追加到末尾）（不可见项追加到末尾）
-					}}
-					folder={{
-						resourceType,
-						value: folderId,
-						onChange: setFolderId,
-					}}
-					// > 标签：仅收录启用时传入（草稿不传，EditorToolbar 不渲染 tag 区）
-					tags={
-						tagsEnabled
-							? {
-									value: tags,
-									onChange: setTags,
-								}
-							: undefined
-					}
-				/>
+				{/* // @ 顶部浮层：标题 + 标签 + 文件夹 + 快捷栏 + 放大；背景色从 store 派生 */}
+				<div
+					className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 px-4 backdrop-blur-[1.5px]"
+					style={{ background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` }}
+				>
+					{/* 标题 */}
+					<span className={`truncate font-semibold text-base ${isExpanded ? "w-64" : "w-32"}`}>
+						{title}
+					</span>
+
+					{/* // @ 标签：仅收录启用；放大模式下显示 chips + 触发器，缩小模式下收起 */}
+					{tagsEnabled && isExpanded ? (
+						<TagSelectTrigger
+							resourceType={resourceType}
+							value={tags}
+							onChange={setTags}
+							triggerVariant="ghost"
+							iconOnly
+							maskColor={editorBgColor}
+							className="min-w-40 max-w-40"
+						/>
+					) : null}
+
+					{/* // @ 文件夹：缩小空间时只显示图标，放大后显示完整文字 */}
+					<FolderCombobox
+						resourceType={resourceType}
+						value={folderId}
+						onChange={setFolderId}
+						className="shrink-0"
+						iconOnly={!isExpanded}
+					/>
+
+					<div className="ml-auto flex items-center gap-2">
+						{/* // @ 快捷栏：偏好从 store 取，tool 动作用 editorRef，对外只剩 editorRef + isExpanded */}
+						<QuickToolbar editorRef={editorRef} isExpanded={isExpanded} />
+
+						{/* // @ 放大/缩小：驱动弹窗 motion 尺寸 */}
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							aria-label={isExpanded ? "缩小" : "放大"}
+							onClick={() => setIsExpanded((prev) => !prev)}
+						>
+							{isExpanded ? (
+								<Icons.minimize className="size-4" />
+							) : (
+								<Icons.expand className="size-4" />
+							)}
+						</Button>
+					</div>
+				</div>
 
 				{/* 保存中遮罩 */}
 				{isSaving && (
