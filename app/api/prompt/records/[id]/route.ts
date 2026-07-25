@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import { calculateDiff, serializeDiff } from "@/server/utils/diff";
+import { mapTags } from "@/server/utils/map-tags";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import {
@@ -11,7 +12,6 @@ import {
 	recordContentVoSchema,
 	updateRecordDtoSchema,
 } from "@/shared/lib/zod/schemas/prompt/record";
-import { mapTags } from "../lib/map-tags";
 
 // # 单条收录详情：全文拉取 / 部分更新，归属隔离统一走 ownerId 进 where
 

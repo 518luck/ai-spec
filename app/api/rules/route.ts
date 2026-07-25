@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { withPersonal } from "@/server/middleware/with-personal";
+import { mapTags } from "@/server/utils/map-tags";
 import prisma from "@/shared/db";
 import {
 	createRuleDtoSchema,
@@ -9,7 +10,7 @@ import {
 	ruleVoSchema,
 } from "@/shared/lib/zod/schemas/rule";
 
-// # 规约：列表查询（文件夹 + 搜索）+ 创建（个人空间）
+// # 规约：列表查询（文件夹 + 标签 + 搜索）+ 创建（个人空间）
 
 // 分页大小
 const PAGE_SIZE = 30;
@@ -42,22 +43,29 @@ const getOrCreatePersonalSpace = async (userId: string): Promise<string> => {
 	return newSpace.id;
 };
 
-// > 按更新时间倒序查询当前用户规约（文件夹 + 搜索筛选 + 分页）
+// > 按更新时间倒序查询当前用户规约（文件夹 + 标签 + 搜索筛选 + 分页）
 export const GET = withPersonal(async ({ session, searchParams }) => {
 	const parsed = listRulesDtoSchema.safeParse(searchParams);
 	if (!parsed.success) {
 		throw parsed.error;
 	}
-	const { folderId, q, offset = 0 } = parsed.data;
+	const { folderId, tagIds: tagIdsParam, q, offset = 0 } = parsed.data;
 	const trimmedQuery = q?.trim() ?? "";
 
 	// folderId 为空（空串/undefined）表示"未分类"，统一映射为 null 查询
 	const targetFolderId = folderId || null;
+	// tagIds 为逗号分隔字符串，解析成数组；为空表示不按标签筛选
+	const tagIds = (tagIdsParam ?? "")
+		.split(",")
+		.map((s) => s.trim())
+		.filter(Boolean);
 
 	// 构建查询条件
 	const where = {
 		ownerId: session.user.id,
 		folderId: targetFolderId,
+		// 命中任一选中标签即返回（some 关系）
+		...(tagIds.length > 0 && { tags: { some: { tagId: { in: tagIds } } } }),
 		...(trimmedQuery && {
 			OR: [
 				{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
@@ -128,7 +136,7 @@ export const POST = withPersonal(async ({ req, session }) => {
 	if (!parsed.success) {
 		throw parsed.error;
 	}
-	const { name, content, folderId } = parsed.data;
+	const { name, content, folderId, tags } = parsed.data;
 
 	// 获取或创建用户的个人规则空间
 	const spaceId = await getOrCreatePersonalSpace(session.user.id);
@@ -140,20 +148,24 @@ export const POST = withPersonal(async ({ req, session }) => {
 			ownerId: session.user.id,
 			spaceId,
 			folderId: folderId || null,
+			// 标签关联：tags 为 id 数组，直接 create 关联表行；id 不存在时外键约束抛 P2025
+			tags: { create: (tags ?? []).map((tagId) => ({ tagId })) },
 		},
 		select: {
 			id: true,
 			name: true,
 			content: true,
 			folderId: true,
+			tags: { include: { tag: true } },
 			createdAt: true,
 			updatedAt: true,
 		},
 	});
 
-	// 转换时间格式
+	// 转换时间格式 + 扁平化标签关联
 	const out = {
 		...rule,
+		tags: mapTags(rule.tags),
 		createdAt: rule.createdAt.toISOString(),
 		updatedAt: rule.updatedAt.toISOString(),
 	};

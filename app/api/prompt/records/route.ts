@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { withPersonal } from "@/server/middleware/with-personal";
+import { mapTags } from "@/server/utils/map-tags";
 import prisma from "@/shared/db";
 import { Prisma } from "@/shared/db/generator/client";
 import { decodeFilters } from "@/shared/lib/search-filter";
@@ -11,7 +12,6 @@ import {
 	listRecordsDtoSchema,
 	recordListVoSchema,
 } from "@/shared/lib/zod/schemas/prompt/record";
-import { mapTags } from "./lib/map-tags";
 
 // # 提示词收录：列表查询（文件夹 + 标签 + 搜索）+ 创建（API Key 接入需 promptRecord.read / .write 权限）
 

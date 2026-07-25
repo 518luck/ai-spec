@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 
+import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
+import { mapTags } from "@/server/utils/map-tags";
 import prisma from "@/shared/db";
-import { ruleVoSchema } from "@/shared/lib/zod/schemas/rule";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
+import {
+	ruleContentVoSchema,
+	ruleVoSchema,
+	updateRuleDtoSchema,
+} from "@/shared/lib/zod/schemas/rule";
 
 // # 单条规约：查看详情、更新、删除
 
-// 获取单条规约详情
+// 获取单条规约详情：返回全文 + tags（编辑回填用）
 export const GET = withPersonal(async ({ ctx, session }) => {
 	const { id: rawId } = await ctx.params;
 	const id = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -21,23 +28,21 @@ export const GET = withPersonal(async ({ ctx, session }) => {
 			name: true,
 			content: true,
 			folderId: true,
-			createdAt: true,
-			updatedAt: true,
+			tags: { include: { tag: true } },
 		},
 	});
 
 	if (!rule) {
-		return NextResponse.json({ error: { message: "规约不存在" } }, { status: 404 });
+		throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "规约不存在" });
 	}
 
-	// 转换时间格式
+	// 扁平化标签关联
 	const out = {
 		...rule,
-		createdAt: rule.createdAt.toISOString(),
-		updatedAt: rule.updatedAt.toISOString(),
+		tags: mapTags(rule.tags),
 	};
 
-	const result = ruleVoSchema.safeParse(out);
+	const result = ruleContentVoSchema.safeParse(out);
 	if (!result.success) {
 		throw result.error;
 	}
@@ -45,11 +50,16 @@ export const GET = withPersonal(async ({ ctx, session }) => {
 	return NextResponse.json(result.data);
 });
 
-// 更新规约
+// 更新规约：部分更新，tags 全量替换（事务保证原子性）
 export const PUT = withPersonal(async ({ req, ctx, session }) => {
 	const { id: rawId } = await ctx.params;
 	const id = Array.isArray(rawId) ? rawId[0] : rawId;
-	const body = await req.json();
+
+	const parsed = updateRuleDtoSchema.safeParse(await req.json());
+	if (!parsed.success) {
+		throw parsed.error;
+	}
+	const { name, content, folderId, tags } = parsed.data;
 
 	// 验证规约是否存在且属于当前用户
 	const existingRule = await prisma.rule.findFirst({
@@ -60,30 +70,53 @@ export const PUT = withPersonal(async ({ req, ctx, session }) => {
 	});
 
 	if (!existingRule) {
-		return NextResponse.json({ error: { message: "规约不存在" } }, { status: 404 });
+		throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "规约不存在" });
 	}
 
-	// 更新规约
-	const rule = await prisma.rule.update({
-		where: { id },
-		data: {
-			name: body.name ?? existingRule.name,
-			content: body.content ?? existingRule.content,
-			folderId: body.folderId !== undefined ? body.folderId || null : existingRule.folderId,
-		},
-		select: {
-			id: true,
-			name: true,
-			content: true,
-			folderId: true,
-			createdAt: true,
-			updatedAt: true,
-		},
+	// 构建部分更新数据：只更新传入的字段
+	const data: {
+		name?: string;
+		content?: string;
+		folderId?: string | null;
+		tags?: { create: { tagId: string }[] };
+	} = {};
+	if (name !== undefined) data.name = name;
+	if (content !== undefined) data.content = content;
+	// folderId 收到 null/"" 表示清空为未分类（落到 DB 的 NULL），收到有效字符串表示归属该文件夹
+	if (folderId !== undefined) data.folderId = folderId || null;
+	// 标签关联全量替换：tags === undefined 时不动
+	// ! 不能用 set：RuleTag 是复合主键 (ruleId, tagId)，set 要求 unique 定位，会报 P2009
+	// ! deleteMany + create 必须放进事务：否则中途失败会丢标签（旧关联已删、新关联未建）
+	if (tags !== undefined) {
+		data.tags = { create: tags.map((tagId) => ({ tagId })) };
+	}
+
+	// > 事务保证原子性：deleteMany + update（含 tags.create）要么全成要么全败
+	// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
+	const rule = await prisma.$transaction(async (tx) => {
+		if (tags !== undefined) {
+			await tx.ruleTag.deleteMany({ where: { ruleId: id } });
+		}
+
+		return tx.rule.update({
+			where: { id, ownerId: session.user.id },
+			data,
+			select: {
+				id: true,
+				name: true,
+				content: true,
+				folderId: true,
+				tags: { include: { tag: true } },
+				createdAt: true,
+				updatedAt: true,
+			},
+		});
 	});
 
-	// 转换时间格式
+	// 转换时间格式 + 扁平化标签关联
 	const out = {
 		...rule,
+		tags: mapTags(rule.tags),
 		createdAt: rule.createdAt.toISOString(),
 		updatedAt: rule.updatedAt.toISOString(),
 	};
@@ -110,7 +143,7 @@ export const DELETE = withPersonal(async ({ ctx, session }) => {
 	});
 
 	if (!existingRule) {
-		return NextResponse.json({ error: { message: "规约不存在" } }, { status: 404 });
+		throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "规约不存在" });
 	}
 
 	// 删除规约
