@@ -11,6 +11,7 @@ import CodeMirror, { type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useTheme } from "next-themes";
 import { type JSX, useEffect, useMemo, useRef } from "react";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
+import { ScrollArea } from "@/shared/ui/scroll-area";
 import { resolveEditorColors } from "../lib/editor-colors";
 import { resolveActiveFormats } from "../lib/resolve-active-formats";
 import { useEditorStore } from "../model/editor-store";
@@ -85,7 +86,12 @@ export function MarkdownEditor({
 
 	// 预览模式：Markdown 渲染；否则：CodeMirror 编辑
 	if (isPreview) {
-		return <MarkdownPreview content={value} className={previewClassName} />;
+		// > 预览用 ScrollArea 接管滚动（与 CodeMirror 自带 cm-scroller 滚动样式对齐）；编辑模式不能用 ScrollArea，CodeMirror height:100% 与 ScrollArea viewport 收缩特性冲突会让虚拟滚动失效
+		return (
+			<ScrollArea className="h-full max-h-full">
+				<MarkdownPreview content={value} className={previewClassName} />
+			</ScrollArea>
+		);
 	}
 
 	return (

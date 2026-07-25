@@ -173,8 +173,10 @@ export function PromptWorkspaceDialog({
 						height: isExpanded ? "40rem" : "32rem",
 					}}
 				>
-					{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider；overflow-auto 统一管滚动（预览）/裁剪（编辑，CodeMirror 内部自滚） */}
-					<div className="min-h-0 flex-1 overflow-auto">
+					{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider
+					    // ! 不能用 ScrollArea 替换本层：CodeMirror 的 height:100% 依赖父级稳定高度，ScrollArea viewport 会收缩到内容尺寸导致 CodeMirror 永不溢出、虚拟滚动失效
+					    // > 本层只裁剪（overflow-hidden）；编辑模式 CodeMirror cm-scroller 自滚，预览模式 MarkdownEditor 内部用 ScrollArea 接管滚动 */}
+					<div className="min-h-0 flex-1 overflow-hidden">
 						<MarkdownEditor
 							ref={editorRef}
 							value={content}
