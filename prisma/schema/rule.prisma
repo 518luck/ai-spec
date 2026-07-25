@@ -1,0 +1,88 @@
+// # 规约库域：领域空间（顶层隔离）+ 规则（原子约定）+ 标签关联
+//
+// 三层结构对应 docs/项目设计/业务设计/规约库.md：
+//   领域空间 → 文件夹（复用 Folder 表，resourceType="ruleFolder"）→ 规则
+//   标签贯穿文件夹检索（复用 shared 域 Tag 表，resourceType="rules"）
+// ! Rule 冗余存 spaceId：支持未分类规则（folderId=null），且查询空间内规则不用 join folder
+
+// 领域空间：顶层物理隔离，规则的「家」固定在此，标签无法穿透
+// 用户自建（代码/创作/智能体/营销...），支持个人空间与团队空间
+model RuleSpace {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段
+  name      String // 空间名称（如"代码"、"创作"、"智能体"）
+  icon      String // 图标标识（code/palette/aiAgents/...，前端 Icons 映射）
+  sortOrder Int @default(0) @map("sort_order") // 同级排序，驱动拖拽
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ④ 外键列
+  ownerId String @map("owner_id")
+  teamId String? @map("team_id") // null=个人空间，非 null=团队空间（与 Folder/Tag 对称）
+
+  // ⑤ 关联关系
+  owner User @relation("RuleSpaceOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其空间）
+  team Team? @relation("TeamRuleSpaces", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其空间；null=个人空间）
+  folders Folder[] @relation("FolderItems_RuleFolder") // 空间下的文件夹（复用 Folder，传 resourceType="ruleFolder"）
+  rules Rule[] // 空间下的所有规则（含 folderId=null 直接挂空间下的）
+
+  // ⑥ 索引
+  @@index([ownerId]) // 加速"我的空间"查询
+  @@index([teamId]) // 加速团队空间内查询
+  @@schema("rule")
+}
+
+// 规则：一条原子约定（标题 + markdown 正文，长度可短可长）
+// 空间归属冗余存在 spaceId（必填），文件夹归属存 folderId（可空，null=未分类直接挂空间下）
+model Rule {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段
+  name String // 规则名称
+  content String @db.Text // 规则正文（markdown，可含代码块/范文片段）
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ④ 外键列
+  ownerId String @map("owner_id")
+  spaceId String @map("space_id") // 所属领域空间（冗余，便于查询空间内规则；与 folder.spaceId 保持一致）
+  folderId String? @map("folder_id") // 所属文件夹，null=未分类（直接挂空间下）
+
+  // ⑤ 关联关系
+  owner User @relation("RuleOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其规则）
+  space RuleSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade) // 所属空间（空间删除→级联删其下规则）
+  folder Folder? @relation("FolderItems_Rule", fields: [folderId], references: [id], onDelete: SetNull) // 所属文件夹（文件夹删除→规则保留，folderId 置空，但仍在原空间）
+  tags RuleTag[] // 标签关联（复用 shared 域 Tag 表）
+
+  // ⑥ 索引
+  @@index([ownerId]) // 加速"我的规则"查询
+  @@index([spaceId]) // 加速"空间内规则"查询（列表页核心索引）
+  @@index([folderId]) // 加速"文件夹内规则"查询
+  @@schema("rule")
+}
+
+// 规则与标签的显式多对多关联（对称于 PromptRecordTag，刻意用显式 m-n 便于未来扩展）
+model RuleTag {
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // ④ 外键列
+  ruleId String @map("rule_id")
+  tagId String @map("tag_id")
+
+  // ⑤ 关联关系
+  rule Rule @relation(fields: [ruleId], references: [id], onDelete: Cascade) // 规则删除→级联删其标签关联
+  tag Tag @relation(fields: [tagId], references: [id], onDelete: Cascade) // 标签删除→级联删其规则关联
+
+  // ⑥ 索引
+  @@id([ruleId, tagId])
+  @@index([tagId]) // 加速"标签下规则"反查（贯穿检索）
+  @@schema("rule")
+}

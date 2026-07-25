@@ -20,6 +20,7 @@ model Tag {
 
   // ⑤ 关联关系（反向）
   promptRecordTags PromptRecordTag[]
+  ruleTags         RuleTag[] // 规则标签关联（resourceType="rules"）
 
   // ⑥ 索引
   // ! 不用 @@unique([ownerId, teamId, resourceType, name])：Prisma 复合唯一键要求所有字段 non-null，

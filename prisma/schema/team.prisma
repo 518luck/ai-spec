@@ -21,6 +21,7 @@ model Team {
   memberships    TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
   folders        Folder[] @relation("TeamFolders") // 团队空间下的全部文件夹
   promptRecords  PromptRecord[] @relation("TeamPromptRecords") // 团队空间内的全部收录记录
+  ruleSpaces     RuleSpace[] @relation("TeamRuleSpaces") // 团队空间下的全部规约领域空间
   teamFavorites  TeamFavorite[] // 团队的共享收藏（成员共用）
 
   // ⑤ 索引
