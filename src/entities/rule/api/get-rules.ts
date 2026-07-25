@@ -7,6 +7,7 @@ import type { ListRulesDto, RuleListVo } from "@/shared/lib/zod/schemas/rule";
 export const getRules = async (params?: ListRulesDto): Promise<RuleListVo> => {
 	const searchParams = new URLSearchParams();
 	if (params?.folderId) searchParams.set("folderId", params.folderId);
+	if (params?.tagIds) searchParams.set("tagIds", params.tagIds);
 	if (params?.q) searchParams.set("q", params.q);
 	if (params?.offset !== undefined) searchParams.set("offset", String(params.offset));
 

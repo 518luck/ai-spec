@@ -1,17 +1,10 @@
 // # 规约 API：更新规约
 
 import { resolveErrorMessage } from "@/entities/lib/fetch-error";
-import type { RuleVo } from "@/shared/lib/zod/schemas/rule";
-
-// 更新规约入参
-interface UpdateRulePayload {
-	name?: string;
-	content?: string;
-	folderId?: string | null;
-}
+import type { RuleVo, UpdateRuleDto } from "@/shared/lib/zod/schemas/rule";
 
 // > 更新规约到 PUT /api/rules/[id]；非 2xx 时解析后端统一错误体并抛出
-export const updateRule = async (id: string, payload: UpdateRulePayload): Promise<RuleVo> => {
+export const updateRule = async (id: string, payload: UpdateRuleDto): Promise<RuleVo> => {
 	const response = await fetch(`/api/rules/${id}`, {
 		method: "PUT",
 		headers: { "Content-Type": "application/json" },
