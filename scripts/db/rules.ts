@@ -123,8 +123,8 @@ const ruleTemplates = [
 			"",
 			"```tsx",
 			"// ✅ 正确",
-			"<div className=\"flex items-center gap-2 p-4\">",
-			"  <span className=\"text-sm font-medium\">标题</span>",
+			'<div className="flex items-center gap-2 p-4">',
+			'  <span className="text-sm font-medium">标题</span>',
 			"</div>",
 			"",
 			"// ❌ 错误",
@@ -139,10 +139,10 @@ const ruleTemplates = [
 			"",
 			"```tsx",
 			"// ✅ 正确",
-			"<div className=\"text-primary bg-background\">",
+			'<div className="text-primary bg-background">',
 			"",
 			"// ❌ 错误",
-			"<div className=\"text-blue-500 bg-white\">",
+			'<div className="text-blue-500 bg-white">',
 			"```",
 		].join("\n"),
 	},
@@ -204,10 +204,10 @@ const ruleTemplates = [
 			"",
 			"```json",
 			"{",
-			"  \"data\": {},",
-			"  \"error\": {",
-			"    \"message\": \"错误信息\",",
-			"    \"code\": \"ERROR_CODE\"",
+			'  "data": {},',
+			'  "error": {',
+			'    "message": "错误信息",',
+			'    "code": "ERROR_CODE"',
 			"  }",
 			"}",
 			"```",
@@ -345,8 +345,8 @@ const ruleTemplates = [
 			"import Image from 'next/image';",
 			"",
 			"<Image",
-			"  src=\"/photo.jpg\"",
-			"  alt=\"描述\"",
+			'  src="/photo.jpg"',
+			'  alt="描述"',
 			"  width={500}",
 			"  height={300}",
 			"/>",
@@ -464,9 +464,7 @@ const main = async (): Promise<void> => {
 	const deleted = await prisma.rule.deleteMany({ where: { ownerId: OWNER_ID } });
 
 	// 生成规约数据
-	const rules = Array.from({ length: RULE_COUNT }, (_, index) =>
-		generateRule(index, space.id),
-	);
+	const rules = Array.from({ length: RULE_COUNT }, (_, index) => generateRule(index, space.id));
 
 	// 批量写入规约
 	await prisma.rule.createMany({ data: rules });
