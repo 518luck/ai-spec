@@ -155,13 +155,17 @@ export function PromptWorkspaceDialog({
 			<DialogContent
 				showCloseButton={false}
 				scrollable={false}
-				// > 编辑器实际尺寸交给 motion.div 控制；外壳 w-fit 收缩到子元素宽度；max-w-[calc(100%-2rem)] 让两侧留 16px 余量，覆盖默认 sm:max-w-md（28rem）
+				// > 编辑器实际尺寸交给 motion.div 控制；外壳 w-fit 收缩到子元素宽度；sm:max-w-none 解除默认 sm:max-w-md（28rem）限制让 motion 固定宽度生效
+				// > 背景改用编辑器主题色（editorBgColor）覆盖 bg-popover，与 CodeMirror 编辑区融为一体，避免"纸贴在弹窗上"的双层视觉
+				// > ring-0 去掉默认 ring-1（motion 填满外壳后会叠成内描边白线）；shadow-lg 补回悬浮阴影，与 dropdown/sheet 视觉一致
 				// ! 不用 render prop：motion.div 当 render 元素时，motion 的 transform 会覆盖 DialogContent 的居中 translate，导致弹窗偏下
-				className="w-fit max-w-[calc(100%-2rem)] overflow-visible p-0 sm:max-w-none"
+				className="w-fit overflow-visible p-0 shadow-lg ring-0 sm:max-w-none"
+				style={{ backgroundColor: editorBgColor }}
 			>
 				<motion.div
 					transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
-					className="relative flex flex-col overflow-hidden"
+					// > rounded-xl 与 DialogContent 外壳圆角对齐：外壳 overflow-visible 不裁剪，实际裁剪由本层 overflow-hidden 完成，圆角必须同步否则内容显示成直角
+					className="relative flex flex-col overflow-hidden rounded-xl"
 					style={{ maxHeight: "85vh" }}
 					initial={false}
 					animate={{
