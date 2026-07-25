@@ -14,16 +14,16 @@ export function PageWidthWrapper({
 	/** 是否撑满父级剩余高度（表格等需要占满视口的场景），默认关闭 */
 	fill?: boolean;
 }) {
+	// fill 模式下整个容器用 flex 链保证高度传递，padding 直接放外层（不再套内层 div 隔离）
 	return (
 		<div
 			className={cn(
-				"@container/page mx-auto w-full",
-				!fill && "px-3 pt-6 pb-6 lg:px-6",
+				"@container/page mx-auto w-full px-3 pt-6 pb-6 lg:px-6",
 				fill && "flex min-h-0 flex-1 flex-col",
 				className,
 			)}
 		>
-			{fill ? <div className="px-3 pt-6 pb-6 lg:px-6">{children}</div> : children}
+			{children}
 		</div>
 	);
 }

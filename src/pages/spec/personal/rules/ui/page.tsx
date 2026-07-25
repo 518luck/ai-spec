@@ -1,18 +1,68 @@
 "use client";
 
-// # 个人规约库页：占位页面，后续实现规约库功能
+// # 个人规约库页：规则列表表格，对齐 keys 页表格范式
 
 import type { JSX } from "react";
-import { Icons } from "@/shared/ui/icons";
-import { EmptyState } from "@/widgets/empty-state";
+import { Badge } from "@/shared/ui/badge";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import { RuleActions } from "./rule-actions";
 
-// # 个人规约库页：SWR Infinite 拉取规约列表，底部哨兵进入视口时自动加载下一页
+// 规则样例数据：临时硬编码，后续接入 API
+export type Rule = {
+	id: string;
+	name: string;
+	folder: string;
+	tags: string[];
+};
+
+const rules: Rule[] = [
+	{ id: "1", name: "使用函数组件", folder: "代码 / React", tags: ["组件"] },
+	{ id: "2", name: "props 必须只读", folder: "代码 / React", tags: ["组件"] },
+	{ id: "3", name: "Error 必须显式处理", folder: "代码 / Go", tags: ["error"] },
+	{ id: "4", name: "避免 any 类型", folder: "代码 / TypeScript", tags: ["类型", "架构"] },
+	{ id: "5", name: "悲愤情感用短句", folder: "创作 / 小说", tags: ["情感"] },
+];
+
 export function PersonalRulesPage(): JSX.Element {
 	return (
 		<ToolbarPageShell title="规约库">
 			<PageWidthWrapper fill>
-				<EmptyState icon={Icons.rulesLibrary} description="规约库功能即将上线，敬请期待" />
+				<div className="flex h-full flex-col overflow-hidden rounded-lg border">
+					<ScrollArea orientation="horizontal" className="min-h-0 flex-1" scrollbarClassName="mx-4">
+						<Table className="table-fixed" containerClassName="overflow-x-visible">
+							<TableHeader className="bg-muted">
+								<TableRow>
+									<TableHead className="w-48 pl-4">名称</TableHead>
+									<TableHead className="w-48">所属文件夹</TableHead>
+									<TableHead>标签</TableHead>
+									<TableHead className="w-16 pr-4">操作</TableHead>
+								</TableRow>
+							</TableHeader>
+							<TableBody>
+								{rules.map((rule) => (
+									<TableRow key={rule.id}>
+										<TableCell className="truncate pl-4 font-medium">{rule.name}</TableCell>
+										<TableCell className="truncate text-muted-foreground">{rule.folder}</TableCell>
+										<TableCell>
+											<div className="flex flex-wrap gap-1">
+												{rule.tags.map((tag) => (
+													<Badge key={tag} shape="square" variant="secondary">
+														{tag}
+													</Badge>
+												))}
+											</div>
+										</TableCell>
+										<TableCell className="pr-4">
+											<RuleActions rule={rule} />
+										</TableCell>
+									</TableRow>
+								))}
+							</TableBody>
+						</Table>
+					</ScrollArea>
+				</div>
 			</PageWidthWrapper>
 		</ToolbarPageShell>
 	);

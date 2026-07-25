@@ -49,7 +49,7 @@ export async function KeysPage({ page }: { page: number }): Promise<JSX.Element>
 	const tokens = rows;
 
 	return (
-		<TitlePageShell title={<KeysPageHeader />}>
+		<TitlePageShell title={<KeysPageHeader />} scrollable={false}>
 			<PageWidthWrapper fill>
 				{total === 0 ? (
 					<EmptyState icon={Icons.key} description="还没有 API 密钥，创建一个开始接入吧" />
