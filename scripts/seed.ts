@@ -50,6 +50,11 @@ const STEPS = {
 		script: "scripts/db/tags.ts",
 		desc: "标签",
 	}),
+	rules: defineStep({
+		enabled: true,
+		script: "scripts/db/rules.ts",
+		desc: "规约",
+	}),
 };
 
 // 失败策略：continue=继续后续步骤，abort=任一步骤失败立即中止
