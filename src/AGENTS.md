@@ -175,6 +175,10 @@ pnpm dlx shadcn@latest add [组件名]
 
 使用 shadcn 组件时，如果不确定组件 API、组合方式或最佳实践，应调用 /shadcn 技能查看正确用法。
 
+## ScrollArea 高度约束
+
+`ScrollArea` 的 Viewport 用 `max-h-[inherit]`，只读父级 `max-height`，不读 `height`。要让其内部滚动，必须传 `max-h-*`（如 `h-full max-h-full`），仅 `h-full` 会撑成内容高度导致无法滚动。
+
 ## 加载状态（Loading）
 
 两种加载组件按场景分工，不要混用：

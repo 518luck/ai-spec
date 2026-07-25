@@ -173,14 +173,16 @@ export function PromptWorkspaceDialog({
 						height: isExpanded ? "40rem" : "32rem",
 					}}
 				>
-					{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider */}
-					<div className="min-h-0 flex-1 overflow-hidden">
+					{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider；overflow-auto 统一管滚动（预览）/裁剪（编辑，CodeMirror 内部自滚） */}
+					<div className="min-h-0 flex-1 overflow-auto">
 						<MarkdownEditor
 							ref={editorRef}
 							value={content}
 							onChange={setContent}
 							placeholder={placeholder}
 							isLoading={isLoading}
+							// > 预览区 padding：pt-12 给顶部 h-12 浮层让位（与 CodeMirror cm-scroller padding-top:48px 对称），p-4 四周留白
+							previewClassName="p-4 pt-12"
 						/>
 					</div>
 

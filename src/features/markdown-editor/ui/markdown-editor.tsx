@@ -24,6 +24,8 @@ type MarkdownEditorProps = {
 	placeholder?: string;
 	// 加载中：编辑区显示 spinner
 	isLoading?: boolean;
+	// 透传给 MarkdownPreview 的 className（padding/margin 等布局由调用方决定）
+	previewClassName?: string;
 };
 
 // > Markdown 编辑器：ref/theme/设置/预览 从 store 取；ref 转发给编排层
@@ -33,6 +35,7 @@ export function MarkdownEditor({
 	onChange,
 	placeholder,
 	isLoading = false,
+	previewClassName,
 }: MarkdownEditorProps & { ref?: React.Ref<ReactCodeMirrorRef> }): JSX.Element {
 	const { resolvedTheme } = useTheme();
 	// 内部 ref：handleUpdate 读 .current 算光标格式；外部 ref：同步给编排层供 QuickToolbar 执行格式化
@@ -82,7 +85,7 @@ export function MarkdownEditor({
 
 	// 预览模式：Markdown 渲染；否则：CodeMirror 编辑
 	if (isPreview) {
-		return <MarkdownPreview content={value} />;
+		return <MarkdownPreview content={value} className={previewClassName} />;
 	}
 
 	return (
