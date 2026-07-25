@@ -155,90 +155,93 @@ export function PromptWorkspaceDialog({
 			<DialogContent
 				showCloseButton={false}
 				scrollable={false}
-				render={
-					<motion.div
-						layout
-						transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
-						className="relative flex flex-col overflow-hidden p-0"
-						style={{ maxHeight: "85vh", maxWidth: "calc(100% - 2rem)" }}
-						initial={false}
-						animate={{
-							width: isExpanded ? "73rem" : "32rem",
-							height: isExpanded ? "40rem" : "32rem",
-						}}
-					/>
-				}
+				// > 编辑器实际尺寸交给 motion.div 控制；外壳 w-fit 收缩到子元素宽度；max-w-[calc(100%-2rem)] 让两侧留 16px 余量，覆盖默认 sm:max-w-md（28rem）
+				// ! 不用 render prop：motion.div 当 render 元素时，motion 的 transform 会覆盖 DialogContent 的居中 translate，导致弹窗偏下
+				className="w-fit max-w-[calc(100%-2rem)] overflow-visible p-0 sm:max-w-none"
 			>
-				{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider */}
-				<div className="min-h-0 flex-1 overflow-hidden">
-					<MarkdownEditor
-						ref={editorRef}
-						value={content}
-						onChange={setContent}
-						placeholder={placeholder}
-						isLoading={isLoading}
-					/>
-				</div>
-
-				{/* // @ 顶部浮层：标题 + 标签 + 文件夹 + 快捷栏 + 放大；背景色从 store 派生 */}
-				<div
-					className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 px-4 backdrop-blur-[1.5px]"
-					style={{ background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` }}
+				<motion.div
+					transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
+					className="relative flex flex-col overflow-hidden"
+					style={{ maxHeight: "85vh" }}
+					initial={false}
+					animate={{
+						width: isExpanded ? "73rem" : "32rem",
+						height: isExpanded ? "40rem" : "32rem",
+					}}
 				>
-					{/* 标题 */}
-					<span className={`truncate font-semibold text-base ${isExpanded ? "w-64" : "w-32"}`}>
-						{title}
-					</span>
-
-					{/* // @ 标签：仅收录启用；放大模式下显示 chips + 触发器，缩小模式下收起 */}
-					{tagsEnabled && isExpanded ? (
-						<TagSelectTrigger
-							resourceType={resourceType}
-							value={tags}
-							onChange={setTags}
-							triggerVariant="ghost"
-							iconOnly
-							maskColor={editorBgColor}
-							className="min-w-40 max-w-40"
+					{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider */}
+					<div className="min-h-0 flex-1 overflow-hidden">
+						<MarkdownEditor
+							ref={editorRef}
+							value={content}
+							onChange={setContent}
+							placeholder={placeholder}
+							isLoading={isLoading}
 						/>
-					) : null}
-
-					{/* // @ 文件夹：缩小空间时只显示图标，放大后显示完整文字 */}
-					<FolderCombobox
-						resourceType={resourceType}
-						value={folderId}
-						onChange={setFolderId}
-						className="shrink-0"
-						iconOnly={!isExpanded}
-					/>
-
-					<div className="ml-auto flex items-center gap-2">
-						{/* // @ 快捷栏：偏好从 store 取，tool 动作用 editorRef，对外只剩 editorRef + isExpanded */}
-						<QuickToolbar editorRef={editorRef} isExpanded={isExpanded} />
-
-						{/* // @ 放大/缩小：驱动弹窗 motion 尺寸 */}
-						<Button
-							variant="ghost"
-							size="icon-sm"
-							aria-label={isExpanded ? "缩小" : "放大"}
-							onClick={() => setIsExpanded((prev) => !prev)}
-						>
-							{isExpanded ? (
-								<Icons.minimize className="size-4" />
-							) : (
-								<Icons.expand className="size-4" />
-							)}
-						</Button>
 					</div>
-				</div>
 
-				{/* 保存中遮罩 */}
-				{isSaving && (
-					<div className="absolute inset-0 z-50 flex items-center justify-center gap-2 bg-popover/80 text-muted-foreground backdrop-blur-sm">
-						<ScaleLoaderWrap height={16} width={2} margin={1} radius={1} />
-						<span className="text-sm">{savingText}</span>
+					{/* // @ 顶部浮层：标题 + 标签 + 文件夹 + 快捷栏 + 放大；背景色从 store 派生 */}
+					<div
+						className="pointer-events-auto absolute inset-x-0 top-0 z-10 flex h-12 items-center gap-2 border-border/50 px-4 backdrop-blur-[1.5px]"
+						style={{
+							background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)`,
+						}}
+					>
+						{/* 标题 */}
+						<span className={`truncate font-semibold text-base ${isExpanded ? "w-64" : "w-32"}`}>
+							{title}
+						</span>
+
+						{/* // @ 标签：仅收录启用；放大模式下显示 chips + 触发器，缩小模式下收起 */}
+						{tagsEnabled && isExpanded ? (
+							<TagSelectTrigger
+								resourceType={resourceType}
+								value={tags}
+								onChange={setTags}
+								triggerVariant="ghost"
+								iconOnly
+								maskColor={editorBgColor}
+								className="min-w-40 max-w-40"
+							/>
+						) : null}
+
+						{/* // @ 文件夹：缩小空间时只显示图标，放大后显示完整文字 */}
+						<FolderCombobox
+							resourceType={resourceType}
+							value={folderId}
+							onChange={setFolderId}
+							className="shrink-0"
+							iconOnly={!isExpanded}
+						/>
+
+						<div className="ml-auto flex items-center gap-2">
+							{/* // @ 快捷栏：偏好从 store 取，tool 动作用 editorRef，对外只剩 editorRef + isExpanded */}
+							<QuickToolbar editorRef={editorRef} isExpanded={isExpanded} />
+
+							{/* // @ 放大/缩小：驱动弹窗 motion 尺寸 */}
+							<Button
+								variant="ghost"
+								size="icon-sm"
+								aria-label={isExpanded ? "缩小" : "放大"}
+								onClick={() => setIsExpanded((prev) => !prev)}
+							>
+								{isExpanded ? (
+									<Icons.minimize className="size-4" />
+								) : (
+									<Icons.expand className="size-4" />
+								)}
+							</Button>
+						</div>
 					</div>
-				)}
+
+					{/* 保存中遮罩 */}
+					{isSaving && (
+						<div className="absolute inset-0 z-50 flex items-center justify-center gap-2 bg-popover/80 text-muted-foreground backdrop-blur-sm">
+							<ScaleLoaderWrap height={16} width={2} margin={1} radius={1} />
+							<span className="text-sm">{savingText}</span>
+						</div>
+					)}
+				</motion.div>
 			</DialogContent>
 		</Dialog>
 	);

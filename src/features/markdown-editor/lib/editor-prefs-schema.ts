@@ -33,5 +33,4 @@ export const activeToolsSchema = z.array(z.enum(TOOL_IDS)).default([...TOOL_IDS]
 export const safeParseEditorSettings = (raw: unknown) =>
 	editorSettingsSchema.parse(raw ?? defaultEditorSettings);
 export const safeParseEditorThemeId = (raw: unknown) => editorThemeIdSchema.parse(raw ?? "vscode");
-export const safeParseActiveTools = (raw: unknown) =>
-	activeToolsSchema.parse(raw ?? [...TOOL_IDS]);
+export const safeParseActiveTools = (raw: unknown) => activeToolsSchema.parse(raw ?? [...TOOL_IDS]);
