@@ -13,12 +13,15 @@ import { TableActions } from "./table-actions";
 
 type RuleTableProps = {
 	folderId?: string;
+	tagIds?: string;
 	q?: string;
 };
 
-export function RuleTable({ folderId, q }: RuleTableProps): JSX.Element {
-	// 获取规约列表，支持文件夹筛选和搜索
-	const { data, isLoading } = useSWR(["rules", folderId, q], () => getRules({ folderId, q }));
+export function RuleTable({ folderId, tagIds, q }: RuleTableProps): JSX.Element {
+	// 获取规约列表，支持文件夹/标签筛选和搜索
+	const { data, isLoading } = useSWR(["rules", folderId, tagIds, q], () =>
+		getRules({ folderId, tagIds, q }),
+	);
 
 	if (isLoading) {
 		return (
@@ -33,7 +36,7 @@ export function RuleTable({ folderId, q }: RuleTableProps): JSX.Element {
 	if (rules.length === 0) {
 		return (
 			<div className="flex h-60 items-center justify-center text-muted-foreground">
-				{folderId ? "该文件夹下暂无规约" : "暂无规约，点击右上角「新增规约」创建"}
+				{folderId || tagIds ? "当前筛选条件下暂无规约" : "暂无规约，点击右上角「新增规约」创建"}
 			</div>
 		);
 	}

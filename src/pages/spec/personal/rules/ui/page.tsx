@@ -1,21 +1,22 @@
 "use client";
 
-// # 个人规约库页：规则列表表格，toolbar 含文件夹筛选
+// # 个人规约库页：规则列表表格，toolbar 含文件夹筛选，筛选条带含标签过滤 + 搜索
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
+import type { ListRulesDto } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import { RuleTagFilter } from "./rule-tag-filter";
 import { RuleTable } from "./table";
 
-export function PersonalRulesPage(): JSX.Element {
+type PersonalRulesPageProps = ListRulesDto;
+
+export function PersonalRulesPage({ folderId, tagIds, q }: PersonalRulesPageProps): JSX.Element {
 	const router = useRouter();
-	const searchParams = useSearchParams();
-	const folderId = searchParams?.get("folderId") ?? undefined;
-	const q = searchParams?.get("q") ?? undefined;
 
 	// 跳转到创建规约页面
 	const handleCreateRule = (): void => {
@@ -36,11 +37,12 @@ export function PersonalRulesPage(): JSX.Element {
 			}
 		>
 			<PageWidthWrapper fill>
-				{/* 筛选条带 */}
-				<div className="mb-6 flex items-center justify-end gap-3">
+				{/* // @ 筛选条带：标签过滤贴左、搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
+				<div className="mb-6 flex items-center justify-between gap-3">
+					<RuleTagFilter />
 					<SearchInput className="max-w-80" filters={["title", "content"]} defaultFilter="title" />
 				</div>
-				<RuleTable folderId={folderId} q={q} />
+				<RuleTable folderId={folderId} tagIds={tagIds} q={q} />
 			</PageWidthWrapper>
 		</ToolbarPageShell>
 	);
