@@ -1,6 +1,7 @@
 import { z } from "@/shared/lib/zod";
+import { tagOptionVoSchema } from "@/shared/lib/zod/schemas/tag";
 
-// # 规约（Rule）相关 zod schema：名称、正文、文件夹归属校验
+// # 规约（Rule）相关 zod schema：名称、正文、文件夹归属、标签校验
 
 // @ 拼装件
 // 规约名称：必填，最多 64 字。refine 只校验纯空白，不改写用户输入
@@ -24,10 +25,33 @@ export const createRuleDtoSchema = z.object({
 	name: ruleNameSchema,
 	content: ruleContentSchema,
 	folderId: ruleFolderIdSchema,
+	// 标签传 id 数组；前端在 TagCombobox 里选/新建时已确保 id 存在，后端只 connect 不查
+	tags: z.array(z.string()).optional(),
 });
 
 // 创建规约入参类型
 export type CreateRuleDto = z.infer<typeof createRuleDtoSchema>;
+
+// 更新规约入参：id 走 URL 路径，body 内所有字段可选（部分更新），至少更新一个
+export const updateRuleDtoSchema = z
+	.object({
+		name: ruleNameSchema.optional(),
+		content: ruleContentSchema.optional(),
+		folderId: ruleFolderIdSchema.optional(),
+		// 标签传 id 数组；undefined 表示不更新，空数组表示清空标签
+		tags: z.array(z.string()).optional(),
+	})
+	.refine(
+		(data) =>
+			data.name !== undefined ||
+			data.content !== undefined ||
+			data.folderId !== undefined ||
+			data.tags !== undefined,
+		{ error: "至少需要更新一个字段" },
+	);
+
+// 更新规约入参类型
+export type UpdateRuleDto = z.infer<typeof updateRuleDtoSchema>;
 
 // @ 出参
 // 创建规约响应
@@ -36,12 +60,25 @@ export const ruleVoSchema = z.object({
 	name: z.string(),
 	content: z.string(),
 	folderId: z.string().nullable(),
+	tags: z.array(tagOptionVoSchema),
 	createdAt: z.iso.datetime(),
 	updatedAt: z.iso.datetime(),
 });
 
 // 创建规约响应类型
 export type RuleVo = z.infer<typeof ruleVoSchema>;
+
+// 单条规约全文响应：返回 name + content（编辑回填用）+ folderId + tags（编辑回填所属文件夹与标签）
+export const ruleContentVoSchema = z.object({
+	id: z.string(),
+	name: z.string(),
+	content: z.string(),
+	folderId: z.string().nullable(),
+	tags: z.array(tagOptionVoSchema),
+});
+
+// 单条规约全文响应类型
+export type RuleContentVo = z.infer<typeof ruleContentVoSchema>;
 
 // @ 出参 - 列表
 // 规约列表项：列表只返回截断预览，不返回 content 全文
@@ -69,9 +106,11 @@ export const ruleListVoSchema = z.object({
 // 规约列表响应类型
 export type RuleListVo = z.infer<typeof ruleListVoSchema>;
 
-// 规约列表查询入参：文件夹筛选 + 搜索 + 分页
+// 规约列表查询入参：文件夹筛选 + 标签筛选 + 搜索 + 分页
+// tagIds 为逗号分隔的 tag id 列表，多选时取交集（命中其中任意一个即返回）
 export const listRulesDtoSchema = z.object({
 	folderId: z.string().optional(),
+	tagIds: z.string().optional(),
 	q: z.string().optional(),
 	offset: z.coerce.number().int().min(0).optional(),
 });
