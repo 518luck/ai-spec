@@ -1,3 +1,4 @@
+import { createMDX } from "fumadocs-mdx/next";
 import type { NextConfig } from "next";
 
 // # Next.js 配置
@@ -30,4 +31,7 @@ const nextConfig: NextConfig = {
 	},
 };
 
-export default nextConfig;
+// fumadocs-mdx:接管 content/docs 的 MDX 编译并生成 .source 目录
+const withMDX = createMDX();
+
+export default withMDX(nextConfig);
