@@ -5,7 +5,7 @@
 	"scripts": {
 		"postinstall": "fumadocs-mdx",
 		"dev": "NODE_OPTIONS=--no-deprecation next dev",
-		"worker": "NODE_OPTIONS=--no-deprecation tsx worker.ts",
+		"worker": "NODE_OPTIONS=--no-deprecation tsx workers/queue/index.ts",
 		"dev:all": "concurrently -n next,worker -c cyan,magenta --kill-timeout 5000 \"pnpm dev\" \"pnpm worker\"",
 		"build": "next build",
 		"start": "next start",

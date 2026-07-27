@@ -1,20 +1,17 @@
 import { SOURCE_FAIL_THRESHOLD } from "@/server/configs/discover.config";
 import { AiSpecError } from "@/server/errors/http-error";
+import { pauseDiscoverUntil } from "@/server/infrastructure/queue/operations/discover/pause";
 import { fetchRepoHeadSha } from "@/server/utils/discover-import";
 import { importRepoSkills } from "@/server/utils/discover-sync";
 import prisma from "@/shared/db";
 import type { DiscoverSource } from "@/shared/db/generator/client";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
-import { enqueueDiscoverSyncRepoDeferred } from "../enqueues/discover-sync-repo";
 import type { DiscoverSyncRepoData } from "../types";
 
 // # 处理器：同步单个仓库——sha 没变秒跳过（仅刷时间戳）；有新提交/休眠试探/上游改名走全量重抓
 
-export async function processDiscoverSyncRepo({
-	repo,
-	deferrals = 0,
-}: DiscoverSyncRepoData): Promise<void> {
+export async function processDiscoverSyncRepo({ repo }: DiscoverSyncRepoData): Promise<void> {
 	const source = await prisma.discoverSource.findUnique({
 		where: { repo_resourceType: { repo, resourceType: "skills" } },
 	});
@@ -61,7 +58,7 @@ export async function processDiscoverSyncRepo({
 			data: { etag: head.notModified ? source.etag : head.etag },
 		});
 	} catch (e) {
-		await handleSyncFailure({ source, deferrals, error: e });
+		await handleSyncFailure({ source, error: e });
 	}
 }
 
@@ -97,27 +94,20 @@ const mergeRenamedRepo = async ({
 	});
 };
 
-// 限流重投上限：超过后放弃本轮，明天的每日同步会重来
-const MAX_RATE_LIMIT_DEFERRALS = 2;
-
 type HandleSyncFailureOptions = {
 	source: DiscoverSource;
-	deferrals: number;
 	error: unknown;
 };
 
-// 失败分级：限流→不计失败延迟重投；无货（404/409/无 SKILL.md）→休眠+下架；其余→计数达阈值休眠，否则抛给 BullMQ 重试
-const handleSyncFailure = async ({
-	source,
-	deferrals,
-	error,
-}: HandleSyncFailureOptions): Promise<void> => {
-	// ! 限流不是仓库的错：不动 failCount，65 分钟后（新限额窗口）重投
+// 失败分级：限流→暂停整队列等窗口刷新；无货（404/409/无 SKILL.md）→休眠+下架；其余→计数达阈值休眠，否则抛给 BullMQ 重试
+const handleSyncFailure = async ({ source, error }: HandleSyncFailureOptions): Promise<void> => {
+	// ! 限流不是仓库的错：不动 failCount，按 GitHub 响应头算出的恢复时刻暂停整队列
 	if (error instanceof AiSpecError && error.code === ErrorCode.RATE_LIMITED) {
-		if (deferrals < MAX_RATE_LIMIT_DEFERRALS) {
-			await enqueueDiscoverSyncRepoDeferred({ repo: source.repo, deferrals: deferrals + 1 });
-			return;
+		const resumeAtMs = error.context?.retryAfter;
+		if (typeof resumeAtMs === "number") {
+			await pauseDiscoverUntil({ resumeAtMs });
 		}
+		// throw 让 BullMQ 接管重试；队列暂停期间重试不会执行，resume 后自动排队重跑
 		throw error;
 	}
 

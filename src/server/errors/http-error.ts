@@ -36,16 +36,23 @@ type ErrorResult = {
 };
 
 // @ 业务自定义错误类
-// 业务自定义错误：只传 code 名，status 自动从 ERROR_CODES 查表
+// 业务自定义错误：只传 code 名，status 自动从 ERROR_CODES 查表；可选 context 携带任意附加信息（如限流恢复时刻）
 export class AiSpecError extends Error {
 	readonly status: number;
 	readonly code: ErrorCode;
+	// 任意附加信息（如 { retryAfter: <Unix ms> } 供 catch 处读取），错误类不绑定具体业务概念
+	readonly context?: Record<string, unknown>;
 
-	constructor({ code, message }: { code: ErrorCode; message: string }) {
+	constructor({
+		code,
+		message,
+		context,
+	}: { code: ErrorCode; message: string; context?: Record<string, unknown> }) {
 		super(message);
 		this.name = "AiSpecError";
 		this.code = code;
 		this.status = ERROR_CODES[code];
+		this.context = context;
 	}
 }
 

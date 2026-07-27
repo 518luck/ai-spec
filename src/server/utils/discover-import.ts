@@ -2,6 +2,10 @@ import matter from "gray-matter";
 // GitHub 响应含大量未声明字段，共享入口的 z 在开发环境是 strictObject 会误报，这里用原生宽松 object
 import * as z from "zod/v4";
 import { AiSpecError } from "@/server/errors/http-error";
+import {
+	getGithubMetricsSnapshot,
+	recordGithubRequest,
+} from "@/server/infrastructure/github/metrics";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
 // # GitHub Skill 抓取：解析仓库链接 → 定位所有 SKILL.md → 拉取全文并解析 frontmatter
@@ -160,6 +164,25 @@ type FetchRepoHeadShaOptions = {
 	etag?: string | null;
 };
 
+// 从 GitHub 限流响应头算恢复时刻（Unix ms）；优先 Retry-After，其次 x-ratelimit-reset，兜底 65min
+const parseGithubResumeAt = (headers: Headers): number => {
+	const now = Date.now();
+	// 1) Retry-After（官方首选）：相对秒数
+	const retryAfter = headers.get("retry-after");
+	if (retryAfter) {
+		const secs = Number.parseInt(retryAfter, 10);
+		if (!Number.isNaN(secs)) return now + secs * 1000;
+	}
+	// 2) x-ratelimit-reset（primary limit）：绝对 Unix 秒
+	const reset = headers.get("x-ratelimit-reset");
+	if (reset) {
+		const secs = Number.parseInt(reset, 10);
+		if (!Number.isNaN(secs)) return secs * 1000;
+	}
+	// 3) 兜底：65 分钟（GitHub 按小时滚动窗口，65 分钟必进新窗口）
+	return now + 65 * 60 * 1000;
+};
+
 // > 查仓库指定/默认分支最新 commit sha（1 次请求）；带 etag 命中 304 时不消耗 API 限额
 export const fetchRepoHeadSha = async ({
 	repo,
@@ -167,9 +190,12 @@ export const fetchRepoHeadSha = async ({
 	etag,
 }: FetchRepoHeadShaOptions): Promise<RepoHeadSha> => {
 	const refParam = ref ? `&sha=${encodeURIComponent(ref)}` : "";
-	const res = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=1${refParam}`, {
-		headers: { ...githubHeaders(), ...(etag && { "If-None-Match": etag }) },
-	});
+	const res = await githubFetch(
+		`https://api.github.com/repos/${repo}/commits?per_page=1${refParam}`,
+		{
+			headers: { ...githubHeaders(), ...(etag && { "If-None-Match": etag }) },
+		},
+	);
 	if (res.status === 304) {
 		return { notModified: true };
 	}
@@ -178,7 +204,15 @@ export const fetchRepoHeadSha = async ({
 		throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "仓库不存在、为空或不是公开仓库" });
 	}
 	if (res.status === 403 || res.status === 429) {
-		throw new AiSpecError({ code: ErrorCode.RATE_LIMITED, message: "GitHub API 触发限流" });
+		console.error("GitHub API 触发限流", {
+			url: `repos/${repo}/commits`,
+			metrics: getGithubMetricsSnapshot(),
+		});
+		throw new AiSpecError({
+			code: ErrorCode.RATE_LIMITED,
+			message: "GitHub API 触发限流",
+			context: { retryAfter: parseGithubResumeAt(res.headers) },
+		});
 	}
 	if (!res.ok) {
 		throw new AiSpecError({
@@ -274,16 +308,35 @@ const githubHeaders = (): HeadersInit => {
 	};
 };
 
+// > 统一 GitHub API 请求入口：在 fetch 外包一层埋点，把请求量/状态码/配额水位记进 metrics
+// 所有 api.github.com 请求都走这里；raw.githubusercontent.com（拉 SKILL.md 全文）不计入（不消耗配额）
+const githubFetch = async (url: string, init?: RequestInit): Promise<Response> => {
+	const res = await fetch(url, init);
+	recordGithubRequest({
+		status: res.status,
+		url,
+		remaining: res.headers.get("x-ratelimit-remaining"),
+		reset: res.headers.get("x-ratelimit-reset"),
+	});
+	return res;
+};
+
 // 调 GitHub REST API，把常见失败翻译成业务错误
 const fetchGitHubJson = async (url: string): Promise<unknown> => {
-	const res = await fetch(url, { headers: githubHeaders() });
+	const res = await githubFetch(url, { headers: githubHeaders() });
 	if (res.status === 404) {
 		throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "仓库不存在或不是公开仓库" });
 	}
 	if (res.status === 403 || res.status === 429) {
+		// > 触发限流时打日志带上 metrics 快照，便于判断是否需要多 PAT 轮换
+		console.error("GitHub API 触发限流", {
+			url,
+			metrics: getGithubMetricsSnapshot(),
+		});
 		throw new AiSpecError({
 			code: ErrorCode.RATE_LIMITED,
 			message: "GitHub API 触发限流，请稍后再试（服务端配置 GITHUB_TOKEN 可提升限额）",
+			context: { retryAfter: parseGithubResumeAt(res.headers) },
 		});
 	}
 	if (!res.ok) {
