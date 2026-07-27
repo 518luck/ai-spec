@@ -10,7 +10,7 @@ import { FilterCombobox } from "@/features/filter-combobox";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
-import { useHotkey, useInView } from "@/shared/hooks";
+import { useHotkey, useInView, useThumbSmooth } from "@/shared/hooks";
 import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
 import { CenteredLoader } from "@/shared/ui/centered-loader";
@@ -121,6 +121,9 @@ export function PersonalRecordsPage({
 		}
 	}, [inView, hasMore, isValidating, setSize]);
 
+	// > 滚动条平滑过渡：内容追加新页（records.length 增长）时短暂开启，让 thumb 平滑收缩而非瞬变
+	const thumbSmooth = useThumbSmooth(records.length);
+
 	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
 	const renderRecordsBody = (): JSX.Element => {
 		if (isLoading) {
@@ -158,6 +161,7 @@ export function PersonalRecordsPage({
 			<ToolbarPageShell
 				title="收录"
 				help={<HelpTooltip content="高频提示词归档处，一点即复制发给 AI" />}
+				scrollAreaProps={{ thumbSmooth }}
 				filter={
 					<FolderCombobox
 						resourceType="promptRecord"

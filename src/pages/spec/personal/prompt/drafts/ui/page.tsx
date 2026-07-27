@@ -10,7 +10,7 @@ import { getDrafts } from "@/entities/prompt";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
-import { useHotkey, useInView } from "@/shared/hooks";
+import { useHotkey, useInView, useThumbSmooth } from "@/shared/hooks";
 import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
 import { CenteredLoader } from "@/shared/ui/centered-loader";
@@ -82,6 +82,9 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 		}
 	}, [inView, hasMore, isValidating, setSize]);
 
+	// > 滚动条平滑过渡：内容追加新页（drafts.length 增长）时短暂开启，让 thumb 平滑收缩而非瞬变
+	const thumbSmooth = useThumbSmooth(drafts.length);
+
 	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
 	const renderDraftsBody = (): JSX.Element => {
 		if (isLoading) {
@@ -110,6 +113,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 			<ToolbarPageShell
 				title="草稿"
 				help={<HelpTooltip content="随手记录灵感，可复用到收录库、Agent.md 等位置" />}
+				scrollAreaProps={{ thumbSmooth }}
 				filter={<FolderCombobox resourceType="promptDraft" />}
 				search={
 					// // > max-w-80 上限 320px、w-full 跟随父级弹性收缩，避免窄窗口标题栏溢出

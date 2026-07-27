@@ -1,12 +1,12 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { type JSX, useEffect, useMemo, useRef, useState } from "react";
+import { type JSX, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getDiscoverSkills } from "@/entities/discover-skill";
 import { SearchInput } from "@/features/search-input";
-import { useInView } from "@/shared/hooks";
+import { useInView, useThumbSmooth } from "@/shared/hooks";
 import type {
 	DiscoverSkillListVo,
 	ListDiscoverSkillsDto,
@@ -52,22 +52,8 @@ export function DiscoverSkillsPage({ q }: ListDiscoverSkillsDto): JSX.Element {
 		}
 	}, [inView, hasMore, isValidating, setSize]);
 
-	// > 滚动条平滑过渡：base-ui 用 ResizeObserver 监听内容尺寸变化重算 thumb（非每帧覆盖），
-	// 所以内容突变时给 thumb 加 transition，浏览器会自动平滑插值 transform 变化。
-	// 仅在"追加新页"（skills.length 增长）时启用 600ms，覆盖一次完整收缩动画；正常滚动不受影响。
-	const prevLenRef = useRef(0);
-	const [thumbSmooth, setThumbSmooth] = useState(false);
-	useEffect(() => {
-		const prev = prevLenRef.current;
-		const next = skills.length;
-		if (next > prev && prev > 0) {
-			setThumbSmooth(true);
-			const timer = setTimeout(() => setThumbSmooth(false), 600);
-			prevLenRef.current = next;
-			return () => clearTimeout(timer);
-		}
-		prevLenRef.current = next;
-	}, [skills.length]);
+	// > 滚动条平滑过渡：内容追加新页（skills.length 增长）时短暂开启，让 thumb 平滑收缩而非瞬变
+	const thumbSmooth = useThumbSmooth(skills.length);
 
 	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
 	const renderSkillsBody = (): JSX.Element => {

@@ -12,3 +12,4 @@ export { useIsMobile } from "./use-mobile"; // 视口是否为移动端（768px 
 export { useMounted } from "./use-mounted"; // 组件是否已挂载，SSR 安全，挂载后驱动渲染
 export { useResizeObserver } from "./use-resize-observer"; // 监听元素尺寸变化，返回最新 entry
 export { useScrollProgress } from "./use-scroll-progress"; // 可滚动容器的滚动进度（0~1）
+export { useThumbSmooth } from "./use-thumb-smooth"; // 无限滚动加载新页时，短暂开启滚动条 thumb 平滑过渡
