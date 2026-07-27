@@ -113,9 +113,7 @@ export function OrganizationCombobox({
 						</CommandGroup>
 					) : allOrgs.length === 0 ? (
 						<CommandGroup>
-							<div className="px-2 py-1.5 text-muted-foreground text-sm">
-								还没有可筛选的组织
-							</div>
+							<div className="px-2 py-1.5 text-muted-foreground text-sm">还没有可筛选的组织</div>
 						</CommandGroup>
 					) : (
 						<CommandGroup>

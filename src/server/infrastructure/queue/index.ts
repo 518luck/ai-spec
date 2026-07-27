@@ -9,6 +9,7 @@ export {
 	enqueueEmailChange,
 	enqueueEmailChangedNotice,
 } from "./operations/email";
+export { enqueueTranslateBatch } from "./operations/translation";
 export {
 	enqueueAvatarSync,
 	enqueueDeleteUserAvatar,

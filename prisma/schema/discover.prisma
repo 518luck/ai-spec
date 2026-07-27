@@ -11,26 +11,39 @@ enum AuthorType {
   @@schema("discover")
 }
 
+// 描述翻译状态：pending 可慢慢扫；done 已有可用中文；skipped 明确不译；failed 可重试
+enum TranslationStatus {
+  pending // 待翻译（后台可慢慢扫）
+  done // 已有可用中文（机翻完成或原文已是中文）
+  skipped // 明确不译（如空描述等无需翻译场景）
+  failed // 翻译失败（可重试）
+
+  @@schema("discover")
+}
+
 // DiscoverSkill：广场里的一个 Agent Skill 条目（SKILL.md 开放规范），name/description 取自 frontmatter
 model DiscoverSkill {
   // ① 主键
   id String @id @default(cuid())
 
   // ② 业务字段
-  name           String       // skill 名称（frontmatter name，缺省回落目录名）
-  description    String       @db.Text // 用途描述（frontmatter description，广场卡片展示）
-  content        String?      @db.Text // SKILL.md 全文；! 源仓库无 license 时为 null（只索引元数据+回链，不转载全文）
-  license        String? // license 标识（SPDX id；优先 frontmatter，回落仓库 license）
-  sourceRepo     String       @map("source_repo") // 来源仓库 "owner/repo"
-  sourcePath     String       @map("source_path") // SKILL.md 在仓库内的文件路径
-  sourceUrl      String?      @map("source_url") // 回链原仓库的 URL（详情页署名+跳转）
-  authorName     String?      @map("author_name") // 作者展示名（取仓库 owner login）
-  authorType     AuthorType?  @map("author_type") // 账号类型（Organization/User），Organization 侧边栏筛选用
-  authorAvatarUrl String?     @map("author_avatar_url") // 作者头像 URL（GitHub avatar）
-  authorHtmlUrl  String?      @map("author_html_url") // 作者 GitHub 主页链接
-  stars          Int          @default(0) // 源仓库 star 数（广场列表排序依据）
-  commitSha      String?      @map("commit_sha") // 入库时源仓库 HEAD sha（增量同步比对用）
-  delistedAt     DateTime?    @map("delisted_at") // 下架时间（上游删除该文件被 prune 标记，或货源休眠被连带下架；重新同步到会自动复活）
+  name              String // skill 名称（frontmatter name，缺省回落目录名）
+  description       String            @db.Text // 用途描述原文（frontmatter description；英/中都原样保留）
+  descriptionZh     String?           @map("description_zh") @db.Text // 中文描述（机翻或原文已是中文时回填；列表优先展示）
+  translationStatus TranslationStatus @default(pending) @map("translation_status") // 翻译状态（后台慢慢补译用）
+  descriptionHash   String?           @map("description_hash") // 原文 description 指纹（未变则跳过重译）
+  content           String?           @db.Text // SKILL.md 全文；! 源仓库无 license 时为 null（只索引元数据+回链，不转载全文）
+  license           String? // license 标识（SPDX id；优先 frontmatter，回落仓库 license）
+  sourceRepo        String            @map("source_repo") // 来源仓库 "owner/repo"
+  sourcePath        String            @map("source_path") // SKILL.md 在仓库内的文件路径
+  sourceUrl         String?           @map("source_url") // 回链原仓库的 URL（详情页署名+跳转）
+  authorName        String?           @map("author_name") // 作者展示名（取仓库 owner login）
+  authorType        AuthorType?       @map("author_type") // 账号类型（Organization/User），Organization 侧边栏筛选用
+  authorAvatarUrl   String?           @map("author_avatar_url") // 作者头像 URL（GitHub avatar）
+  authorHtmlUrl     String?           @map("author_html_url") // 作者 GitHub 主页链接
+  stars             Int               @default(0) // 源仓库 star 数（广场列表排序依据）
+  commitSha         String?           @map("commit_sha") // 入库时源仓库 HEAD sha（增量同步比对用）
+  delistedAt        DateTime?         @map("delisted_at") // 下架时间（上游删除该文件被 prune 标记，或货源休眠被连带下架；重新同步到会自动复活）
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")
@@ -39,6 +52,7 @@ model DiscoverSkill {
   // ⑥ 索引
   @@unique([sourceRepo, sourcePath]) // 去重键：同一仓库同一路径只入库一次（重复导入走 upsert 刷新）
   @@index([stars]) // 加速广场列表（按 stars 倒序）
+  @@index([translationStatus, stars]) // 加速待译扫描（按状态取高 star 优先补译）
   @@schema("discover")
 }
 

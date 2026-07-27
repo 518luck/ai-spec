@@ -1,7 +1,11 @@
 import { Queue } from "bullmq";
 import { getAppRedis } from "@/server/infrastructure/redis/clients";
 
-import { BACKGROUND_JOBS_QUEUE_CONFIG, DISCOVER_QUEUE_CONFIG } from "./constants";
+import {
+	BACKGROUND_JOBS_QUEUE_CONFIG,
+	DISCOVER_QUEUE_CONFIG,
+	TRANSLATION_QUEUE_CONFIG,
+} from "./constants";
 
 // # 后台任务队列实例（生产者）
 
@@ -15,4 +19,10 @@ export const backgroundJobsQueue = new Queue(BACKGROUND_JOBS_QUEUE_CONFIG.name, 
 export const discoverQueue = new Queue(DISCOVER_QUEUE_CONFIG.name, {
 	connection: getAppRedis(),
 	defaultJobOptions: DISCOVER_QUEUE_CONFIG.jobOptions,
+});
+
+// > translation 队列实例（生产者）：机翻补译投这里，可独立提高 concurrency
+export const translationQueue = new Queue(TRANSLATION_QUEUE_CONFIG.name, {
+	connection: getAppRedis(),
+	defaultJobOptions: TRANSLATION_QUEUE_CONFIG.jobOptions,
 });

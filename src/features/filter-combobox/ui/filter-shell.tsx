@@ -7,11 +7,7 @@ import { type JSX, type ReactNode, useState } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuTrigger,
-} from "@/shared/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
 
 type FilterShellProps = {

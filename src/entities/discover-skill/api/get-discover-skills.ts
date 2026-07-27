@@ -11,11 +11,10 @@ export const getDiscoverSkills = async (
 	params?: ListDiscoverSkillsDto,
 ): Promise<DiscoverSkillListVo> => {
 	const searchParams = new URLSearchParams();
-if (params?.q) searchParams.set("q", params.q);
-		if (params?.orgs) searchParams.set("orgs", params.orgs);
-		if (params?.minStars !== undefined) searchParams.set("minStars", String(params.minStars));
-		if (params?.offset !== undefined) searchParams.set("offset", String(params.offset));
-
+	if (params?.q) searchParams.set("q", params.q);
+	if (params?.orgs) searchParams.set("orgs", params.orgs);
+	if (params?.minStars !== undefined) searchParams.set("minStars", String(params.minStars));
+	if (params?.offset !== undefined) searchParams.set("offset", String(params.offset));
 
 	const url = `/api/discover/skills${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 	const response = await fetch(url);

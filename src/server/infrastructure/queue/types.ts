@@ -13,6 +13,10 @@ export type {
 	EmailChangedNoticeData,
 } from "./operations/email/types";
 export type {
+	TranslateBatchData,
+	TranslationResourceType,
+} from "./operations/translation/types";
+export type {
 	DeleteUserAvatarData,
 	SyncOauthAvatarData,
 } from "./operations/user/types";
@@ -23,8 +27,8 @@ import type { EmailChangeData, EmailChangedNoticeData } from "./operations/email
 import type { DeleteUserAvatarData, SyncOauthAvatarData } from "./operations/user/types";
 
 // background-jobs 队列的任务数据联合类型
-// ! discover 的 scan/sync-repo/sweep 已迁移到独立 discover 队列（见 DiscoverJobData）；本队列只保留跑在 background-jobs 的任务
-// ! discover-resume 虽属 discover 领域，但它投在 background-jobs 队列跑（撞限流暂停 discover 后，resume 必须能在 discover 暂停时执行）
+// ! discover 的 scan/sync-repo/sweep 在独立 discover 队列；translate 在独立 translation 队列
+// ! discover-resume 虽属 discover 领域，但投在 background-jobs（撞限流暂停 discover 后，resume 必须能在 discover 暂停时执行）
 export type BackgroundJobData =
 	| SyncOauthAvatarData
 	| DeleteUserAvatarData

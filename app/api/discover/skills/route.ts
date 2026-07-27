@@ -43,6 +43,8 @@ export const GET = withPersonal(
 				OR: [
 					{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
 					{ description: { contains: trimmedQuery, mode: "insensitive" as const } },
+					// 已译中文也可被搜到（用户用中文关键词检索）
+					{ descriptionZh: { contains: trimmedQuery, mode: "insensitive" as const } },
 				],
 			}),
 		};

@@ -16,6 +16,15 @@
 
 没有上述需求时，不要因为"看起来更整洁"就拆 queue。
 
+### 当前已批准的独立队列
+
+| 队列 | 原因 |
+|------|------|
+| `discover` | GitHub 配额串行 + 整队 pause/resume |
+| `translation` | 机翻有独立 concurrency / 限流，且后续多资源补译不能拖慢邮件与 GitHub 同步 |
+
+其余业务（邮件、头像、discover-resume）仍进 `background-jobs`。
+
 ## 实现要求
 
 1. **集中分发**：worker 处理函数内部按 `job.name` 分派，所有 job 类型共用同一

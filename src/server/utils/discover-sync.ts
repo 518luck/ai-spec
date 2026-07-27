@@ -1,4 +1,5 @@
 import { fetchRepoSkills, type RepoSkills } from "@/server/utils/discover-import";
+import { resolveTranslationFields } from "@/server/utils/discover-translation";
 import { discoverSkillListItemSelect, toDiscoverSkillListItem } from "@/server/utils/discover-vo";
 import prisma from "@/shared/db";
 import type { Prisma } from "@/shared/db/generator/client";
@@ -44,7 +45,9 @@ export const importRepoSkills = async ({
 	const saved: DiscoverSkillListItemVo[] = [];
 	for (const skill of skills) {
 		const skillDir = skill.sourcePath.split("/").slice(0, -1).join("/");
-		const data: Prisma.DiscoverSkillUncheckedCreateInput = {
+		// 翻译字段：中文原文直接 done；英文进 pending 由后台补译；hash 未变则 update 时保留旧中文
+		const translation = resolveTranslationFields(skill.description);
+		const baseData = {
 			name: skill.name,
 			description: skill.description,
 			// ! 无 license 的仓库只索引元数据与回链，不转载全文
@@ -62,11 +65,39 @@ export const importRepoSkills = async ({
 			stars,
 			commitSha,
 			delistedAt: null, // 上游复出/货源复活的条目自动复活
-		};
+		} satisfies Omit<
+			Prisma.DiscoverSkillUncheckedCreateInput,
+			"descriptionZh" | "translationStatus" | "descriptionHash"
+		>;
+
+		// 先读旧行：description 未变时保留已有 translation 结果，避免同步把中文刷掉
+		const existing = await prisma.discoverSkill.findUnique({
+			where: { sourceRepo_sourcePath: { sourceRepo, sourcePath: skill.sourcePath } },
+			select: {
+				descriptionHash: true,
+				descriptionZh: true,
+				translationStatus: true,
+			},
+		});
+		const descriptionUnchanged =
+			existing?.descriptionHash != null && existing.descriptionHash === translation.textHash;
+
+		const translationData = descriptionUnchanged
+			? {
+					descriptionZh: existing.descriptionZh,
+					translationStatus: existing.translationStatus,
+					descriptionHash: existing.descriptionHash,
+				}
+			: {
+					descriptionZh: translation.textZh,
+					translationStatus: translation.translationStatus,
+					descriptionHash: translation.textHash,
+				};
+
 		const row = await prisma.discoverSkill.upsert({
 			where: { sourceRepo_sourcePath: { sourceRepo, sourcePath: skill.sourcePath } },
-			create: data,
-			update: data,
+			create: { ...baseData, ...translationData },
+			update: { ...baseData, ...translationData },
 			select: discoverSkillListItemSelect,
 		});
 		saved.push(toDiscoverSkillListItem(row));
