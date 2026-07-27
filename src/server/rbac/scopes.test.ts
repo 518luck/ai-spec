@@ -36,7 +36,7 @@ describe("scopePresets", () => {
 // 资源 → 该资源的 read/write scope 列表，供前端渲染勾选表
 describe("getScopesForResource", () => {
 	test("每个资源恰好有 read、write 两个 scope", () => {
-		const scopes = getScopesForResource("skills");
+		const scopes = getScopesForResource("discover");
 		expect(scopes).toHaveLength(2);
 		expect(scopes.map((s) => s.type)).toEqual(["read", "write"]);
 	});
@@ -53,22 +53,21 @@ describe("scopesToName", () => {
 	});
 
 	test("仅资源级 scope → 限制", () => {
-		expect(scopesToName(["promptRecord.read", "skills.read"]).name).toBe("限制");
+		expect(scopesToName(["promptRecord.read", "discover.read"]).name).toBe("限制");
 	});
 });
 
 // 合并去重：同资源同时有 read 和 write 时只保留 write
 describe("consolidateScopes", () => {
 	test("read 被 write 吞掉", () => {
-		expect(consolidateScopes(["promptRecord.read", "promptRecord.write", "skills.read"])).toEqual([
-			"promptRecord.write",
-			"skills.read",
-		]);
+		expect(consolidateScopes(["promptRecord.read", "promptRecord.write", "discover.read"])).toEqual(
+			["promptRecord.write", "discover.read"],
+		);
 	});
 
 	test("无冲突时原样返回", () => {
-		expect(consolidateScopes(["skills.read", "agents.write"])).toEqual([
-			"skills.read",
+		expect(consolidateScopes(["discover.read", "agents.write"])).toEqual([
+			"discover.read",
 			"agents.write",
 		]);
 	});

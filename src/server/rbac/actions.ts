@@ -7,7 +7,7 @@ const RESOURCE_KEYS = [
 	"promptDraft", // 提示词-草稿
 	"rules", // 规约库
 	"agentMD", // AGENTS.md
-	"skills", // Skills
+	"discover", // 发现广场
 	"agents", // 智能体
 	"plugins", // Plugins
 	// —— 团队专属概念 ——
@@ -80,16 +80,16 @@ export const ACTION_DEFS = [
 		description: "编辑 AGENTS.md",
 	},
 	{
-		action: "skills.read",
+		action: "discover.read",
 		teamOnly: false,
 		apiKeyGrantable: true,
-		description: "浏览 Skills",
+		description: "浏览发现广场",
 	},
 	{
-		action: "skills.write",
+		action: "discover.write",
 		teamOnly: false,
 		apiKeyGrantable: true,
-		description: "编辑 Skills",
+		description: "编辑发现广场",
 	},
 	{
 		action: "agents.read",

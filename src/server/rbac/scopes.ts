@@ -32,9 +32,9 @@ export const RESOURCE_SCOPES: readonly ResourceScopeEntry[] = [
 	// ---------- AGENTS.md ----------
 	{ scope: "agentMD.read", type: "read", resource: "agentMD" },
 	{ scope: "agentMD.write", type: "write", resource: "agentMD" },
-	// ---------- Skills ----------
-	{ scope: "skills.read", type: "read", resource: "skills" },
-	{ scope: "skills.write", type: "write", resource: "skills" },
+	// ---------- 发现广场 ----------
+	{ scope: "discover.read", type: "read", resource: "discover" },
+	{ scope: "discover.write", type: "write", resource: "discover" },
 	// ---------- 智能体 ----------
 	{ scope: "agents.read", type: "read", resource: "agents" },
 	{ scope: "agents.write", type: "write", resource: "agents" },

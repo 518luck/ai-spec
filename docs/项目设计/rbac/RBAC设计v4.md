@@ -62,8 +62,8 @@
 | `rules.write`        | 新建/编辑规约                |
 | `agentMD.read`       | 查看 AGENTS.md 文档          |
 | `agentMD.write`      | 编辑 AGENTS.md 文档          |
-| `skills.read`        | 查看 Skills                  |
-| `skills.write`       | 新建/编辑/删除 Skills        |
+| `discover.read`        | 查看 Skills                  |
+| `discover.write`       | 新建/编辑/删除 Skills        |
 | `agents.read`        | 查看智能体                   |
 | `agents.write`       | 新建/编辑/删除智能体         |
 | `plugins.read`       | 查看 Plugins                 |
@@ -108,8 +108,8 @@
 | --------------- | :---: | :--: | :----: |
 | `agentMD.read`  |  ✅   |  ✅  |   ✅   |
 | `agentMD.write` |  ❌   |  ✅  |   ✅   |
-| `skills.read`   |  ✅   |  ✅  |   ✅   |
-| `skills.write`  |  ❌   |  ✅  |   ✅   |
+| `discover.read`   |  ✅   |  ✅  |   ✅   |
+| `discover.write`  |  ❌   |  ✅  |   ✅   |
 | `agents.read`   |  ✅   |  ✅  |   ✅   |
 | `agents.write`  |  ❌   |  ✅  |   ✅   |
 | `plugins.read`  |  ✅   |  ✅  |   ✅   |

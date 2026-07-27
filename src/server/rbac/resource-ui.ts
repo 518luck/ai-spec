@@ -19,7 +19,7 @@ export const FOLDERABLE_RESOURCE_KEYS = [
 	"promptDraft",
 	"rules",
 	"agentMD",
-	"skills",
+	"discover",
 	"agents",
 	"plugins",
 ] as const satisfies readonly ResourceKey[];
@@ -53,9 +53,9 @@ export const RESOURCES = [
 		description: "指导 AI 行为的项目规约文档",
 	},
 	{
-		key: "skills",
-		name: "Skills",
-		description: "可复用的 AI 能力模块",
+		key: "discover",
+		name: "发现广场",
+		description: "GitHub 开源 Agent Skills 的索引广场",
 	},
 	{
 		key: "agents",

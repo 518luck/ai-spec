@@ -19,7 +19,7 @@ export const tokenDescriptionSchema = z
 	.optional()
 	.or(z.literal(""));
 
-// scopes：权限范围数组，如 ["apis.all"]、["skills.read", "agents.write"]
+// scopes：权限范围数组，如 ["apis.all"]、["discover.read", "agents.write"]
 // 元素必须是 SCOPES 里登记的合法 scope，可选，默认空数组
 // 注意：前端传数组，后端会 join(" ") 存到 DB 的 scopes 字段
 const tokenScopesSchema = z.array(z.enum(SCOPES)).default([]);
