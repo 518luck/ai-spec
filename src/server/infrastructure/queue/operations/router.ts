@@ -2,6 +2,7 @@ import type { Job } from "bullmq";
 
 import { JOB_NAMES } from "../constants";
 import type { BackgroundJobData } from "../types";
+import { processDiscoverScan, processDiscoverSweep, processDiscoverSyncRepo } from "./discover";
 import { processEmailChange, processEmailChangedNotice } from "./email";
 import { processDeleteUserAvatar, processSyncOauthAvatar } from "./user";
 
@@ -14,6 +15,9 @@ const JOB_REGISTRY = {
 	[JOB_NAMES.avatarCleanup]: processDeleteUserAvatar,
 	[JOB_NAMES.emailChange]: processEmailChange,
 	[JOB_NAMES.emailChangedNotice]: processEmailChangedNotice,
+	[JOB_NAMES.discoverScan]: processDiscoverScan,
+	[JOB_NAMES.discoverSyncRepo]: processDiscoverSyncRepo,
+	[JOB_NAMES.discoverSweep]: processDiscoverSweep,
 } as const;
 
 // 后台任务总路由：按 job.name 从注册表查处理器执行，未知类型抛错

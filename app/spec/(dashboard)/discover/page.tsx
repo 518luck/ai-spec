@@ -1,6 +1,6 @@
-import { DiscoverPromptsPage } from "@/pages/spec/discover/prompts";
+import { redirect } from "next/navigation";
 
-// # 发现页（薄层路由，委托 DiscoverPromptsPage 组件）
-export default function Page() {
-	return <DiscoverPromptsPage />;
+// # 发现页入口（重定向到 Prompt 广场）
+export default function Page(): never {
+	redirect("/spec/discover/prompt");
 }

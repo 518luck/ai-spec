@@ -1,0 +1,78 @@
+// # Discover 域：发现广场的 GitHub skill 索引缓存 + 同步货源清单
+//
+// GitHub 是唯一数据源，本域两张表只是索引/缓存，可随时从源头全量重建
+// 用户自建 skill 不在本域——将来在个人空间域单独建表，与广场缓存彻底隔离
+
+// DiscoverSkill：广场里的一个 Agent Skill 条目（SKILL.md 开放规范），name/description 取自 frontmatter
+model DiscoverSkill {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段
+  name        String // skill 名称（frontmatter name，缺省回落目录名）
+  description String    @db.Text // 用途描述（frontmatter description，广场卡片展示）
+  content     String?   @db.Text // SKILL.md 全文；! 源仓库无 license 时为 null（只索引元数据+回链，不转载全文）
+  license     String? // license 标识（SPDX id；优先 frontmatter，回落仓库 license）
+  sourceRepo  String    @map("source_repo") // 来源仓库 "owner/repo"
+  sourcePath  String    @map("source_path") // SKILL.md 在仓库内的文件路径
+  sourceUrl   String?   @map("source_url") // 回链原仓库的 URL（详情页署名+跳转）
+  authorName  String?   @map("author_name") // 作者展示名（取仓库 owner login）
+  stars       Int       @default(0) // 源仓库 star 数（广场列表排序依据）
+  commitSha   String?   @map("commit_sha") // 入库时源仓库 HEAD sha（增量同步比对用）
+  delistedAt  DateTime? @map("delisted_at") // 下架时间（上游删除该文件被 prune 标记，或货源休眠被连带下架；重新同步到会自动复活）
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ⑥ 索引
+  @@unique([sourceRepo, sourcePath]) // 去重键：同一仓库同一路径只入库一次（重复导入走 upsert 刷新）
+  @@index([stars]) // 加速广场列表（按 stars 倒序）
+  @@schema("discover")
+}
+
+// 货源类型：awesome=链接目录（scan 任务解析它找矿），repo=真正含 SKILL.md 的仓库（同步任务抓取对象）
+enum DiscoverSourceKind {
+  awesome
+  repo
+
+  @@schema("discover")
+}
+
+// 货源状态：active=参与每日同步，dormant=连续失败休眠（仓库被删/转私有/无 SKILL.md）
+enum DiscoverSourceStatus {
+  active
+  dormant
+
+  @@schema("discover")
+}
+
+// DiscoverSource：多资源类型共用的同步货源清单（"从哪些仓库抓、抓哪种资源"），各资源类型有自己的条目表
+// ! awesome 列表与内容仓库共用同一套 sha 比对逻辑；同一仓库可为不同资源类型分别登记（唯一键 repo+resourceType）
+model DiscoverSource {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段
+  repo          String // 仓库全名 "owner/name"（同步时向 GitHub 规范名收敛）
+  // > 货源供给的资源类型（skills/plugins/agentMD/mcp），与 Folder.resourceType 同约定；故意不给默认值，强制调用方显式传入
+  resourceType  String               @map("resource_type")
+  kind          DiscoverSourceKind // 货源类型：awesome=目录 / repo=矿
+  addedFrom     String?              @map("added_from") // 发现渠道：awesome 列表仓库名 / "user-import" / "manual"
+  syncRef       String?              @map("sync_ref") // 同步的分支/ref；null=默认分支（用户按 tree/blob 链接导入时记录）
+  pathPrefix    String?              @map("path_prefix") // 同步范围限定的子目录前缀；null=整仓（与 syncRef 成对出现）
+  lastCommitSha String?              @map("last_commit_sha") // 上次同步时的 HEAD commit sha（没变整仓跳过）
+  etag          String? // GitHub API 条件请求缓存标识（304 响应不消耗限额）
+  failCount     Int                  @default(0) @map("fail_count") // 连续失败计数（含重试），达阈值置 dormant
+  status        DiscoverSourceStatus @default(active)
+  lastSyncedAt  DateTime?            @map("last_synced_at") // 上次同步完成时间
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ⑥ 索引
+  @@unique([repo, resourceType]) // 同一仓库同一资源类型只登记一次（不同资源类型可各自登记）
+  @@index([resourceType, status, kind]) // 加速同步任务"取某资源类型全部 active 矿仓库"查询
+  @@schema("discover")
+}

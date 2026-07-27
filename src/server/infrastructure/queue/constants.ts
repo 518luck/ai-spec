@@ -20,4 +20,7 @@ export const JOB_NAMES = {
 	avatarCleanup: "avatar-cleanup",
 	emailChange: "email-change",
 	emailChangedNotice: "email-changed-notice",
+	discoverScan: "discover-scan",
+	discoverSyncRepo: "discover-sync-repo",
+	discoverSweep: "discover-sweep",
 } as const;
