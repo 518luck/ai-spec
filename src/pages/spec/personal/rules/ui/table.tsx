@@ -1,48 +1,28 @@
 "use client";
 
-// # 规约列表表格：展示规则名称、预览及操作列，支持文件夹筛选和搜索
+// # 规约列表表格：展示规则名称、文件夹、预览及操作列；数据由 RuleList 统一拉取后传入
+// > 整块跟着视图切换进出场，行再按索引错峰淡入
 
+import { motion } from "motion/react";
 import type { JSX } from "react";
-import useSWR from "swr";
 
-import { getRules } from "@/entities/rule";
-import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
+import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
+import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import { itemTransition, LIST_SWITCH_MOTION, ROW_ITEM_MOTION } from "../lib/list-motion";
 import { TableActions } from "./table-actions";
 
 type RuleTableProps = {
-	folderId?: string;
-	tagIds?: string;
-	q?: string;
+	rules: RuleListItemVo[];
 };
 
-export function RuleTable({ folderId, tagIds, q }: RuleTableProps): JSX.Element {
-	// 获取规约列表，支持文件夹/标签筛选和搜索
-	const { data, isLoading } = useSWR(["rules", folderId, tagIds, q], () =>
-		getRules({ folderId, tagIds, q }),
-	);
-
-	if (isLoading) {
-		return (
-			<div className="flex h-60 items-center justify-center">
-				<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-			</div>
-		);
-	}
-
-	const rules = data?.data ?? [];
-
-	if (rules.length === 0) {
-		return (
-			<div className="flex h-60 items-center justify-center text-muted-foreground">
-				{folderId || tagIds ? "当前筛选条件下暂无规约" : "暂无规约，点击右上角「新增规约」创建"}
-			</div>
-		);
-	}
-
+export function RuleTable({ rules }: RuleTableProps): JSX.Element {
 	return (
-		<div className="flex h-full flex-col overflow-hidden rounded-lg border">
+		<motion.div
+			className="flex h-full flex-col overflow-hidden rounded-lg border"
+			{...LIST_SWITCH_MOTION}
+		>
 			<ScrollArea orientation="horizontal" className="min-h-0 flex-1" scrollbarClassName="mx-4">
 				<Table className="table-fixed" containerClassName="overflow-x-visible">
 					<TableHeader className="bg-muted">
@@ -54,21 +34,27 @@ export function RuleTable({ folderId, tagIds, q }: RuleTableProps): JSX.Element 
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{rules.map((rule) => (
-							<TableRow key={rule.id}>
+						{rules.map((rule, index) => (
+							<MotionTableRow key={rule.id} {...ROW_ITEM_MOTION} transition={itemTransition(index)}>
 								<TableCell className="truncate pl-4 font-medium">{rule.name}</TableCell>
-								<TableCell className="truncate text-muted-foreground">
-									{rule.folderName || "未分类"}
+								<TableCell className="text-muted-foreground">
+									<span className="flex items-center gap-1.5">
+										<Icons.folderClosed className="size-4 shrink-0" />
+										<span className="truncate">{rule.folderName || "未分类"}</span>
+									</span>
 								</TableCell>
 								<TableCell className="truncate text-muted-foreground">{rule.preview}</TableCell>
 								<TableCell className="pr-4">
 									<TableActions rule={rule} />
 								</TableCell>
-							</TableRow>
+							</MotionTableRow>
 						))}
 					</TableBody>
 				</Table>
 			</ScrollArea>
-		</div>
+		</motion.div>
 	);
 }
+
+// 可做动画的表格行：给 TableRow 套一层 motion，让行能按索引错峰淡入
+const MotionTableRow = motion.create(TableRow);

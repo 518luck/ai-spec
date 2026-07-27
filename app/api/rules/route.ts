@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
+import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
 import { mapTags } from "@/server/utils/map-tags";
+import { getOrCreatePersonalRuleSpace, resolveRuleSpaceId } from "@/server/utils/rule-space";
 import prisma from "@/shared/db";
+import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import {
 	createRuleDtoSchema,
 	listRulesDtoSchema,
@@ -10,7 +13,7 @@ import {
 	ruleVoSchema,
 } from "@/shared/lib/zod/schemas/rule";
 
-// # 规约：列表查询（文件夹 + 标签 + 搜索）+ 创建（个人空间）
+// # 规约：列表查询（领域空间 + 文件夹 + 标签 + 搜索）+ 创建（个人空间）
 
 // 分页大小
 const PAGE_SIZE = 30;
@@ -18,38 +21,13 @@ const PAGE_SIZE = 30;
 // 列表预览的截断长度（字符数）
 const PREVIEW_LENGTH = 120;
 
-// 获取或创建用户的个人规则空间（teamId=null）
-const getOrCreatePersonalSpace = async (userId: string): Promise<string> => {
-	const existingSpace = await prisma.ruleSpace.findFirst({
-		where: { ownerId: userId, teamId: null },
-		select: { id: true },
-	});
-
-	if (existingSpace) {
-		return existingSpace.id;
-	}
-
-	// 个人空间不存在，自动创建默认空间
-	const newSpace = await prisma.ruleSpace.create({
-		data: {
-			name: "我的规约",
-			icon: "rules",
-			ownerId: userId,
-			teamId: null,
-		},
-		select: { id: true },
-	});
-
-	return newSpace.id;
-};
-
 // > 按更新时间倒序查询当前用户规约（文件夹 + 标签 + 搜索筛选 + 分页）
 export const GET = withPersonal(async ({ session, searchParams }) => {
 	const parsed = listRulesDtoSchema.safeParse(searchParams);
 	if (!parsed.success) {
 		throw parsed.error;
 	}
-	const { folderId, tagIds: tagIdsParam, q, offset = 0 } = parsed.data;
+	const { folderId, spaceId, tagIds: tagIdsParam, q, offset = 0 } = parsed.data;
 	const trimmedQuery = q?.trim() ?? "";
 
 	// folderId 为空（空串/undefined）表示"未分类"，统一映射为 null 查询
@@ -60,10 +38,14 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 		.map((s) => s.trim())
 		.filter(Boolean);
 
+	// ! 领域空间是顶层隔离：没传 spaceId 时按个人默认空间查，绝不跨空间混列
+	const targetSpaceId = spaceId ?? (await getOrCreatePersonalRuleSpace(session.user.id));
+
 	// 构建查询条件
 	const where = {
 		ownerId: session.user.id,
 		folderId: targetFolderId,
+		spaceId: targetSpaceId,
 		// 命中任一选中标签即返回（some 关系）
 		...(tagIds.length > 0 && { tags: { some: { tagId: { in: tagIds } } } }),
 		...(trimmedQuery && {
@@ -130,24 +112,36 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 	return NextResponse.json(voResult.data);
 });
 
-// > 校验入参后创建规约，自动关联用户的个人空间
+// > 校验入参后创建规约，空间归属跟随所选文件夹，未选文件夹时落到个人默认空间
 export const POST = withPersonal(async ({ req, session }) => {
 	const parsed = createRuleDtoSchema.safeParse(await req.json());
 	if (!parsed.success) {
 		throw parsed.error;
 	}
-	const { name, content, folderId, tags } = parsed.data;
+	const { name, content, folderId, spaceId, tags } = parsed.data;
+	const targetFolderId = folderId || null;
 
-	// 获取或创建用户的个人规则空间
-	const spaceId = await getOrCreatePersonalSpace(session.user.id);
+	// ! 规则的 spaceId 必须与所在文件夹的空间一致，否则规则会出现在文件夹之外的空间里
+	const folder = targetFolderId
+		? await prisma.folder.findFirst({
+				where: { id: targetFolderId, ownerId: session.user.id },
+				select: { ruleSpaceId: true },
+			})
+		: null;
+	if (targetFolderId && !folder) {
+		throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "文件夹不存在" });
+	}
+
+	const targetSpaceId =
+		folder?.ruleSpaceId ?? (await resolveRuleSpaceId({ userId: session.user.id, spaceId }));
 
 	const rule = await prisma.rule.create({
 		data: {
 			name,
 			content,
 			ownerId: session.user.id,
-			spaceId,
-			folderId: folderId || null,
+			spaceId: targetSpaceId,
+			folderId: targetFolderId,
 			// 标签关联：tags 为 id 数组，直接 create 关联表行；id 不存在时外键约束抛 P2025
 			tags: { create: (tags ?? []).map((tagId) => ({ tagId })) },
 		},

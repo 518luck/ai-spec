@@ -9,12 +9,16 @@ export default async function Page({
 }: {
 	searchParams: Promise<{
 		folderId?: string;
+		spaceId?: string;
 		tagIds?: string;
 		q?: string;
+		view?: string;
 	}>;
 }) {
 	// Next.js 15 的 searchParams 是 Promise，必须先 await 再校验
 	const sp = await searchParams;
-	const { folderId, tagIds, q } = listRulesDtoSchema.parse(sp);
-	return <PersonalRulesPage folderId={folderId} tagIds={tagIds} q={q} />;
+	// ! view 只决定前端渲染成表格还是卡片，不参与列表查询；DTO schema 开发环境走 strict，解析前必须摘掉，否则未知键直接抛
+	const { view: _view, ...listParams } = sp;
+	const { folderId, spaceId, tagIds, q } = listRulesDtoSchema.parse(listParams);
+	return <PersonalRulesPage folderId={folderId} spaceId={spaceId} tagIds={tagIds} q={q} />;
 }

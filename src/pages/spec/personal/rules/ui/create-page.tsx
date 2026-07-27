@@ -15,7 +15,12 @@ import {
 } from "@/shared/lib/zod/schemas/rule";
 import { RuleEditorForm, type RuleEditorPayload } from "./rule-editor-form";
 
-export function CreateRulePage(): JSX.Element {
+type CreateRulePageProps = {
+	// 目标领域空间：列表页跳转时带在 URL 上，没带则由后端落到个人默认空间
+	spaceId?: string;
+};
+
+export function CreateRulePage({ spaceId }: CreateRulePageProps): JSX.Element {
 	const router = useRouter();
 	// 创建规约 mutation
 	const { trigger: triggerCreateRule } = useSWRMutation<RuleVo, Error, string, CreateRuleDto>(
@@ -25,7 +30,7 @@ export function CreateRulePage(): JSX.Element {
 
 	// 保存逻辑：schema 校验 + 创建 + toast + 跳回列表；返回是否成功供表单控制按钮状态
 	const handleSave = async (payload: RuleEditorPayload): Promise<boolean> => {
-		const parsed = createRuleDtoSchema.safeParse(payload);
+		const parsed = createRuleDtoSchema.safeParse({ ...payload, spaceId });
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请填写规约信息");
 			return false;
@@ -33,9 +38,12 @@ export function CreateRulePage(): JSX.Element {
 
 		await triggerCreateRule(parsed.data);
 		toast.success("规约已创建");
-		router.push("/spec/personal/rules");
+		// 回列表时带回原空间，避免创建完跳到默认空间看不到新规约
+		router.push(`/spec/personal/rules${spaceId ? `?spaceId=${spaceId}` : ""}`);
 		return true;
 	};
 
-	return <RuleEditorForm title="创建规约" submitLabel="创建" onSave={handleSave} />;
+	return (
+		<RuleEditorForm title="创建规约" spaceId={spaceId} submitLabel="创建" onSave={handleSave} />
+	);
 }

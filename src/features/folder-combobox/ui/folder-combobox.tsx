@@ -53,6 +53,8 @@ type EmptyOverride = {
 type FolderComboboxProps = {
 	// 文件夹归属的资源类型（如 "promptDraft"），决定拉取哪类文件夹 + 创建时归属
 	resourceType: string;
+	// 规约领域空间 id：仅规约文件夹需要，传了只拉该空间下的文件夹，新建也落到该空间
+	spaceId?: string;
 	// 当前选中的 folderId；传了（含 null = 未分类）走受控模式，没传自动从 URL ?folder=xxx 读写
 	value?: string | null;
 	// 选中回调；传了走受控模式，没传自动写入 URL
@@ -68,6 +70,7 @@ type FolderComboboxProps = {
 // > 传 value/onChange 时走受控模式（弹窗用），没传时自动读写 URL ?folder=xxx（导航栏筛选用）
 export function FolderCombobox({
 	resourceType,
+	spaceId,
 	value: controlledValue,
 	onChange: controlledOnChange,
 	iconOnly = false,
@@ -116,7 +119,7 @@ export function FolderCombobox({
 		data: rawFolders,
 		isLoading,
 		mutate: refetchFolders,
-	} = useSWR(["folders", resourceType], ([, type]) => getFolders(type));
+	} = useSWR(["folders", resourceType, spaceId], () => getFolders({ type: resourceType, spaceId }));
 	// 后端 VO 映射为下拉选项；rawFolders 为 undefined 时回退空数组
 	const folders = useMemo<FolderOption[]>(
 		() => (rawFolders ?? []).map((f) => ({ value: f.id, label: f.name, color: f.color })),
@@ -153,6 +156,7 @@ export function FolderCombobox({
 		const parsed = createFolderDtoSchema.safeParse({
 			...input,
 			resourceType,
+			spaceId,
 		});
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "创建文件夹失败");
@@ -164,6 +168,7 @@ export function FolderCombobox({
 				description: parsed.data.description,
 				color: parsed.data.color,
 				resourceType: parsed.data.resourceType,
+				spaceId: parsed.data.spaceId,
 			});
 			// 创建成功后刷新缓存（替代手动 setFolders），让新文件夹出现在列表里
 			await refetchFolders();

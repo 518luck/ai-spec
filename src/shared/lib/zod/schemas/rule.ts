@@ -19,12 +19,16 @@ export const ruleContentSchema = z
 // 规约所属文件夹：null/空串表示不加入任何文件夹
 export const ruleFolderIdSchema = z.string().nullable().or(z.literal(""));
 
+// 规约所属领域空间：省略时后端按文件夹归属推导，都没有则回落个人默认空间
+export const ruleSpaceIdSchema = z.string().optional();
+
 // @ 入参
 // 创建规约入参
 export const createRuleDtoSchema = z.object({
 	name: ruleNameSchema,
 	content: ruleContentSchema,
 	folderId: ruleFolderIdSchema,
+	spaceId: ruleSpaceIdSchema,
 	// 标签传 id 数组；前端在 TagCombobox 里选/新建时已确保 id 存在，后端只 connect 不查
 	tags: z.array(z.string()).optional(),
 });
@@ -110,6 +114,7 @@ export type RuleListVo = z.infer<typeof ruleListVoSchema>;
 // tagIds 为逗号分隔的 tag id 列表，多选时取交集（命中其中任意一个即返回）
 export const listRulesDtoSchema = z.object({
 	folderId: z.string().optional(),
+	spaceId: ruleSpaceIdSchema,
 	tagIds: z.string().optional(),
 	q: z.string().optional(),
 	offset: z.coerce.number().int().min(0).optional(),

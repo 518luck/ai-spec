@@ -27,6 +27,9 @@ export const folderColorSchema = z
 	.string()
 	.regex(/^#[0-9a-fA-F]{6}$/, { error: "颜色需为 #RRGGBB 格式" });
 
+// 文件夹所属的规约领域空间：仅 resourceType="rules" 的文件夹使用，省略时后端回落个人默认空间
+export const folderSpaceIdSchema = z.string().optional();
+
 // @ 入参
 // 创建文件夹入参
 export const createFolderDtoSchema = z.object({
@@ -34,6 +37,7 @@ export const createFolderDtoSchema = z.object({
 	description: folderDescriptionSchema,
 	color: folderColorSchema,
 	resourceType: folderResourceTypeSchema,
+	spaceId: folderSpaceIdSchema,
 });
 
 // 创建文件夹入参类型
