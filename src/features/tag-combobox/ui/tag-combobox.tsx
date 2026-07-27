@@ -1,7 +1,7 @@
 "use client";
 
 // # 标签选择面板：搜索 + 勾选 + 内联创建的纯内容组件，不含 Popover/chips/触发器
-// > 由外层容器（FilterCombobox、editor-toolbar 等）自行包 Popover 和 chips 展示
+// > 由外层容器（RecordFilter、editor-toolbar 等）自行包 Popover 和 chips 展示
 // > 传 value/onChange 时走受控模式（弹窗用），没传时自动读写 URL ?tagIds=a,b,c（导航栏筛选用）
 
 import { useCommandState } from "cmdk";

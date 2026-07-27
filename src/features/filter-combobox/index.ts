@@ -1,1 +1,1 @@
-export { FilterCombobox } from "./ui/filter-combobox";
+export { FilterShell } from "./ui/filter-shell";

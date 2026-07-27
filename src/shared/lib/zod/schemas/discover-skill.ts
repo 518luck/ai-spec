@@ -45,9 +45,11 @@ export const importDiscoverSkillsDtoSchema = z.object({
 // 按 URL 导入入参类型
 export type ImportDiscoverSkillsDto = z.infer<typeof importDiscoverSkillsDtoSchema>;
 
-// 广场列表查询入参：搜索 + 分页
+// 广场列表查询入参：搜索 + 组织筛选 + 分页
 export const listDiscoverSkillsDtoSchema = z.object({
 	q: z.string().optional(),
+	// 按 GitHub 组织名筛选，逗号分隔（如 "vercel,anthropics"）
+	orgs: z.string().optional(),
 	offset: z.coerce.number().int().min(0).optional(),
 });
 
@@ -65,6 +67,26 @@ export const discoverSkillListVoSchema = z.object({
 	hasMore: z.boolean(),
 	nextOffset: z.number().int().min(0).optional(),
 });
+
+// Organization 列表项（按 GitHub 组织分组，供前端侧边栏筛选）
+export const organizationListItemVoSchema = z.object({
+	authorName: z.string(),
+	authorType: z.string().nullable(), // "Organization" 或 "User"
+	authorAvatarUrl: z.string().nullable(),
+	authorHtmlUrl: z.string().nullable(),
+	skillCount: z.number().int(),
+});
+
+export type OrganizationListItemVo = z.infer<typeof organizationListItemVoSchema>;
+
+// Organization 列表响应
+export const organizationListVoSchema = z.object({
+	data: z.array(organizationListItemVoSchema),
+	total: z.number(),
+});
+
+// Organization 列表响应类型
+export type OrganizationListVo = z.infer<typeof organizationListVoSchema>;
 
 // 广场列表响应类型
 export type DiscoverSkillListVo = z.infer<typeof discoverSkillListVoSchema>;

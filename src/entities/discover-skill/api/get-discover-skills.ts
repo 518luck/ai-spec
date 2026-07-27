@@ -12,6 +12,7 @@ export const getDiscoverSkills = async (
 ): Promise<DiscoverSkillListVo> => {
 	const searchParams = new URLSearchParams();
 	if (params?.q) searchParams.set("q", params.q);
+	if (params?.orgs) searchParams.set("orgs", params.orgs);
 	if (params?.offset !== undefined) searchParams.set("offset", String(params.offset));
 
 	const url = `/api/discover/skills${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;

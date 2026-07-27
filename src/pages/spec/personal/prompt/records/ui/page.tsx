@@ -6,7 +6,6 @@ import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getRecords } from "@/entities/prompt";
-import { FilterCombobox } from "@/features/filter-combobox";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
@@ -24,6 +23,7 @@ import { RecordsMutateProvider } from "../model/records-mutate-context";
 import { CreateRecordDialog } from "./create-record-dialog";
 import { EditRecordDialog } from "./edit-record-dialog";
 import { recordMorphId } from "./record-card";
+import { RecordFilter } from "./record-filter";
 import { RecordsGrid } from "./records-grid";
 
 // # 个人收录页：SWR Infinite 拉取 GET /api/prompt/records，底部哨兵进入视口时自动加载下一页
@@ -190,7 +190,7 @@ export function PersonalRecordsPage({
 				<PageWidthWrapper fill>
 					{/* // @ 筛选条带：筛选容器贴左、搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 					<div className="mb-6 flex items-center justify-between gap-3">
-						<FilterCombobox resourceType="promptRecord" />
+						<RecordFilter />
 						<SearchInput
 							className="max-w-80"
 							filters={["title", "content"]}

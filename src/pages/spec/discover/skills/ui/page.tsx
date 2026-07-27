@@ -19,24 +19,25 @@ import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { ImportDialog } from "./import-dialog";
+import { OrganizationFilter } from "./organization-filter";
 import { SkillCard } from "./skill-card";
 
-// # Skills 广场页：SWR Infinite 拉取 GET /api/discover/skills，按 star 倒序的卡片网格 + 搜索 + 无限滚动
-export function DiscoverSkillsPage({ q }: ListDiscoverSkillsDto): JSX.Element {
+// # Skills 广场页：SWR Infinite 拉取 GET /api/discover/skills，按 star 倒序的卡片网格 + 组织过滤 + 搜索 + 无限滚动
+export function DiscoverSkillsPage({ q, orgs }: ListDiscoverSkillsDto): JSX.Element {
 	const { status } = useSession();
 	const [importOpen, setImportOpen] = useState(false);
 
-	// SWR Infinite key：q 变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
+	// SWR Infinite key：q/orgs 变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: DiscoverSkillListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["discover-skills", q, offset] as const;
+		return ["discover-skills", q, orgs, offset] as const;
 	};
 
 	const { data, isLoading, isValidating, setSize, mutate } = useSWRInfinite(
 		getKey,
-		async ([, q, offset]) => getDiscoverSkills({ q, offset }),
+		async ([, q, orgs, offset]) => getDiscoverSkills({ q, orgs, offset }),
 	);
 
 	const skills = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
@@ -64,7 +65,11 @@ export function DiscoverSkillsPage({ q }: ListDiscoverSkillsDto): JSX.Element {
 			return (
 				<EmptyState
 					icon={Icons.skills}
-					description="广场还空着，粘贴一个 GitHub 仓库链接，把好用的 skills 收进来吧"
+					description={
+						orgs || q
+							? "没有符合当前筛选条件的 skills"
+							: "广场还空着，粘贴一个 GitHub 仓库链接，把好用的 skills 收进来吧"
+					}
 				/>
 			);
 		}
@@ -113,9 +118,10 @@ export function DiscoverSkillsPage({ q }: ListDiscoverSkillsDto): JSX.Element {
 			}
 		>
 			<PageWidthWrapper fill>
-				{/* // @ 工具条带：搜索框贴右 */}
-				<div className="mb-6 flex items-center justify-end">
-					<SearchInput className="max-w-80" />
+				{/* // @ 工具条带：左侧组织过滤标签，右侧搜索 */}
+				<div className="mb-6 flex items-center gap-3">
+					<OrganizationFilter className="min-w-0 flex-1" />
+					<SearchInput className="max-w-80 shrink-0" />
 				</div>
 				{renderSkillsBody()}
 			</PageWidthWrapper>

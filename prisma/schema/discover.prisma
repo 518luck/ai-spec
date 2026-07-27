@@ -3,7 +3,7 @@
 // GitHub 是唯一数据源，本域两张表只是索引/缓存，可随时从源头全量重建
 // 用户自建 skill 不在本域——将来在个人空间域单独建表，与广场缓存彻底隔离
 
-// 作者类型：区分 GitHub 组织账号与个人账号（Publisher 筛选用）
+// 作者类型：区分 GitHub 组织账号与个人账号（Organization 侧边栏筛选用）
 enum AuthorType {
   Organization
   User
@@ -25,7 +25,7 @@ model DiscoverSkill {
   sourcePath     String       @map("source_path") // SKILL.md 在仓库内的文件路径
   sourceUrl      String?      @map("source_url") // 回链原仓库的 URL（详情页署名+跳转）
   authorName     String?      @map("author_name") // 作者展示名（取仓库 owner login）
-  authorType     AuthorType?  @map("author_type") // 账号类型（Organization/User），Publisher 筛选用
+  authorType     AuthorType?  @map("author_type") // 账号类型（Organization/User），Organization 侧边栏筛选用
   authorAvatarUrl String?     @map("author_avatar_url") // 作者头像 URL（GitHub avatar）
   authorHtmlUrl  String?      @map("author_html_url") // 作者 GitHub 主页链接
   stars          Int          @default(0) // 源仓库 star 数（广场列表排序依据）

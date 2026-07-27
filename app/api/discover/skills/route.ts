@@ -20,12 +20,21 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { q, offset = 0 } = parsed.data;
+		const { q, orgs, offset = 0 } = parsed.data;
 		const trimmedQuery = q?.trim() ?? "";
+		// 解析组织筛选：逗号分隔的 authorName 列表
+		const orgNames = (orgs ?? "")
+			.split(",")
+			.map((s) => s.trim())
+			.filter(Boolean);
 
-		// 构建查询条件：过滤已下架条目，搜索命中名称或描述
+		// 构建查询条件：过滤已下架条目，可选组织筛选，搜索命中名称或描述
 		const where = {
 			delistedAt: null,
+			...(orgNames.length > 0 && {
+				authorType: "Organization" as const,
+				authorName: { in: orgNames },
+			}),
 			...(trimmedQuery && {
 				OR: [
 					{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
