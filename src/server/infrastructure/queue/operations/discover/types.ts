@@ -5,8 +5,11 @@ export interface DiscoverSyncRepoData {
 	repo: string; // 仓库全名 "owner/name"
 }
 
-// 发现任务无载荷（货源清单读自 config 与数据库）
-export type DiscoverScanData = Record<string, never>;
+// 扫描任务载荷：不传 source 跑全部 awesome 源（cron 用），传 source 只跑指定源（测试用）
+export interface DiscoverScanData {
+	// 可选：指定单个 awesome 源（owner/name），不传则遍历 AWESOME_SOURCES 全部
+	source?: string;
+}
 
 // sweep 收尾任务无载荷
 export type DiscoverSweepData = Record<string, never>;

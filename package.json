@@ -19,7 +19,9 @@
 		"prisma:validate": "prisma validate",
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
-		"prisma:studio": "prisma studio"
+		"prisma:studio": "prisma studio",
+		"scan": "tsx scripts/trigger-scan.ts",
+		"scan:one": "tsx scripts/trigger-scan.ts --source=ComposioHQ/awesome-claude-skills"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.11.2",

@@ -3,6 +3,7 @@
 // > 单并发串行（GitHub API 串行调用避免打爆配额）+ 撞限流时 pause，由 background-jobs 的 discover-resume 延迟 job 触发恢复
 
 import { Worker } from "bullmq";
+import { DISCOVER_SCAN_CRON } from "@/server/configs/discover.config";
 import { formatGithubMetrics } from "@/server/infrastructure/github/metrics";
 import { DISCOVER_QUEUE_CONFIG, JOB_NAMES } from "@/server/infrastructure/queue/constants";
 import { processDiscoverJob } from "@/server/infrastructure/queue/operations/discover";
@@ -37,20 +38,20 @@ discoverWorker.on("failed", (job, err) => {
 	});
 });
 
-// > 注册每日定时调度：凌晨 4 点投递一次广场扫描编排任务到 discover 队列（upsert 幂等，worker 重启不会重复注册）
-// 先幂等清理 skill 域时期的旧调度 id，防止它每天投递已无人认领的旧任务名
+// > 注册广场扫描定时调度（cron 由 DISCOVER_SCAN_CRON 控制，默认 04:00，本地可设每分钟测试）
+// upsert 幂等：worker 重启不会重复注册；先清理 skill 域时期的旧调度 id，防止投递已无人认领的旧任务名
 discoverQueue
 	.removeJobScheduler("skill-discover-daily")
 	.then(() =>
 		discoverQueue.upsertJobScheduler(
 			"discover-scan-daily",
-			{ pattern: "0 4 * * *" },
+			{ pattern: DISCOVER_SCAN_CRON },
 			{ name: JOB_NAMES.discoverScan, data: {} },
 		),
 	)
-	.then(() => console.warn("广场每日同步调度已注册（04:00）"))
+	.then(() => console.warn(`广场扫描调度已注册（cron: ${DISCOVER_SCAN_CRON}）`))
 	.catch((err) =>
-		console.error("注册广场同步调度失败", {
+		console.error("注册广场扫描调度失败", {
 			error: err instanceof Error ? err.message : String(err),
 		}),
 	);

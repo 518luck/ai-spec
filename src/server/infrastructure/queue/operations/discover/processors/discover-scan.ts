@@ -4,16 +4,21 @@ import prisma from "@/shared/db";
 
 import { enqueueDiscoverSweep } from "../enqueues/discover-sweep";
 import { enqueueDiscoverSyncRepo } from "../enqueues/discover-sync-repo";
+import type { DiscoverScanData } from "../types";
 
 // # 处理器：发现 + 编排——刷新 awesome 货源清单、fan-out 各仓库同步任务、收尾投递 sweep
+// > 不传 source 跑全部源（cron 用），传 source 只跑指定源（测试用，fan-out 也限定在该源登记的仓库）
 
 // 休眠货源的试探间隔：每周给一次复活机会，避免天天撞已死仓库
 const DORMANT_PROBE_MS = 7 * 24 * 60 * 60 * 1000;
 
-export async function processDiscoverScan(): Promise<void> {
+export async function processDiscoverScan({ source }: DiscoverScanData = {}): Promise<void> {
+	// 待刷新的 awesome 源：传了 source 只跑那一个，否则跑配置里的全部
+	const sources = source ? [source] : AWESOME_SOURCES;
+
 	// ① 逐个 awesome 目录：sha 没变整层跳过；变了重新解析 README，把新仓库登记进货源清单
 	// ! 单源失败只记录不中断，保证 fan-out 与 sweep 始终执行
-	for (const listRepo of AWESOME_SOURCES) {
+	for (const listRepo of sources) {
 		try {
 			await refreshAwesomeSource(listRepo);
 		} catch (e) {
@@ -25,11 +30,13 @@ export async function processDiscoverScan(): Promise<void> {
 	}
 
 	// ② fan-out：active 全量 + 休眠超一周的试探名额，各投一条同步任务（worker 单并发串行消费天然限流）
+	// 传了 source 时只同步该源登记的仓库（按 addedFrom 过滤），否则同步全部
 	const probeBefore = new Date(Date.now() - DORMANT_PROBE_MS);
 	const targets = await prisma.discoverSource.findMany({
 		where: {
 			resourceType: "skills",
 			kind: "repo",
+			...(source ? { addedFrom: source } : {}),
 			OR: [{ status: "active" }, { status: "dormant", updatedAt: { lt: probeBefore } }],
 		},
 		select: { repo: true },
