@@ -1,0 +1,7 @@
+/* # 文档站样式入口:仅供 DocsSiteLayout 引入,是独立的 Tailwind 编译单元 */
+/* ! 严禁并入 global.css:preset 的 @layer base 会覆写全站 body/border 配色 */
+/* source(none) 阻止扫描宿主源码,fumadocs 所需工具类由 preset 内置的 @source inline 安全列表生成 */
+@import "tailwindcss" source(none);
+/* shadcn.css 是纯变量映射(--color-fd-* → 宿主 shadcn 变量),文档站因此自动跟随双主题 */
+@import "fumadocs-ui/css/shadcn.css";
+@import "fumadocs-ui/css/preset.css";
