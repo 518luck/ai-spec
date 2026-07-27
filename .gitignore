@@ -54,3 +54,9 @@ next-env.d.ts
 
 # ZCode 本地配置
 .zcode/
+
+# fumadocs-mdx 生成目录
+.source/
+
+# 个人简历等非项目产物
+/docx/

@@ -1,7 +1,7 @@
 // # 规约库域：领域空间（顶层隔离）+ 规则（原子约定）+ 标签关联
 //
 // 三层结构对应 docs/项目设计/业务设计/规约库.md：
-//   领域空间 → 文件夹（复用 Folder 表，resourceType="ruleFolder"）→ 规则
+//   领域空间 → 文件夹（复用 Folder 表，resourceType="rules"）→ 规则
 //   标签贯穿文件夹检索（复用 shared 域 Tag 表，resourceType="rules"）
 // ! Rule 冗余存 spaceId：支持未分类规则（folderId=null），且查询空间内规则不用 join folder
 
@@ -27,7 +27,7 @@ model RuleSpace {
   // ⑤ 关联关系
   owner   User     @relation("RuleSpaceOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其空间）
   team    Team?    @relation("TeamRuleSpaces", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其空间；null=个人空间）
-  folders Folder[] @relation("FolderItems_RuleFolder") // 空间下的文件夹（复用 Folder，传 resourceType="ruleFolder"）
+  folders Folder[] @relation("FolderItems_RuleFolder") // 空间下的文件夹（复用 Folder，传 resourceType="rules"）
   rules   Rule[] // 空间下的所有规则（含 folderId=null 直接挂空间下的）
 
   // ⑥ 索引

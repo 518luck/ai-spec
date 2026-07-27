@@ -26,7 +26,7 @@ model Folder {
 
   // ④ 外键列
   ownerId     String  @map("owner_id") // 创建者 ID（拥有最高权限，不受 FolderMember 影响）
-  ruleSpaceId String? @map("rule_space_id") // 所属规约领域空间 ID（仅 resourceType="ruleFolder" 时有值；其他资源类型的文件夹此列为 null）
+  ruleSpaceId String? @map("rule_space_id") // 所属规约领域空间 ID（仅 resourceType="rules" 时有值；其他资源类型的文件夹此列为 null）
 
   // ⑤ 关联关系
   owner         User           @relation("FolderOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文件夹）

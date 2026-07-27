@@ -8,10 +8,10 @@ model Team {
   id String @id @default(cuid()) // 团队主键
 
   // ② 业务字段
-  name String // 团队名称
-  slug String? @unique // URL 友好标识，用于团队专属页路径
+  name        String // 团队名称
+  slug        String?  @unique // URL 友好标识，用于团队专属页路径
   description String? // 团队描述，可选
-  plan TeamPlan @default(free) // 团队套餐档位，控制团队空间额度与付费功能
+  plan        TeamPlan @default(free) // 团队套餐档位，控制团队空间额度与付费功能
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at") // 创建时间
@@ -19,9 +19,10 @@ model Team {
 
   // ④ 关联关系
   memberships    TeamMember[] // 团队的全部成员关系；创建者由其中 role=owner 的行表达
-  folders        Folder[] @relation("TeamFolders") // 团队空间下的全部文件夹
-  promptRecords  PromptRecord[] @relation("TeamPromptRecords") // 团队空间内的全部收录记录
-  ruleSpaces     RuleSpace[] @relation("TeamRuleSpaces") // 团队空间下的全部规约领域空间
+  folders        Folder[]        @relation("TeamFolders") // 团队空间下的全部文件夹
+  promptRecords  PromptRecord[]  @relation("TeamPromptRecords") // 团队空间内的全部收录记录
+  ruleSpaces     RuleSpace[]     @relation("TeamRuleSpaces") // 团队空间下的全部规约领域空间
+  agentsProjects AgentsProject[] @relation("TeamAgentsProjects") // 团队空间下的全部 AGENTS.md 项目
   teamFavorites  TeamFavorite[] // 团队的共享收藏（成员共用）
 
   // ⑤ 索引

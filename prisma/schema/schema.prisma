@@ -15,7 +15,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth", "token", "prompt", "folder", "team", "shared", "rule"]
+  schemas  = ["auth", "token", "prompt", "folder", "team", "shared", "rule", "agents", "discover"]
 }
 
 // 用户本人信息
@@ -54,6 +54,10 @@ model User {
   // 规约库反向关系：该用户创建的领域空间与规则
   ruleSpaces RuleSpace[] @relation("RuleSpaceOwner")
   rules      Rule[]      @relation("RuleOwner")
+
+  // AGENTS.md 反向关系：该用户创建的项目与文档
+  agentsProjects AgentsProject[] @relation("AgentsProjectOwner")
+  agentsDocs     AgentsDoc[]     @relation("AgentsDocOwner")
 
   // 团队反向关系：该用户加入的所有团队，创建者身份由其中 role=owner 的行表达
   memberships TeamMember[]
