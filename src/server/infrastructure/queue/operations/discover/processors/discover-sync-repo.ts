@@ -11,13 +11,18 @@ import type { DiscoverSyncRepoData } from "../types";
 
 // # 处理器：同步单个仓库——sha 没变秒跳过（仅刷时间戳）；有新提交/休眠试探/上游改名走全量重抓
 
-export async function processDiscoverSyncRepo({ repo }: DiscoverSyncRepoData): Promise<void> {
+// 同步结果：cached=304/未变跳过 synced=有新提交全量重抓 renamed=上游改名合并
+export type SyncRepoResult = "cached" | "synced" | "renamed";
+
+export async function processDiscoverSyncRepo({
+	repo,
+}: DiscoverSyncRepoData): Promise<SyncRepoResult | undefined> {
 	const source = await prisma.discoverSource.findUnique({
 		where: { repo_resourceType: { repo, resourceType: "skills" } },
 	});
 	// 货源已被移除时跳过；dormant 允许通过（discover 每周投递一次试探）
 	if (!source) {
-		return;
+		return undefined;
 	}
 
 	try {
@@ -32,7 +37,7 @@ export async function processDiscoverSyncRepo({ repo }: DiscoverSyncRepoData): P
 		// ! 上游改名或大小写差异（fetch 静默跟随 301）：按规范名重建后清掉旧行，避免双份来源与重复条目
 		if (!head.notModified && head.canonicalRepo && head.canonicalRepo !== repo) {
 			await mergeRenamedRepo({ source, canonicalRepo: head.canonicalRepo, headSha: head.sha });
-			return;
+			return "renamed";
 		}
 
 		// 304 或 sha 未变：只刷新货源时间戳，不重抓内容
@@ -45,7 +50,7 @@ export async function processDiscoverSyncRepo({ repo }: DiscoverSyncRepoData): P
 					...(head.notModified ? {} : { etag: head.etag }),
 				},
 			});
-			return;
+			return "cached";
 		}
 
 		// 有新提交或休眠试探：全量重抓（importRepoSkills 内部完成 upsert、prune 与货源复活）
@@ -57,6 +62,7 @@ export async function processDiscoverSyncRepo({ repo }: DiscoverSyncRepoData): P
 			where: { repo_resourceType: { repo, resourceType: "skills" } },
 			data: { etag: head.notModified ? source.etag : head.etag },
 		});
+		return "synced";
 	} catch (e) {
 		await handleSyncFailure({ source, error: e });
 	}

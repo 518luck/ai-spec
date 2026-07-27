@@ -148,9 +148,9 @@ export const formatGithubMetrics = (m: Readonly<GithubMetrics> = getGithubMetric
 	const resetStr = m.resetAt ? new Date(m.resetAt * 1000).toISOString() : "未知";
 	return [
 		`GitHub API 统计（自 ${m.startedAt.toISOString()}）`,
-		`  总请求: ${m.totalRequests} | 真实消耗配额: ${m.quotaConsumed}（304 命中 ${m.byStatus["304"]} 次未计入）`,
+		`  总请求: ${m.totalRequests} | 本次消耗配额: ${m.quotaConsumed}（304 命中 ${m.byStatus["304"]} 次不消耗）`,
 		`  状态码: 200=${m.byStatus["200"]} 304=${m.byStatus["304"]} 404=${m.byStatus["404"]} 403=${m.byStatus["403"]} 429=${m.byStatus["429"]} other=${m.byStatus.other}`,
 		`  endpoint: commits=${m.byEndpoint.commits} repos=${m.byEndpoint.repos} git-trees=${m.byEndpoint["git-trees"]} search=${m.byEndpoint.search} other=${m.byEndpoint.other}`,
-		`  配额水位: 最低剩余 ${m.minRemaining ?? "未知"} | 重置于 ${resetStr}`,
+		`  GitHub 配额剩余: ${m.minRemaining ?? "未知"}（来自响应头，含其他进程消耗）| 重置于 ${resetStr}`,
 	].join("\n");
 };

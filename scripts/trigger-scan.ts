@@ -5,6 +5,8 @@
 // > 前提：worker 进程已在跑（否则任务投进去没人消费）
 
 import "dotenv/config";
+// ! 必须先于业务模块加载：业务模块顶层间接 import axiom，依赖 globalThis.AsyncLocalStorage（tsx 脚本环境不自带）
+import "../workers/queue/worker-globals";
 
 import { enqueueDiscoverScan } from "@/server/infrastructure/queue";
 
