@@ -1,5 +1,5 @@
 // # 翻译队列配置：批大小、块切分、worker 并发、自动续跑
-// > 腾讯 TextTranslate 默认约 5 次/秒且单条接口；块内并发由 tencent provider 自己限流
+// > 腾讯 TextTranslate 默认约 5 次/秒；出站 QPS/并发由 tencent-client 内 Bottleneck 控制
 
 // 单 job 最多拉取多少条待译（本地短路径 + 送 API 合计）
 export const TRANSLATION_BATCH_LIMIT = Math.max(

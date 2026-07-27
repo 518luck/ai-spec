@@ -1,15 +1,22 @@
+import Bottleneck from "bottleneck";
 import { tmt } from "tencentcloud-sdk-nodejs-tmt";
 
 import type { TranslateTextsOptions, TranslateTextsResult, TranslationProvider } from "./types";
 
-// # 腾讯云机器翻译：官方 tmt SDK 负责签名与请求，本文件只做批处理与端口适配
+// # 腾讯云机器翻译：官方 tmt SDK 负责签名与请求，Bottleneck 负责出站 QPS/并发
 
 const TmtClient = tmt.v20180321.Client;
 
-// TextTranslate 默认约 5 次/秒；批内并发略低于上限
-const DEFAULT_CONCURRENCY = 4;
+// TextTranslate 默认约 5 次/秒；并发与间隔略留余量
+const DEFAULT_MAX_CONCURRENT = 2;
+// 两次启动最小间隔，约 4.5 QPS
+const DEFAULT_MIN_INTERVAL_MS = 220;
+// 每秒令牌桶容量（与腾讯 frequency limit 对齐）
+const DEFAULT_RESERVOIR = 5;
 // 单次 SourceText 上限 6000 字符
 const MAX_SOURCE_CHARS = 6000;
+// 限流错误最多重试次数（不含首次）
+const MAX_RETRIES = 3;
 
 // TextTranslate 成功响应（SDK request 解包后的业务字段）
 type TextTranslateResult = {
@@ -35,33 +42,12 @@ const toTmtLang = (lang: TranslateTextsOptions["sourceLang"] | "ZH"): string => 
 	return "en";
 };
 
-// 限流并发执行（保持结果顺序）
-const mapWithConcurrency = async <T, R>(
-	items: T[],
-	concurrency: number,
-	mapper: (item: T, index: number) => Promise<R>,
-): Promise<R[]> => {
-	if (items.length === 0) {
-		return [];
-	}
-	const results = new Array<R>(items.length);
-	let nextIndex = 0;
-
-	const worker = async (): Promise<void> => {
-		while (nextIndex < items.length) {
-			const current = nextIndex;
-			nextIndex += 1;
-			const item = items[current];
-			if (item === undefined) {
-				continue;
-			}
-			results[current] = await mapper(item, current);
-		}
-	};
-
-	const poolSize = Math.min(concurrency, items.length);
-	await Promise.all(Array.from({ length: poolSize }, () => worker()));
-	return results;
+// 是否为腾讯侧限流/频控类错误（可退避重试）
+const isRateLimitError = (error: unknown): boolean => {
+	const message = error instanceof Error ? error.message : String(error);
+	return /frequency limit|exceeds the frequency|RequestLimitExceeded|RequestLimit|限频|超过频率/i.test(
+		message,
+	);
 };
 
 // 腾讯 TMT provider：缺密钥直接抛错，避免静默不翻却无感知
@@ -70,10 +56,15 @@ export const createTencentProvider = (): TranslationProvider => {
 	const secretKey = process.env.TENCENT_SECRET_KEY?.trim() ?? ""; // 云 API 密钥 Key
 	const region = process.env.TENCENT_TMT_REGION?.trim() || "ap-guangzhou"; // 调用地域，默认广州
 	const projectId = Number(process.env.TENCENT_TMT_PROJECT_ID ?? "0") || 0; // 腾讯云项目 ID，默认 0
-	const concurrency = Math.max(
+	const maxConcurrent = Math.max(
 		1,
-		Number(process.env.TENCENT_TMT_CONCURRENCY) || DEFAULT_CONCURRENCY, // 批内并发，默认 4
+		Number(process.env.TENCENT_TMT_CONCURRENCY) || DEFAULT_MAX_CONCURRENT,
 	);
+	const minTime = Math.max(
+		0,
+		Number(process.env.TENCENT_TMT_MIN_INTERVAL_MS) || DEFAULT_MIN_INTERVAL_MS,
+	);
+	const reservoir = Math.max(1, Number(process.env.TENCENT_TMT_RESERVOIR) || DEFAULT_RESERVOIR);
 
 	// ! 密钥必须成对配置；缺了立刻失败，方便在 worker 日志里发现
 	if (!secretId || !secretKey) {
@@ -81,6 +72,24 @@ export const createTencentProvider = (): TranslationProvider => {
 			"未配置 TENCENT_SECRET_ID / TENCENT_SECRET_KEY，无法调用腾讯云机器翻译（请写入 .env 后重启 worker）",
 		);
 	}
+
+	// 出站调度：并发 + 最小间隔 + 每秒令牌桶，避免打爆 TMT 5 次/秒
+	const limiter = new Bottleneck({
+		maxConcurrent,
+		minTime,
+		reservoir,
+		reservoirRefreshAmount: reservoir,
+		reservoirRefreshInterval: 1000,
+	});
+
+	// 限流失败时按次数退避重试；返回等待毫秒数即再次入队
+	limiter.on("failed", (error, jobInfo) => {
+		if (!isRateLimitError(error) || jobInfo.retryCount >= MAX_RETRIES) {
+			return;
+		}
+		const backoffMs = 400 * 2 ** jobInfo.retryCount + Math.floor(Math.random() * 200);
+		return backoffMs;
+	});
 
 	// SDK 生成的 Client 目前只声明了 ImageTranslateLLM，TextTranslate 走通用 request
 	const client = new TmtClient({
@@ -93,7 +102,7 @@ export const createTencentProvider = (): TranslationProvider => {
 		},
 	});
 
-	// 单条 TextTranslate（SDK 负责 TC3 签名）
+	// 单条 TextTranslate（SDK 负责 TC3 签名；调度由 Bottleneck 完成）
 	const translateOne = async (options: {
 		text: string;
 		source: string;
@@ -131,12 +140,15 @@ export const createTencentProvider = (): TranslationProvider => {
 			const source = toTmtLang(sourceLang);
 			const target = toTmtLang(targetLang);
 
-			const translated = await mapWithConcurrency(texts, concurrency, async (text) => {
-				if (!text.trim()) {
-					return text;
-				}
-				return translateOne({ text, source, target });
-			});
+			// 全部丢进 limiter 排队；空串直接回传，不占 QPS
+			const translated = await Promise.all(
+				texts.map((text) => {
+					if (!text.trim()) {
+						return Promise.resolve(text);
+					}
+					return limiter.schedule(() => translateOne({ text, source, target }));
+				}),
+			);
 
 			return { texts: translated };
 		},
