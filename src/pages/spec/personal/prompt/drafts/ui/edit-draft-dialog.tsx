@@ -17,9 +17,16 @@ type EditDraftDialogProps = {
 	id: string;
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
+	// 形变锚点 id：与来源卡片对上，弹窗从那张卡长出来
+	morphId?: string;
 };
 
-export function EditDraftDialog({ id, open, onOpenChange }: EditDraftDialogProps): JSX.Element {
+export function EditDraftDialog({
+	id,
+	open,
+	onOpenChange,
+	morphId,
+}: EditDraftDialogProps): JSX.Element {
 	// 打开弹窗时拉取草稿全文（列表只有截断预览），用 SWR 缓存避免重复请求；错误提示走全局 SWRConfig
 	const { data: fullDraft, isLoading } = useSWR(
 		open ? (["draft", id] as const) : null,
@@ -79,6 +86,7 @@ export function EditDraftDialog({ id, open, onOpenChange }: EditDraftDialogProps
 			initialFolderId={fullDraft?.folderId}
 			emptyTitle="无标题草稿"
 			savingText="更新中..."
+			morphId={morphId}
 		/>
 	);
 }

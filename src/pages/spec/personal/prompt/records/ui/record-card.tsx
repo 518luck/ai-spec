@@ -17,9 +17,9 @@ import type { FavoriteToggleVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { deleteRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
+import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
 import { Spinner } from "@/shared/ui/spinner";
-import { PromptCard } from "../../shared/ui/prompt-card";
 import { useRecordsMutate } from "../model/records-mutate-context";
 
 type RecordCardProps = {
@@ -33,10 +33,22 @@ type RecordCardProps = {
 	favorite: boolean;
 	// 点击编辑按钮时触发，由顶层全局编辑器接管打开
 	onEdit: () => void;
+	// ! 顶层编辑器正在编辑本卡：为 true 时本卡撤掉形变锚点，交给弹窗那侧接管
+	isEditing: boolean;
 };
 
-// # 收录卡片：基于 PromptCard，注入收藏★ + 编辑/版本入口（编辑器由顶层全局管理）
-export function RecordCard({ id, name, preview, favorite, onEdit }: RecordCardProps): JSX.Element {
+// ! 收录卡片与编辑弹窗共用的形变锚点 id：两侧分处不同文件，必须由同一个函数生成，否则 layoutId 对不上、形变静默失效
+export const recordMorphId = (id: string): string => `record-morph-${id}`;
+
+// # 收录卡片：基于 ContentCard，注入收藏★ + 编辑/版本入口（编辑器由顶层全局管理）
+export function RecordCard({
+	id,
+	name,
+	preview,
+	favorite,
+	onEdit,
+	isEditing,
+}: RecordCardProps): JSX.Element {
 	const router = useRouter();
 	// 复制进行中标志：拉全文期间禁用按钮 + 触发卡片 loading 蒙层
 	const [isCopying, setIsCopying] = useState(false);
@@ -58,11 +70,13 @@ export function RecordCard({ id, name, preview, favorite, onEdit }: RecordCardPr
 	};
 
 	return (
-		<PromptCard
+		<ContentCard
 			name={name}
 			preview={preview}
 			onCopy={handleCopy}
 			isCopying={isCopying}
+			morphId={recordMorphId(id)}
+			isMorphing={isEditing}
 			// > 标题行右侧常驻★按钮：浮在透明复制层之上，可独立点击
 			headerExtra={<FavoriteButton id={id} favorite={favorite} />}
 			// > 底部 hover 遮罩的操作：编辑（交给顶层全局编辑器）+ 版本历史 + 删除
@@ -82,7 +96,7 @@ export function RecordCard({ id, name, preview, favorite, onEdit }: RecordCardPr
 					<DeleteRecordAction id={id} />
 				</>
 			}
-		></PromptCard>
+		></ContentCard>
 	);
 }
 

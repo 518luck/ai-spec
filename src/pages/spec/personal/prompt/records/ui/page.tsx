@@ -9,19 +9,21 @@ import { getRecords } from "@/entities/prompt";
 import { FilterCombobox } from "@/features/filter-combobox";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
-import { useInView } from "@/shared/hooks";
+import { HOTKEYS } from "@/shared/configs/hotkeys.config";
+import { useHotkey, useInView } from "@/shared/hooks";
 import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
 import { CenteredLoader } from "@/shared/ui/centered-loader";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { Kbd } from "@/shared/ui/kbd";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
-import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { RecordsMutateProvider } from "../model/records-mutate-context";
 import { CreateRecordDialog } from "./create-record-dialog";
 import { EditRecordDialog } from "./edit-record-dialog";
+import { recordMorphId } from "./record-card";
 import { RecordsGrid } from "./records-grid";
 
 // # 个人收录页：SWR Infinite 拉取 GET /api/prompt/records，底部哨兵进入视口时自动加载下一页
@@ -60,6 +62,24 @@ export function PersonalRecordsPage({
 			router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`);
 		}
 	}, [useRecordId, useVersionId, router, pathname, searchParams]);
+
+	// > kbar「新建收录」经 ?create=1 落地：URL 带该参数时自动开创建弹窗；用后清 URL 避免刷新重复触发
+	useEffect(() => {
+		if (searchParams?.get("create") === "1") {
+			setCreateOpen(true);
+			// 清除 URL 中的 create 参数，保留其余筛选参数
+			const params = new URLSearchParams(searchParams.toString());
+			params.delete("create");
+			router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`);
+		}
+	}, [searchParams, router, pathname]);
+
+	// > C 键打开创建弹窗：创建弹窗或全局编辑器已开时禁用，避免叠开弹窗
+	useHotkey({
+		combo: HOTKEYS.createNew.combo,
+		onTrigger: () => setCreateOpen(true),
+		enabled: !createOpen && editingId === null,
+	});
 
 	// > 关闭编辑器时清空 versionId，避免下次打开残留上次版本内容
 	const handleEditOpenChange = useCallback((open: boolean) => {
@@ -111,7 +131,7 @@ export function PersonalRecordsPage({
 		}
 		return (
 			<>
-				<RecordsGrid records={records} onEdit={setEditingId} />
+				<RecordsGrid records={records} onEdit={setEditingId} editingId={editingId} />
 				<InfiniteListFooter
 					hasMore={hasMore}
 					hasPaged={hasPaged}
@@ -132,6 +152,8 @@ export function PersonalRecordsPage({
 				open={editingId !== null}
 				onOpenChange={handleEditOpenChange}
 				useVersionId={pendingVersionId}
+				// 形变锚点：对上正在编辑那张卡；卡片不在当前分页时锚点不存在，motion 自动退化成原地展开
+				morphId={editingId ? recordMorphId(editingId) : undefined}
 			/>
 			<ToolbarPageShell
 				title="收录"
@@ -153,7 +175,7 @@ export function PersonalRecordsPage({
 							>
 								创建收录
 								<Kbd alignWithText hideOnNarrow>
-									C
+									{HOTKEYS.createNew.label}
 								</Kbd>
 							</Button>
 							<CreateRecordDialog open={createOpen} onOpenChange={setCreateOpen} />

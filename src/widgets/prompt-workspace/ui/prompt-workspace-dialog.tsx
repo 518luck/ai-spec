@@ -20,11 +20,16 @@ import {
 } from "@/features/markdown-editor";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import { useLocalStorage } from "@/shared/hooks";
+import { formatHotkey } from "@/shared/lib/format-hotkey";
+import { MORPH_CONTENT_TRANSITION, MORPH_RADIUS, MORPH_TRANSITION } from "@/shared/lib/motion";
+import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
 import { Icons } from "@/shared/ui/icons";
+import { Kbd } from "@/shared/ui/kbd";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
 // 保存时传给外部的数据形状
 export type PromptEditorSaveData = {
@@ -59,7 +64,15 @@ type PromptWorkspaceDialogProps = {
 	tagsEnabled?: boolean;
 	// 编辑模式的初始标签（回填用），仅 tagsEnabled 时生效
 	initialTags?: TagOptionVo[];
+	// > 形变锚点 id：与来源卡片共用同一个 layoutId，面板从那张卡的位置长出来、关闭时收回去；不传则走弹窗默认的 CSS 进出场（创建场景没有来源卡片）
+	morphId?: string;
 };
+
+// 面板尺寸：放大 / 缩小两档
+const PANEL_SIZE = {
+	expanded: { width: "73rem", height: "40rem" },
+	collapsed: { width: "32rem", height: "32rem" },
+} as const;
 
 export function PromptWorkspaceDialog({
 	open,
@@ -75,7 +88,10 @@ export function PromptWorkspaceDialog({
 	initialFolderId,
 	tagsEnabled = false,
 	initialTags,
+	morphId,
 }: PromptWorkspaceDialogProps): JSX.Element {
+	// 有锚点就走形变入场：面板动画交给 motion，弹窗自带的 CSS 进出场必须关掉，两套叠一起会打架
+	const isMorphing = Boolean(morphId);
 	const isEditMode = initialContent !== undefined;
 	const [content, setContent] = useState(initialContent ?? "");
 	// editorRef：编排层持有，传给 MarkdownEditor（挂 CodeMirror）+ QuickToolbar（执行格式化）
@@ -114,6 +130,9 @@ export function PromptWorkspaceDialog({
 	// 标题：从内容首行提取
 	const title = extractTitle(content) ?? emptyTitle;
 
+	// 当前档位的面板尺寸
+	const panelSize = isExpanded ? PANEL_SIZE.expanded : PANEL_SIZE.collapsed;
+
 	// 关闭即保存：有内容则保存后关闭；创建模式清空业务态 + 重置编辑器视图态（store.resetView）
 	const handleClose = async (): Promise<void> => {
 		const trimmed = content.trim();
@@ -141,6 +160,23 @@ export function PromptWorkspaceDialog({
 		onOpenChange(false);
 	};
 
+	// ⌘↵/⌘S 保存并关闭：与 Esc 同走 handleClose（onSave 抛错自动阻止关闭），保存中忽略
+	const handleSubmitShortcut = (): void => {
+		if (isSaving) return;
+		void handleClose();
+	};
+
+	// > 面板 keydown 兜底：焦点在文件夹/标签选择器等编辑器外位置时也能 ⌘↵/⌘S 保存并关闭
+	// > defaultPrevented 让行：编辑器内已由 CodeMirror keymap 消费，避免双触发
+	const handlePanelKeyDown = (event: React.KeyboardEvent<HTMLDivElement>): void => {
+		const { metaKey, ctrlKey, key, defaultPrevented } = event;
+		if (defaultPrevented) return;
+		if (!metaKey && !ctrlKey) return;
+		if (key !== "Enter" && key.toLowerCase() !== "s") return;
+		event.preventDefault();
+		handleSubmitShortcut();
+	};
+
 	return (
 		<Dialog
 			open={open}
@@ -155,23 +191,47 @@ export function PromptWorkspaceDialog({
 			<DialogContent
 				showCloseButton={false}
 				scrollable={false}
+				// 形变模式下面板动画归 motion，关掉内置 CSS 进出场
+				animated={!isMorphing}
 				// > 编辑器实际尺寸交给 motion.div 控制；外壳 w-fit 收缩到子元素宽度；sm:max-w-none 解除默认 sm:max-w-md（28rem）限制让 motion 固定宽度生效
 				// > 背景改用编辑器主题色（editorBgColor）覆盖 bg-popover，与 CodeMirror 编辑区融为一体，避免"纸贴在弹窗上"的双层视觉
 				// > ring-0 去掉默认 ring-1（motion 填满外壳后会叠成内描边白线）；shadow-lg 补回悬浮阴影，与 dropdown/sheet 视觉一致
-				// ! 不用 render prop：motion.div 当 render 元素时，motion 的 transform 会覆盖 DialogContent 的居中 translate，导致弹窗偏下
-				className="w-fit overflow-visible p-0 shadow-lg ring-0 sm:max-w-none"
-				style={{ backgroundColor: editorBgColor }}
+				// ! 形变模式下外壳自己不画底色和阴影，改由下面那层 layoutId 元素承担，否则飞行途中会看到一个不动的方块
+				// ! 不用 render prop：motion.div 当 render 元素时，motion 的 transform 会覆盖 DialogContent 的居中定位
+				className={cn(
+					"w-fit overflow-visible p-0 ring-0 sm:max-w-none",
+					isMorphing ? "bg-transparent shadow-none" : "shadow-lg",
+				)}
+				style={isMorphing ? undefined : { backgroundColor: editorBgColor }}
 			>
+				{/* // > 形变面板：与来源卡片共用 layoutId，motion 把它从卡片的矩形补间到这里；只画底色，不带阴影 —— box-shadow 不受 motion 的缩放修正，跟着缩放会被拉成一片糊影 */}
+				{morphId ? (
+					<motion.div
+						layoutId={morphId}
+						transition={MORPH_TRANSITION}
+						className="absolute inset-0"
+						style={{ backgroundColor: editorBgColor, borderRadius: MORPH_RADIUS.panel }}
+					/>
+				) : null}
 				<motion.div
-					transition={{ type: "spring", duration: 0.3, bounce: 0.1 }}
-					// > rounded-xl 与 DialogContent 外壳圆角对齐：外壳 overflow-visible 不裁剪，实际裁剪由本层 overflow-hidden 完成，圆角必须同步否则内容显示成直角
-					className="relative flex flex-col overflow-hidden rounded-xl"
-					style={{ maxHeight: "85vh" }}
-					initial={false}
-					animate={{
-						width: isExpanded ? "73rem" : "32rem",
-						height: isExpanded ? "40rem" : "32rem",
+					transition={{
+						type: "spring",
+						duration: 0.3,
+						bounce: 0.1,
+						// ! 内容整段排在形变之后：它是完整尺寸、不参与缩放，提前淡入会露在还没长到位的面板外面
+						opacity: MORPH_CONTENT_TRANSITION,
 					}}
+					// > rounded-xl 与 DialogContent 外壳圆角对齐：外壳 overflow-visible 不裁剪，实际裁剪由本层 overflow-hidden 完成，圆角必须同步否则内容显示成直角
+					// 形变模式下阴影挂在本层：跟着内容一起淡入，不参与缩放
+					className={cn(
+						"relative flex flex-col overflow-hidden rounded-xl",
+						isMorphing && "shadow-lg",
+					)}
+					style={{ maxHeight: "85vh" }}
+					// ! 非形变模式仍用 initial={false}：宽高必须直接落到目标值，从 auto 补间会抖
+					initial={isMorphing ? { ...panelSize, opacity: 0 } : false}
+					animate={{ ...panelSize, opacity: 1 }}
+					onKeyDown={handlePanelKeyDown}
 				>
 					{/* // @ 编辑器：内部按 isPreview 切编辑/预览；ref/theme/设置 从 store 取，无需 Provider
 					    // ! 不能用 ScrollArea 替换本层：CodeMirror 的 height:100% 依赖父级稳定高度，ScrollArea viewport 会收缩到内容尺寸导致 CodeMirror 永不溢出、虚拟滚动失效
@@ -185,6 +245,7 @@ export function PromptWorkspaceDialog({
 							isLoading={isLoading}
 							// > 预览区 padding：pt-12 给顶部 h-12 浮层让位（与 CodeMirror cm-scroller padding-top:48px 对称），p-4 四周留白
 							previewClassName="p-4 pt-12"
+							onSubmitShortcut={handleSubmitShortcut}
 						/>
 					</div>
 
@@ -223,6 +284,14 @@ export function PromptWorkspaceDialog({
 						/>
 
 						<div className="ml-auto flex items-center gap-2">
+							{/* // 保存快捷键提示：⌘↵ 保存并关闭（⌘S 同效） */}
+							<Tooltip>
+								<TooltipTrigger render={<span className="flex items-center" />}>
+									<Kbd>{formatHotkey("mod+enter")}</Kbd>
+								</TooltipTrigger>
+								<TooltipContent>保存并关闭</TooltipContent>
+							</Tooltip>
+
 							{/* // @ 快捷栏：偏好从 store 取，tool 动作用 editorRef，对外只剩 editorRef + isExpanded */}
 							<QuickToolbar editorRef={editorRef} isExpanded={isExpanded} />
 

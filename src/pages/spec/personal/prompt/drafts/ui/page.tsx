@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -8,24 +9,46 @@ import useSWRInfinite from "swr/infinite";
 import { getDrafts } from "@/entities/prompt";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
-import { useInView } from "@/shared/hooks";
+import { HOTKEYS } from "@/shared/configs/hotkeys.config";
+import { useHotkey, useInView } from "@/shared/hooks";
 import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
 import { Button } from "@/shared/ui/button";
 import { CenteredLoader } from "@/shared/ui/centered-loader";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { Kbd } from "@/shared/ui/kbd";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
-import { InfiniteListFooter } from "../../shared/ui/infinite-list-footer";
 import { DraftsMutateProvider } from "../model/drafts-mutate-context";
 import { CreateDraftDialog } from "./create-draft-dialog";
 import { DraftsGrid } from "./drafts-grid";
 
 // # 个人草稿页：SWR Infinite 拉取 GET /api/prompt/drafts，底部哨兵进入视口时自动加载下一页
 export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.Element {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
 	const { status } = useSession();
 	const [createOpen, setCreateOpen] = useState(false);
+
+	// > kbar「新建草稿」经 ?create=1 落地：URL 带该参数时自动开创建弹窗；用后清 URL 避免刷新重复触发
+	useEffect(() => {
+		if (searchParams?.get("create") === "1") {
+			setCreateOpen(true);
+			// 清除 URL 中的 create 参数，保留其余筛选参数
+			const params = new URLSearchParams(searchParams.toString());
+			params.delete("create");
+			router.replace(`${pathname}${params.toString() ? `?${params}` : ""}`);
+		}
+	}, [searchParams, router, pathname]);
+
+	// > C 键打开创建弹窗：创建弹窗已开时禁用，避免叠开
+	useHotkey({
+		combo: HOTKEYS.createNew.combo,
+		onTrigger: () => setCreateOpen(true),
+		enabled: !createOpen,
+	});
 
 	// SWR Infinite key：q/filter/folderId 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
 	const getKey = (_pageIndex: number, previousPageData: DraftListVo | null) => {
@@ -108,7 +131,7 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 							>
 								新建草稿
 								<Kbd alignWithText hideOnNarrow>
-									C
+									{HOTKEYS.createNew.label}
 								</Kbd>
 							</Button>
 							<CreateDraftDialog open={createOpen} onOpenChange={setCreateOpen} />

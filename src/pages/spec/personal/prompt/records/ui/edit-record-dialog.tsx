@@ -21,6 +21,8 @@ type EditRecordDialogProps = {
 	onOpenChange: (open: boolean) => void;
 	// 版本页「使用此版本」带回的 versionId，有值时编辑器用该版本内容初始化（不落库）
 	useVersionId?: string | null;
+	// 形变锚点 id：与来源卡片对上，弹窗从那张卡长出来
+	morphId?: string;
 };
 
 export function EditRecordDialog({
@@ -28,6 +30,7 @@ export function EditRecordDialog({
 	open,
 	onOpenChange,
 	useVersionId,
+	morphId,
 }: EditRecordDialogProps): JSX.Element {
 	// 打开弹窗时拉取收录全文（列表只有截断预览），用 SWR 缓存避免重复请求；错误提示走全局 SWRConfig
 	const { data: fullRecord, isLoading } = useSWR(
@@ -103,6 +106,7 @@ export function EditRecordDialog({
 			initialTags={fullRecord?.tags}
 			emptyTitle="无标题收录"
 			savingText="更新中..."
+			morphId={morphId}
 		/>
 	);
 }

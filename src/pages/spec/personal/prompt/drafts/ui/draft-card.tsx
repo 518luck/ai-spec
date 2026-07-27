@@ -9,8 +9,8 @@ import { deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
+import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
-import { PromptCard } from "../../shared/ui/prompt-card";
 import { useDraftsMutate } from "../model/drafts-mutate-context";
 import { EditDraftDialog } from "./edit-draft-dialog";
 import { PromoteDraftPopover } from "./promote-draft-dialog";
@@ -24,11 +24,13 @@ type DraftCardProps = {
 	preview: string;
 };
 
-// # 草稿卡片：基于 PromptCard，注入编辑 + 更多操作（复用/删除）+ 编辑弹窗
+// # 草稿卡片：基于 ContentCard，注入编辑 + 更多操作（复用/删除）+ 编辑弹窗
 export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	const [editOpen, setEditOpen] = useState(false);
 	// 复制进行中标志：拉全文期间禁用按钮 + 触发卡片 loading 蒙层
 	const [isCopying, setIsCopying] = useState(false);
+	// 形变锚点 id：卡片与编辑弹窗两侧共用，motion 靠它把面板从本卡的位置补间出去
+	const morphId = `draft-morph-${id}`;
 
 	// 复制：拉全文 → 写剪贴板。一次性只读请求，不需要缓存，用裸 fetch + useState 最直接
 	const handleCopy = async (): Promise<void> => {
@@ -45,11 +47,13 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	};
 
 	return (
-		<PromptCard
+		<ContentCard
 			name={name}
 			preview={preview}
 			onCopy={handleCopy}
 			isCopying={isCopying}
+			morphId={morphId}
+			isMorphing={editOpen}
 			// > 底部 hover 遮罩的操作：编辑 + 复用 + 删除（各自独立子组件）
 			actions={
 				<>
@@ -75,8 +79,8 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 			}
 		>
 			{/* 编辑弹窗 */}
-			<EditDraftDialog id={id} open={editOpen} onOpenChange={setEditOpen} />
-		</PromptCard>
+			<EditDraftDialog id={id} open={editOpen} onOpenChange={setEditOpen} morphId={morphId} />
+		</ContentCard>
 	);
 }
 

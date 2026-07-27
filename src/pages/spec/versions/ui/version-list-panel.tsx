@@ -2,7 +2,7 @@
 
 import dayjs from "dayjs";
 import type { JSX, Ref } from "react";
-import { InfiniteListFooter } from "@/pages/spec/personal/prompt/shared/ui/infinite-list-footer";
+import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Skeleton } from "@/shared/ui/skeleton";
 import type { VersionListItem } from "./version-page";

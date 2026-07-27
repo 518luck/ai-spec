@@ -16,12 +16,13 @@ export default async function Page({
 		sort?: string;
 		useRecordId?: string;
 		useVersionId?: string;
+		create?: string;
 	}>;
 }) {
 	// Next.js 15 的 searchParams 是 Promise，必须先 await 再校验
 	const sp = await searchParams;
-	// 先取出「使用此版本」带回的两个参数（不参与列表查询校验），剩余字段交给 schema 校验
-	const { useRecordId, useVersionId, ...listParams } = sp;
+	// ! 「使用此版本」两参数与快捷新建的 create 不参与列表查询；DTO schema 开发环境走 strict，解析前必须摘掉，否则未知键直接抛
+	const { useRecordId, useVersionId, create: _create, ...listParams } = sp;
 	const { folderId, tagIds, q, filter, favorite, sort } = listRecordsDtoSchema.parse(listParams);
 	return (
 		<PersonalRecordsPage
