@@ -39,6 +39,9 @@ export type ParsedSkill = {
 export type RepoSkills = {
 	sourceRepo: string;
 	authorName: string;
+	authorType: string; // "Organization" 或 "User"
+	authorAvatarUrl: string;
+	authorHtmlUrl: string;
 	stars: number;
 	commitSha: string;
 	ref: string;
@@ -53,7 +56,12 @@ const repoMetaSchema = z.object({
 	full_name: z.string(),
 	default_branch: z.string(),
 	stargazers_count: z.number(),
-	owner: z.object({ login: z.string() }),
+	owner: z.object({
+		login: z.string(),
+		type: z.string(), // "Organization" 或 "User"
+		avatar_url: z.string(),
+		html_url: z.string(),
+	}),
 	license: z.object({ spdx_id: z.string().nullable() }).nullable(),
 });
 
@@ -81,6 +89,7 @@ export const fetchRepoSkills = async (url: string): Promise<RepoSkills> => {
 	);
 	const targetRef = ref ?? meta.default_branch;
 	const repoLicense = normalizeLicense(meta.license?.spdx_id);
+	const authorType = meta.owner.type === "Organization" ? "Organization" : "User";
 
 	// ② 完整文件树一次拿全，过滤出（限定子目录下的）所有 SKILL.md
 	const tree = repoTreeSchema.parse(
@@ -121,6 +130,9 @@ export const fetchRepoSkills = async (url: string): Promise<RepoSkills> => {
 	return {
 		sourceRepo: meta.full_name,
 		authorName: meta.owner.login,
+		authorType,
+		authorAvatarUrl: meta.owner.avatar_url,
+		authorHtmlUrl: meta.owner.html_url,
 		stars: meta.stargazers_count,
 		commitSha: tree.sha,
 		ref: targetRef,

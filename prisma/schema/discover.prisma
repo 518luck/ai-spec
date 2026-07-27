@@ -3,23 +3,34 @@
 // GitHub 是唯一数据源，本域两张表只是索引/缓存，可随时从源头全量重建
 // 用户自建 skill 不在本域——将来在个人空间域单独建表，与广场缓存彻底隔离
 
+// 作者类型：区分 GitHub 组织账号与个人账号（Publisher 筛选用）
+enum AuthorType {
+  Organization
+  User
+
+  @@schema("discover")
+}
+
 // DiscoverSkill：广场里的一个 Agent Skill 条目（SKILL.md 开放规范），name/description 取自 frontmatter
 model DiscoverSkill {
   // ① 主键
   id String @id @default(cuid())
 
   // ② 业务字段
-  name        String // skill 名称（frontmatter name，缺省回落目录名）
-  description String    @db.Text // 用途描述（frontmatter description，广场卡片展示）
-  content     String?   @db.Text // SKILL.md 全文；! 源仓库无 license 时为 null（只索引元数据+回链，不转载全文）
-  license     String? // license 标识（SPDX id；优先 frontmatter，回落仓库 license）
-  sourceRepo  String    @map("source_repo") // 来源仓库 "owner/repo"
-  sourcePath  String    @map("source_path") // SKILL.md 在仓库内的文件路径
-  sourceUrl   String?   @map("source_url") // 回链原仓库的 URL（详情页署名+跳转）
-  authorName  String?   @map("author_name") // 作者展示名（取仓库 owner login）
-  stars       Int       @default(0) // 源仓库 star 数（广场列表排序依据）
-  commitSha   String?   @map("commit_sha") // 入库时源仓库 HEAD sha（增量同步比对用）
-  delistedAt  DateTime? @map("delisted_at") // 下架时间（上游删除该文件被 prune 标记，或货源休眠被连带下架；重新同步到会自动复活）
+  name           String       // skill 名称（frontmatter name，缺省回落目录名）
+  description    String       @db.Text // 用途描述（frontmatter description，广场卡片展示）
+  content        String?      @db.Text // SKILL.md 全文；! 源仓库无 license 时为 null（只索引元数据+回链，不转载全文）
+  license        String? // license 标识（SPDX id；优先 frontmatter，回落仓库 license）
+  sourceRepo     String       @map("source_repo") // 来源仓库 "owner/repo"
+  sourcePath     String       @map("source_path") // SKILL.md 在仓库内的文件路径
+  sourceUrl      String?      @map("source_url") // 回链原仓库的 URL（详情页署名+跳转）
+  authorName     String?      @map("author_name") // 作者展示名（取仓库 owner login）
+  authorType     AuthorType?  @map("author_type") // 账号类型（Organization/User），Publisher 筛选用
+  authorAvatarUrl String?     @map("author_avatar_url") // 作者头像 URL（GitHub avatar）
+  authorHtmlUrl  String?      @map("author_html_url") // 作者 GitHub 主页链接
+  stars          Int          @default(0) // 源仓库 star 数（广场列表排序依据）
+  commitSha      String?      @map("commit_sha") // 入库时源仓库 HEAD sha（增量同步比对用）
+  delistedAt     DateTime?    @map("delisted_at") // 下架时间（上游删除该文件被 prune 标记，或货源休眠被连带下架；重新同步到会自动复活）
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")

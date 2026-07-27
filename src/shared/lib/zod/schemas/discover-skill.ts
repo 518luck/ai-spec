@@ -27,6 +27,9 @@ const discoverSkillListItemVoSchema = z.object({
 	sourceRepo: z.string().nullable(),
 	sourceUrl: z.string().nullable(),
 	authorName: z.string().nullable(),
+	authorType: z.string().nullable(), // "Organization" 或 "User"
+	authorAvatarUrl: z.string().nullable(),
+	authorHtmlUrl: z.string().nullable(),
 	stars: z.number().int(),
 	// 是否存有 SKILL.md 全文（无 license 的条目只索引元数据，"复制到我的空间"不可用）
 	hasContent: z.boolean(),

@@ -26,8 +26,19 @@ export const importRepoSkills = async ({
 	headSha,
 }: ImportRepoSkillsOptions): Promise<ImportRepoSkillsResult> => {
 	const repoSkills = await fetchRepoSkills(url);
-	const { sourceRepo, authorName, stars, commitSha, ref, requestedRef, pathPrefix, skills } =
-		repoSkills;
+	const {
+		sourceRepo,
+		authorName,
+		authorType,
+		authorAvatarUrl,
+		authorHtmlUrl,
+		stars,
+		commitSha,
+		ref,
+		requestedRef,
+		pathPrefix,
+		skills,
+	} = repoSkills;
 	const syncedAt = new Date();
 
 	const saved: DiscoverSkillListItemVo[] = [];
@@ -45,6 +56,9 @@ export const importRepoSkills = async ({
 				? `https://github.com/${sourceRepo}/tree/${ref}/${skillDir}`
 				: `https://github.com/${sourceRepo}`,
 			authorName,
+			authorType: authorType as "Organization" | "User",
+			authorAvatarUrl,
+			authorHtmlUrl,
 			stars,
 			commitSha,
 			delistedAt: null, // 上游复出/货源复活的条目自动复活
