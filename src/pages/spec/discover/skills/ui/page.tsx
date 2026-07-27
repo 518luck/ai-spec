@@ -18,26 +18,26 @@ import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import { SkillFilter } from "./filter";
 import { ImportDialog } from "./import-dialog";
-import { OrganizationFilter } from "./organization-filter";
 import { SkillCard } from "./skill-card";
 
-// # Skills 广场页：SWR Infinite 拉取 GET /api/discover/skills，按 star 倒序的卡片网格 + 组织过滤 + 搜索 + 无限滚动
-export function DiscoverSkillsPage({ q, orgs }: ListDiscoverSkillsDto): JSX.Element {
+// # Skills 广场页：按 star 递减列表 + 组织 / 热度筛选 + 搜索 + 无限滚动
+export function DiscoverSkillsPage({ q, orgs, minStars }: ListDiscoverSkillsDto): JSX.Element {
 	const { status } = useSession();
 	const [importOpen, setImportOpen] = useState(false);
 
-	// SWR Infinite key：q/orgs 变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
+	// SWR Infinite key：q/orgs/minStars 变化自动重置到第一页
 	const getKey = (_pageIndex: number, previousPageData: DiscoverSkillListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["discover-skills", q, orgs, offset] as const;
+		return ["discover-skills", q, orgs, minStars, offset] as const;
 	};
 
 	const { data, isLoading, isValidating, setSize, mutate } = useSWRInfinite(
 		getKey,
-		async ([, q, orgs, offset]) => getDiscoverSkills({ q, orgs, offset }),
+		async ([, q, orgs, minStars, offset]) => getDiscoverSkills({ q, orgs, minStars, offset }),
 	);
 
 	const skills = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
@@ -53,10 +53,11 @@ export function DiscoverSkillsPage({ q, orgs }: ListDiscoverSkillsDto): JSX.Elem
 		}
 	}, [inView, hasMore, isValidating, setSize]);
 
-	// > 滚动条平滑过渡：内容追加新页（skills.length 增长）时短暂开启，让 thumb 平滑收缩而非瞬变
+	// > 滚动条平滑过渡：内容追加新页时短暂开启
 	const thumbSmooth = useThumbSmooth(skills.length);
 
-	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
+	const hasFilters = Boolean(orgs || q || (minStars !== undefined && minStars > 0));
+
 	const renderSkillsBody = (): JSX.Element => {
 		if (isLoading) {
 			return <CenteredLoader />;
@@ -66,7 +67,7 @@ export function DiscoverSkillsPage({ q, orgs }: ListDiscoverSkillsDto): JSX.Elem
 				<EmptyState
 					icon={Icons.skills}
 					description={
-						orgs || q
+						hasFilters
 							? "没有符合当前筛选条件的 skills"
 							: "广场还空着，粘贴一个 GitHub 仓库链接，把好用的 skills 收进来吧"
 					}
@@ -118,9 +119,9 @@ export function DiscoverSkillsPage({ q, orgs }: ListDiscoverSkillsDto): JSX.Elem
 			}
 		>
 			<PageWidthWrapper fill>
-				{/* // @ 工具条带：左侧组织过滤标签，右侧搜索 */}
+				{/* // @ 工具条带：左侧组织 / 热度过滤，右侧搜索 */}
 				<div className="mb-6 flex items-center gap-3">
-					<OrganizationFilter className="min-w-0 flex-1" />
+					<SkillFilter className="min-w-0 flex-1" />
 					<SearchInput className="max-w-80 shrink-0" />
 				</div>
 				{renderSkillsBody()}

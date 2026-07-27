@@ -45,11 +45,13 @@ export const importDiscoverSkillsDtoSchema = z.object({
 // 按 URL 导入入参类型
 export type ImportDiscoverSkillsDto = z.infer<typeof importDiscoverSkillsDtoSchema>;
 
-// 广场列表查询入参：搜索 + 组织筛选 + 分页
+// 广场列表查询入参：搜索 + 组织筛选 + 热度（最低 star）+ 分页
 export const listDiscoverSkillsDtoSchema = z.object({
 	q: z.string().optional(),
 	// 按 GitHub 组织名筛选，逗号分隔（如 "vercel,anthropics"）
 	orgs: z.string().optional(),
+	// 热度门槛：只返回 stars >= minStars 的条目（如 1000 表示 star>1k）
+	minStars: z.coerce.number().int().min(0).optional(),
 	offset: z.coerce.number().int().min(0).optional(),
 });
 

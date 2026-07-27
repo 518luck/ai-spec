@@ -1,7 +1,7 @@
 "use client";
 
 // # 组织选择面板：搜索 + 勾选的纯内容组件，不含 Popover/chips/触发器
-// > 由外层 OrganizationFilter 包 DropdownMenu 和 chips 展示
+// > 由外层 SkillFilter 包 DropdownMenu 和 chips 展示
 // > 数据来自 GET /api/discover/skills/organizations
 
 import { type JSX, type KeyboardEvent, useCallback, useEffect, useMemo, useRef } from "react";
