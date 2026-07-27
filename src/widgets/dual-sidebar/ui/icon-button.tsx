@@ -9,8 +9,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 type IconButtonProps = {
 	label: string;
 	onClick: () => void;
-	// 传入则用 Tooltip 包裹按钮，悬停显示提示
-	tooltip?: string;
+	// 传入则用 Tooltip 包裹按钮，悬停显示提示；ReactNode 以支持文字旁附带 Kbd 快捷键
+	tooltip?: ReactNode;
 	// tooltip 弹出延迟（ms），默认 500ms，避免快速划过时频繁弹出
 	tooltipDelay?: number;
 	children: ReactNode;

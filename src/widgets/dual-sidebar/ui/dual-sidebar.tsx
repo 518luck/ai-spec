@@ -7,8 +7,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentProps, JSX, ReactNode } from "react";
 
+import { HOTKEYS } from "@/shared/configs/hotkeys.config";
+import { useHotkey } from "@/shared/hooks";
+import { formatHotkey } from "@/shared/lib/format-hotkey";
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
+import { Kbd } from "@/shared/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { useDualSidebarContext } from "../model/dual-sidebar-context";
 import { dualSidebarZoneClasses } from "../model/dual-sidebar-styles";
@@ -30,6 +34,7 @@ import {
 } from "../model/sidebar-config";
 import { AnimatedArea } from "./animated-area";
 import { AnimatedNavIcon } from "./animated-nav-icon";
+import { CommandEntry } from "./command-entry";
 import { IconButton } from "./icon-button";
 import { SidebarResizeHandle } from "./sidebar-resize-handle";
 import { UserAvatarPopover } from "./user-avatar-popover";
@@ -54,7 +59,10 @@ type NavBusinessItemProps = NavBusinessItemBaseProps & {
 
 export function DualSidebar({ className, ...props }: DualSidebarProps): JSX.Element {
 	// 读取侧边栏宽度/紧凑/拖拽状态，左侧业务导航栏始终保留。
-	const { width, collapsed, isResizing } = useDualSidebarContext();
+	const { width, collapsed, isResizing, toggleCollapsed } = useDualSidebarContext();
+
+	// ⌘\ 折叠/展开侧边栏（mod 组合豁免焦点排除，输入框聚焦时也生效）
+	useHotkey({ combo: HOTKEYS.toggleSidebar.combo, onTrigger: toggleCollapsed });
 
 	const pathname = usePathname();
 	const navContext = { pathname: pathname ?? "" };
@@ -241,12 +249,28 @@ function NavAreasPanel({
 											</div>
 										)}
 										{collapsed ? (
-											<IconButton label="展开侧边栏" onClick={toggleCollapsed}>
+											<IconButton
+												label="展开侧边栏"
+												tooltip={
+													<>
+														展开 <Kbd>{formatHotkey(HOTKEYS.toggleSidebar.combo)}</Kbd>
+													</>
+												}
+												onClick={toggleCollapsed}
+											>
 												<Icons.sidebarExpand className="size-4" />
 											</IconButton>
 										) : (
 											<div className="flex shrink-0 items-center">
-												<IconButton label="收起侧边栏" tooltip="收起" onClick={toggleCollapsed}>
+												<IconButton
+													label="收起侧边栏"
+													tooltip={
+														<>
+															收起 <Kbd>{formatHotkey(HOTKEYS.toggleSidebar.combo)}</Kbd>
+														</>
+													}
+													onClick={toggleCollapsed}
+												>
 													<Icons.sidebarCollapse className="size-4" />
 												</IconButton>
 												<IconButton label="恢复默认宽度" tooltip="重置" onClick={resetWidth}>
@@ -353,8 +377,9 @@ function NavAreasPanel({
 					})}
 				</div>
 
+				{/* 底部固定栏：命令面板入口 */}
 				<div data-slot="dual-sidebar-operation-nav-footer" className="flex flex-col gap-2 p-3">
-					<div className="font-medium text-muted-foreground text-xs">底部固定栏</div>
+					<CommandEntry />
 				</div>
 			</div>
 

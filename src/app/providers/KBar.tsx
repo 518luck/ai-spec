@@ -13,6 +13,7 @@ import {
 	useMatches,
 } from "kbar";
 import { cn } from "@/shared/lib/utils";
+import { Kbd } from "@/shared/ui/kbd";
 import { useKBarActions } from "../config/kbar-actions";
 
 export function KBar({ children }: { children: React.ReactNode }) {
@@ -33,7 +34,11 @@ function KBarComponent({ children }: { children: React.ReactNode }) {
 		<>
 			<KBarPortal>
 				<KBarPositioner className="bg-background/70 backdrop-blur-xs">
-					<KBarAnimator className="w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl">
+					{/* // > data-slot 供 useHotkey 识别面板开启态,面板打开时抑制裸键快捷键 */}
+					<KBarAnimator
+						data-slot="kbar-panel"
+						className="w-full max-w-2xl overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl"
+					>
 						<div className="border-border border-b px-3 py-3">
 							<KBarSearch
 								defaultPlaceholder="输入命令或页面名称..."
@@ -79,12 +84,9 @@ function ResultItem({ action, active }: { action: ActionImpl; active: boolean })
 			{action.shortcut?.length ? (
 				<div className="flex items-center gap-1">
 					{action.shortcut.map((key) => (
-						<kbd
-							key={key}
-							className="rounded-sm border border-border bg-muted px-1.5 py-0.5 font-medium text-muted-foreground text-sm"
-						>
+						<Kbd key={key} className="h-6 min-w-6 border border-border px-1.5 text-sm">
 							{key}
-						</kbd>
+						</Kbd>
 					))}
 				</div>
 			) : null}

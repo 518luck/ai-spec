@@ -4,13 +4,6 @@ import type * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
 
 import { cn } from "@/shared/lib/utils";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-} from "@/shared/ui/dialog";
 import { InputGroup, InputGroupAddon } from "@/shared/ui/input-group";
 import { SearchIcon, CheckIcon } from "lucide-react";
 
@@ -24,36 +17,6 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
 			)}
 			{...props}
 		/>
-	);
-}
-
-function CommandDialog({
-	title = "Command Palette",
-	description = "Search for a command to run...",
-	children,
-	className,
-	showCloseButton = false,
-	...props
-}: Omit<React.ComponentProps<typeof Dialog>, "children"> & {
-	title?: string;
-	description?: string;
-	className?: string;
-	showCloseButton?: boolean;
-	children: React.ReactNode;
-}) {
-	return (
-		<Dialog {...props}>
-			<DialogHeader className="sr-only">
-				<DialogTitle>{title}</DialogTitle>
-				<DialogDescription>{description}</DialogDescription>
-			</DialogHeader>
-			<DialogContent
-				className={cn("top-1/3 translate-y-0 overflow-hidden rounded-xl! p-0", className)}
-				showCloseButton={showCloseButton}
-			>
-				{children}
-			</DialogContent>
-		</Dialog>
 	);
 }
 
@@ -155,32 +118,17 @@ function CommandItem({
 			{...props}
 		>
 			{children}
-			<CheckIcon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
+			<CheckIcon className="ml-auto opacity-0 group-data-[checked=true]/command-item:opacity-100" />
 		</CommandPrimitive.Item>
-	);
-}
-
-function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) {
-	return (
-		<span
-			data-slot="command-shortcut"
-			className={cn(
-				"ml-auto text-muted-foreground text-xs tracking-widest group-data-selected/command-item:text-foreground",
-				className,
-			)}
-			{...props}
-		/>
 	);
 }
 
 export {
 	Command,
-	CommandDialog,
 	CommandInput,
 	CommandList,
 	CommandEmpty,
 	CommandGroup,
 	CommandItem,
-	CommandShortcut,
 	CommandSeparator,
 };

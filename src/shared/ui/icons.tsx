@@ -10,6 +10,7 @@ import {
 	IconArrowUpRight,
 	IconBold,
 	IconBook,
+	IconBrandGithub,
 	IconBrandMetabrainz,
 	IconBrandTeams,
 	IconBrightness,
@@ -19,6 +20,8 @@ import {
 	IconChevronDown,
 	IconChevronLeft,
 	IconChevronRight,
+	IconChevronsDown,
+	IconChevronsUp,
 	IconChevronUp,
 	IconClock,
 	IconCode,
@@ -34,6 +37,7 @@ import {
 	IconFileText,
 	IconFilter2,
 	IconFolder,
+	IconFolderOpen,
 	IconFolderX,
 	IconFolderPlus,
 	IconGift,
@@ -42,6 +46,7 @@ import {
 	IconHelpSquareRounded,
 	IconItalic,
 	IconKey,
+	IconLayoutGrid,
 	IconLayoutSidebarLeftExpand,
 	IconLink,
 	IconLogin,
@@ -64,6 +69,7 @@ import {
 	IconSparkleHighlight,
 	IconStar,
 	IconSun,
+	IconTable,
 	IconTag,
 	IconTagPlus,
 	IconTrash,
@@ -102,6 +108,7 @@ export const Icons = {
 	agentsMd: IconFileAi,
 	rulesLibrary: IconFolder,
 	skills: IconBook,
+	github: IconBrandGithub, // skill 广场条目回链源仓库
 	aiAgents: IconBrandMetabrainz,
 	plugins: IconPlug,
 	projects: IconFiles,
@@ -144,7 +151,11 @@ export const Icons = {
 	chevronRight: IconChevronRight,
 	chevronUp: IconChevronUp,
 	selector: IconSelector,
+	// 树形列表：全部展开 / 全部收起
+	expandAll: IconChevronsDown,
+	collapseAll: IconChevronsUp,
 	folderClosed: IconFolder,
+	folderOpen: IconFolderOpen,
 	folderX: IconFolderX,
 	folderPlus: IconFolderPlus,
 	squares: SquaresIcon,
@@ -164,6 +175,10 @@ export const Icons = {
 	lineNumbers: IconListNumbers,
 	fold: IconFold,
 	highlight: IconHighlight,
+
+	// 列表视图切换
+	viewTable: IconTable,
+	viewGrid: IconLayoutGrid,
 
 	// 列表通用操作
 	plus: IconPlus,

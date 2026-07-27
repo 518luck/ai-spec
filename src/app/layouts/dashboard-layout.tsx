@@ -2,7 +2,7 @@
 
 import { TooltipProvider } from "@/shared/ui/tooltip";
 import { DualSidebarLayout } from "@/widgets/dual-sidebar";
-import { KBar } from "../providers/KBar";
+import { KBar } from "../providers/kbar";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
 	return (
