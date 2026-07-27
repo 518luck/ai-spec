@@ -1,5 +1,6 @@
 // # 编辑器配置 —— 主题、菜单分组、格式化操作的集中定义
 
+import { type EditorView, keymap } from "@codemirror/view";
 import { basicDark, basicLight } from "@uiw/codemirror-theme-basic";
 import { duotoneDark, duotoneLight } from "@uiw/codemirror-theme-duotone";
 import { githubDark, githubLight } from "@uiw/codemirror-theme-github";
@@ -8,7 +9,8 @@ import { solarizedDark, solarizedLight } from "@uiw/codemirror-theme-solarized";
 import { vscodeDark, vscodeLight } from "@uiw/codemirror-theme-vscode";
 import { xcodeDark, xcodeLight } from "@uiw/codemirror-theme-xcode";
 
-import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
+// ! Prec 从 @uiw/react-codemirror 的再导出取：@codemirror/state 非直接依赖，pnpm 隔离链接下无法从 src 解析
+import { Prec, type ReactCodeMirrorRef } from "@uiw/react-codemirror";
 
 import type { Icon } from "@/shared/ui/icons";
 import { Icons } from "@/shared/ui/icons";
@@ -109,6 +111,8 @@ export type MenuItem = {
 	label: string;
 	icon: Icon;
 	description?: string;
+	/** 快捷键绑定 token（如 "mod+b"）：formatKeymap 据此生成绑定，Tooltip 经 formatHotkey 展示 */
+	shortcut?: string;
 	/** 该项在哪种模式下显示：edit（编辑模式）、preview（预览模式）、both（两种模式，默认） */
 	showIn?: "edit" | "preview" | "both";
 };
@@ -128,12 +132,18 @@ export const MENU_GROUPS: readonly MenuGroup[] = [
 	{
 		type: "tool",
 		items: [
-			{ id: "bold", label: "加粗", icon: Icons.bold, showIn: "edit" },
-			{ id: "italic", label: "斜体", icon: Icons.italic, showIn: "edit" },
-			{ id: "heading1", label: "标题", icon: Icons.heading1, showIn: "edit" },
-			{ id: "quote", label: "引用", icon: Icons.quote, showIn: "edit" },
-			{ id: "code", label: "代码", icon: Icons.code, showIn: "edit" },
-			{ id: "link", label: "链接", icon: Icons.link, showIn: "edit" },
+			{ id: "bold", label: "加粗", icon: Icons.bold, shortcut: "mod+b", showIn: "edit" },
+			{ id: "italic", label: "斜体", icon: Icons.italic, shortcut: "mod+i", showIn: "edit" },
+			{
+				id: "heading1",
+				label: "标题",
+				icon: Icons.heading1,
+				shortcut: "mod+alt+1",
+				showIn: "edit",
+			},
+			{ id: "quote", label: "引用", icon: Icons.quote, shortcut: "mod+shift+9", showIn: "edit" },
+			{ id: "code", label: "代码", icon: Icons.code, shortcut: "mod+e", showIn: "edit" },
+			{ id: "link", label: "链接", icon: Icons.link, shortcut: "mod+k", showIn: "edit" },
 		],
 	},
 	{
@@ -192,6 +202,50 @@ export const defaultEditorSettings = {
 
 // @ Markdown 格式化操作
 
+// 在选区两端包裹格式标记的核心实现，直接操作 EditorView（供菜单包装函数与快捷键 keymap 共用）
+const wrapSelectionInView = (view: EditorView, before: string, after = before): void => {
+	const { from, to } = view.state.selection.main;
+	view.dispatch({
+		changes: { from, to, insert: before + view.state.sliceDoc(from, to) + after },
+		selection: { anchor: from + before.length, head: to + before.length },
+	});
+	view.focus();
+};
+
+// 在行首添加 Markdown 前缀的核心实现，直接操作 EditorView
+const prependLineInView = (view: EditorView, prefix: string): void => {
+	const { from } = view.state.selection.main;
+	const line = view.state.doc.lineAt(from);
+	view.dispatch({
+		changes: { from: line.from, insert: prefix },
+	});
+	view.focus();
+};
+
+// 执行某个工具 id 对应格式化操作的核心实现，直接操作 EditorView
+const executeFormatInView = (view: EditorView, id: ToolId): void => {
+	switch (id) {
+		case "bold":
+			wrapSelectionInView(view, "**");
+			break;
+		case "italic":
+			wrapSelectionInView(view, "*");
+			break;
+		case "code":
+			wrapSelectionInView(view, "`");
+			break;
+		case "link":
+			wrapSelectionInView(view, "[", "](url)");
+			break;
+		case "heading1":
+			prependLineInView(view, "# ");
+			break;
+		case "quote":
+			prependLineInView(view, "> ");
+			break;
+	}
+};
+
 // > 在选区两端包裹格式标记（如 **粗体**），无选区时插入空标记并光标居中
 export const wrapSelection = (
 	view: ReactCodeMirrorRef | null,
@@ -200,46 +254,55 @@ export const wrapSelection = (
 ): void => {
 	const v = view?.view;
 	if (!v) return;
-	const { from, to } = v.state.selection.main;
-	v.dispatch({
-		changes: { from, to, insert: before + v.state.sliceDoc(from, to) + after },
-		selection: { anchor: from + before.length, head: to + before.length },
-	});
-	v.focus();
+	wrapSelectionInView(v, before, after);
 };
 
 // 在行首添加 Markdown 前缀（如 # 标题、> 引用）
 export const prependLine = (view: ReactCodeMirrorRef | null, prefix: string): void => {
 	const v = view?.view;
 	if (!v) return;
-	const { from } = v.state.selection.main;
-	const line = v.state.doc.lineAt(from);
-	v.dispatch({
-		changes: { from: line.from, insert: prefix },
-	});
-	v.focus();
+	prependLineInView(v, prefix);
 };
 
 // 执行某个工具 id 对应的格式化操作
 export const executeFormat = (view: ReactCodeMirrorRef | null, id: ToolId): void => {
-	switch (id) {
-		case "bold":
-			wrapSelection(view, "**");
-			break;
-		case "italic":
-			wrapSelection(view, "*");
-			break;
-		case "code":
-			wrapSelection(view, "`");
-			break;
-		case "link":
-			wrapSelection(view, "[", "](url)");
-			break;
-		case "heading1":
-			prependLine(view, "# ");
-			break;
-		case "quote":
-			prependLine(view, "> ");
-			break;
-	}
+	const v = view?.view;
+	if (!v) return;
+	executeFormatInView(v, id);
 };
+
+// @ 格式化快捷键 keymap
+
+// 把 "mod+alt+1" 绑定 token 转成 CodeMirror 键名 "Mod-Alt-1"：修饰键首字母大写，末位主键保持原样
+const toCodeMirrorKey = (combo: string): string =>
+	combo
+		.split("+")
+		.map((part, index, parts) =>
+			index === parts.length - 1 ? part : part.charAt(0).toUpperCase() + part.slice(1),
+		)
+		.join("-");
+
+// 收窄 string → ToolId 的类型守卫（菜单项 id 是宽泛 string）
+const isToolId = (id: string): id is ToolId => TOOL_IDS.some((toolId) => toolId === id);
+
+// > 编辑器格式化快捷键：从 tool 组的 shortcut token 生成绑定，键位与 Tooltip 展示同源
+// > 命中后 return true 自动 preventDefault，压过 kbar 的 ⌘K 与浏览器默认行为
+export const formatKeymap = Prec.high(
+	keymap.of(
+		MENU_GROUPS.filter((group) => group.type === "tool")
+			.flatMap((group) => group.items)
+			.flatMap(({ id, shortcut }) =>
+				shortcut && isToolId(id)
+					? [
+							{
+								key: toCodeMirrorKey(shortcut),
+								run: (view: EditorView): boolean => {
+									executeFormatInView(view, id);
+									return true;
+								},
+							},
+						]
+					: [],
+			),
+	),
+);

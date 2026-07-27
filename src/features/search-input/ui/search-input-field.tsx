@@ -2,11 +2,13 @@
 
 // # 搜索输入框：左侧搜索图标 + 输入框（防抖写 URL）+ 有内容时显示清空按钮
 
-import { type JSX, useState } from "react";
-import { useDebounce } from "@/shared/hooks";
+import { type JSX, useRef, useState } from "react";
+import { HOTKEYS } from "@/shared/configs/hotkeys.config";
+import { useDebounce, useHotkey } from "@/shared/hooks";
 import type { SearchFilters } from "@/shared/lib/search-filter";
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
+import { Kbd } from "@/shared/ui/kbd";
 import { getPlaceholder, SEARCH_DEBOUNCE_MS, SEARCH_QUERY_PARAM } from "../config/search-filters";
 import { useSearchUrl } from "../model/use-search-url";
 
@@ -29,6 +31,13 @@ export function SearchInputField({
 	const [value, setValue] = useState(() => getParam(param) ?? "");
 	// placeholder 跟随 filter 状态变化：选标题→"搜索标题..."，选标题+内容→"搜索标题和内容..."
 	const placeholder = getPlaceholder(getFilters());
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	// "/" 聚焦搜索框（preventDefault 默认阻止 "/" 字符落入刚聚焦的输入框）
+	useHotkey({
+		combo: HOTKEYS.focusSearch.combo,
+		onTrigger: () => inputRef.current?.focus(),
+	});
 
 	// 防抖写 URL：value 每次变化重设定时器，停止输入后执行 fn
 	useDebounce(
@@ -50,12 +59,14 @@ export function SearchInputField({
 	return (
 		<div className={cn("flex flex-1 items-center gap-2", className)}>
 			<input
+				ref={inputRef}
 				type="text"
 				value={value}
 				onChange={(e) => setValue(e.target.value)}
 				placeholder={placeholder}
 				className="h-full w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 			/>
+			{/* 有内容时显示清空按钮，空态在同位置显示 "/" 快捷键提示 */}
 			{value ? (
 				<button
 					type="button"
@@ -65,7 +76,9 @@ export function SearchInputField({
 				>
 					<Icons.x className="size-4" />
 				</button>
-			) : null}
+			) : (
+				<Kbd className="shrink-0">{HOTKEYS.focusSearch.label}</Kbd>
+			)}
 		</div>
 	);
 }

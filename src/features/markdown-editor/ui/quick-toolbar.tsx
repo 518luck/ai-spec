@@ -9,6 +9,7 @@ import { useTheme } from "next-themes";
 import type { JSX } from "react";
 import { useEffect, useRef } from "react";
 import { useInertialScroll, useScrollProgress } from "@/shared/hooks";
+import { formatHotkey } from "@/shared/lib/format-hotkey";
 import { cn } from "@/shared/lib/utils";
 import { AnimatedSizeContainer } from "@/shared/ui/animated-size-container";
 import { Button } from "@/shared/ui/button";
@@ -26,6 +27,7 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { Kbd } from "@/shared/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import {
 	EDITOR_THEMES,
@@ -183,7 +185,11 @@ export function QuickToolbar({ editorRef, isExpanded }: QuickToolbarProps): JSX.
 													<item.icon className="size-4" />
 												</Button>
 											</TooltipTrigger>
-											<TooltipContent>{item.label}</TooltipContent>
+											{/* // 胶囊悬浮提示：label + 快捷键（仅格式工具有 shortcut） */}
+											<TooltipContent>
+												{item.label}
+												{item.shortcut ? <Kbd>{formatHotkey(item.shortcut)}</Kbd> : null}
+											</TooltipContent>
 										</Tooltip>
 									);
 								})}
@@ -264,6 +270,10 @@ export function QuickToolbar({ editorRef, isExpanded }: QuickToolbarProps): JSX.
 													<HelpTooltip content={item.description} />
 												</span>
 											)}
+											{/* // 行尾右对齐快捷键提示（仅格式工具有 shortcut） */}
+											{item.shortcut ? (
+												<Kbd className="ml-auto">{formatHotkey(item.shortcut)}</Kbd>
+											) : null}
 										</button>
 									</div>
 								))}

@@ -101,6 +101,12 @@ export function ConfirmDialog({
 							<Input
 								value={inputValue}
 								onChange={(event) => setInputValue(event.target.value)}
+								onKeyDown={(event) => {
+									// Enter 直接确认（canConfirm/isPending 守卫在 handleConfirm 内）；IME 上屏的 Enter 让行
+									if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
+									event.preventDefault();
+									void handleConfirm();
+								}}
 								placeholder={requireConfirmInput.placeholder}
 								aria-invalid={!canConfirm && inputValue.length > 0}
 								disabled={isPending}

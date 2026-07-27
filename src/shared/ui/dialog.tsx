@@ -30,7 +30,7 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
 		<DialogPrimitive.Backdrop
 			data-slot="dialog-overlay"
 			className={cn(
-				"data-open:fade-in-0 data-closed:fade-out-0 fixed inset-0 isolate z-50 bg-black/50 duration-100 data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-lg",
+				"data-open:fade-in-0 data-closed:fade-out-0 fixed inset-0 isolate z-50 bg-black/50 duration-200 ease-out data-closed:animate-out data-open:animate-in supports-backdrop-filter:backdrop-blur-lg",
 				className,
 			)}
 			{...props}
@@ -38,26 +38,36 @@ function DialogOverlay({ className, ...props }: DialogPrimitive.Backdrop.Props) 
 	);
 }
 
+// ! 面板定位用 inset-0 + m-auto 居中，不用 top/left-1/2 + -translate-1/2：
+// ! tw-animate 的 zoom/slide 关键帧会整个改写 transform，起始帧丢掉 -50% 偏移，弹窗会从偏左上斜着飘到中间。
+// ! margin auto 居中不占用 transform，缩放和位移动画才是纯的
+const DIALOG_CONTENT_CLASS =
+	"fixed inset-0 z-50 m-auto grid h-fit max-h-[85vh] w-full max-w-[calc(100%-2rem)] gap-0 overflow-hidden rounded-xl bg-popover p-0 text-popover-foreground text-sm outline-none ring-1 ring-foreground/10 sm:max-w-md";
+
+// 默认进出场：淡入 + 轻微放大 + 自下微升
+const DIALOG_CONTENT_ANIMATION_CLASS =
+	"data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-bottom-3 data-closed:fade-out-0 data-closed:zoom-out-95 data-closed:slide-out-to-bottom-2 duration-200 ease-out data-closed:animate-out data-open:animate-in";
+
 function DialogContent({
 	className,
 	children,
 	showCloseButton = true,
 	scrollable = true,
+	animated = true,
 	...props
 }: DialogPrimitive.Popup.Props & {
 	showCloseButton?: boolean;
 	/** 是否用 ScrollArea 包裹内容（默认开启）；内部自带滚动的组件（如 CodeMirror）应关闭，避免双重滚动冲突 */
 	scrollable?: boolean;
+	/** 是否使用内置的 CSS 进出场（默认开启）；由 motion 接管面板动画时关闭，避免两套动画叠加打架 */
+	animated?: boolean;
 }) {
 	return (
 		<DialogPortal>
 			<DialogOverlay />
 			<DialogPrimitive.Popup
 				data-slot="dialog-content"
-				className={cn(
-					"data-open:fade-in-0 data-open:zoom-in-95 data-closed:fade-out-0 data-closed:zoom-out-95 fixed top-1/2 left-1/2 z-50 grid max-h-[85vh] w-full max-w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 gap-0 overflow-hidden rounded-xl bg-popover p-0 text-popover-foreground text-sm outline-none ring-1 ring-foreground/10 duration-100 data-closed:animate-out data-open:animate-in sm:max-w-md",
-					className,
-				)}
+				className={cn(DIALOG_CONTENT_CLASS, animated && DIALOG_CONTENT_ANIMATION_CLASS, className)}
 				{...props}
 			>
 				{/* // ! ScrollArea 包裹内容让超长弹窗自动滚动；scrollable=false 时直接渲染 children（供 CodeMirror 等自带滚动的组件使用，避免双重滚动冲突） */}
