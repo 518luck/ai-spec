@@ -69,7 +69,7 @@ export function PersonalRulesPage({
 			<PageWidthWrapper fill>
 				{/* // @ 筛选条带：空间 + 标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 				<div className="mb-6 flex items-center justify-between gap-3">
-					<div className="flex items-center gap-1">
+					<div className="flex items-center gap-2">
 						<RuleSpaceCombobox />
 						<RuleTagFilter />
 					</div>

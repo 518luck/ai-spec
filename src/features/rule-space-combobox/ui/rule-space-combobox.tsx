@@ -4,6 +4,7 @@
 // ! 空间是规约库的顶层隔离，切空间必须清掉 folderId / tagIds——文件夹和标签都出不了空间
 
 import { useCommandState } from "cmdk";
+import { AnimatePresence, motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useState } from "react";
 import useSWR from "swr";
@@ -25,6 +26,7 @@ import {
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
 import { Skeleton } from "@/shared/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { resolveSpaceIcon } from "../config/space-icons";
 import { CreateSpaceDialog } from "./create-space-dialog";
 
@@ -95,35 +97,54 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
-			<PopoverTrigger
-				render={
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						role="combobox"
-						aria-label={activeSpace?.name ?? "领域空间"}
-						title={activeSpace?.name ?? "领域空间"}
-						aria-expanded={open}
-						className={className}
-					/>
-				}
-			>
-				{(() => {
-					// 有选中空间时用其图标 + 颜色，否则回落默认 domain 图标
-					if (activeSpace) {
-						const ActiveGlyph = resolveSpaceIcon(activeSpace.icon);
-						return (
-							<span
-								className="flex size-4 items-center justify-center"
-								style={{ color: activeSpace.color }}
-							>
-								<ActiveGlyph className="size-4" />
-							</span>
-						);
+			<Tooltip>
+				<TooltipTrigger
+					render={
+						<PopoverTrigger
+							render={
+								<Button
+									variant="ghost"
+									role="combobox"
+									aria-label={activeSpace?.name ?? "领域空间"}
+									aria-expanded={open}
+									className={cn("h-9 w-9 shrink-0 p-0", className)}
+								/>
+							}
+						/>
 					}
-					return <Icons.domain className="size-4 text-muted-foreground" />;
-				})()}
-			</PopoverTrigger>
+				>
+					{(() => {
+						// 有选中空间时用淡彩底 + 同色图标，否则回落默认 domain 图标
+						if (activeSpace) {
+							const ActiveGlyph = resolveSpaceIcon(activeSpace.icon);
+							return (
+								<span
+									className="flex size-full items-center justify-center rounded-md"
+									style={{
+										color: activeSpace.color,
+										backgroundColor: `color-mix(in srgb, ${activeSpace.color} 15%, transparent)`,
+									}}
+								>
+									<AnimatePresence initial={false} mode="wait">
+										<motion.span
+											key={activeSpace.icon}
+											initial={{ opacity: 0, scale: 0.6 }}
+											animate={{ opacity: 1, scale: 1 }}
+											exit={{ opacity: 0, scale: 0.6 }}
+											transition={{ duration: 0.15 }}
+											className="flex size-full items-center justify-center"
+										>
+											<ActiveGlyph className="size-5" />
+										</motion.span>
+									</AnimatePresence>
+								</span>
+							);
+						}
+						return <Icons.domain className="size-5 text-muted-foreground" />;
+					})()}
+				</TooltipTrigger>
+				<TooltipContent>{activeSpace?.name ?? "领域空间"}</TooltipContent>
+			</Tooltip>
 
 			<PopoverContent className="w-45 p-0" align="start">
 				<Command>
