@@ -1,4 +1,5 @@
-// # 手动触发批量补译：往 translation 队列投 translate-batch
+// # 手动触发批量补译（测试/补跑用）：往 translation 队列投 translate-batch
+// > 生产日常靠 worker 内 TRANSLATION_BATCH_CRON 定时调度；本脚本只在本地验证或临时补跑时用
 // > 用法：
 // >   pnpm translate                         默认 skills，批大小走配置
 // >   pnpm translate --limit=200             指定本批条数
