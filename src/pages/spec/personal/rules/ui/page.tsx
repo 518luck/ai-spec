@@ -15,7 +15,7 @@ import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
-import { RuleLayoutPopover } from "./rule-layout-popover";
+import { RuleLayoutTrigger } from "./rule-layout-trigger";
 import { RuleTagFilter } from "./rule-tag-filter";
 import { parseRuleView, RULE_VIEW_PARAM, type RuleView, RuleViewToggle } from "./view-toggle";
 
@@ -71,12 +71,12 @@ export function PersonalRulesPage({
 				{/* // @ 筛选条带：空间 + 标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 				<div className="mb-6 flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2">
-							<RuleSpaceCombobox />
-							<RuleTagFilter />
-						</div>
-						<div className="flex items-center gap-2">
-							<RuleLayoutPopover />
-							<RuleViewToggle value={view} onChange={handleViewChange} />
+						<RuleSpaceCombobox />
+						<RuleTagFilter />
+						<RuleLayoutTrigger />
+					</div>
+					<div className="flex items-center gap-2">
+						<RuleViewToggle value={view} onChange={handleViewChange} />
 						<SearchInput
 							className="max-w-80"
 							filters={["title", "content"]}
