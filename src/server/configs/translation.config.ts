@@ -20,7 +20,7 @@ export const TRANSLATION_CONCURRENCY = Math.max(
 export const TRANSLATION_AUTO_CHAIN = process.env.TRANSLATION_AUTO_CHAIN !== "false";
 
 // 定时补译 cron（BullMQ 调度，默认 UTC）；扫完广场后再跑，默认每天 05:00
-// 本地测试可设 TRANSLATION_BATCH_CRON="*/5 * * * *"；设 "off" 关闭定时（仍可用 pnpm translate 手动测）
+// 本地测试可设 TRANSLATION_BATCH_CRON="*/5 * * * *"；设 "off" 关闭定时（仍可用 pnpm translate / test:translate）
 export const TRANSLATION_BATCH_CRON = process.env.TRANSLATION_BATCH_CRON || "0 5 * * *";
 
 // 是否启用定时补译（"off" / "false" 关闭；其余走 TRANSLATION_BATCH_CRON）

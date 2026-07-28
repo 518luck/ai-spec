@@ -1,10 +1,12 @@
-// # 手动触发批量补译（测试/补跑用）：往 translation 队列投 translate-batch
-// > 生产日常靠 worker 内 TRANSLATION_BATCH_CRON 定时调度；本脚本只在本地验证或临时补跑时用
+// # 手动触发批量补译（测试/临时补跑）：往 translation 队列投 translate-batch
+// > 生产日常靠 worker 内 TRANSLATION_BATCH_CRON；本脚本只在本地验证或临时补跑时用
+// > 待译在 target 侧按 stars 降序，无需本脚本再排序
+// >
 // > 用法：
-// >   pnpm translate                         默认 skills，批大小走配置
-// >   pnpm translate --limit=200             指定本批条数
-// >   pnpm translate --resource=skills       指定资源（目前仅 skills）
-// >   pnpm translate --no-chain              本批结束后不自动续跑
+// >   pnpm translate                         手动全量补译：批大小走配置，默认续跑直到翻完
+// >   pnpm test:translate                    测试：--limit=10 --no-chain（高 star 10 条）
+// >   pnpm exec tsx scripts/trigger-translate.ts --limit=5 --no-chain
+// >   pnpm exec tsx scripts/trigger-translate.ts --resource=skills
 // > 前提：worker 已在跑（pnpm worker），且配置了 TENCENT_SECRET_ID / TENCENT_SECRET_KEY
 
 import "dotenv/config";

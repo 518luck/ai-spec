@@ -1,6 +1,6 @@
 // # 翻译队列 Worker：独立消费 translation 队列的批量补译任务
 // > 通过副作用 import 启动；并发由 TRANSLATION_CONCURRENCY 控制，不和邮件/GitHub 抢
-// > 定时调度与 discover-scan 同模式：worker 启动时 upsertJobScheduler，pnpm translate 仅手动测试
+// > 定时调度与 discover-scan 同模式：worker 启动时 upsertJobScheduler；pnpm translate 全量、test:translate 试跑
 
 import { Worker } from "bullmq";
 import {

@@ -1,7 +1,8 @@
 // # 手动触发广场扫描：立刻往 discover 队列投一个 discover-scan 任务
 // > 用法：
-// >   npx tsx scripts/trigger-scan.ts                      跑全部源（和定时任务一样）
-// >   npx tsx scripts/trigger-scan.ts --source=owner/name  只跑指定 awesome 源
+// >   pnpm scan                                            跑全部源（和定时任务一样）
+// >   pnpm test:scan:one                                   只跑 ComposioHQ/awesome-claude-skills（测试）
+// >   pnpm exec tsx scripts/trigger-scan.ts --source=owner/name
 // > 前提：worker 进程已在跑（否则任务投进去没人消费）
 
 import "dotenv/config";

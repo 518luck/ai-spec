@@ -20,9 +20,11 @@
 		"prisma:generate": "prisma generate",
 		"prisma:migrate": "prisma migrate dev",
 		"prisma:studio": "prisma studio",
+
 		"scan": "tsx scripts/trigger-scan.ts",
-		"scan:one": "tsx scripts/trigger-scan.ts --source=ComposioHQ/awesome-claude-skills",
-		"translate": "tsx scripts/trigger-translate.ts"
+		"test:scan:one": "tsx scripts/trigger-scan.ts --source=ComposioHQ/awesome-claude-skills",
+		"translate": "tsx scripts/trigger-translate.ts",
+		"test:translate": "tsx scripts/trigger-translate.ts --limit=10 --no-chain"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.11.2",
