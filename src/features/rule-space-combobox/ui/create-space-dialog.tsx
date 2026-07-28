@@ -19,6 +19,7 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
 	DEFAULT_SPACE_ICON_KEY,
+	ICON_CATEGORIES,
 	RULE_SPACE_ICON_OPTIONS,
 	resolveSpaceIcon,
 } from "../config/space-icons";
@@ -85,22 +86,37 @@ export function CreateSpaceDialog({
 					{/* // 右侧：图标选择 */}
 					<div className="flex w-52 shrink-0 flex-col gap-2">
 						<Label>图标</Label>
-						<div className="grid grid-cols-4 gap-2">
-							{RULE_SPACE_ICON_OPTIONS.map((option) => (
-								<Button
-									key={option.key}
-									variant="ghost"
-									size="icon-sm"
-									aria-label={`选择图标 ${option.label}`}
-									onClick={() => setIcon(option.key)}
-									className={cn(
-										"hover:scale-110",
-										icon === option.key && "ring-2 ring-ring ring-offset-1 ring-offset-background",
-									)}
-								>
-									<option.icon className="size-5" />
-								</Button>
-							))}
+						{/* // 图标较多，限高后内部滚动；p-1 内边距避免选中 ring 贴边被切 */}
+						<div className="max-h-60 overflow-y-auto p-1">
+							{ICON_CATEGORIES.map((category, index) => {
+								const options = RULE_SPACE_ICON_OPTIONS.filter(
+									(option) => option.category === category.key,
+								);
+								if (options.length === 0) return null;
+								return (
+									<div key={category.key} className={index > 0 ? "mt-2" : undefined}>
+										<div className="mb-1 text-muted-foreground text-xs">{category.label}</div>
+										<div className="grid grid-cols-4 gap-2">
+											{options.map((option) => (
+												<Button
+													key={option.key}
+													variant="ghost"
+													size="icon-sm"
+													aria-label={`选择图标 ${option.label}`}
+													onClick={() => setIcon(option.key)}
+													className={cn(
+														"hover:scale-110",
+														icon === option.key &&
+															"ring-2 ring-ring ring-offset-1 ring-offset-background",
+													)}
+												>
+													<option.icon className="size-5" />
+												</Button>
+											))}
+										</div>
+									</div>
+								);
+							})}
 						</div>
 					</div>
 				</DialogContentBody>

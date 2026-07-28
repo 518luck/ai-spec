@@ -112,7 +112,7 @@ export function DiscoverSkillsPage({
 		}
 		return (
 			<>
-{/* // 大屏约 4 列，卡片比收录略大；高度仍由 ContentCard aspect-4/3 统一 */}
+				{/* // 大屏约 4 列，卡片比收录略大；高度仍由 ContentCard aspect-4/3 统一 */}
 				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-4 2xl:gap-6">
 					{skills.map((skill) => (
 						<SkillCard
