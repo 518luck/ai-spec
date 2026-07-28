@@ -16,6 +16,7 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { ScrollMask } from "@/shared/ui/scroll-mask";
 import { HeatMenu } from "./heat-menu";
@@ -159,11 +160,18 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 						</DropdownMenuSubContent>
 					</DropdownMenuSub>
 
-					{/* // 热度：star > 500 / 2k / 5k / 10k，单选；列表仍按 star 递减 */}
+					{/* // 热度：star 来自源仓库，档位 500 / 2k / 5k / 10k，单选；列表仍按 star 递减 */}
 					<DropdownMenuSub>
 						<DropdownMenuSubTrigger className="gap-2">
 							<Icons.trending className="size-4 text-foreground" />
 							热度
+							{/* 阻止点帮助时误触开合子菜单（仅 pointerdown，避免静态节点绑 click 的 a11y 告警） */}
+							<span className="ml-auto inline-flex" onPointerDown={(e) => e.stopPropagation()}>
+								<HelpTooltip
+									alignWithText
+									content="热度按来源 GitHub 仓库的 Star 数计算，不是单个 Skill 的独立热度；同一仓库下的多个 Skill 会共用该仓库的 Star。"
+								/>
+							</span>
 						</DropdownMenuSubTrigger>
 						<DropdownMenuSubContent className="min-w-32 p-1">
 							<HeatMenu value={minStars} onSelect={handleToggleHeat} />

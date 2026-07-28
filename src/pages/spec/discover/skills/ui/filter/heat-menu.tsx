@@ -30,6 +30,7 @@ export function HeatMenu({ value, onSelect }: HeatMenuProps): JSX.Element {
 						onClick={() => onSelect(threshold.value)}
 						className="cursor-pointer gap-2"
 					>
+						<Icons.star className="size-4 shrink-0 text-muted-foreground" />
 						<span className="flex-1 tabular-nums">{threshold.label}</span>
 						<Icons.check
 							className={cn("ml-auto size-4 shrink-0", active ? "opacity-100" : "opacity-0")}
