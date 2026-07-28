@@ -18,11 +18,17 @@ const ruleSpaceIconSchema = z
 	.min(1, { error: "请选择空间图标" })
 	.max(32, { error: "图标标识长度不能超过 32 个字符" });
 
+// 空间颜色：#RRGGBB 格式（不含 alpha），DB 有 @default，入参可省略由后端兜底默认色
+const ruleSpaceColorSchema = z
+	.string()
+	.regex(/^#[0-9a-fA-F]{6}$/, { error: "颜色需为 #RRGGBB 格式" });
+
 // @ 入参
-// 创建领域空间入参：icon 可省略，省略时后端填默认图标；ownerId/teamId 由后端从 session 注入
+// 创建领域空间入参：icon/color 可省略，省略时后端填默认值；ownerId/teamId 由后端从 session 注入
 export const createRuleSpaceDtoSchema = z.object({
 	name: ruleSpaceNameSchema,
 	icon: ruleSpaceIconSchema.optional(),
+	color: ruleSpaceColorSchema.optional(),
 });
 
 // 创建领域空间入参类型
@@ -34,6 +40,7 @@ export const ruleSpaceVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	icon: z.string(),
+	color: z.string(),
 	sortOrder: z.number().int(),
 });
 

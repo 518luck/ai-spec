@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
-import { DEFAULT_RULE_SPACE_ICON, getOrCreatePersonalRuleSpace } from "@/server/utils/rule-space";
+import {
+	DEFAULT_RULE_SPACE_COLOR,
+	DEFAULT_RULE_SPACE_ICON,
+	getOrCreatePersonalRuleSpace,
+} from "@/server/utils/rule-space";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import {
@@ -22,7 +26,7 @@ export const GET = withPersonal(
 		const spaces = await prisma.ruleSpace.findMany({
 			where: { ownerId: session.user.id, teamId: null },
 			orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
-			select: { id: true, name: true, icon: true, sortOrder: true },
+			select: { id: true, name: true, icon: true, color: true, sortOrder: true },
 		});
 
 		const parsed = ruleSpaceListVoSchema.safeParse(spaces);
@@ -42,7 +46,7 @@ export const POST = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { name, icon = DEFAULT_RULE_SPACE_ICON } = parsed.data;
+		const { name, icon = DEFAULT_RULE_SPACE_ICON, color = DEFAULT_RULE_SPACE_COLOR } = parsed.data;
 
 		const duplicated = await prisma.ruleSpace.findFirst({
 			where: { ownerId: session.user.id, teamId: null, name },
@@ -58,8 +62,8 @@ export const POST = withPersonal(
 		});
 
 		const space = await prisma.ruleSpace.create({
-			data: { name, icon, sortOrder, ownerId: session.user.id, teamId: null },
-			select: { id: true, name: true, icon: true, sortOrder: true },
+			data: { name, icon, color, sortOrder, ownerId: session.user.id, teamId: null },
+			select: { id: true, name: true, icon: true, color: true, sortOrder: true },
 		});
 
 		const result = ruleSpaceVoSchema.safeParse(space);

@@ -107,6 +107,19 @@ import {
 
 import { type Icon, Icons } from "@/shared/ui/icons";
 
+// # 空间预设颜色盘：红橙黄绿蓝，均为 #RRGGBB 格式（对齐 ruleSpaceColorSchema）
+// 预设色：覆盖常见分类色相，供空间创建时快捷选择
+export const SPACE_PRESET_COLORS = [
+	"#ef4444", // 红
+	"#f59e0b", // 橙
+	"#eab308", // 黄
+	"#10b981", // 绿
+	"#3b82f6", // 蓝
+] as const;
+
+// 默认颜色：红色（创建时预选，与 DB @default 一致）
+export const SPACE_DEFAULT_COLOR = SPACE_PRESET_COLORS[0];
+
 // 图标分类标识（数组顺序即渲染顺序）
 export const ICON_CATEGORIES = [
 	{ key: "general", label: "通用" },

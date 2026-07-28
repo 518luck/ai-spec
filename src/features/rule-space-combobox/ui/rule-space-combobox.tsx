@@ -67,7 +67,11 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 	};
 
 	// > 新建空间：Dto 全量校验后落库，成功后刷新列表并切到新空间
-	const handleCreate = async (input: { name: string; icon: string }): Promise<void> => {
+	const handleCreate = async (input: {
+		name: string;
+		icon: string;
+		color: string;
+	}): Promise<void> => {
 		const parsed = createRuleSpaceDtoSchema.safeParse(input);
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "创建空间失败");
@@ -137,6 +141,7 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 										key={space.id}
 										name={space.name}
 										icon={space.icon}
+										color={space.color}
 										selected={space.id === activeSpace?.id}
 										onSelect={() => handleSelect(space.id)}
 									/>
@@ -173,15 +178,17 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 	);
 }
 
-// 空间列表项：图标 + 名称 + 选中勾
+// 空间列表项：图标（color 驱动淡彩底 + 同色）+ 名称 + 选中勾
 function SpaceOptionItem({
 	name,
 	icon,
+	color,
 	selected,
 	onSelect,
 }: {
 	name: string;
 	icon: string;
+	color: string;
 	selected: boolean;
 	onSelect: () => void;
 }): JSX.Element {
@@ -193,7 +200,12 @@ function SpaceOptionItem({
 			onSelect={onSelect}
 			className="not-first:mt-2 cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
 		>
-			<Glyph className="size-4 shrink-0 text-muted-foreground" />
+			<span
+				className="flex size-5 shrink-0 items-center justify-center rounded"
+				style={{ backgroundColor: `color-mix(in srgb, ${color} 15%, transparent)` }}
+			>
+				<Glyph className="size-3.5" style={{ color }} />
+			</span>
 			<span className="min-w-0 truncate">{name}</span>
 			<Icons.check className={cn("ml-auto size-4", selected ? "opacity-100" : "opacity-0")} />
 		</CommandItem>

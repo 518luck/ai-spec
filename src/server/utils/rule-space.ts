@@ -7,8 +7,15 @@ import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 // 新建空间的默认图标（前端 Icons 注册表的 key）
 export const DEFAULT_RULE_SPACE_ICON = "rulesLibrary";
 
+// 新建空间的默认颜色（与 RuleSpace.color 的 @default 一致）
+export const DEFAULT_RULE_SPACE_COLOR = "#ef4444";
+
 // 个人默认空间：用户还没建过空间时自动补一个，避免规则/文件夹无家可归
-const DEFAULT_PERSONAL_SPACE = { name: "我的规约", icon: DEFAULT_RULE_SPACE_ICON } as const;
+const DEFAULT_PERSONAL_SPACE = {
+	name: "我的规约",
+	icon: DEFAULT_RULE_SPACE_ICON,
+	color: DEFAULT_RULE_SPACE_COLOR,
+} as const;
 
 // > 获取用户的个人默认领域空间（teamId=null，取排序最靠前的一个），不存在则自动创建
 export const getOrCreatePersonalRuleSpace = async (userId: string): Promise<string> => {
