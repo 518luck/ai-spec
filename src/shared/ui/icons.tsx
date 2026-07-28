@@ -88,6 +88,7 @@ import type { ComponentType, SVGProps } from "react";
 
 import { CompareDiffIcon } from "@/shared/assets/icons/compare-diff";
 import { LayoutIcon } from "@/shared/assets/icons/layout";
+import { TableIcon } from "@/shared/assets/icons/table";
 import { LogoIcon } from "@/shared/assets/icons/logo";
 import { SquaresIcon } from "@/shared/assets/icons/squares";
 
@@ -183,7 +184,7 @@ export const Icons = {
 	highlight: IconHighlight,
 
 	// 列表视图切换 / 布局
-	viewTable: IconTable,
+	viewTable: TableIcon,
 	viewGrid: IconLayoutGrid,
 	layout: LayoutIcon,
 

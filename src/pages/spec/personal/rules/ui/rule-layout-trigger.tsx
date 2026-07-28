@@ -1,12 +1,11 @@
 "use client";
 
-// # 规约布局触发器：布局预设 PanelTrigger + 视图切换菜单项
+// # 规约布局触发器：布局预设 PanelTrigger + 视图切换卡片
 
 import type { JSX } from "react";
 
 import { PanelTrigger } from "@/features/panel-trigger";
 import { cn } from "@/shared/lib/utils";
-import { DropdownMenuItem } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
 import type { RuleView } from "./view-toggle";
 
@@ -22,27 +21,30 @@ type RuleLayoutTriggerProps = {
 	onChange: (next: RuleView) => void;
 };
 
-// > 布局壳：layout 预设 + 表格/卡片视图切换菜单项
+// > 布局壳：layout 预设 + 表格/卡片两块并排卡片
 export function RuleLayoutTrigger({ value, onChange }: RuleLayoutTriggerProps): JSX.Element {
 	return (
 		<PanelTrigger
 			variant="layout"
-			menu={VIEW_OPTIONS.map((option) => (
-				<DropdownMenuItem
-					key={option.value}
-					onClick={() => onChange(option.value)}
-					className="gap-2"
-				>
-					<option.icon className="size-4" />
-					<span>{option.label}</span>
-					<Icons.check
-						className={cn(
-							"ml-auto size-4 shrink-0",
-							value === option.value ? "opacity-100" : "opacity-0",
-						)}
-					/>
-				</DropdownMenuItem>
-			))}
+			menuClassName="w-auto"
+			menu={
+				<div className="flex gap-2 p-1">
+					{VIEW_OPTIONS.map((option) => (
+						<button
+							key={option.value}
+							type="button"
+							onClick={() => onChange(option.value)}
+							className={cn(
+								"flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-colors hover:text-foreground",
+								value === option.value && "bg-accent text-foreground",
+							)}
+						>
+							<option.icon className="size-4" />
+							<span className="text-xs">{option.label}</span>
+						</button>
+					))}
+				</div>
+			}
 		/>
 	);
 }

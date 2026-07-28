@@ -4,7 +4,7 @@
 // > 视图状态放 URL 而不是 localStorage：与本页其它筛选（folderId/tagIds/q）一致，SSR 与客户端首屏读到同一份，不会 hydration 打架
 
 import { motion } from "motion/react";
-import type { JSX } from "react";
+import type { ComponentType, JSX, SVGProps } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
@@ -23,7 +23,7 @@ export const parseRuleView = (value: string | undefined | null): RuleView =>
 const VIEW_OPTIONS = [
 	{ value: "table", label: "表格", icon: Icons.viewTable },
 	{ value: "grid", label: "卡片", icon: Icons.viewGrid },
-] as const satisfies readonly { value: RuleView; label: string; icon: typeof Icons.viewTable }[];
+] as const satisfies readonly { value: RuleView; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> }[];
 
 // > 选中态胶囊的共享布局 id：两个按钮下渲染的是同一个 layoutId，motion 会把它从旧位置平移到新位置，而不是一边消失一边出现
 const VIEW_INDICATOR_LAYOUT_ID = "rule-view-indicator";
