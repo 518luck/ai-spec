@@ -26,6 +26,7 @@ import {
 	IconBulb,
 	IconCalendar,
 	IconCamera,
+	IconCategory,
 	IconCertificate,
 	IconCertificate2,
 	IconChartBar,
@@ -146,6 +147,7 @@ type SpaceIconOption = {
 export const RULE_SPACE_ICON_OPTIONS: readonly SpaceIconOption[] = [
 	// @ 通用 / 容器（保留原有 key，保证历史数据兼容）
 	{ key: "rulesLibrary", label: "规约", icon: IconFolder, category: "general" },
+	{ key: "domain", label: "领域", icon: IconCategory, category: "general" },
 	{ key: "star", label: "收藏", icon: IconStar, category: "general" },
 	{ key: "bookmark", label: "书签", icon: IconBookmark, category: "general" },
 	{ key: "tag", label: "标签", icon: IconTags, category: "general" },

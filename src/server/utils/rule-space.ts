@@ -4,11 +4,9 @@ import { AiSpecError } from "@/server/errors/http-error";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
-// 新建空间的默认图标（前端 Icons 注册表的 key）
-export const DEFAULT_RULE_SPACE_ICON = "rulesLibrary";
-
-// 新建空间的默认颜色（与 RuleSpace.color 的 @default 一致）
-export const DEFAULT_RULE_SPACE_COLOR = "#ef4444";
+// 自动创建的个人默认空间的图标与颜色（用户首次访问规约时惰性补建）
+export const DEFAULT_RULE_SPACE_ICON = "domain";
+export const DEFAULT_RULE_SPACE_COLOR = "#f5f1f1";
 
 // 个人默认空间：用户还没建过空间时自动补一个，避免规则/文件夹无家可归
 const DEFAULT_PERSONAL_SPACE = {

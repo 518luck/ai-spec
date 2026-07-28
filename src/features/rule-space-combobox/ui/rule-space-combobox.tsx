@@ -108,7 +108,21 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 					/>
 				}
 			>
-				<Icons.domain className="size-4 text-muted-foreground" />
+				{(() => {
+					// 有选中空间时用其图标 + 颜色，否则回落默认 domain 图标
+					if (activeSpace) {
+						const ActiveGlyph = resolveSpaceIcon(activeSpace.icon);
+						return (
+							<span
+								className="flex size-4 items-center justify-center"
+								style={{ color: activeSpace.color }}
+							>
+								<ActiveGlyph className="size-4" />
+							</span>
+						);
+					}
+					return <Icons.domain className="size-4 text-muted-foreground" />;
+				})()}
 			</PopoverTrigger>
 
 			<PopoverContent className="w-45 p-0" align="start">

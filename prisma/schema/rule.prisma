@@ -14,7 +14,7 @@ model RuleSpace {
   // ② 业务字段
   name      String // 空间名称（如"代码"、"创作"、"智能体"）
   icon      String // 图标标识（code/palette/aiAgents/...，前端 Icons 映射）
-  color     String @default("#ef4444") // 空间颜色（#RRGGBB hex），驱动图标底色
+  color     String @default("#ef4444") // 空间颜色（#RRGGBB hex），驱动图标底色与图标色
   sortOrder Int    @default(0) @map("sort_order") // 同级排序，驱动拖拽
 
   // ③ 时间戳
