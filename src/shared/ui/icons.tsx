@@ -109,9 +109,9 @@ export const Icons = {
 
 	prompt: IconNote,
 	agentsMd: IconFileAi,
-		rulesLibrary: IconFolder,
-		domain: IconCategory,
-		skills: IconBook,
+	rulesLibrary: IconFolder,
+	domain: IconCategory,
+	skills: IconBook,
 
 	github: IconBrandGithub, // skill 广场条目回链源仓库
 	aiAgents: IconBrandMetabrainz,

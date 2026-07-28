@@ -62,7 +62,9 @@ export function CreateFolderDialog({
 			<DialogContent showCloseButton={false} className="sm:max-w-lg">
 				<DialogHeader className="relative">
 					<DialogTitle>新建文件夹</DialogTitle>
-					<DialogDescription>创建一个属于你的文件夹吧，取个好记的名字和颜色。</DialogDescription>
+					<DialogDescription className="pr-16">
+						创建一个属于你的文件夹吧，取个好记的名字和颜色。
+					</DialogDescription>
 					<FolderIcon
 						color={color}
 						className="absolute top-4 right-4 size-12 rounded-lg"

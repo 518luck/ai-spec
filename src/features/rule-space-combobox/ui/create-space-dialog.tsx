@@ -57,17 +57,20 @@ export function CreateSpaceDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent showCloseButton={false} className="sm:max-w-md">
+			<DialogContent showCloseButton={false} className="sm:max-w-lg">
 				<DialogHeader className="relative">
 					<DialogTitle>新建领域空间</DialogTitle>
-					<DialogDescription>
-						领域空间之间彼此隔离，标签只在同一空间内跨文件夹筛选，先给它取个名字吧。
+					<DialogDescription className="pr-16">
+						领域空间之间彼此隔离，标签无法贯穿。
 					</DialogDescription>
-					<PreviewIcon className="absolute top-4 right-4 size-8 text-muted-foreground" />
+					<div className="absolute top-4 right-4 flex size-12 items-center justify-center rounded-lg bg-muted">
+						<PreviewIcon className="size-6 text-muted-foreground" />
+					</div>
 				</DialogHeader>
 
-				<DialogContentBody className="flex flex-col gap-4">
-					<div className="flex flex-col gap-2">
+				<DialogContentBody className="flex gap-4">
+					{/* // 左侧：空间名称 */}
+					<div className="flex min-w-0 flex-1 flex-col gap-2">
 						<Label>空间名称</Label>
 						<Input
 							value={name}
@@ -79,9 +82,10 @@ export function CreateSpaceDialog({
 							autoFocus
 						/>
 					</div>
-					<div className="flex flex-col gap-2">
+					{/* // 右侧：图标选择 */}
+					<div className="flex w-52 shrink-0 flex-col gap-2">
 						<Label>图标</Label>
-						<div className="grid grid-cols-8 gap-2">
+						<div className="grid grid-cols-4 gap-2">
 							{RULE_SPACE_ICON_OPTIONS.map((option) => (
 								<Button
 									key={option.key}
