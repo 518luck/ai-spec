@@ -15,8 +15,8 @@ import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
-import { LayoutPopover } from "./layout-popover";
-import { TagFilter } from "./tag-filter";
+import { RuleLayoutPopover } from "./rule-layout-popover";
+import { RuleTagFilter } from "./rule-tag-filter";
 import { parseRuleView, RULE_VIEW_PARAM, type RuleView, RuleViewToggle } from "./view-toggle";
 
 type PersonalRulesPageProps = ListRulesDto;
@@ -72,10 +72,10 @@ export function PersonalRulesPage({
 				<div className="mb-6 flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2">
 							<RuleSpaceCombobox />
-							<TagFilter />
+							<RuleTagFilter />
 						</div>
 						<div className="flex items-center gap-2">
-							<LayoutPopover />
+							<RuleLayoutPopover />
 							<RuleViewToggle value={view} onChange={handleViewChange} />
 						<SearchInput
 							className="max-w-80"

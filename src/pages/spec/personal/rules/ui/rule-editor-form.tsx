@@ -25,14 +25,14 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { TitlePageShell } from "@/widgets/page-shell";
 
 // 表单提交载荷：创建/更新共用形状
-export type EditorPayload = {
+export type RuleEditorPayload = {
 	name: string;
 	content: string;
 	folderId: string | null;
 	tags: string[];
 };
 
-type EditorFormProps = {
+type RuleEditorFormProps = {
 	// 顶部标题（如「创建规约」「编辑规约」）
 	title: string;
 	// 当前领域空间：创建页从 URL 带入，文件夹下拉只列该空间下的文件夹
@@ -45,19 +45,19 @@ type EditorFormProps = {
 		tags?: TagOptionVo[];
 	};
 	// 提交：表单完成 schema 校验后交父组件落库
-	onSave: (payload: EditorPayload) => Promise<boolean>;
+	onSave: (payload: RuleEditorPayload) => Promise<boolean>;
 	// 保存按钮文案：创建/保存
 	submitLabel: string;
 };
 
 // > 规约编辑表单：顶部状态栏内聚 name/folder/tags 状态，父组件只管数据获取和落库
-export function EditorForm({
+export function RuleEditorForm({
 	title: headerTitle,
 	spaceId,
 	initialValues,
 	onSave,
 	submitLabel,
-}: EditorFormProps): JSX.Element {
+}: RuleEditorFormProps): JSX.Element {
 	const router = useRouter();
 	const [name, setName] = useState(initialValues?.name ?? "");
 	const [content, setContent] = useState(initialValues?.content ?? "");

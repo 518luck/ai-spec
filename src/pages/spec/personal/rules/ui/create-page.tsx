@@ -13,7 +13,7 @@ import {
 	createRuleDtoSchema,
 	type RuleVo,
 } from "@/shared/lib/zod/schemas/rule";
-import { EditorForm, type EditorPayload } from "./editor-form";
+import { RuleEditorForm, type RuleEditorPayload } from "./rule-editor-form";
 
 type CreateRulePageProps = {
 	// 目标领域空间：列表页跳转时带在 URL 上，没带则由后端落到个人默认空间
@@ -29,7 +29,7 @@ export function CreateRulePage({ spaceId }: CreateRulePageProps): JSX.Element {
 	);
 
 	// 保存逻辑：schema 校验 + 创建 + toast + 跳回列表；返回是否成功供表单控制按钮状态
-	const handleSave = async (payload: EditorPayload): Promise<boolean> => {
+	const handleSave = async (payload: RuleEditorPayload): Promise<boolean> => {
 		const parsed = createRuleDtoSchema.safeParse({ ...payload, spaceId });
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请填写规约信息");
@@ -43,5 +43,5 @@ export function CreateRulePage({ spaceId }: CreateRulePageProps): JSX.Element {
 		return true;
 	};
 
-	return <EditorForm title="创建规约" spaceId={spaceId} submitLabel="创建" onSave={handleSave} />;
+	return <RuleEditorForm title="创建规约" spaceId={spaceId} submitLabel="创建" onSave={handleSave} />;
 }

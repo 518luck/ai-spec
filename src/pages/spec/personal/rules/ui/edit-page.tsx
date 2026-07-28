@@ -15,7 +15,7 @@ import {
 	updateRuleDtoSchema,
 } from "@/shared/lib/zod/schemas/rule";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
-import { EditorForm, type EditorPayload } from "./editor-form";
+import { RuleEditorForm, type RuleEditorPayload } from "./rule-editor-form";
 
 type EditRulePageProps = {
 	id: string;
@@ -32,7 +32,7 @@ export function EditRulePage({ id }: EditRulePageProps): JSX.Element {
 	);
 
 	// 保存逻辑：schema 校验 + 更新 + toast + 跳回列表；返回是否成功供表单控制按钮状态
-	const handleSave = async (payload: EditorPayload): Promise<boolean> => {
+	const handleSave = async (payload: RuleEditorPayload): Promise<boolean> => {
 		const parsed = updateRuleDtoSchema.safeParse(payload);
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请填写规约信息");
@@ -54,7 +54,7 @@ export function EditRulePage({ id }: EditRulePageProps): JSX.Element {
 	}
 
 	return (
-		<EditorForm
+		<RuleEditorForm
 			title="编辑规约"
 			submitLabel="保存"
 			initialValues={{

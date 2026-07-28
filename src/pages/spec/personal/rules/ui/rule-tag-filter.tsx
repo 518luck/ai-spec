@@ -15,12 +15,12 @@ import {
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
 
-type TagFilterProps = {
+type RuleTagFilterProps = {
 	className?: string;
 };
 
 // > 过滤壳 + 标签子菜单 + 右侧已选标签条；TagSelectTrigger 在 URL 模式下读写 ?tagIds=
-export function TagFilter({ className }: TagFilterProps): JSX.Element {
+export function RuleTagFilter({ className }: RuleTagFilterProps): JSX.Element {
 	// TagSelectTrigger 受控 open：用户也可直接点 + 按钮单独打开标签面板
 	const [tagOpen, setTagOpen] = useState(false);
 
