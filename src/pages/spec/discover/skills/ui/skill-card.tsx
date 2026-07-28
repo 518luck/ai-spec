@@ -1,8 +1,13 @@
-import type { JSX } from "react";
+"use client";
+
+// # Skill 广场卡片：名称 + star + 描述 + 署名；描述被 line-clamp 截断时 hover 出全文 Tooltip
+
+import { type JSX, useLayoutEffect, useRef, useState } from "react";
 
 import type { DiscoverSkillListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
 import { Badge } from "@/shared/ui/badge";
 import { Icons } from "@/shared/ui/icons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
 import type { SkillDescLang } from "../lib/desc-lang";
 
@@ -19,8 +24,20 @@ export function SkillCard({ skill, lang = "zh" }: SkillCardProps): JSX.Element {
 	// 中文态：有译用译，无译回落原文；英文态始终原文
 	const displayDescription = lang === "zh" ? descriptionZh?.trim() || description : description;
 
-	return (
-		<div className="flex flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-ring/40">
+	const descRef = useRef<HTMLParagraphElement>(null);
+	// 描述是否被 line-clamp 截断；仅截断时才挂 Tooltip
+	const [truncated, setTruncated] = useState(false);
+
+	// 文案或语言变化后测量是否超出 3 行（依赖文案本身，不读 ref 身份）
+	// biome-ignore lint/correctness/useExhaustiveDependencies: displayDescription 是测量触发信号，body 只读 DOM 几何
+	useLayoutEffect(() => {
+		const el = descRef.current;
+		if (!el) return;
+		setTruncated(el.scrollHeight > el.clientHeight + 1);
+	}, [displayDescription]);
+
+	const cardBody = (
+		<>
 			<div className="flex items-start justify-between gap-2">
 				<h3 className="truncate font-semibold text-sm">{name}</h3>
 				<span className="flex shrink-0 items-center gap-1 text-muted-foreground text-xs">
@@ -28,7 +45,9 @@ export function SkillCard({ skill, lang = "zh" }: SkillCardProps): JSX.Element {
 					{formatStars(stars)}
 				</span>
 			</div>
-			<p className="line-clamp-3 flex-1 text-muted-foreground text-xs">{displayDescription}</p>
+			<p ref={descRef} className="line-clamp-3 flex-1 text-muted-foreground text-xs">
+				{displayDescription}
+			</p>
 			{/* // @ 底部署名条：来源仓库 + license + GitHub 回链 */}
 			<div className="flex items-center justify-between gap-2 pt-1">
 				<span className="truncate text-muted-foreground text-xs">{sourceRepo ?? authorName}</span>
@@ -51,7 +70,29 @@ export function SkillCard({ skill, lang = "zh" }: SkillCardProps): JSX.Element {
 					) : null}
 				</div>
 			</div>
-		</div>
+		</>
+	);
+
+	const cardClassName =
+		"flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-ring/40";
+
+	// 未截断：不包 Tooltip，避免短描述也弹层
+	if (!truncated) {
+		return <div className={cardClassName}>{cardBody}</div>;
+	}
+
+	// 截断：hover 卡片任意位置展示完整描述
+	return (
+		<Tooltip>
+			<TooltipTrigger render={<div className={cardClassName} />}>{cardBody}</TooltipTrigger>
+			<TooltipContent
+				showArrow={false}
+				side="top"
+				className="max-w-xs whitespace-pre-wrap text-left leading-relaxed"
+			>
+				{displayDescription}
+			</TooltipContent>
+		</Tooltip>
 	);
 }
 
