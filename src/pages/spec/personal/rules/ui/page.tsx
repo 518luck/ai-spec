@@ -14,8 +14,8 @@ import type { ListRulesDto } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
-import { LayoutPopover } from "./layout-popover";
 import { RuleList } from "./list";
+import { LayoutPopover } from "./layout-popover";
 import { TagFilter } from "./tag-filter";
 import { parseRuleView, RULE_VIEW_PARAM, type RuleView, RuleViewToggle } from "./view-toggle";
 
@@ -71,12 +71,12 @@ export function PersonalRulesPage({
 				{/* // @ 筛选条带：空间 + 标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 				<div className="mb-6 flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2">
-						<RuleSpaceCombobox />
-						<TagFilter />
-					</div>
-					<div className="flex items-center gap-2">
-						<LayoutPopover />
-						<RuleViewToggle value={view} onChange={handleViewChange} />
+							<RuleSpaceCombobox />
+							<TagFilter />
+						</div>
+						<div className="flex items-center gap-2">
+							<LayoutPopover />
+							<RuleViewToggle value={view} onChange={handleViewChange} />
 						<SearchInput
 							className="max-w-80"
 							filters={["title", "content"]}
