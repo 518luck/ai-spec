@@ -1,13 +1,13 @@
 "use client";
 
-// # 收录筛选：在通用 FilterShell 上组装「标签 + 收藏 + 常用」
+// # 收录筛选：在通用 PanelTrigger 上组装「标签 + 收藏 + 常用」
 // > chips/触发器/Popover 全部由 TagSelectTrigger 内聚，本组件只负责收录业务菜单项
 // > 「收藏」是布尔筛选：开启后写 URL ?favorite=true 并清掉 folderId，跨文件夹返回当前用户收藏的收录
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useState } from "react";
 
-import { FilterShell } from "@/features/filter-combobox";
+import { PanelTrigger } from "@/features/panel-trigger";
 import { TagCombobox, TagSelectTrigger } from "@/features/tag-combobox";
 import { cn } from "@/shared/lib/utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
@@ -66,7 +66,7 @@ export function RecordFilter({ value, onChange, className }: RecordFilterProps):
 	}, [mostCopiedActive, searchParams, router]);
 
 	return (
-		<FilterShell
+		<PanelTrigger
 			className={className}
 			menu={
 				<>

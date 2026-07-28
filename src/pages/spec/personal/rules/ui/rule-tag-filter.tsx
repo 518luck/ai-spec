@@ -1,11 +1,11 @@
 "use client";
 
-// # 规约标签过滤器：通用 FilterShell + 仅「标签」一维
+// # 规约标签过滤器：通用 PanelTrigger + 仅「标签」一维
 // > 规约暂无收藏/常用排序能力，菜单只挂标签子面板
 
 import { type JSX, useState } from "react";
 
-import { FilterShell } from "@/features/filter-combobox";
+import { PanelTrigger } from "@/features/panel-trigger";
 import { TagCombobox } from "@/features/tag-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import {
@@ -25,7 +25,7 @@ export function RuleTagFilter({ className }: RuleTagFilterProps): JSX.Element {
 	const [tagOpen, setTagOpen] = useState(false);
 
 	return (
-		<FilterShell
+		<PanelTrigger
 			className={className}
 			menu={
 				// 标签子菜单：hover/点击在右侧展开标签面板，类型菜单保持可见

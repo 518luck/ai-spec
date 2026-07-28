@@ -1,6 +1,6 @@
 "use client";
 
-// # Skills 过滤器：FilterShell + 组织 + 热度（star 门槛）+ 右侧已选条件
+// # Skills 过滤器：PanelTrigger + 组织 + 热度（star 门槛）+ 右侧已选条件
 // > URL：?orgs=a,b & minStars=2000；列表始终按 star 数量递减
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,7 +8,7 @@ import { type JSX, useCallback, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 
 import { getDiscoverOrganizations } from "@/entities/discover-skill";
-import { FilterShell } from "@/features/filter-combobox";
+import { PanelTrigger } from "@/features/panel-trigger";
 import { useInertialScroll, useScrollProgress } from "@/shared/hooks";
 import type { OrganizationListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
 import {
@@ -145,7 +145,7 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 	);
 
 	return (
-		<FilterShell
+		<PanelTrigger
 			className={className}
 			menu={
 				<>
