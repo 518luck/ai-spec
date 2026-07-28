@@ -15,6 +15,7 @@ import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
+import { RuleLayoutPopover } from "./rule-layout-popover";
 import { RuleTagFilter } from "./rule-tag-filter";
 import { parseRuleView, RULE_VIEW_PARAM, type RuleView, RuleViewToggle } from "./view-toggle";
 
@@ -74,6 +75,7 @@ export function PersonalRulesPage({
 						<RuleTagFilter />
 					</div>
 					<div className="flex items-center gap-2">
+						<RuleLayoutPopover />
 						<RuleViewToggle value={view} onChange={handleViewChange} />
 						<SearchInput
 							className="max-w-80"

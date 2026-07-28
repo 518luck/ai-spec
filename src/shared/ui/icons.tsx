@@ -86,9 +86,10 @@ import {
 } from "@tabler/icons-react";
 import type { ComponentType, SVGProps } from "react";
 
+import { CompareDiffIcon } from "@/shared/assets/icons/compare-diff";
+import { LayoutIcon } from "@/shared/assets/icons/layout";
 import { LogoIcon } from "@/shared/assets/icons/logo";
 import { SquaresIcon } from "@/shared/assets/icons/squares";
-import { CompareDiffIcon } from "@/shared/assets/icons/compare-diff";
 
 // @ 图标组件类型：兼容 tabler 图标（TablerIcon）和自封装 SVG 图标组件
 export type Icon = TablerIcon | ComponentType<SVGProps<SVGSVGElement>>;
@@ -181,9 +182,10 @@ export const Icons = {
 	fold: IconFold,
 	highlight: IconHighlight,
 
-	// 列表视图切换
+	// 列表视图切换 / 布局
 	viewTable: IconTable,
 	viewGrid: IconLayoutGrid,
+	layout: LayoutIcon,
 
 	// 列表通用操作
 	plus: IconPlus,
