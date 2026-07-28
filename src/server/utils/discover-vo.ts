@@ -9,7 +9,7 @@ export const discoverSkillFrontendLicenseWhere = {
 	license: { in: [...DISCOVER_FRONTEND_LICENSE_ALLOWLIST] },
 } satisfies Prisma.DiscoverSkillWhereInput;
 
-// 列表项所需字段的统一 select（content 仅用于折算 hasContent，不外传全文）
+// 列表项所需字段的统一 select（广场只索引元数据）
 export const discoverSkillListItemSelect = {
 	id: true,
 	name: true,
@@ -23,7 +23,6 @@ export const discoverSkillListItemSelect = {
 	authorAvatarUrl: true,
 	authorHtmlUrl: true,
 	stars: true,
-	content: true,
 	updatedAt: true,
 } satisfies Prisma.DiscoverSkillSelect;
 
@@ -31,7 +30,7 @@ type DiscoverSkillListItemRow = Prisma.DiscoverSkillGetPayload<{
 	select: typeof discoverSkillListItemSelect;
 }>;
 
-// 行 → Vo：时间转 ISO 字符串，content 折算成 hasContent；中英文描述都下发，展示语言由前端切换
+// 行 → Vo：时间转 ISO 字符串；中英文描述都下发，展示语言由前端切换
 export const toDiscoverSkillListItem = (
 	row: DiscoverSkillListItemRow,
 ): DiscoverSkillListItemVo => ({
@@ -47,6 +46,5 @@ export const toDiscoverSkillListItem = (
 	authorAvatarUrl: row.authorAvatarUrl,
 	authorHtmlUrl: row.authorHtmlUrl,
 	stars: row.stars,
-	hasContent: row.content !== null,
 	updatedAt: row.updatedAt.toISOString(),
 });

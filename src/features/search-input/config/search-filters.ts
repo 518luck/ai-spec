@@ -7,8 +7,8 @@ export type { SearchFilters } from "@/shared/lib/search-filter";
 // > 编解码实现从 shared/lib 统一导入（前后端共享，避免 atob/btoa 重复实现）
 export { decodeFilters, encodeFilters } from "@/shared/lib/search-filter";
 
-// @ 内置搜索字段全集：新增字段（如 tag、folder）在此追加，并同步 SearchFieldKey 类型
-// > 字段语义：title/content 是布尔开关（true=参与搜索），tag/folder 是字符串值
+// @ 内置搜索字段全集：新增开关字段在此追加，并同步 SearchFieldKey 类型
+// > 字段语义：title/content/description 均为布尔开关（true=参与搜索）
 export const SEARCH_FIELDS: Record<SearchFieldKey, SearchFieldDefinition> = {
 	// 标题：默认参与搜索（开关型，true=搜 name 字段）
 	title: {
@@ -16,10 +16,16 @@ export const SEARCH_FIELDS: Record<SearchFieldKey, SearchFieldDefinition> = {
 		text: "标题",
 		type: "boolean",
 	},
-	// 内容：默认不参与搜索（开关型，true=搜 content 字段）
+	// 内容：默认不参与搜索（开关型，true=搜 content 字段；prompt/rules 等有正文的页面用）
 	content: {
 		key: "content",
 		text: "内容",
+		type: "boolean",
+	},
+	// 描述：默认不参与搜索（开关型；广场 skills 等只索引描述、无正文的页面用）
+	description: {
+		key: "description",
+		text: "描述",
 		type: "boolean",
 	},
 };
@@ -37,7 +43,7 @@ export const SEARCH_FILTER_PARAM = "filter";
 export const SEARCH_DEBOUNCE_MS = 300;
 
 // > 根据 filter 状态生成 placeholder：把激活字段的 text 用"和"连接，让用户直观看到当前搜的是哪些字段
-// 规则：{title:true} → "搜索标题..."；{content:true} → "搜索内容..."；都选 → "搜索标题和内容..."；都没选 → "搜索..."
+// 规则：{title:true} → "搜索标题..."；{description:true} → "搜索描述..."；都选 → "搜索标题和描述..."；都没选 → "搜索..."
 export const getPlaceholder = (filters: SearchFilters): string => {
 	// 按 SEARCH_FIELDS 的顺序过滤出激活的字段文案
 	const activeTexts = (Object.keys(SEARCH_FIELDS) as SearchFieldKey[])

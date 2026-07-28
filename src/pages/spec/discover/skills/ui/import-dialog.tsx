@@ -54,7 +54,7 @@ export function ImportDialog({ open, onOpenChange, onImported }: ImportDialogPro
 					<DialogTitle>导入 Skills</DialogTitle>
 					<DialogDescription>
 						粘贴一个公开的 GitHub 仓库链接，其中的 SKILL.md
-						会被自动收进广场。仓库需带有开源协议；无协议时仅索引标题与回链，不转载全文。
+						会被自动收进广场。广场只索引名称、描述与回链，不转载 SKILL.md 全文。
 					</DialogDescription>
 				</DialogHeader>
 

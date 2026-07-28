@@ -34,8 +34,6 @@ const discoverSkillListItemVoSchema = z.object({
 	authorAvatarUrl: z.string().nullable(),
 	authorHtmlUrl: z.string().nullable(),
 	stars: z.number().int(),
-	// 是否存有 SKILL.md 全文（无 license 的条目只索引元数据，"复制到我的空间"不可用）
-	hasContent: z.boolean(),
 	updatedAt: z.iso.datetime(),
 });
 
@@ -49,10 +47,10 @@ export const importDiscoverSkillsDtoSchema = z.object({
 export type ImportDiscoverSkillsDto = z.infer<typeof importDiscoverSkillsDtoSchema>;
 
 // 广场列表查询入参：搜索（q + filter）+ 组织筛选 + 热度（最低 star）+ 分页
-// filter 为 base64 编码的 JSON，形如 {title:true,content:true}，决定 q 搜哪些字段
+// filter 为 base64 编码的 JSON，形如 {title:true,description:true}，决定 q 搜哪些字段
 export const listDiscoverSkillsDtoSchema = z.object({
 	q: z.string().optional(),
-	// 字段开关：title=true 搜 name，content=true 搜 description / descriptionZh
+	// 字段开关：title=true 搜 name，description=true 搜 description / descriptionZh
 	filter: z.string().optional(),
 	// 按 GitHub 组织名筛选，逗号分隔（如 "vercel,anthropics"）
 	orgs: z.string().optional(),

@@ -32,7 +32,6 @@ model DiscoverSkill {
   descriptionZh     String?           @map("description_zh") @db.Text // 中文描述（机翻或原文已是中文时回填；列表优先展示）
   translationStatus TranslationStatus @default(pending) @map("translation_status") // 翻译状态（后台慢慢补译用）
   descriptionHash   String?           @map("description_hash") // 原文 description 指纹（未变则跳过重译）
-  content           String?           @db.Text // SKILL.md 全文；! 源仓库无 license 时为 null（只索引元数据+回链，不转载全文）
   license           String? // license 标识（SPDX id；优先 frontmatter，回落仓库 license）
   sourceRepo        String            @map("source_repo") // 来源仓库 "owner/repo"
   sourcePath        String            @map("source_path") // SKILL.md 在仓库内的文件路径

@@ -47,11 +47,10 @@ export const importRepoSkills = async ({
 		const skillDir = skill.sourcePath.split("/").slice(0, -1).join("/");
 		// 翻译字段：中文原文直接 done；英文进 pending 由后台补译；hash 未变则 update 时保留旧中文
 		const translation = resolveTranslationFields(skill.description);
+		// 广场只索引元数据（name/description/license/回链等），不落 SKILL.md 全文
 		const baseData = {
 			name: skill.name,
 			description: skill.description,
-			// ! 无 license 的仓库只索引元数据与回链，不转载全文
-			content: skill.license ? skill.content : null,
 			license: skill.license,
 			sourceRepo,
 			sourcePath: skill.sourcePath,

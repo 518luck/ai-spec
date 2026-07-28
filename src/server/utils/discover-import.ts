@@ -8,9 +8,10 @@ import {
 } from "@/server/infrastructure/github/metrics";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 
-// # GitHub Skill 抓取：解析仓库链接 → 定位所有 SKILL.md → 拉取全文并解析 frontmatter
+// # GitHub Skill 抓取：解析仓库链接 → 定位所有 SKILL.md → 拉取文件仅解析 frontmatter
 //
-// GitHub 是唯一数据源，本模块只读不写库；按 URL 导入接口与未来的定时同步任务共用这一套函数
+// GitHub 是唯一数据源，本模块只读不写库；按 URL 导入接口与定时同步任务共用这一套函数
+// ! 只取 name/description/license，不保留 SKILL.md 全文（广场不做全文转载）
 
 // 单次导入最多处理的 SKILL.md 数量（防止超大 monorepo 拖垮请求）
 const MAX_SKILLS_PER_IMPORT = 100;
@@ -26,11 +27,10 @@ type GitHubSource = {
 	pathPrefix?: string;
 };
 
-// 单个解析成功的 skill（license 已完成 frontmatter → 仓库 license 的回落）
+// 单个解析成功的 skill（license 已完成 frontmatter → 仓库 license 的回落；不携带全文）
 export type ParsedSkill = {
 	name: string;
 	description: string;
-	content: string;
 	license: string | null;
 	sourcePath: string;
 };
@@ -110,7 +110,7 @@ export const fetchRepoSkills = async (url: string): Promise<RepoSkills> => {
 		});
 	}
 
-	// ③ 分批并发拉取全文并解析，单个文件失败跳过不影响整批
+	// ③ 分批并发拉取文件并只解析 frontmatter，单个文件失败跳过不影响整批
 	const skills: ParsedSkill[] = [];
 	for (let i = 0; i < skillPaths.length; i += FETCH_BATCH_SIZE) {
 		const batch = skillPaths.slice(i, i + FETCH_BATCH_SIZE);
@@ -321,7 +321,7 @@ const githubHeaders = (): HeadersInit => {
 };
 
 // > 统一 GitHub API 请求入口：在 fetch 外包一层埋点，把请求量/状态码/配额水位记进 metrics
-// 所有 api.github.com 请求都走这里；raw.githubusercontent.com（拉 SKILL.md 全文）不计入（不消耗配额）
+// 所有 api.github.com 请求都走这里；raw.githubusercontent.com（拉 SKILL.md 解析 frontmatter）不计入（不消耗配额）
 const githubFetch = async (url: string, init?: RequestInit): Promise<Response> => {
 	const res = await fetch(url, init);
 	recordGithubRequest({
@@ -360,7 +360,7 @@ const fetchGitHubJson = async (url: string): Promise<unknown> => {
 	return res.json();
 };
 
-// 拉取单个 SKILL.md 原文并解析 frontmatter；不合规范或拉取失败返回 null 跳过
+// 拉取单个 SKILL.md 并解析 frontmatter；不合规范或拉取失败返回 null 跳过（全文用完即弃）
 const fetchSkillFile = async ({
 	owner,
 	repo,
@@ -402,7 +402,6 @@ const fetchSkillFile = async ({
 	return {
 		name: name || dirName,
 		description,
-		content: text,
 		license: normalizeLicense(license) ?? repoLicense,
 		sourcePath: path,
 	};
