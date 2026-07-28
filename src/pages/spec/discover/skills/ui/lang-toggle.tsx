@@ -2,6 +2,7 @@
 
 // # 描述语言切换：单按钮在中文 / 英文间翻转，只影响卡片 description，不改筛选与请求
 
+import { AnimatePresence, motion } from "motion/react";
 import type { JSX } from "react";
 
 import { Button } from "@/shared/ui/button";
@@ -10,6 +11,9 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import type { SkillDescLang } from "../lib/desc-lang";
 
 export type { SkillDescLang } from "../lib/desc-lang";
+
+// 「中」↔「EN」同槽位切换动效
+const LABEL_TRANSITION = { duration: 0.15, ease: "easeOut" } as const;
 
 type SkillLangToggleProps = {
 	value: SkillDescLang;
@@ -36,11 +40,29 @@ export function SkillLangToggle({ value, onChange }: SkillLangToggleProps): JSX.
 						size="sm"
 						aria-label={tip}
 						onClick={() => onChange(next)}
-						className="h-9 min-w-9 shrink-0 px-2 font-medium tabular-nums"
+						className="relative h-9 min-w-9 shrink-0 overflow-hidden px-2 font-medium tabular-nums"
 					/>
 				}
 			>
-				{label}
+				{/* // 「中」/「EN」同槽位淡入淡出，避免硬切 */}
+				<span className="relative inline-flex h-4 min-w-4 items-center justify-center">
+					<AnimatePresence initial={false} mode="wait">
+						<motion.span
+							key={value}
+							initial={{ opacity: 0, y: 4 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -4 }}
+							transition={LABEL_TRANSITION}
+							className="absolute inset-0 flex items-center justify-center"
+						>
+							{label}
+						</motion.span>
+					</AnimatePresence>
+					{/* // 占位保持按钮宽度稳定（EN 比「中」略宽） */}
+					<span className="invisible" aria-hidden>
+						{label}
+					</span>
+				</span>
 			</TooltipTrigger>
 			<TooltipContent>{tip}</TooltipContent>
 		</Tooltip>
