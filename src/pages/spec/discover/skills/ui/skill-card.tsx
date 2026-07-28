@@ -23,6 +23,10 @@ export function SkillCard({ skill, lang = "zh" }: SkillCardProps): JSX.Element {
 		skill;
 	// 中文态：有译用译，无译回落原文；英文态始终原文
 	const displayDescription = lang === "zh" ? descriptionZh?.trim() || description : description;
+	// license 始终展示：有 SPDX 用原值，无协议标明「无协议」
+	const licenseLabel = license?.trim() || "无协议";
+	// 回链优先 sourceUrl，缺省时用 sourceRepo 拼仓库主页
+	const repoHref = sourceUrl ?? (sourceRepo ? `https://github.com/${sourceRepo}` : null);
 
 	const descRef = useRef<HTMLParagraphElement>(null);
 	// 描述是否被 line-clamp 截断；仅截断时才挂 Tooltip
@@ -48,18 +52,16 @@ export function SkillCard({ skill, lang = "zh" }: SkillCardProps): JSX.Element {
 			<p ref={descRef} className="line-clamp-3 flex-1 text-muted-foreground text-xs">
 				{displayDescription}
 			</p>
-			{/* // @ 底部署名条：来源仓库 + license + GitHub 回链 */}
+			{/* // @ 底部署名条：来源仓库 + license（含无协议）+ GitHub 回链，二者始终展示 */}
 			<div className="flex items-center justify-between gap-2 pt-1">
 				<span className="truncate text-muted-foreground text-xs">{sourceRepo ?? authorName}</span>
 				<div className="flex shrink-0 items-center gap-1.5">
-					{license ? (
-						<Badge variant="outline" className="max-w-28 truncate text-xs">
-							{license}
-						</Badge>
-					) : null}
-					{sourceUrl ? (
+					<Badge variant="outline" className="max-w-28 truncate text-xs">
+						{licenseLabel}
+					</Badge>
+					{repoHref ? (
 						<a
-							href={sourceUrl}
+							href={repoHref}
 							target="_blank"
 							rel="noreferrer"
 							aria-label="在 GitHub 查看源仓库"

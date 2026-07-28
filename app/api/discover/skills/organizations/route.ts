@@ -13,7 +13,7 @@ export const GET = withPersonal(
 	async () => {
 		// 按组织作者字段分组统计 skill 数量（作者信息来自 GitHub owner 快照，同组织可直接 GROUP BY）
 		// ! 物理表名是 DiscoverSkill（无 @@map），raw SQL 必须写 discover."DiscoverSkill"
-		// 计数口径与列表一致：只统计前端可见的宽松可商用 license
+		// 计数口径与列表一致：白名单协议或无协议
 		const licenseList = Prisma.join([...DISCOVER_FRONTEND_LICENSE_ALLOWLIST]);
 		const rows = await prisma.$queryRaw<
 			{
@@ -34,7 +34,7 @@ export const GET = withPersonal(
 			WHERE delisted_at IS NULL
 				AND author_name IS NOT NULL
 				AND author_type = 'Organization'
-				AND license IN (${licenseList})
+				AND (license IN (${licenseList}) OR license IS NULL)
 			GROUP BY
 				author_name,
 				author_type,

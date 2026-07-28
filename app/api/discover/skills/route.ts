@@ -50,19 +50,18 @@ export const GET = withPersonal(
 			searchConditions.push({ descriptionZh: { contains: trimmedQuery, mode: "insensitive" } });
 		}
 
-		// 构建查询条件：已下架排除 + 仅宽松可商用 license；可选组织 / 热度 / 搜索；列表始终按 star 递减
+		// 构建查询条件：已下架排除 + 目录可见 license（白名单或无协议）；可选组织 / 热度 / 搜索
+		// ! license 条件本身含 OR，搜索也是 OR，必须放进 AND，避免顶层 OR 被后写覆盖
 		const where: Prisma.DiscoverSkillWhereInput = {
-			delistedAt: null,
-			...discoverSkillFrontendLicenseWhere,
-			...(orgNames.length > 0 && {
-				authorType: "Organization" as const,
-				authorName: { in: orgNames },
-			}),
-			...(minStars !== undefined &&
-				minStars > 0 && {
-					stars: { gte: minStars },
-				}),
-			...(searchConditions.length > 0 && { OR: searchConditions }),
+			AND: [
+				{ delistedAt: null },
+				discoverSkillFrontendLicenseWhere,
+				...(orgNames.length > 0
+					? [{ authorType: "Organization" as const, authorName: { in: orgNames } }]
+					: []),
+				...(minStars !== undefined && minStars > 0 ? [{ stars: { gte: minStars } }] : []),
+				...(searchConditions.length > 0 ? [{ OR: searchConditions }] : []),
+			],
 		};
 
 		// 查询列表和总数

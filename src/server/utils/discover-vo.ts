@@ -4,9 +4,9 @@ import type { DiscoverSkillListItemVo } from "@/shared/lib/zod/schemas/discover-
 
 // # DiscoverSkill 行 → 列表项 Vo 的公共映射（广场列表接口与导入接口复用）
 
-// > 前端读接口共用：只暴露可再分发、可商用的宽松 license（抓取入库仍保留全量）
+// > 前端读接口共用：白名单协议，或无协议（null）；均可展示 name/description + license 标记 + 回链
 export const discoverSkillFrontendLicenseWhere = {
-	license: { in: [...DISCOVER_FRONTEND_LICENSE_ALLOWLIST] },
+	OR: [{ license: { in: [...DISCOVER_FRONTEND_LICENSE_ALLOWLIST] } }, { license: null }],
 } satisfies Prisma.DiscoverSkillWhereInput;
 
 // 列表项所需字段的统一 select（广场只索引元数据）
