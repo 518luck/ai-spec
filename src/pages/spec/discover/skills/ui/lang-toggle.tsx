@@ -20,11 +20,11 @@ type SkillLangToggleProps = {
 export function SkillLangToggle({ value, onChange }: SkillLangToggleProps): JSX.Element {
 	const next: SkillDescLang = value === "zh" ? "en" : "zh";
 	const label = value === "zh" ? "中" : "EN";
-// 中文仅影响卡片展示，不改原文
-		const tip =
-			value === "zh"
-				? "当前以中文展示描述（不影响原文），点击切换为英文原文"
-				: "当前展示英文原文，点击切换为中文展示";
+	// 中文仅影响卡片展示，不改原文
+	const tip =
+		value === "zh"
+			? "当前以中文展示描述（不影响原文），点击切换为英文原文"
+			: "当前展示英文原文，点击切换为中文展示";
 
 	return (
 		<Tooltip>

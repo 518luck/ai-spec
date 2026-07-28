@@ -55,7 +55,7 @@ export function OrganizationCombobox({
 
 	// 列表滚动容器 ref：驱动 ScrollMask 渐变
 	const listRef = useRef<HTMLDivElement>(null);
-	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
+	const { scrollProgress, scrollable, updateScrollProgress } = useScrollProgress(listRef);
 
 	// 挂载时刷新一次，保证组织统计新鲜（外层 SubMenu 每次展开会重新挂载本面板）
 	useEffect(() => {
@@ -128,7 +128,12 @@ export function OrganizationCombobox({
 						</CommandGroup>
 					)}
 				</CommandList>
-				<CommandScrollMask scrollProgress={scrollProgress} onSearchChange={updateScrollProgress} />
+				{/* // 底部弥散遮罩：仅列表可滚时显示；色取 popover 与弹层一致 */}
+				<CommandScrollMask
+					scrollProgress={scrollProgress}
+					enabled={scrollable}
+					onSearchChange={updateScrollProgress}
+				/>
 			</div>
 		</Command>
 	);

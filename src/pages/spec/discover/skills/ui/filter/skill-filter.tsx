@@ -155,7 +155,8 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 							<Icons.members className="size-4 text-foreground" />
 							组织
 						</DropdownMenuSubTrigger>
-						<DropdownMenuSubContent className="p-0">
+						{/* // overflow-hidden：盖掉 SubContent 默认 overflow-y-auto，滚动只发生在 CommandList，底部弥散遮罩才能生效 */}
+						<DropdownMenuSubContent className="overflow-hidden p-0">
 							<OrganizationCombobox value={selectedNames} onChange={writeOrgs} />
 						</DropdownMenuSubContent>
 					</DropdownMenuSub>

@@ -127,7 +127,7 @@ export function FolderCombobox({
 	);
 	// 列表滚动容器 ref：驱动 useScrollProgress 算进度，底部接 ScrollMask 渐变遮罩
 	const listRef = useRef<HTMLDivElement>(null);
-	const { scrollProgress, updateScrollProgress } = useScrollProgress(listRef);
+	const { scrollProgress, scrollable, updateScrollProgress } = useScrollProgress(listRef);
 
 	// 弹层打开时刷新一次，保证列表新鲜
 	useEffect(() => {
@@ -299,9 +299,10 @@ export function FolderCombobox({
 								</CommandItem>
 							</CommandGroup>
 						</CommandList>
-						{/* // 底部渐变遮罩：滚到底自动淡出，订阅 cmdk 搜索词避免过滤时闪烁 */}
+						{/* // 底部渐变遮罩：仅列表可滚时显示；滚到底自动淡出，订阅 cmdk 搜索词避免过滤时闪烁 */}
 						<CommandScrollMask
 							scrollProgress={scrollProgress}
+							enabled={scrollable}
 							onSearchChange={updateScrollProgress}
 						/>
 					</div>

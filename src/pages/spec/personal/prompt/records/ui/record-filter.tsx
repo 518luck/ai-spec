@@ -76,7 +76,8 @@ export function RecordFilter({ value, onChange, className }: RecordFilterProps):
 							<Icons.tag className="size-4 text-foreground" />
 							标签
 						</DropdownMenuSubTrigger>
-						<DropdownMenuSubContent className="p-0">
+						{/* // overflow-hidden：盖掉 SubContent 默认 overflow-y-auto，滚动只发生在 CommandList，底部弥散遮罩才能生效 */}
+						<DropdownMenuSubContent className="overflow-hidden p-0">
 							<TagCombobox resourceType="promptRecord" value={value} onChange={onChange} />
 						</DropdownMenuSubContent>
 					</DropdownMenuSub>

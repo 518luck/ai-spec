@@ -13,6 +13,10 @@ type CommandScrollMaskProps = {
 	scrollProgress: number;
 	// 滚动进度重算回调，通常传 useScrollProgress 返回的 updateScrollProgress
 	onSearchChange: () => void;
+	// 是否启用：内容不可滚动时传 false 整体不渲染
+	enabled?: boolean;
+	// 遮罩底色：Command/Popover 面板默认 popover，避免暗色主题下 background 与弹层色差导致弥散看不见
+	maskColor?: string;
 	className?: string;
 };
 
@@ -20,8 +24,10 @@ type CommandScrollMaskProps = {
 export function CommandScrollMask({
 	scrollProgress,
 	onSearchChange,
+	enabled = true,
+	maskColor = "var(--popover)",
 	className,
-}: CommandScrollMaskProps): JSX.Element {
+}: CommandScrollMaskProps): JSX.Element | null {
 	const search = useCommandState((state) => state.search);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: search 作为 cmdk 过滤的触发信号，effect body 不读它但需响应其变化
@@ -31,5 +37,12 @@ export function CommandScrollMask({
 		return () => cancelAnimationFrame(id);
 	}, [search, onSearchChange]);
 
-	return <ScrollMask scrollProgress={scrollProgress} className={className} />;
+	return (
+		<ScrollMask
+			scrollProgress={scrollProgress}
+			enabled={enabled}
+			maskColor={maskColor}
+			className={className}
+		/>
+	);
 }
