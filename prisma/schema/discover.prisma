@@ -48,10 +48,62 @@ model DiscoverSkill {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  // ⑤ 关联关系
+  reports DiscoverSkillReport[] // 用户反馈（收集-only，不驱动 delistedAt）
+
   // ⑥ 索引
   @@unique([sourceRepo, sourcePath]) // 去重键：同一仓库同一路径只入库一次（重复导入走 upsert 刷新）
   @@index([stars]) // 加速广场列表（按 stars 倒序）
   @@index([translationStatus, stars]) // 加速待译扫描（按状态取高 star 优先补译）
+  @@schema("discover")
+}
+
+// 用户反馈原因：广场收录质量/合规信号（仅收集，不自动下架）
+enum DiscoverSkillReportReason {
+  lowQuality // 质量差 / 无用
+  inappropriate // 不当内容
+  spam // 广告 / 刷量
+  licenseIssue // 协议 / 转载问题
+  other // 其他
+
+  @@schema("discover")
+}
+
+// 反馈处理状态：预留给运营审核；本期 UI 不暴露
+enum DiscoverSkillReportStatus {
+  open // 待处理
+  reviewed // 已查看
+  dismissed // 已驳回/忽略
+
+  @@schema("discover")
+}
+
+// DiscoverSkillReport：用户对广场 skill 的反馈（一人一 skill 一条；与同步 delist 生命周期分离）
+model DiscoverSkillReport {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段
+  reason DiscoverSkillReportReason // 反馈原因
+  detail String?                   @db.Text // 可选补充说明
+  status DiscoverSkillReportStatus @default(open) // 运营处理状态
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ④ 外键列
+  skillId    String @map("skill_id")
+  reporterId String @map("reporter_id")
+
+  // ⑤ 关联关系
+  skill    DiscoverSkill @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  reporter User          @relation(fields: [reporterId], references: [id], onDelete: Cascade)
+
+  // ⑥ 索引
+  @@unique([skillId, reporterId]) // 同一用户对同一 skill 只反馈一次
+  @@index([status, createdAt]) // 运营按状态扫新反馈
+  @@index([skillId])
   @@schema("discover")
 }
 

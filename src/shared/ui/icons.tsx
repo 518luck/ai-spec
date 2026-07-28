@@ -37,6 +37,7 @@ import {
 	IconFiles,
 	IconFileText,
 	IconFilter2,
+	IconFlag,
 	IconFolder,
 	IconFolderOpen,
 	IconFolderX,
@@ -185,6 +186,7 @@ export const Icons = {
 	plus: IconPlus,
 	more: IconDots,
 	pencil: IconPencil,
+	flag: IconFlag, // 反馈 / 标记
 	trash: IconTrash,
 	trending: IconTrendingUp,
 	arrowUp: IconArrowUp, // 快速回到顶部

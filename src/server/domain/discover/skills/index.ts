@@ -6,6 +6,7 @@ export {
 	SOURCE_FAIL_THRESHOLD,
 } from "./constants";
 export {
+	createDiscoverSkillReport,
 	fetchAwesomeRepos,
 	fetchRepoHeadSha,
 	fetchRepoSkills,

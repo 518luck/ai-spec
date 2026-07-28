@@ -3,11 +3,6 @@
 // > 定时调度与 discover-scan 同模式：worker 启动时 upsertJobScheduler；pnpm translate 全量、test:translate 试跑
 
 import { Worker } from "bullmq";
-import {
-	TRANSLATION_BATCH_CRON,
-	TRANSLATION_BATCH_CRON_ENABLED,
-	TRANSLATION_CONCURRENCY,
-} from "@/server/infrastructure/translation/config";
 import { JOB_NAMES, TRANSLATION_QUEUE_CONFIG } from "@/server/infrastructure/queue/constants";
 import {
 	processTranslationJob,
@@ -15,6 +10,11 @@ import {
 } from "@/server/infrastructure/queue/operations/translation";
 import { translationQueue } from "@/server/infrastructure/queue/queues";
 import { getWorkerRedis } from "@/server/infrastructure/redis/clients";
+import {
+	TRANSLATION_BATCH_CRON,
+	TRANSLATION_BATCH_CRON_ENABLED,
+	TRANSLATION_CONCURRENCY,
+} from "@/server/infrastructure/translation/config";
 
 // translation Worker：可独立 concurrency，与 background / discover 隔离
 export const translationWorker = new Worker(TRANSLATION_QUEUE_CONFIG.name, processTranslationJob, {

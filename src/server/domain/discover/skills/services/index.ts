@@ -6,4 +6,5 @@ export {
 	type ParsedSkill,
 	type RepoSkills,
 } from "./import-github";
+export { createDiscoverSkillReport } from "./report";
 export { importRepoSkills } from "./sync";

@@ -42,8 +42,19 @@ export function DiscoverSkillsPage({
 }: DiscoverSkillsPageProps): JSX.Element {
 	const { status } = useSession();
 	const [importOpen, setImportOpen] = useState(false);
+	// 本会话已反馈的 skillId（避免连点；不跨刷新持久化）
+	const [reportedIds, setReportedIds] = useState<ReadonlySet<string>>(() => new Set());
 	// 卡片描述语言：cookie 初值 + 切换时回写
 	const [descLang, setDescLang] = useState<SkillDescLang>(initialDescLang);
+
+	// 反馈成功后记入本会话集合
+	const handleSkillReported = (skillId: string): void => {
+		setReportedIds((prev) => {
+			const next = new Set(prev);
+			next.add(skillId);
+			return next;
+		});
+	};
 
 	// 切换语言并写入 cookie（与主题/侧边栏同一套 client-cookie）
 	const handleDescLangChange = (next: SkillDescLang): void => {
@@ -103,7 +114,14 @@ export function DiscoverSkillsPage({
 			<>
 				<div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3 xl:gap-4">
 					{skills.map((skill) => (
-						<SkillCard key={skill.id} skill={skill} lang={descLang} />
+						<SkillCard
+							key={skill.id}
+							skill={skill}
+							lang={descLang}
+							canReport={status === "authenticated"}
+							reported={reportedIds.has(skill.id)}
+							onReported={handleSkillReported}
+						/>
 					))}
 				</div>
 				<InfiniteListFooter

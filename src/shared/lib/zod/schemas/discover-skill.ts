@@ -105,3 +105,43 @@ export const importDiscoverSkillsVoSchema = z.object({
 
 // 导入结果响应类型
 export type ImportDiscoverSkillsVo = z.infer<typeof importDiscoverSkillsVoSchema>;
+
+// @ 反馈
+// 反馈原因枚举（与 Prisma DiscoverSkillReportReason 对齐）
+export const discoverSkillReportReasonSchema = z.enum([
+	"lowQuality",
+	"inappropriate",
+	"spam",
+	"licenseIssue",
+	"other",
+]);
+
+export type DiscoverSkillReportReason = z.infer<typeof discoverSkillReportReasonSchema>;
+
+// 提交反馈入参：原因必选，备注可选
+export const reportDiscoverSkillDtoSchema = z.object({
+	reason: discoverSkillReportReasonSchema,
+	// 可选补充说明；空串按未填处理
+	detail: z
+		.string()
+		.trim()
+		.max(500, { error: "补充说明最多 500 字" })
+		.optional()
+		.transform((v) => (v && v.length > 0 ? v : undefined)),
+});
+
+export type ReportDiscoverSkillDto = z.infer<typeof reportDiscoverSkillDtoSchema>;
+
+// 反馈处理状态（预留运营；与 Prisma 对齐）
+export const discoverSkillReportStatusSchema = z.enum(["open", "reviewed", "dismissed"]);
+
+// 提交反馈出参
+export const reportDiscoverSkillVoSchema = z.object({
+	id: z.string(),
+	skillId: z.string(),
+	reason: discoverSkillReportReasonSchema,
+	status: discoverSkillReportStatusSchema,
+	createdAt: z.iso.datetime(),
+});
+
+export type ReportDiscoverSkillVo = z.infer<typeof reportDiscoverSkillVoSchema>;
