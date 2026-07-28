@@ -33,8 +33,7 @@ export function ToolbarPageShell({
 	return (
 		<div data-slot="toolbar-page-shell" className={cn("flex h-full min-h-0 flex-col", className)}>
 			<ScrollArea
-				// min-h-0：作为 flex 子项时允许低于内容固有高度，否则 viewport 撑破、滚动落到外层原生条
-				className="h-full max-h-full min-h-0"
+				className="h-full max-h-full"
 				// 滚动条从标题栏下方开始，避免穿过标题栏区域；
 				scrollbarClassName="!top-16 data-[orientation=vertical]:!h-[calc(100%-4rem)]"
 				{...(scrollAreaProps ?? {})}

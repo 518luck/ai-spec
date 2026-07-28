@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { withPersonal } from "@/server/middleware/with-personal";
 import { discoverSkillListItemSelect, toDiscoverSkillListItem } from "@/server/utils/discover-vo";
 import prisma from "@/shared/db";
-import type { Prisma } from "@/shared/db/generator/client";
+import { Prisma } from "@/shared/db/generator/client";
 import { decodeFilters } from "@/shared/lib/search-filter";
 import {
 	discoverSkillListVoSchema,

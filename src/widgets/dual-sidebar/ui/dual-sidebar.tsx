@@ -235,7 +235,7 @@ function NavAreasPanel({
 							>
 								<div
 									data-slot="dual-sidebar-operation-nav-content"
-									className="flex min-h-0 flex-col gap-4 overflow-auto overscroll-contain px-2 py-6 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+									className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-6"
 								>
 									<div
 										className={cn(
