@@ -36,3 +36,32 @@ export const SOURCE_FAIL_THRESHOLD = 5;
 // 广场每日扫描的 cron 表达式（BullMQ 调度，默认按 UTC 时区）
 // 本地测试可设 DISCOVER_SCAN_CRON="*/1 * * * *"（每分钟触发）；生产留空走默认 04:00
 export const DISCOVER_SCAN_CRON = process.env.DISCOVER_SCAN_CRON || "0 4 * * *";
+
+/**
+ * 广场前端可见的 license 白名单（SPDX id）。
+ *
+ * 抓取/入库仍保留全协议，仅列表与组织筛选等「给前端的数据」按此过滤：
+ * 允许再分发，且可放入自有商用项目（宽松许可；不含 GPL/AGPL/LGPL 等 copyleft，也不含 CC-BY-NC）。
+ * 加新协议时只扩这个列表，读接口会一起生效。
+ */
+export const DISCOVER_FRONTEND_LICENSE_ALLOWLIST = [
+	"MIT",
+	"Apache-2.0",
+	"BSD-2-Clause",
+	"BSD-3-Clause",
+	"BSD-3-Clause-Clear",
+	"ISC",
+	"0BSD",
+	"Unlicense",
+	"CC0-1.0",
+	"CC-BY-3.0",
+	"CC-BY-4.0",
+	"BlueOak-1.0.0",
+	"BSL-1.0",
+	"PostgreSQL",
+	"Zlib",
+	"WTFPL",
+	"NCSA",
+	"MS-PL",
+	"Python-2.0",
+] as const;

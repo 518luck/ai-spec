@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { withPersonal } from "@/server/middleware/with-personal";
-import { discoverSkillListItemSelect, toDiscoverSkillListItem } from "@/server/utils/discover-vo";
+import {
+	discoverSkillFrontendLicenseWhere,
+	discoverSkillListItemSelect,
+	toDiscoverSkillListItem,
+} from "@/server/utils/discover-vo";
 import prisma from "@/shared/db";
-import { Prisma } from "@/shared/db/generator/client";
+import type { Prisma } from "@/shared/db/generator/client";
 import { decodeFilters } from "@/shared/lib/search-filter";
 import {
 	discoverSkillListVoSchema,
@@ -46,9 +50,10 @@ export const GET = withPersonal(
 			searchConditions.push({ descriptionZh: { contains: trimmedQuery, mode: "insensitive" } });
 		}
 
-		// 构建查询条件：过滤已下架条目，可选组织 / 热度门槛 / 搜索；列表始终按 star 递减
+		// 构建查询条件：已下架排除 + 仅宽松可商用 license；可选组织 / 热度 / 搜索；列表始终按 star 递减
 		const where: Prisma.DiscoverSkillWhereInput = {
 			delistedAt: null,
+			...discoverSkillFrontendLicenseWhere,
 			...(orgNames.length > 0 && {
 				authorType: "Organization" as const,
 				authorName: { in: orgNames },

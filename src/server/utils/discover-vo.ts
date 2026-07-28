@@ -1,7 +1,13 @@
+import { DISCOVER_FRONTEND_LICENSE_ALLOWLIST } from "@/server/configs/discover.config";
 import type { Prisma } from "@/shared/db/generator/client";
 import type { DiscoverSkillListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
 
 // # DiscoverSkill 行 → 列表项 Vo 的公共映射（广场列表接口与导入接口复用）
+
+// > 前端读接口共用：只暴露可再分发、可商用的宽松 license（抓取入库仍保留全量）
+export const discoverSkillFrontendLicenseWhere = {
+	license: { in: [...DISCOVER_FRONTEND_LICENSE_ALLOWLIST] },
+} satisfies Prisma.DiscoverSkillWhereInput;
 
 // 列表项所需字段的统一 select（content 仅用于折算 hasContent，不外传全文）
 export const discoverSkillListItemSelect = {
