@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { withPersonal } from "@/server/middleware/with-personal";
 import { discoverSkillListItemSelect, toDiscoverSkillListItem } from "@/server/utils/discover-vo";
 import prisma from "@/shared/db";
+import { Prisma } from "@/shared/db/generator/client";
+import { decodeFilters } from "@/shared/lib/search-filter";
 import {
 	discoverSkillListVoSchema,
 	listDiscoverSkillsDtoSchema,
@@ -20,16 +22,32 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { q, orgs, minStars, offset = 0 } = parsed.data;
+		const { q, filter: filterEncoded, orgs, minStars, offset = 0 } = parsed.data;
 		const trimmedQuery = q?.trim() ?? "";
+		// > 解析字段开关：filter 为 base64 JSON（{title:true,content:true}）；解码失败或无 filter 参数时默认只搜 name
+		const filter = decodeFilters(filterEncoded) ?? { title: true };
+		// title=true 搜 name，content=true 搜 description / descriptionZh；两开关都关时不加搜索条件（兜底）
+		const searchTitle = filter.title === true;
+		const searchContent = filter.content === true;
 		// 解析组织筛选：逗号分隔的 authorName 列表
 		const orgNames = (orgs ?? "")
 			.split(",")
 			.map((s) => s.trim())
 			.filter(Boolean);
 
+		// 按开关动态拼搜索条件（title→name，content→中英文描述）
+		const searchConditions: Prisma.DiscoverSkillWhereInput[] = [];
+		if (trimmedQuery && searchTitle) {
+			searchConditions.push({ name: { contains: trimmedQuery, mode: "insensitive" } });
+		}
+		if (trimmedQuery && searchContent) {
+			searchConditions.push({ description: { contains: trimmedQuery, mode: "insensitive" } });
+			// 已译中文也可被搜到（用户用中文关键词检索）
+			searchConditions.push({ descriptionZh: { contains: trimmedQuery, mode: "insensitive" } });
+		}
+
 		// 构建查询条件：过滤已下架条目，可选组织 / 热度门槛 / 搜索；列表始终按 star 递减
-		const where = {
+		const where: Prisma.DiscoverSkillWhereInput = {
 			delistedAt: null,
 			...(orgNames.length > 0 && {
 				authorType: "Organization" as const,
@@ -39,14 +57,7 @@ export const GET = withPersonal(
 				minStars > 0 && {
 					stars: { gte: minStars },
 				}),
-			...(trimmedQuery && {
-				OR: [
-					{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
-					{ description: { contains: trimmedQuery, mode: "insensitive" as const } },
-					// 已译中文也可被搜到（用户用中文关键词检索）
-					{ descriptionZh: { contains: trimmedQuery, mode: "insensitive" as const } },
-				],
-			}),
+			...(searchConditions.length > 0 && { OR: searchConditions }),
 		};
 
 		// 查询列表和总数

@@ -35,6 +35,7 @@ type DiscoverSkillsPageProps = ListDiscoverSkillsDto & {
 // # Skills 广场页：按 star 递减列表 + 组织 / 热度筛选 + 搜索 + 无限滚动
 export function DiscoverSkillsPage({
 	q,
+	filter,
 	orgs,
 	minStars,
 	initialDescLang = "zh",
@@ -50,17 +51,18 @@ export function DiscoverSkillsPage({
 		setCookie(DISCOVER_SKILL_DESC_LANG_COOKIE, next, COOKIE_DEFAULTS);
 	};
 
-	// SWR Infinite key：q/orgs/minStars 变化自动重置到第一页
+	// SWR Infinite key：q/filter/orgs/minStars 变化自动重置到第一页
 	const getKey = (_pageIndex: number, previousPageData: DiscoverSkillListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
 		const offset = previousPageData?.nextOffset ?? 0;
-		return ["discover-skills", q, orgs, minStars, offset] as const;
+		return ["discover-skills", q, filter, orgs, minStars, offset] as const;
 	};
 
 	const { data, isLoading, isValidating, setSize, mutate } = useSWRInfinite(
 		getKey,
-		async ([, q, orgs, minStars, offset]) => getDiscoverSkills({ q, orgs, minStars, offset }),
+		async ([, q, filter, orgs, minStars, offset]) =>
+			getDiscoverSkills({ q, filter, orgs, minStars, offset }),
 	);
 
 	const skills = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
@@ -164,7 +166,12 @@ export function DiscoverSkillsPage({
 							</motion.span>
 						) : null}
 					</AnimatePresence>
-					<SearchInput className="max-w-80 shrink-0" />
+						{/* // 搜索：标题=skill 名，内容=中英文描述；可单选或同时搜 */}
+						<SearchInput
+							className="max-w-80 shrink-0"
+							filters={["title", "content"]}
+							defaultFilter="title"
+						/>
 				</div>
 				{renderSkillsBody()}
 			</PageWidthWrapper>

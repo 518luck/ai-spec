@@ -2,6 +2,7 @@
 
 // # 搜索输入框：左侧搜索图标 + 输入框（防抖写 URL）+ 有内容时显示清空按钮
 
+import { AnimatePresence, motion } from "motion/react";
 import { type JSX, useRef, useState } from "react";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
 import { useDebounce, useHotkey } from "@/shared/hooks";
@@ -11,6 +12,9 @@ import { Icons } from "@/shared/ui/icons";
 import { Kbd } from "@/shared/ui/kbd";
 import { getPlaceholder, SEARCH_DEBOUNCE_MS, SEARCH_QUERY_PARAM } from "../config/search-filters";
 import { useSearchUrl } from "../model/use-search-url";
+
+// 清空按钮 ↔ "/" 快捷键提示的切换动效（同槽位淡入淡出）
+const TRAILING_TRANSITION = { duration: 0.15, ease: "easeOut" } as const;
 
 type SearchInputFieldProps = {
 	// URL 无 filter 参数时的回退默认值
@@ -66,19 +70,37 @@ export function SearchInputField({
 				placeholder={placeholder}
 				className="h-full w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 			/>
-			{/* 有内容时显示清空按钮，空态在同位置显示 "/" 快捷键提示 */}
-			{value ? (
-				<button
-					type="button"
-					aria-label="清空搜索"
-					onClick={handleClear}
-					className="flex shrink-0 cursor-pointer items-center text-muted-foreground transition-colors hover:text-foreground"
-				>
-					<Icons.x className="size-4" />
-				</button>
-			) : (
-				<Kbd className="shrink-0">{HOTKEYS.focusSearch.label}</Kbd>
-			)}
+			{/* // 有内容时清空按钮，空态显示 "/" 快捷键；同槽位淡入淡出，避免硬切 */}
+			<div className="relative flex h-5 w-5 shrink-0 items-center justify-center">
+				<AnimatePresence initial={false} mode="wait">
+					{value ? (
+						<motion.button
+							key="clear"
+							type="button"
+							aria-label="清空搜索"
+							onClick={handleClear}
+							initial={{ opacity: 0, scale: 0.85 }}
+							animate={{ opacity: 1, scale: 1 }}
+							exit={{ opacity: 0, scale: 0.85 }}
+							transition={TRAILING_TRANSITION}
+							className="absolute inset-0 flex cursor-pointer items-center justify-center text-muted-foreground hover:text-foreground"
+						>
+							<Icons.x className="size-4" />
+						</motion.button>
+					) : (
+						<motion.span
+							key="kbd"
+							initial={{ opacity: 0, scale: 0.85 }}
+							animate={{ opacity: 1, scale: 1 }}
+							exit={{ opacity: 0, scale: 0.85 }}
+							transition={TRAILING_TRANSITION}
+							className="absolute inset-0 flex items-center justify-center"
+						>
+							<Kbd>{HOTKEYS.focusSearch.label}</Kbd>
+						</motion.span>
+					)}
+				</AnimatePresence>
+			</div>
 		</div>
 	);
 }

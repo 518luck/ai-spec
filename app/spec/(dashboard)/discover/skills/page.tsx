@@ -9,12 +9,13 @@ import { listDiscoverSkillsDtoSchema } from "@/shared/lib/zod/schemas/discover-s
 export default async function Page({
 	searchParams,
 }: {
-	searchParams: Promise<{ q?: string; orgs?: string; minStars?: string }>;
+	searchParams: Promise<{ q?: string; filter?: string; orgs?: string; minStars?: string }>;
 }) {
 	// Next.js 15 的 searchParams 是 Promise，必须先 await 再校验
 	const raw = await searchParams;
 	const parsed = listDiscoverSkillsDtoSchema.parse({
 		q: raw.q,
+		filter: raw.filter,
 		orgs: raw.orgs,
 		minStars: raw.minStars,
 	});
@@ -26,6 +27,7 @@ export default async function Page({
 	return (
 		<DiscoverSkillsPage
 			q={parsed.q}
+			filter={parsed.filter}
 			orgs={parsed.orgs}
 			minStars={parsed.minStars}
 			initialDescLang={initialDescLang}
