@@ -3,6 +3,7 @@
 // # ScrollArea 滚动区域（基于 base-ui）：自定义滚动条样式，hover/滚动时淡入、移出自动隐藏
 
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
+import type { Ref } from "react";
 
 import { cn } from "@/shared/lib/utils";
 
@@ -12,6 +13,7 @@ function ScrollArea({
 	orientation = "vertical",
 	scrollbarClassName,
 	thumbSmooth = false,
+	viewportRef,
 	...props
 }: ScrollAreaPrimitive.Root.Props & {
 	/** 滚动方向：vertical（默认，竖向）或 horizontal（横向） */
@@ -25,6 +27,8 @@ function ScrollArea({
 	 * 仅在内容突变时由调用方短暂启用，避免正常滚动时 thumb 拖影。
 	 */
 	thumbSmooth?: boolean;
+	/** 透传给内部 viewport，供回顶按钮等读取真实滚动容器 */
+	viewportRef?: Ref<HTMLDivElement>;
 }) {
 	return (
 		<ScrollAreaPrimitive.Root
@@ -33,6 +37,7 @@ function ScrollArea({
 			{...props}
 		>
 			<ScrollAreaPrimitive.Viewport
+				ref={viewportRef}
 				data-slot="scroll-area-viewport"
 				className={cn(
 					"rounded-[inherit] outline-none transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] focus-visible:ring-ring/50",

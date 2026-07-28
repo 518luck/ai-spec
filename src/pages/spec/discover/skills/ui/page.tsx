@@ -122,6 +122,7 @@ export function DiscoverSkillsPage({
 			title="Skills"
 			help={<HelpTooltip content="来自 GitHub 开源社区的 Agent Skills，逛一逛，看中就收" />}
 			scrollAreaProps={{ thumbSmooth }}
+			backToTop
 			actions={
 				<>
 					{/* 中/英描述切换：只改卡片文案，偏好写入 cookie */}

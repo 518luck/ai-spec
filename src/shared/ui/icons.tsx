@@ -7,6 +7,7 @@ import {
 	IconArrowBarLeft,
 	IconArrowsDiagonal,
 	IconArrowsDiagonalMinimize2,
+	IconArrowUp,
 	IconArrowUpRight,
 	IconBold,
 	IconBook,
@@ -186,6 +187,7 @@ export const Icons = {
 	pencil: IconPencil,
 	trash: IconTrash,
 	trending: IconTrendingUp,
+	arrowUp: IconArrowUp, // 快速回到顶部
 	promote: IconArrowUpRight,
 	expand: IconArrowsDiagonal,
 	minimize: IconArrowsDiagonalMinimize2,
