@@ -1,9 +1,9 @@
 "use client";
 
-// # 通用规格卡片：统一视觉壳 + 可选整卡点击 + 标题/正文/hover 操作；收录与广场等共用
-// > 传 onClick 即整卡可点（复制等）；不传则为只读展示卡。loading 用 isPending 蒙层。
+// # 通用规格卡片：统一视觉壳 + 可选整卡点击 + 标题/正文/静态底栏/hover 操作
+// > 传 onClick 即整卡可点；不传则为只读。footer 仅展示无交互信息，hover 时淡出让位给 actions。
+// ! 可点击控件（回链、反馈等）一律放 actions，不要放 footer
 // ! 若 onClick 是复制，调用方必须拉全文，绝不能复制列表里的截断 preview
-// ! 可点击控件（回链、反馈等）一律放 actions，避免被底部 hover 遮罩挡住
 
 import { motion } from "motion/react";
 import type { JSX, ReactNode } from "react";
@@ -23,10 +23,12 @@ type ContentCardProps = {
 	clickAriaLabel?: string;
 	// 整卡操作进行中：蒙层 + 禁用点击
 	isPending?: boolean;
-	// 底部 hover 操作区（按钮、回链等可点控件放这里）
+	// 底部 hover 操作区（按钮、回链等可点控件）
 	actions?: ReactNode;
 	// 标题行右侧常驻插槽（收藏★、star 数等）
 	headerExtra?: ReactNode;
+	// 静态底栏：仅无交互信息；卡片 hover 时淡出，避免挡住 actions
+	footer?: ReactNode;
 	// 与弹窗共用的形变锚点
 	morphId?: string;
 	// 弹窗已接管锚点时淡出本卡
@@ -46,6 +48,7 @@ export function ContentCard({
 	isPending = false,
 	actions,
 	headerExtra,
+	footer,
 	morphId,
 	isMorphing = false,
 	previewClassName,
@@ -110,7 +113,10 @@ export function ContentCard({
 
 			{children}
 
-			{/* // 底部渐变操作条：hover 淡入；可点控件统一放 actions */}
+			{/* // 静态底栏：无交互信息；hover 时 CSS 淡出下移，把位置让给 actions */}
+			{footer != null ? <div className={FOOTER_CLASS}>{footer}</div> : null}
+
+			{/* // 底部渐变操作条：hover 时淡入上移；可点控件放这里 */}
 			{actions != null ? <div className={ACTIONS_CLASS}>{actions}</div> : null}
 
 			{/* // ! 进行中：半透明蒙层 + spinner */}
@@ -124,13 +130,33 @@ export function ContentCard({
 }
 
 // 容器质感：aspect-4/3 + hover 抬升 + 亮/暗色投影
+// ! 壳层只过渡 transform/shadow/颜色，避免 transition-all 干扰子元素 opacity 动画
 const SHELL_CLASS = [
-	"group relative flex aspect-4/3 flex-col gap-3 overflow-hidden rounded-lg border bg-card p-4 transition-all hover:-translate-y-0.5",
+	"group relative flex aspect-4/3 flex-col gap-3 overflow-hidden rounded-lg border bg-card p-4",
+	"transition-[transform,box-shadow,background-color,border-color] duration-200 ease-out hover:-translate-y-0.5",
 	"shadow-[1px_2px_4px_-1px_rgba(0,0,0,0.1),3px_6px_16px_-4px_rgba(0,0,0,0.06)] hover:bg-accent/30 hover:shadow-[1px_2px_4px_-1px_rgba(0,0,0,0.12),6px_12px_28px_-4px_rgba(0,0,0,0.1)]",
 	"inset-shadow-[1px_1px_0_white/30] inset-shadow-[-1px_-1px_0_rgba(0,0,0,0.06)]",
 	"dark:shadow-none dark:border-white/5 dark:bg-[oklch(0.235_0_0)] dark:inset-shadow-[1px_1px_0_white/8] dark:inset-shadow-[-1px_-1px_0_rgba(0,0,0,0.3)] dark:hover:border-white/10 dark:hover:bg-[oklch(0.265_0_0)]",
+	"motion-reduce:transition-none motion-reduce:hover:translate-y-0",
 ].join(" ");
 
-// 底部 hover 操作条（全宽，便于左右分布：来源 | 按钮）
-const ACTIONS_CLASS =
-	"pointer-events-none absolute inset-x-0 bottom-0 z-10 flex w-full items-center justify-end gap-1 bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100";
+// 静态底栏：淡出 + 轻微下移；与 actions 交叉淡入淡出
+const FOOTER_CLASS = [
+	"relative z-0 mt-auto flex shrink-0 items-center will-change-[opacity,transform]",
+	"translate-y-0 opacity-100",
+	"transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+	"group-hover:pointer-events-none group-hover:translate-y-1 group-hover:opacity-0",
+	"group-focus-within:pointer-events-none group-focus-within:translate-y-1 group-focus-within:opacity-0",
+	"motion-reduce:transition-none motion-reduce:group-hover:translate-y-0 motion-reduce:group-focus-within:translate-y-0",
+].join(" ");
+
+// 底部操作条：淡入 + 轻微上移，接住 footer 让出的位置
+const ACTIONS_CLASS = [
+	"pointer-events-none absolute inset-x-0 bottom-0 z-10 flex w-full items-center justify-end gap-1",
+	"bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 backdrop-blur-[1px]",
+	"translate-y-1 opacity-0 will-change-[opacity,transform]",
+	"transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)]",
+	"group-hover:pointer-events-auto group-hover:translate-y-0 group-hover:opacity-100",
+	"group-focus-within:pointer-events-auto group-focus-within:translate-y-0 group-focus-within:opacity-100",
+	"motion-reduce:transition-none motion-reduce:translate-y-0",
+].join(" ");

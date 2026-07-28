@@ -1,6 +1,6 @@
 "use client";
 
-// # Skill 广场卡片：通用 ContentCard；来源/回链/反馈放 actions，尺寸与收录卡对齐
+// # Skill 广场卡片：footer 展示来源/协议；actions 放回链与反馈（hover 时 footer 淡出）
 
 import { type JSX, useState } from "react";
 
@@ -27,7 +27,7 @@ type SkillCardProps = {
 	onReported?: (skillId: string) => void;
 };
 
-// # Skill 广场卡片：只读 ContentCard；视觉尺寸与收录共用 aspect-4/3
+// # Skill 广场卡片：只读 ContentCard；静态信息走 footer，可点控件走 actions
 export function SkillCard({
 	skill,
 	lang = "zh",
@@ -53,7 +53,7 @@ export function SkillCard({
 
 	const [reportOpen, setReportOpen] = useState(false);
 
-	// 描述偏长时给全文 Tooltip（不改卡片尺寸测量逻辑，避免自定义 preview 撑破比例）
+	// 描述偏长时给全文 Tooltip
 	const showDescTooltip = displayDescription.length > 80;
 
 	const card = (
@@ -66,51 +66,52 @@ export function SkillCard({
 					{formatStars(stars)}
 				</span>
 			}
-			actions={
+			footer={
 				<div className="flex w-full min-w-0 items-center justify-between gap-2">
 					<span className="min-w-0 truncate text-muted-foreground text-xs">{sourceLabel}</span>
-					<div className="flex shrink-0 items-center gap-1">
-						<Badge variant="outline" className="max-w-24 truncate text-xs">
-							{licenseLabel}
-						</Badge>
-						{repoHref ? (
-							<a
-								href={repoHref}
-								target="_blank"
-								rel="noreferrer"
-								aria-label="在 GitHub 查看源仓库"
-								className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-								onClick={(e) => e.stopPropagation()}
-							>
-								<Icons.github className="size-4" />
-							</a>
-						) : null}
-						{canReport ? (
-							<Button
-								type="button"
-								variant="ghost"
-								size="icon-sm"
-								disabled={reported}
-								aria-label={reported ? "已反馈" : "反馈此 Skill"}
-								title={reported ? "已反馈" : "反馈"}
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									if (!reported) setReportOpen(true);
-								}}
-							>
-								<Icons.flag className="size-4" />
-							</Button>
-						) : null}
-					</div>
+					<Badge variant="outline" className="max-w-24 shrink-0 truncate text-xs">
+						{licenseLabel}
+					</Badge>
 				</div>
+			}
+			actions={
+				<>
+					{repoHref ? (
+						<a
+							href={repoHref}
+							target="_blank"
+							rel="noreferrer"
+							aria-label="在 GitHub 查看源仓库"
+							className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+							onClick={(e) => e.stopPropagation()}
+						>
+							<Icons.github className="size-4" />
+						</a>
+					) : null}
+					{canReport ? (
+						<Button
+							type="button"
+							variant="ghost"
+							size="icon-sm"
+							disabled={reported}
+							aria-label={reported ? "已反馈" : "反馈此 Skill"}
+							title={reported ? "已反馈" : "反馈"}
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								if (!reported) setReportOpen(true);
+							}}
+						>
+							<Icons.flag className="size-4" />
+						</Button>
+					) : null}
+				</>
 			}
 		/>
 	);
 
 	return (
 		<>
-			{/* // 网格单元内拉满宽度，保证与邻卡同宽同高（aspect 由 ContentCard 决定） */}
 			<div className="w-full min-w-0">
 				{showDescTooltip ? (
 					<Tooltip>
