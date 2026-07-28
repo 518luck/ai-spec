@@ -41,6 +41,11 @@ export interface EditorPreferencesCookie {
 // 草稿编辑器偏好 cookie，值：JSON 字符串，解析后类型为上方 EditorPreferencesCookie
 export const EDITOR_PREFERENCES_COOKIE = "ai-spec.editor-preferences";
 
+// @ 广场相关
+
+// Skills 卡片描述语言偏好，值："zh" | "en"（缺省按中文）
+export const DISCOVER_SKILL_DESC_LANG_COOKIE = "ai-spec.discover-skill-desc-lang";
+
 // @ 写入选项
 
 // cookie 通用写入选项：1 年有效期、全路径、同源 Lax

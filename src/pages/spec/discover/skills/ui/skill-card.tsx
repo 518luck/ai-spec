@@ -4,13 +4,20 @@ import type { DiscoverSkillListItemVo } from "@/shared/lib/zod/schemas/discover-
 import { Badge } from "@/shared/ui/badge";
 import { Icons } from "@/shared/ui/icons";
 
+import type { SkillDescLang } from "../lib/desc-lang";
+
 type SkillCardProps = {
 	skill: DiscoverSkillListItemVo;
+	// 描述展示语言：中文优先 descriptionZh，缺译回落原文
+	lang?: SkillDescLang;
 };
 
 // # Skill 广场卡片：名称 + star 数 + 描述 + 来源署名与回链
-export function SkillCard({ skill }: SkillCardProps): JSX.Element {
-	const { name, description, license, sourceRepo, sourceUrl, authorName, stars } = skill;
+export function SkillCard({ skill, lang = "zh" }: SkillCardProps): JSX.Element {
+	const { name, description, descriptionZh, license, sourceRepo, sourceUrl, authorName, stars } =
+		skill;
+	// 中文态：有译用译，无译回落原文；英文态始终原文
+	const displayDescription = lang === "zh" ? descriptionZh?.trim() || description : description;
 
 	return (
 		<div className="flex flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-ring/40">
@@ -21,7 +28,7 @@ export function SkillCard({ skill }: SkillCardProps): JSX.Element {
 					{formatStars(stars)}
 				</span>
 			</div>
-			<p className="line-clamp-3 flex-1 text-muted-foreground text-xs">{description}</p>
+			<p className="line-clamp-3 flex-1 text-muted-foreground text-xs">{displayDescription}</p>
 			{/* // @ 底部署名条：来源仓库 + license + GitHub 回链 */}
 			<div className="flex items-center justify-between gap-2 pt-1">
 				<span className="truncate text-muted-foreground text-xs">{sourceRepo ?? authorName}</span>

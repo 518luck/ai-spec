@@ -8,6 +8,8 @@ import useSWRInfinite from "swr/infinite";
 import { getDiscoverSkills } from "@/entities/discover-skill";
 import { SearchInput } from "@/features/search-input";
 import { useInView, useThumbSmooth } from "@/shared/hooks";
+import { setCookie } from "@/shared/lib/cookie/client-cookie";
+import { COOKIE_DEFAULTS, DISCOVER_SKILL_DESC_LANG_COOKIE } from "@/shared/lib/cookie/cookies";
 import type {
 	DiscoverSkillListVo,
 	ListDiscoverSkillsDto,
@@ -19,14 +21,34 @@ import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import type { SkillDescLang } from "../lib/desc-lang";
 import { SkillFilter } from "./filter";
 import { ImportDialog } from "./import-dialog";
+import { SkillLangToggle } from "./lang-toggle";
 import { SkillCard } from "./skill-card";
 
+type DiscoverSkillsPageProps = ListDiscoverSkillsDto & {
+	// SSR 从 cookie 读出的描述语言，避免首屏语言闪烁
+	initialDescLang?: SkillDescLang;
+};
+
 // # Skills 广场页：按 star 递减列表 + 组织 / 热度筛选 + 搜索 + 无限滚动
-export function DiscoverSkillsPage({ q, orgs, minStars }: ListDiscoverSkillsDto): JSX.Element {
+export function DiscoverSkillsPage({
+	q,
+	orgs,
+	minStars,
+	initialDescLang = "zh",
+}: DiscoverSkillsPageProps): JSX.Element {
 	const { status } = useSession();
 	const [importOpen, setImportOpen] = useState(false);
+	// 卡片描述语言：cookie 初值 + 切换时回写
+	const [descLang, setDescLang] = useState<SkillDescLang>(initialDescLang);
+
+	// 切换语言并写入 cookie（与主题/侧边栏同一套 client-cookie）
+	const handleDescLangChange = (next: SkillDescLang): void => {
+		setDescLang(next);
+		setCookie(DISCOVER_SKILL_DESC_LANG_COOKIE, next, COOKIE_DEFAULTS);
+	};
 
 	// SWR Infinite key：q/orgs/minStars 变化自动重置到第一页
 	const getKey = (_pageIndex: number, previousPageData: DiscoverSkillListVo | null) => {
@@ -79,7 +101,7 @@ export function DiscoverSkillsPage({ q, orgs, minStars }: ListDiscoverSkillsDto)
 			<>
 				<div className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3 xl:gap-4">
 					{skills.map((skill) => (
-						<SkillCard key={skill.id} skill={skill} />
+						<SkillCard key={skill.id} skill={skill} lang={descLang} />
 					))}
 				</div>
 				<InfiniteListFooter
@@ -99,24 +121,28 @@ export function DiscoverSkillsPage({ q, orgs, minStars }: ListDiscoverSkillsDto)
 			help={<HelpTooltip content="来自 GitHub 开源社区的 Agent Skills，逛一逛，看中就收" />}
 			scrollAreaProps={{ thumbSmooth }}
 			actions={
-				status === "authenticated" ? (
-					<>
-						<Button
-							size="sm"
-							variant="outline"
-							onClick={() => setImportOpen(true)}
-							className="gap-2"
-						>
-							<Icons.github className="size-4" />
-							导入 Skills
-						</Button>
-						<ImportDialog
-							open={importOpen}
-							onOpenChange={setImportOpen}
-							onImported={() => mutate()}
-						/>
-					</>
-				) : undefined
+				<>
+					{/* 中/英描述切换：只改卡片文案，偏好写入 cookie */}
+					<SkillLangToggle value={descLang} onChange={handleDescLangChange} />
+					{status === "authenticated" ? (
+						<>
+							<Button
+								size="sm"
+								variant="outline"
+								onClick={() => setImportOpen(true)}
+								className="gap-2"
+							>
+								<Icons.github className="size-4" />
+								导入 Skills
+							</Button>
+							<ImportDialog
+								open={importOpen}
+								onOpenChange={setImportOpen}
+								onImported={() => mutate()}
+							/>
+						</>
+					) : null}
+				</>
 			}
 		>
 			<PageWidthWrapper fill>

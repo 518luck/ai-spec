@@ -22,7 +22,10 @@ const githubUrlSchema = z
 const discoverSkillListItemVoSchema = z.object({
 	id: z.string(),
 	name: z.string(),
+	// 原文描述（多为英文；列表「英文」态直接展示）
 	description: z.string(),
+	// 中文描述（机翻或原文已是中文）；无则前端中文态回落 description
+	descriptionZh: z.string().nullable(),
 	license: z.string().nullable(),
 	sourceRepo: z.string().nullable(),
 	sourceUrl: z.string().nullable(),

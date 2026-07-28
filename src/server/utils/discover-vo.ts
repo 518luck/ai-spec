@@ -25,14 +25,14 @@ type DiscoverSkillListItemRow = Prisma.DiscoverSkillGetPayload<{
 	select: typeof discoverSkillListItemSelect;
 }>;
 
-// 行 → Vo：时间转 ISO 字符串，content 折算成 hasContent；description 优先中文
+// 行 → Vo：时间转 ISO 字符串，content 折算成 hasContent；中英文描述都下发，展示语言由前端切换
 export const toDiscoverSkillListItem = (
 	row: DiscoverSkillListItemRow,
 ): DiscoverSkillListItemVo => ({
 	id: row.id,
 	name: row.name,
-	// 有中文描述则给前端中文，否则回落原文（待译/失败时仍可展示英文）
-	description: row.descriptionZh ?? row.description,
+	description: row.description,
+	descriptionZh: row.descriptionZh,
 	license: row.license,
 	sourceRepo: row.sourceRepo,
 	sourceUrl: row.sourceUrl,
