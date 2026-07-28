@@ -1,1 +1,1 @@
-export { Combobox, type Option } from "./ui/combobox";
+export { FolderCombobox, type FolderOption } from "./ui/folder-combobox";

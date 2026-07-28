@@ -16,8 +16,8 @@ import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
-import { DEFAULT_COLOR, PRESET_COLORS } from "../config/colors";
-import { Icon } from "./icon";
+import { FOLDER_DEFAULT_COLOR, FOLDER_PRESET_COLORS } from "../config/folder-colors";
+import { FolderIcon } from "./folder-icon";
 
 type CreateFolderDialogProps = {
 	open: boolean;
@@ -37,14 +37,14 @@ export function CreateFolderDialog({
 }: CreateFolderDialogProps): JSX.Element {
 	const [name, setName] = useState(initialName);
 	const [description, setDescription] = useState("");
-	const [color, setColor] = useState<string>(DEFAULT_COLOR);
+	const [color, setColor] = useState<string>(FOLDER_DEFAULT_COLOR);
 
 	// open 打开时同步预填名称，重置描述/颜色
 	useEffect(() => {
 		if (open) {
 			setName(initialName);
 			setDescription("");
-			setColor(DEFAULT_COLOR);
+			setColor(FOLDER_DEFAULT_COLOR);
 		}
 	}, [open, initialName]);
 
@@ -65,7 +65,7 @@ export function CreateFolderDialog({
 					<DialogDescription className="pr-16">
 						创建一个属于你的文件夹吧，取个好记的名字和颜色。
 					</DialogDescription>
-					<Icon
+					<FolderIcon
 						color={color}
 						className="absolute top-4 right-4 size-12 rounded-lg"
 						iconClassName="size-6"
@@ -98,7 +98,7 @@ export function CreateFolderDialog({
 							/>
 						</div>
 						<div className="grid grid-cols-5 gap-2">
-							{PRESET_COLORS.map((preset) => (
+							{FOLDER_PRESET_COLORS.map((preset) => (
 								<Button
 									key={preset}
 									variant="ghost"

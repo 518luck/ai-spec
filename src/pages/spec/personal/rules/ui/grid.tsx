@@ -8,13 +8,13 @@ import type { JSX } from "react";
 
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { CARD_ITEM_MOTION, itemTransition, LIST_SWITCH_MOTION } from "../lib/list-motion";
-import { Card } from "./card";
+import { RuleCard } from "./card";
 
-type GridProps = {
+type RuleGridProps = {
 	rules: RuleListItemVo[];
 };
 
-export function Grid({ rules }: GridProps): JSX.Element {
+export function RuleGrid({ rules }: RuleGridProps): JSX.Element {
 	return (
 		<motion.div
 			className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3 xl:gap-4 2xl:gap-6"
@@ -22,7 +22,7 @@ export function Grid({ rules }: GridProps): JSX.Element {
 		>
 			{rules.map((rule, index) => (
 				<motion.div key={rule.id} {...CARD_ITEM_MOTION} transition={itemTransition(index)}>
-					<Card rule={rule} />
+					<RuleCard rule={rule} />
 				</motion.div>
 			))}
 		</motion.div>

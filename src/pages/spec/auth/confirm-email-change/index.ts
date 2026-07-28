@@ -1,1 +1,1 @@
-export { Page as ConfirmEmailChangePage } from "./ui/page";
+export { ConfirmEmailChangePage } from "./ui/page";

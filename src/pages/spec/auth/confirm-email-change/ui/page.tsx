@@ -2,15 +2,18 @@ import type { JSX } from "react";
 import { Suspense } from "react";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { AuthFormLayout } from "@/widgets/auth-form-layout";
-import { Flow } from "./flow";
+import { ConfirmEmailChangeFlow } from "./confirm-flow";
 
-type PageProps = {
+type ConfirmEmailChangePageProps = {
 	token: string;
 	isCancel: boolean;
 };
 
 // # 渲染邮箱变更确认页：Suspense 包裹异步服务端流程，等待期间显示 loading
-export function Page({ token, isCancel }: PageProps): JSX.Element {
+export function ConfirmEmailChangePage({
+	token,
+	isCancel,
+}: ConfirmEmailChangePageProps): JSX.Element {
 	return (
 		<AuthFormLayout showTerms="app">
 			<Suspense
@@ -20,7 +23,7 @@ export function Page({ token, isCancel }: PageProps): JSX.Element {
 					</div>
 				}
 			>
-				<Flow token={token} isCancel={isCancel} />
+				<ConfirmEmailChangeFlow token={token} isCancel={isCancel} />
 			</Suspense>
 		</AuthFormLayout>
 	);

@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import { truncate } from "@/shared/lib/utils";
-import { Provider, useContext } from "../model/context";
+import { RegisterProvider, useRegisterContext } from "../model/register-context";
 import { SignUpForm } from "./signup-form";
 import { VerifyEmailForm } from "./verify-email-form";
 
 // # 注册页客户端入口：挂载 Provider，按步骤渲染注册/验证流程
 export default function RegisterPageClient() {
 	return (
-		<Provider>
+		<RegisterProvider>
 			<RegisterFlow />
-		</Provider>
+		</RegisterProvider>
 	);
 }
 
@@ -37,7 +37,7 @@ function SignUp() {
 }
 
 function Verify() {
-	const { email } = useContext();
+	const { email } = useRegisterContext();
 
 	return (
 		<div className="w-full max-w-sm">
@@ -58,7 +58,7 @@ function Verify() {
 
 // > 步骤切换：signup 填写邮箱密码，verify 输入 OTP 验证码
 const RegisterFlow = () => {
-	const { step } = useContext();
+	const { step } = useRegisterContext();
 
 	if (step === "signup") return <SignUp />;
 	if (step === "verify") return <Verify />;

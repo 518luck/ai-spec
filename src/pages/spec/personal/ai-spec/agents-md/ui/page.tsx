@@ -7,8 +7,8 @@ import { useState } from "react";
 
 import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import { State } from "@/widgets/empty-state";
-import { TitlePageShell, WidthWrapper } from "@/widgets/page-shell";
+import { EmptyState } from "@/widgets/empty-state";
+import { PageWidthWrapper, TitlePageShell } from "@/widgets/page-shell";
 import {
 	agentsTreeItems,
 	collectAgentsDocs,
@@ -57,9 +57,9 @@ export function PersonalAgentsMdPage(): JSX.Element {
 	if (!openedProjectId) {
 		return (
 			<TitlePageShell title="AGENTS.md">
-				<WidthWrapper>
+				<PageWidthWrapper>
 					<ProjectCardGrid projects={collectProjects()} onOpen={handleProjectOpen} />
-				</WidthWrapper>
+				</PageWidthWrapper>
 			</TitlePageShell>
 		);
 	}
@@ -82,7 +82,7 @@ export function PersonalAgentsMdPage(): JSX.Element {
 			);
 		}
 		if (docs.length === 0) {
-			return <State icon={Icons.agentsMd} description="该文件夹下还没有 AGENTS.md 文档" />;
+			return <EmptyState icon={Icons.agentsMd} description="该文件夹下还没有 AGENTS.md 文档" />;
 		}
 		return (
 			<ScrollArea className="h-full">

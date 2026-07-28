@@ -1,2 +1,2 @@
 export type { SearchFieldKey, SearchInputProps } from "./model/types";
-export { Input } from "./ui/input";
+export { SearchInput } from "./ui/search-input";

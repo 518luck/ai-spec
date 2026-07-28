@@ -1,8 +1,8 @@
 import type { JSX } from "react";
 
-import { Uploader as AvatarUploader } from "@/features/upload-avatar";
+import { AvatarUploader } from "@/features/upload-avatar";
 import { auth } from "@/shared/lib/auth/auth";
-import { TitlePageShell, WidthWrapper } from "@/widgets/page-shell";
+import { PageWidthWrapper, TitlePageShell } from "@/widgets/page-shell";
 
 import { EmailFieldCard } from "./email-field-card";
 import { NameFieldCard } from "./name-field-card";
@@ -18,12 +18,12 @@ export async function ProfilePage(): Promise<JSX.Element> {
 
 	return (
 		<TitlePageShell title="个人详情">
-			<WidthWrapper>
+			<PageWidthWrapper>
 				<div className="flex flex-col gap-4">
 					<NameFieldCard defaultValue={name} aside={<AvatarUploader className="size-24" />} />
 					<EmailFieldCard defaultValue={email} />
 				</div>
-			</WidthWrapper>
+			</PageWidthWrapper>
 		</TitlePageShell>
 	);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-// # 规约列表表格：展示规则名称、文件夹、预览及操作列；数据由 List 统一拉取后传入
+// # 规约列表表格：展示规则名称、文件夹、预览及操作列；数据由 RuleList 统一拉取后传入
 // > 整块跟着视图切换进出场，行再按索引错峰淡入
 
 import { motion } from "motion/react";
@@ -9,29 +9,22 @@ import type { JSX } from "react";
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { Icons } from "@/shared/ui/icons";
 import { ScrollArea } from "@/shared/ui/scroll-area";
-import {
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-	Table as UITable,
-} from "@/shared/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
 import { itemTransition, LIST_SWITCH_MOTION, ROW_ITEM_MOTION } from "../lib/list-motion";
 import { TableActions } from "./table-actions";
 
-type TableProps = {
+type RuleTableProps = {
 	rules: RuleListItemVo[];
 };
 
-export function Table({ rules }: TableProps): JSX.Element {
+export function RuleTable({ rules }: RuleTableProps): JSX.Element {
 	return (
 		<motion.div
 			className="flex h-full flex-col overflow-hidden rounded-lg border"
 			{...LIST_SWITCH_MOTION}
 		>
 			<ScrollArea orientation="horizontal" className="min-h-0 flex-1" scrollbarClassName="mx-4">
-				<UITable className="table-fixed" containerClassName="overflow-x-visible">
+				<Table className="table-fixed" containerClassName="overflow-x-visible">
 					<TableHeader className="bg-muted">
 						<TableRow>
 							<TableHead className="w-48 pl-4">名称</TableHead>
@@ -57,7 +50,7 @@ export function Table({ rules }: TableProps): JSX.Element {
 							</MotionTableRow>
 						))}
 					</TableBody>
-				</UITable>
+				</Table>
 			</ScrollArea>
 		</motion.div>
 	);

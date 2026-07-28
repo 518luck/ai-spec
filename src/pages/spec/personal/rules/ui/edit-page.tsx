@@ -17,11 +17,11 @@ import {
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EditorForm, type EditorPayload } from "./editor-form";
 
-type EditPageProps = {
+type EditRulePageProps = {
 	id: string;
 };
 
-export function EditPage({ id }: EditPageProps): JSX.Element {
+export function EditRulePage({ id }: EditRulePageProps): JSX.Element {
 	const router = useRouter();
 	// 拉取规约详情用于回填
 	const { data: rule, isLoading } = useSWR(["rule", id], () => getRule(id));

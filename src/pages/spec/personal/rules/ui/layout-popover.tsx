@@ -8,6 +8,5 @@ import { PanelTrigger } from "@/features/panel-trigger";
 
 // > 布局壳：使用 layout 预设，菜单内容后续按需填充
 export function LayoutPopover(): JSX.Element {
-	// ! menu 内容待补充，暂传空占位
-	return <PanelTrigger variant="layout" menu={null} />;
+	return <PanelTrigger variant="layout" menu={<></>} />;
 }

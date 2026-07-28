@@ -1,7 +1,7 @@
 import type { JSX } from "react";
 import { appConfig } from "@/shared/configs/app.config";
 import { Icons } from "@/shared/ui/icons";
-import { TitlePageShell, WidthWrapper } from "@/widgets/page-shell";
+import { PageWidthWrapper, TitlePageShell } from "@/widgets/page-shell";
 
 import { ThemeModeSwitcher } from "./theme-mode-switcher";
 import { ThemePreferencePreview } from "./theme-preference-preview";
@@ -11,7 +11,7 @@ import { ThemePreferencePreview } from "./theme-preference-preview";
 export function PreferencesPage(): JSX.Element {
 	return (
 		<TitlePageShell title="个人偏好">
-			<WidthWrapper>
+			<PageWidthWrapper>
 				<p className="mb-6 text-sm leading-6">
 					定制 {appConfig.appName}{" "}
 					的外观。你可以锁定单一主题，也可以跟随系统自动切换日夜模式。选项即选即生效，并会自动保存。
@@ -31,7 +31,7 @@ export function PreferencesPage(): JSX.Element {
 						icon={<Icons.themeDark className="size-5" />}
 					/>
 				</div>
-			</WidthWrapper>
+			</PageWidthWrapper>
 		</TitlePageShell>
 	);
 }

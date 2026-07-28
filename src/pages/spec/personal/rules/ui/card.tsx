@@ -12,13 +12,13 @@ import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
-import { DeleteDialog } from "./delete-dialog";
+import { DeleteRuleDialog } from "./delete-rule-dialog";
 
-type CardProps = {
+type RuleCardProps = {
 	rule: RuleListItemVo;
 };
 
-export function Card({ rule }: CardProps): JSX.Element {
+export function RuleCard({ rule }: RuleCardProps): JSX.Element {
 	const router = useRouter();
 	const [deleteOpen, setDeleteOpen] = useState(false);
 	// 复制进行中标志：拉全文期间禁用点击 + 触发卡片 loading 蒙层
@@ -68,7 +68,7 @@ export function Card({ rule }: CardProps): JSX.Element {
 				</>
 			}
 		>
-			<DeleteDialog rule={rule} open={deleteOpen} onOpenChange={setDeleteOpen} />
+			<DeleteRuleDialog rule={rule} open={deleteOpen} onOpenChange={setDeleteOpen} />
 		</ContentCard>
 	);
 }

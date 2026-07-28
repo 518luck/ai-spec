@@ -11,12 +11,12 @@ import { formatHotkey } from "@/shared/lib/format-hotkey";
 import { Icons } from "@/shared/ui/icons";
 import { Kbd } from "@/shared/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
-import { useSidebarContext } from "../model/sidebar-context";
+import { useDualSidebarContext } from "../model/dual-sidebar-context";
 
 // 命令面板入口按钮：展开态显示「搜索命令 ⌘K」整行，紧凑态只留图标并用 Tooltip 补充说明
 export function CommandEntry(): JSX.Element {
 	const { query } = useKBar();
-	const { collapsed } = useSidebarContext();
+	const { collapsed } = useDualSidebarContext();
 	const mounted = useMounted();
 
 	// 挂载后按平台显示真实键位（⌘K / Ctrl+K）；SSR 首帧用静态 label 避免水合不一致

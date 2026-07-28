@@ -1,1 +1,1 @@
-export { Combobox } from "./ui/combobox";
+export { RuleSpaceCombobox } from "./ui/rule-space-combobox";

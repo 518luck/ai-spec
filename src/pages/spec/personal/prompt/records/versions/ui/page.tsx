@@ -5,7 +5,7 @@
 import { type JSX, useMemo } from "react";
 import { getVersionDetail } from "@/entities/prompt/records/api/get-version-detail";
 import { getVersions } from "@/entities/prompt/records/api/get-versions";
-import { Page, type PageHandlers } from "@/pages/spec/versions";
+import { VersionPage, type VersionPageHandlers } from "@/pages/spec/versions";
 
 // @ 组件 Props
 interface RecordVersionsPageProps {
@@ -14,7 +14,7 @@ interface RecordVersionsPageProps {
 
 export function RecordVersionsPage({ recordId }: RecordVersionsPageProps): JSX.Element {
 	// > 注入 prompt records 的版本数据源与行为给通用版本页
-	const handlers = useMemo<PageHandlers>(
+	const handlers = useMemo<VersionPageHandlers>(
 		() => ({
 			resourceId: recordId,
 			fetchVersions: async (offset) => {
@@ -38,5 +38,5 @@ export function RecordVersionsPage({ recordId }: RecordVersionsPageProps): JSX.E
 		[recordId],
 	);
 
-	return <Page handlers={handlers} />;
+	return <VersionPage handlers={handlers} />;
 }

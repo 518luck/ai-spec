@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { JSX } from "react";
 import { appConfig } from "@/shared/configs/app.config";
 import { AuthFormLayout } from "@/widgets/auth-form-layout";
-import { Form } from "./form";
+import { LoginForm } from "./login-form";
 
 // TODO : 需要构建登陆的页面元信息
 // export const metadata = constructMetadata({
@@ -17,7 +17,7 @@ export default function LoginPage(): JSX.Element {
 			<div className="w-full max-w-sm">
 				<h3 className="text-center font-semibold text-xl">登录您的 {appConfig.appName} 账号</h3>
 				<div className="mt-8">
-					<Form />
+					<LoginForm />
 				</div>
 				<p className="mt-6 text-center font-medium text-neutral-500 text-sm">
 					还没有账号？&nbsp;

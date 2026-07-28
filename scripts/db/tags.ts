@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { PRESET_COLORS as TAG_PRESET_COLORS } from "@/features/tag-combobox/config/colors";
+import { TAG_PRESET_COLORS } from "@/features/tag-combobox/config/tag-colors";
 import prisma from "@/shared/db";
 
 // 模拟当前用户（luck2 zhang / zhangluck598@gmail.com）在数据库中的 ID
