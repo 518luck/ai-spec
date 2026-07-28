@@ -3,7 +3,7 @@
 // # 搜索框主组件：一体化胶囊容器，左侧图标 + 中间输入框（防抖）+ 右侧可选筛选区
 
 import { type JSX, useMemo } from "react";
-import type { SearchFilters } from "@/shared/lib/search-filter";
+import type { SearchFilters } from "@/shared/lib/search-filter-codec";
 import { cn } from "@/shared/lib/utils";
 import { buildDefaultFilter } from "../config/search-filters";
 import type { SearchInputProps } from "../model/types";

@@ -1,4 +1,4 @@
-// # 搜索筛选状态编解码：扁平 JSON ↔ base64，前后端共享同一份实现
+// # 搜索字段开关编解码（codec）：SearchFilters ↔ URL base64，前后端共享
 
 // 扁平 filter 状态类型：布尔开关字段（true=参与搜索）
 export type SearchFilters = Partial<{

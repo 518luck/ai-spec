@@ -4,7 +4,7 @@ import { withPersonal } from "@/server/middleware/with-personal";
 import { mapTags } from "@/server/utils/map-tags";
 import prisma from "@/shared/db";
 import { Prisma } from "@/shared/db/generator/client";
-import { decodeFilters } from "@/shared/lib/search-filter";
+import { decodeFilters } from "@/shared/lib/search-filter-codec";
 import type { RecordVo } from "@/shared/lib/zod/schemas/prompt/record";
 import {
 	createRecordDtoSchema,

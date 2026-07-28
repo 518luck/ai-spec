@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { type JSX, useRef, useState } from "react";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
 import { useDebounce, useHotkey } from "@/shared/hooks";
-import type { SearchFilters } from "@/shared/lib/search-filter";
+import type { SearchFilters } from "@/shared/lib/search-filter-codec";
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
 import { Kbd } from "@/shared/ui/kbd";

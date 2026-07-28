@@ -3,7 +3,7 @@
 // # 搜索筛选弹层：右侧筛选按钮 + DropdownMenu，渲染外部指定的内置字段（多选开关）
 
 import { Fragment, type JSX, useState } from "react";
-import type { SearchFilters } from "@/shared/lib/search-filter";
+import type { SearchFilters } from "@/shared/lib/search-filter-codec";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import {

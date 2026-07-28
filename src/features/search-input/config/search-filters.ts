@@ -1,11 +1,11 @@
 // # 搜索筛选配置：内置字段定义 + 默认值；编解码复用 shared/lib 的共享实现
 
-import type { SearchFilters } from "@/shared/lib/search-filter";
+import type { SearchFilters } from "@/shared/lib/search-filter-codec";
 import type { SearchFieldDefinition, SearchFieldKey } from "../model/types";
 
-export type { SearchFilters } from "@/shared/lib/search-filter";
+export type { SearchFilters } from "@/shared/lib/search-filter-codec";
 // > 编解码实现从 shared/lib 统一导入（前后端共享，避免 atob/btoa 重复实现）
-export { decodeFilters, encodeFilters } from "@/shared/lib/search-filter";
+export { decodeFilters, encodeFilters } from "@/shared/lib/search-filter-codec";
 
 // @ 内置搜索字段全集：新增开关字段在此追加，并同步 SearchFieldKey 类型
 // > 字段语义：title/content/description 均为布尔开关（true=参与搜索）

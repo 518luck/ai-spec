@@ -8,7 +8,7 @@ import {
 } from "@/server/utils/discover-vo";
 import prisma from "@/shared/db";
 import type { Prisma } from "@/shared/db/generator/client";
-import { decodeFilters } from "@/shared/lib/search-filter";
+import { decodeFilters } from "@/shared/lib/search-filter-codec";
 import {
 	discoverSkillListVoSchema,
 	listDiscoverSkillsDtoSchema,

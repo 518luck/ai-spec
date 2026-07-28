@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import { Prisma } from "@/shared/db/generator/client";
-import { decodeFilters } from "@/shared/lib/search-filter";
+import { decodeFilters } from "@/shared/lib/search-filter-codec";
 import type { DraftVo } from "@/shared/lib/zod/schemas/prompt/draft";
 import {
 	createDraftDtoSchema,
