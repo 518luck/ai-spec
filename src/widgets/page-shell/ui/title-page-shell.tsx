@@ -41,7 +41,8 @@ export function TitlePageShell({
 		>
 			{scrollable ? (
 				<ScrollArea
-					className="h-full max-h-full"
+					// min-h-0：flex 子项可低于内容固有高度，保证内部滚动不漏到外层原生条
+					className="h-full max-h-full min-h-0"
 					// 滚动条从标题栏下方开始，避免穿过标题栏区域
 					scrollbarClassName="!top-16 data-[orientation=vertical]:!h-[calc(100%-4rem)]"
 				>

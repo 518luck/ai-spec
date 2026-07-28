@@ -29,14 +29,18 @@ function ScrollArea({
 	return (
 		<ScrollAreaPrimitive.Root
 			data-slot="scroll-area"
-			className={cn("relative", className)}
+			// min-h-0：flex 子项可收缩；overflow-hidden：裁掉 overscroll 残影
+			className={cn("relative min-h-0 overflow-hidden", className)}
 			{...props}
 		>
 			<ScrollAreaPrimitive.Viewport
 				data-slot="scroll-area-viewport"
 				className={cn(
-					"rounded-[inherit] outline-none transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] focus-visible:ring-ring/50",
-					orientation === "vertical" ? "max-h-[inherit] w-full" : "h-full max-w-[inherit]",
+					// size-full：与官方 base-vega 一致，viewport 必须吃满 root。
+					// 只写 max-h-[inherit]/w-full 时高度会随内容撑开，滚动漏到外层原生条（快速向上回顶时最明显）
+					"size-full max-h-[inherit] max-w-[inherit] rounded-[inherit] outline-none transition-[color,box-shadow] focus-visible:outline-1 focus-visible:ring-[3px] focus-visible:ring-ring/50",
+					// 禁止滚动链：顶/底快速回弹时不把 wheel 传给外层
+					"overscroll-none",
 				)}
 			>
 				{children}

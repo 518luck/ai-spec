@@ -50,6 +50,16 @@
 	body {
 		@apply bg-background text-foreground overscroll-none;
 	}
+	/* // ! ScrollArea viewport 必须硬藏原生条：base-ui 虽注入 .base-ui-disable-scrollbar，但 overflow:scroll + 快速 overscroll 时 WebKit 仍可能闪原生条；用 data-slot 全局钉死比 utility 更稳 */
+	[data-slot="scroll-area-viewport"] {
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+	}
+	[data-slot="scroll-area-viewport"]::-webkit-scrollbar {
+		display: none;
+		width: 0;
+		height: 0;
+	}
 	/* 所有可交互元素默认手指光标（button / role=button / select-item 等不再需要逐个加 cursor-pointer） */
 	button:not(:disabled),
 	[role="button"]:not(:disabled),

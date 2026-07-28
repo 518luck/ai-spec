@@ -166,12 +166,12 @@ export function DiscoverSkillsPage({
 							</motion.span>
 						) : null}
 					</AnimatePresence>
-						{/* // 搜索：标题=skill 名，内容=中英文描述；可单选或同时搜 */}
-						<SearchInput
-							className="max-w-80 shrink-0"
-							filters={["title", "content"]}
-							defaultFilter="title"
-						/>
+					{/* // 搜索：标题=skill 名，内容=中英文描述；可单选或同时搜 */}
+					<SearchInput
+						className="max-w-80 shrink-0"
+						filters={["title", "content"]}
+						defaultFilter="title"
+					/>
 				</div>
 				{renderSkillsBody()}
 			</PageWidthWrapper>
