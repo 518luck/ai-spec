@@ -2,21 +2,24 @@
 // > 解决 wheel 直接赋值 scrollLeft/scrollTop 导致的"一格一跳"顿挫感
 // > react-use 未提供同类语义（useMouseWheel 只返回累积值，不含动画），按 hooks/AGENTS.md 例外条款自实现
 // > 工作原理：wheel 事件把 delta 累加到 target，rAF 循环用 lerp 让 current 渐进逼近 target
+// ! 横向把纵向滚轮转横滚时必须用非 passive 原生监听，React onWheel 无法可靠 preventDefault，否则页面会跟着滚
 
 import type { WheelEvent } from "react";
-import { type RefObject, useCallback, useEffect, useRef } from "react";
+import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 type UseInertialScrollOptions = {
 	// 滚动方向：vertical 处理 deltaY，horizontal 把 deltaY 转成横向位移
 	direction?: "vertical" | "horizontal";
 	// 缓动因子 (0,1)：越大到达目标越快，越小越柔；默认 0.2
 	smooth?: number;
+	// 为 false 时不绑原生 wheel（条件渲染的滚动节点未挂载时关掉）
+	enabled?: boolean;
 };
 
 // > 返回可绑到 onWheel 的 handler 与编程式 scrollTo，均走 rAF 缓动
 export function useInertialScroll(
 	ref: RefObject<HTMLElement | null>,
-	{ direction = "vertical", smooth = 0.2 }: UseInertialScrollOptions = {},
+	{ direction = "vertical", smooth = 0.2, enabled = true }: UseInertialScrollOptions = {},
 ): {
 	handleWheel: (e: WheelEvent<HTMLElement>) => void;
 	scrollTo: (delta: number) => void;
@@ -77,23 +80,63 @@ export function useInertialScroll(
 		[readCurrent, scheduleTick],
 	);
 
-	// > wheel handler：垂直滚轮转横向（horizontal 模式），原样转发纵向（vertical 模式）
-	// > horizontal 模式下，触控板的真实横向滚动（deltaX 为主）交给浏览器原生处理，不抢事件
-	const handleWheel = useCallback(
-		(e: WheelEvent) => {
+	// 处理一次 wheel：横向可转纵轮；返回是否已消费事件（需 preventDefault）
+	const consumeWheel = useCallback(
+		(e: Pick<globalThis.WheelEvent, "deltaX" | "deltaY">): boolean => {
 			const el = ref.current;
-			if (!el) return;
+			if (!el) return false;
+
 			if (direction === "horizontal") {
-				// 垂直滚轮为主时才转横向：避免抢走真实横向滚轮（触控板）事件
-				if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
-				e.preventDefault();
-				scrollTo(e.deltaY);
-			} else {
-				scrollTo(e.deltaY);
+				// 真实横向手势交给浏览器；仅把「纵向为主」的滚轮转成横滚
+				if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return false;
+
+				const maxScroll = el.scrollWidth - el.clientWidth;
+				// 内容未溢出：不拦截，让页面正常竖滚
+				if (maxScroll <= 1) return false;
+
+				const delta = e.deltaY;
+				const atStart = el.scrollLeft <= 0 && delta < 0;
+				const atEnd = el.scrollLeft >= maxScroll - 1 && delta > 0;
+				// 已到边缘还继续往外滚：放行页面滚动
+				if (atStart || atEnd) return false;
+
+				scrollTo(delta);
+				return true;
 			}
+
+			scrollTo(e.deltaY);
+			return false;
 		},
 		[direction, ref, scrollTo],
 	);
+
+	// > 兼容旧的 React onWheel；主路径已改原生非 passive，这里作后备
+	const handleWheel = useCallback(
+		(e: WheelEvent) => {
+			if (consumeWheel(e)) {
+				e.preventDefault();
+			}
+		},
+		[consumeWheel],
+	);
+
+	// > 原生 wheel + passive:false，才能挡住页面跟着竖滚（React 合成 wheel 不可靠）
+	useLayoutEffect(() => {
+		if (!enabled) return;
+		const el = ref.current;
+		if (!el) return;
+
+		const onWheel = (e: globalThis.WheelEvent) => {
+			if (consumeWheel(e)) {
+				e.preventDefault();
+			}
+		};
+
+		el.addEventListener("wheel", onWheel, { passive: false });
+		return () => {
+			el.removeEventListener("wheel", onWheel);
+		};
+	}, [consumeWheel, enabled, ref]);
 
 	// 卸载时清理 rAF，避免内存泄漏与跨组件污染
 	useEffect(() => cancel, [cancel]);

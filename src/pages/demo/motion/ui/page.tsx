@@ -14,6 +14,7 @@ import { DemoMorph } from "./demo-morph";
 import { DemoSkeleton } from "./demo-skeleton";
 import { DemoStagger } from "./demo-stagger";
 import { DemoTextReveal } from "./demo-text-reveal";
+import { DemoTyped } from "./demo-typed";
 import { Stage } from "./stage";
 
 type DemoEntry = {
@@ -26,6 +27,7 @@ type DemoEntry = {
 const DEMOS: DemoEntry[] = [
 	{ title: "错峰浮现", description: "列表逐项上浮，首屏内容依次铺开", Content: DemoStagger },
 	{ title: "逐词升起", description: "标题按词从遮罩下沿推上来", Content: DemoTextReveal },
+	{ title: "打字机", description: "Typed.js 多句循环输入与回删", Content: DemoTyped },
 	{ title: "描边绘制", description: "空状态插画沿路径一笔画出", Content: DemoDraw },
 	{ title: "骨架交叉", description: "加载完成时骨架与内容错开半拍交替", Content: DemoSkeleton },
 	{ title: "数字滚动", description: "统计值缓动到目标，进度条同时到位", Content: DemoCounter },
@@ -45,7 +47,7 @@ export function MotionDemoPage(): JSX.Element {
 			>
 				<h1 className="font-semibold text-2xl tracking-tight">动效演示</h1>
 				<p className="text-muted-foreground text-sm">
-					八种空白页常用动效，全部基于 motion；点每格右上角「重播」重看一遍。
+					空白页常用动效（含 Typed.js 打字机）；点每格右上角「重播」重看一遍。
 				</p>
 			</motion.header>
 

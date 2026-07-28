@@ -122,7 +122,8 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 	} = useScrollProgress(chipsScrollRef, { direction: "horizontal" });
 	const { handleWheel: handleChipsWheel, scrollTo: scrollChipsTo } = useInertialScroll(
 		chipsScrollRef,
-		{ direction: "horizontal" },
+		// chips 条件挂载：有选中项时再绑原生 wheel，避免 ref 为空时漏绑
+		{ direction: "horizontal", enabled: chipsCount > 0 },
 	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: chipsCount 是内容变化信号
@@ -172,7 +173,8 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 			}
 			trailing={
 				chipsCount > 0 ? (
-					<div className="group relative min-w-0 flex-1">
+					// 限制 chips 带最大宽度，多选时横向滚动，不占满整行
+					<div className="group relative min-w-0 max-w-56 flex-1 sm:max-w-142">
 						<div
 							ref={chipsScrollRef}
 							onWheel={handleChipsWheel}

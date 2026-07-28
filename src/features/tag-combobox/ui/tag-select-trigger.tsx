@@ -131,7 +131,8 @@ export function TagSelectTrigger({
 	// 横向惯性滚动：wheel 直接绑 handleWheel，箭头点击走 scrollTo，都走 rAF + lerp 缓动
 	const { handleWheel: handleChipsWheel, scrollTo: scrollChipsTo } = useInertialScroll(
 		chipsScrollRef,
-		{ direction: "horizontal" },
+		// chips 条件挂载：有选中标签时再绑原生 wheel
+		{ direction: "horizontal", enabled: chips.length > 0 },
 	);
 
 	// chips 增删后跨布局帧重算进度

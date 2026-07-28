@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import { useSession } from "next-auth/react";
 import { type JSX, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
@@ -119,9 +120,24 @@ export function DiscoverSkillsPage({ q, orgs, minStars }: ListDiscoverSkillsDto)
 			}
 		>
 			<PageWidthWrapper fill>
-				{/* // @ 工具条带：左侧组织 / 热度过滤，右侧搜索 */}
+				{/* // @ 工具条带：左侧组织 / 热度过滤，中部结果数，右侧搜索 */}
 				<div className="mb-6 flex items-center gap-3">
 					<SkillFilter className="min-w-0 flex-1" />
+					{/* 结果数：加载中卸下时淡出，出现时淡入上浮 */}
+					<AnimatePresence initial={false}>
+						{!isLoading ? (
+							<motion.span
+								key="skills-total"
+								className="shrink-0 text-muted-foreground text-xs tabular-nums"
+								initial={{ opacity: 0, y: 4 }}
+								animate={{ opacity: 1, y: 0 }}
+								exit={{ opacity: 0, y: -4 }}
+								transition={{ duration: 0.18, ease: "easeOut" }}
+							>
+								{total.toLocaleString("zh-CN")}
+							</motion.span>
+						) : null}
+					</AnimatePresence>
 					<SearchInput className="max-w-80 shrink-0" />
 				</div>
 				{renderSkillsBody()}

@@ -100,6 +100,8 @@ export function QuickToolbar({ editorRef, isExpanded }: QuickToolbarProps): JSX.
 	const toolbarScrollRef = useRef<HTMLDivElement>(null);
 	const { handleWheel: handleToolbarWheel } = useInertialScroll(toolbarScrollRef, {
 		direction: "horizontal",
+		// 工具条条件挂载：有快捷项时再绑原生 wheel
+		enabled: activeToolbarItems.length > 0,
 	});
 	const {
 		scrollProgress: toolbarProgress,
