@@ -7,7 +7,7 @@ import {
 	TRANSLATION_BATCH_CRON,
 	TRANSLATION_BATCH_CRON_ENABLED,
 	TRANSLATION_CONCURRENCY,
-} from "@/server/configs/translation.config";
+} from "@/server/infrastructure/translation/config";
 import { JOB_NAMES, TRANSLATION_QUEUE_CONFIG } from "@/server/infrastructure/queue/constants";
 import {
 	processTranslationJob,

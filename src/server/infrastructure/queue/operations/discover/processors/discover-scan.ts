@@ -1,5 +1,8 @@
-import { AWESOME_SOURCES } from "@/server/configs/discover.config";
-import { fetchAwesomeRepos, fetchRepoHeadSha } from "@/server/utils/discover-import";
+import {
+	AWESOME_SOURCES,
+	fetchAwesomeRepos,
+	fetchRepoHeadSha,
+} from "@/server/domain/discover/skills";
 import prisma from "@/shared/db";
 
 import { enqueueDiscoverSweep } from "../enqueues/discover-sweep";

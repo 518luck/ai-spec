@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
-
-import { withPersonal } from "@/server/middleware/with-personal";
 import {
 	discoverSkillFrontendLicenseWhere,
 	discoverSkillListItemSelect,
 	toDiscoverSkillListItem,
-} from "@/server/utils/discover-vo";
+} from "@/server/domain/discover/skills";
+import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import type { Prisma } from "@/shared/db/generator/client";
 import { decodeFilters } from "@/shared/lib/search-filter-codec";

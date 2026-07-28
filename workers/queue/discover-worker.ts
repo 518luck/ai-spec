@@ -3,7 +3,7 @@
 // > 单并发串行（GitHub API 串行调用避免打爆配额）+ 撞限流时 pause，由 background-jobs 的 discover-resume 延迟 job 触发恢复
 
 import { Worker } from "bullmq";
-import { DISCOVER_SCAN_CRON } from "@/server/configs/discover.config";
+import { DISCOVER_SCAN_CRON } from "@/server/domain/discover/skills";
 import { formatGithubMetrics } from "@/server/infrastructure/github/metrics";
 import { DISCOVER_QUEUE_CONFIG, JOB_NAMES } from "@/server/infrastructure/queue/constants";
 import { processDiscoverJob } from "@/server/infrastructure/queue/operations/discover";

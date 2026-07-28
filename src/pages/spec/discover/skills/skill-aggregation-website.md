@@ -94,7 +94,7 @@
 
 ## 七、GitHub awesome 聚合源（discover 数据源）
 
-> discover 广场的 `AWESOME_SOURCES` 配置项，配置文件：`src/server/configs/discover.config.ts`。
+> discover 广场的 `AWESOME_SOURCES` 配置项，配置文件：`src/server/domain/discover/skills/constants/sources.ts`。
 > 来源：通过 GitHub API 搜索 + 多轮筛选，从 119 个候选仓库中精选的「README 列出其他 SKILL.md 仓库链接」的聚合型列表。
 > 排除标准：MCP servers 列表、纯教程/文档、fork/翻译版、星标过低（<50）。
 > 同步机制：每日凌晨 4 点 scan 任务读这些源的 README，正则抽取其中的 `github.com/owner/repo` 链接登记为子货源，fan-out sync-repo 逐个抓取。
@@ -137,4 +137,4 @@
 
 ### 扩源方法
 
-新增源只需在 `src/server/configs/discover.config.ts` 的 `AWESOME_SOURCES` 数组里加一行仓库全名（`owner/repo`）。下次凌晨 scan 任务会自动读取该仓库 README、抽取链接、登记子货源并 fan-out 同步。重复仓库由 `skipDuplicates` 自动跳过。
+新增源只需在 `src/server/domain/discover/skills/constants/sources.ts` 的 `AWESOME_SOURCES` 数组里加一行仓库全名（`owner/repo`）。下次凌晨 scan 任务会自动读取该仓库 README、抽取链接、登记子货源并 fan-out 同步。重复仓库由 `skipDuplicates` 自动跳过。

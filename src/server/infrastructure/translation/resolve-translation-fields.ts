@@ -1,11 +1,8 @@
-import {
-	hashDescription,
-	isMostlyChinese,
-	isWorthTranslating,
-} from "@/server/infrastructure/translation";
 import type { TranslationStatus } from "@/shared/db/generator/client";
 
-// # 广场文案翻译字段：入库时算状态，后台 job 批量补译（skills description，后续资源可复用）
+import { hashDescription, isMostlyChinese, isWorthTranslating } from "./detect-language";
+
+// # 文案翻译字段推导：入库时算状态，后台 job 批量补译（skills/其他资源复用）
 
 type TranslationFields = {
 	textZh: string | null;

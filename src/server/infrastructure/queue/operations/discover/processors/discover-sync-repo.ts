@@ -1,8 +1,10 @@
-import { SOURCE_FAIL_THRESHOLD } from "@/server/configs/discover.config";
+import {
+	fetchRepoHeadSha,
+	importRepoSkills,
+	SOURCE_FAIL_THRESHOLD,
+} from "@/server/domain/discover/skills";
 import { AiSpecError } from "@/server/errors/http-error";
 import { pauseDiscoverUntil } from "@/server/infrastructure/queue/operations/discover/pause";
-import { fetchRepoHeadSha } from "@/server/utils/discover-import";
-import { importRepoSkills } from "@/server/utils/discover-sync";
 import prisma from "@/shared/db";
 import type { DiscoverSource } from "@/shared/db/generator/client";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";

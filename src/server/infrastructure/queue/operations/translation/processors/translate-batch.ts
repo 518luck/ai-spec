@@ -1,10 +1,10 @@
 import { getTranslationProvider } from "@/server/adapters/translation";
 import {
+	resolveTranslationFields,
 	TRANSLATION_AUTO_CHAIN,
 	TRANSLATION_BATCH_LIMIT,
 	TRANSLATION_CHUNK_SIZE,
-} from "@/server/configs/translation.config";
-import { resolveTranslationFields } from "@/server/utils/discover-translation";
+} from "@/server/infrastructure/translation";
 
 import { enqueueTranslateBatch } from "../enqueues/translate-batch";
 import { getTranslationTarget } from "../targets";

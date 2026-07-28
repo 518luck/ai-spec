@@ -1,4 +1,4 @@
-import { resolveTranslationFields } from "@/server/utils/discover-translation";
+import { resolveTranslationFields } from "@/server/infrastructure/translation";
 import prisma from "@/shared/db";
 
 import type {

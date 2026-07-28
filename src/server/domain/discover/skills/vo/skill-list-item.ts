@@ -1,6 +1,7 @@
-import { DISCOVER_FRONTEND_LICENSE_ALLOWLIST } from "@/server/configs/discover.config";
 import type { Prisma } from "@/shared/db/generator/client";
 import type { DiscoverSkillListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
+
+import { DISCOVER_FRONTEND_LICENSE_ALLOWLIST } from "../constants";
 
 // # DiscoverSkill 行 → 列表项 Vo 的公共映射（广场列表接口与导入接口复用）
 

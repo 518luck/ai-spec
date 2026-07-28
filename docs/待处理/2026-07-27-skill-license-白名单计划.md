@@ -4,7 +4,7 @@
 
 同步管线把 frontmatter 里任意字符串当有效协议，只要 license 非空就存 SKILL.md 全文。实测库里 223 条非标准 SPDX 条目存了全文，其中 15 条明确 Proprietary（Anthropic 官方文档 skills 及其复制品），属实际侵权风险。
 
-问题代码：`src/server/utils/discover-import.ts` 的 `normalizeLicense`（只挡 `NOASSERTION`，黑名单思路）。
+问题代码：`src/server/domain/discover/skills/services/import-github.ts` 的 `normalizeLicense`（只挡 `NOASSERTION`，黑名单思路）。
 
 ## 方案
 

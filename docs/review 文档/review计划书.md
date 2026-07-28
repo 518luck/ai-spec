@@ -55,7 +55,7 @@
 
 **服务端工具与 API**
 
-- `src/server/utils/discover-import.ts`、`discover-sync.ts`、`discover-vo.ts`
+- `src/server/domain/discover/skills/services/import-github.ts`、`discover-sync.ts`、`discover-vo.ts`
 - `app/api/discover/skills/route.ts`、`app/api/discover/skills/import/route.ts`
 - `src/shared/lib/zod/schemas/discover-skill.ts`
 

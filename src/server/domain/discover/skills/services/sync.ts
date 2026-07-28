@@ -1,9 +1,10 @@
-import { fetchRepoSkills, type RepoSkills } from "@/server/utils/discover-import";
-import { resolveTranslationFields } from "@/server/utils/discover-translation";
-import { discoverSkillListItemSelect, toDiscoverSkillListItem } from "@/server/utils/discover-vo";
+import { resolveTranslationFields } from "@/server/infrastructure/translation";
 import prisma from "@/shared/db";
 import type { Prisma } from "@/shared/db/generator/client";
 import type { DiscoverSkillListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
+
+import { discoverSkillListItemSelect, toDiscoverSkillListItem } from "../vo";
+import { fetchRepoSkills, type RepoSkills } from "./import-github";
 
 // # 广场同步共用逻辑：抓取仓库 → upsert 条目 → 清理消失路径 → 登记/刷新货源（手动导入与每日同步走同一条路）
 

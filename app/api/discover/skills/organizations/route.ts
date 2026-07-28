@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { DISCOVER_FRONTEND_LICENSE_ALLOWLIST } from "@/server/configs/discover.config";
+import { DISCOVER_FRONTEND_LICENSE_ALLOWLIST } from "@/server/domain/discover/skills";
 import { withPersonal } from "@/server/middleware/with-personal";
 import prisma from "@/shared/db";
 import { Prisma } from "@/shared/db/generator/client";

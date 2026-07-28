@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-
+import { importRepoSkills } from "@/server/domain/discover/skills";
 import { withPersonal } from "@/server/middleware/with-personal";
-import { importRepoSkills } from "@/server/utils/discover-sync";
 import {
 	importDiscoverSkillsDtoSchema,
 	importDiscoverSkillsVoSchema,

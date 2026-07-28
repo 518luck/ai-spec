@@ -1,0 +1,20 @@
+// # Discover skills 领域模块出口：API / queue 只从这里引用
+export {
+	AWESOME_SOURCES,
+	DISCOVER_FRONTEND_LICENSE_ALLOWLIST,
+	DISCOVER_SCAN_CRON,
+	SOURCE_FAIL_THRESHOLD,
+} from "./constants";
+export {
+	fetchAwesomeRepos,
+	fetchRepoHeadSha,
+	fetchRepoSkills,
+	importRepoSkills,
+	type ParsedSkill,
+	type RepoSkills,
+} from "./services";
+export {
+	discoverSkillFrontendLicenseWhere,
+	discoverSkillListItemSelect,
+	toDiscoverSkillListItem,
+} from "./vo";
