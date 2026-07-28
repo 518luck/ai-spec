@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 
-import type { ExpiryPresetValue } from "../ui/key-form-fields";
+import type { ExpiryPresetValue } from "../ui/form-fields";
 
 // # 密钥过期时间计算与格式化工具
 // 把弹窗选的过期预设/日期换算成后端接受的 ISO 字符串；null 表示永不过期

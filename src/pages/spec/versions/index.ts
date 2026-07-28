@@ -1,1 +1,1 @@
-export { type VersionListItem, VersionPage, type VersionPageHandlers } from "./ui/version-page";
+export { type ListItem, Page, type PageHandlers } from "./ui/page";

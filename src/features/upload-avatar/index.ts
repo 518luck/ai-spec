@@ -1,1 +1,1 @@
-export { AvatarUploader } from "./ui/avatar-uploader";
+export { Uploader } from "./ui/uploader";

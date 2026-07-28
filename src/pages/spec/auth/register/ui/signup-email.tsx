@@ -13,7 +13,7 @@ import { Button } from "@/shared/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel, FieldSet } from "@/shared/ui/field";
 import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
-import { useRegisterContext } from "../model/register-context";
+import { useContext } from "../model/context";
 import { PasswordRequirements } from "./password-requirements";
 
 type SignUpProps = z.infer<typeof signUpDtoSchema>;
@@ -22,7 +22,7 @@ type SignUpProps = z.infer<typeof signUpDtoSchema>;
 export function SignUpEmail() {
 	const { isMobile } = useMediaQuery();
 
-	const { setStep, setEmail, setPassword, email } = useRegisterContext();
+	const { setStep, setEmail, setPassword, email } = useContext();
 
 	const [showPassword, setShowPassword] = useState(false);
 	const [showPasswordText, setShowPasswordText] = useState(false);

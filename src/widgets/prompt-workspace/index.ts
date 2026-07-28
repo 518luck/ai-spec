@@ -1,1 +1,1 @@
-export { type PromptEditorSaveData, PromptWorkspaceDialog } from "./ui/prompt-workspace-dialog";
+export { type EditorSaveData, WorkspaceDialog } from "./ui/workspace-dialog";

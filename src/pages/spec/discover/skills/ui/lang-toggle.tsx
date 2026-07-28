@@ -8,21 +8,21 @@ import type { JSX } from "react";
 import { Button } from "@/shared/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
-import type { SkillDescLang } from "../lib/desc-lang";
+import type { DescLang } from "../lib/desc-lang";
 
-export type { SkillDescLang } from "../lib/desc-lang";
+export type { DescLang } from "../lib/desc-lang";
 
 // 「中」↔「EN」同槽位切换动效
 const LABEL_TRANSITION = { duration: 0.15, ease: "easeOut" } as const;
 
-type SkillLangToggleProps = {
-	value: SkillDescLang;
-	onChange: (next: SkillDescLang) => void;
+type LangToggleProps = {
+	value: DescLang;
+	onChange: (next: DescLang) => void;
 };
 
 // > 单按钮切换：当前为中则显示「中」，点一下变 EN；反之亦然
-export function SkillLangToggle({ value, onChange }: SkillLangToggleProps): JSX.Element {
-	const next: SkillDescLang = value === "zh" ? "en" : "zh";
+export function LangToggle({ value, onChange }: LangToggleProps): JSX.Element {
+	const next: DescLang = value === "zh" ? "en" : "zh";
 	const label = value === "zh" ? "中" : "EN";
 	// 中文仅影响卡片展示，不改原文
 	const tip =

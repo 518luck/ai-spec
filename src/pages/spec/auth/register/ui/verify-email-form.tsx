@@ -9,13 +9,13 @@ import { AUTH_REDIRECT_HOME } from "@/shared/lib/auth/constants";
 import { Button } from "@/shared/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/shared/ui/input-otp";
 import { Spinner } from "@/shared/ui/spinner";
-import { useRegisterContext } from "../model/register-context";
+import { useContext } from "../model/context";
 import { ResendOtp } from "./resend-otp";
 
 // # 邮箱验证码表单：6 位 OTP 输入完整后自动校验并创建账户
 export function VerifyEmailForm() {
 	const router = useRouter();
-	const { email, password } = useRegisterContext();
+	const { email, password } = useContext();
 	const { isMobile } = useMediaQuery();
 	const [code, setCode] = useState("");
 	const [isInvalidCode, setIsInvalidCode] = useState(false);

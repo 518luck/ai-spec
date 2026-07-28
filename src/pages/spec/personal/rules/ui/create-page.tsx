@@ -15,12 +15,12 @@ import {
 } from "@/shared/lib/zod/schemas/rule";
 import { EditorForm, type EditorPayload } from "./editor-form";
 
-type CreateRulePageProps = {
+type CreatePageProps = {
 	// 目标领域空间：列表页跳转时带在 URL 上，没带则由后端落到个人默认空间
 	spaceId?: string;
 };
 
-export function CreateRulePage({ spaceId }: CreateRulePageProps): JSX.Element {
+export function CreatePage({ spaceId }: CreatePageProps): JSX.Element {
 	const router = useRouter();
 	// 创建规约 mutation
 	const { trigger: triggerCreateRule } = useSWRMutation<RuleVo, Error, string, CreateRuleDto>(

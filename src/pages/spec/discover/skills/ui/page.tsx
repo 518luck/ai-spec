@@ -6,7 +6,7 @@ import { type JSX, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getDiscoverSkills } from "@/entities/discover-skill";
-import { SearchInput } from "@/features/search-input";
+import { Input as SearchInput } from "@/features/search-input";
 import { useInView, useThumbSmooth } from "@/shared/hooks";
 import { setCookie } from "@/shared/lib/cookie/client-cookie";
 import { COOKIE_DEFAULTS, DISCOVER_SKILL_DESC_LANG_COOKIE } from "@/shared/lib/cookie/cookies";
@@ -19,17 +19,17 @@ import { CenteredLoader } from "@/shared/ui/centered-loader";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
-import { EmptyState } from "@/widgets/empty-state";
-import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
-import type { SkillDescLang } from "../lib/desc-lang";
-import { SkillFilter } from "./filter";
+import { State } from "@/widgets/empty-state";
+import { ToolbarPageShell, WidthWrapper } from "@/widgets/page-shell";
+import type { DescLang } from "../lib/desc-lang";
+import { Card } from "./card";
+import { Filter } from "./filter";
 import { ImportDialog } from "./import-dialog";
-import { SkillLangToggle } from "./lang-toggle";
-import { SkillCard } from "./skill-card";
+import { LangToggle } from "./lang-toggle";
 
 type DiscoverSkillsPageProps = ListDiscoverSkillsDto & {
 	// SSR 从 cookie 读出的描述语言，避免首屏语言闪烁
-	initialDescLang?: SkillDescLang;
+	initialDescLang?: DescLang;
 };
 
 // # Skills 广场页：按 star 递减列表 + 组织 / 热度筛选 + 搜索 + 无限滚动
@@ -45,7 +45,7 @@ export function DiscoverSkillsPage({
 	// 本会话已反馈的 skillId（避免连点；不跨刷新持久化）
 	const [reportedIds, setReportedIds] = useState<ReadonlySet<string>>(() => new Set());
 	// 卡片描述语言：cookie 初值 + 切换时回写
-	const [descLang, setDescLang] = useState<SkillDescLang>(initialDescLang);
+	const [descLang, setDescLang] = useState<DescLang>(initialDescLang);
 
 	// 反馈成功后记入本会话集合
 	const handleSkillReported = (skillId: string): void => {
@@ -57,7 +57,7 @@ export function DiscoverSkillsPage({
 	};
 
 	// 切换语言并写入 cookie（与主题/侧边栏同一套 client-cookie）
-	const handleDescLangChange = (next: SkillDescLang): void => {
+	const handleDescLangChange = (next: DescLang): void => {
 		setDescLang(next);
 		setCookie(DISCOVER_SKILL_DESC_LANG_COOKIE, next, COOKIE_DEFAULTS);
 	};
@@ -100,7 +100,7 @@ export function DiscoverSkillsPage({
 		}
 		if (total === 0) {
 			return (
-				<EmptyState
+				<State
 					icon={Icons.skills}
 					description={
 						hasFilters
@@ -115,7 +115,7 @@ export function DiscoverSkillsPage({
 				{/* // 大屏约 4 列，卡片比收录略大；高度仍由 ContentCard aspect-4/3 统一 */}
 				<div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-4 2xl:gap-6">
 					{skills.map((skill) => (
-						<SkillCard
+						<Card
 							key={skill.id}
 							skill={skill}
 							lang={descLang}
@@ -145,7 +145,7 @@ export function DiscoverSkillsPage({
 			actions={
 				<>
 					{/* 中/英描述切换：只改卡片文案，偏好写入 cookie */}
-					<SkillLangToggle value={descLang} onChange={handleDescLangChange} />
+					<LangToggle value={descLang} onChange={handleDescLangChange} />
 					{status === "authenticated" ? (
 						<>
 							<Button
@@ -167,10 +167,10 @@ export function DiscoverSkillsPage({
 				</>
 			}
 		>
-			<PageWidthWrapper fill>
+			<WidthWrapper fill>
 				{/* // @ 工具条带：左侧组织 / 热度过滤，中部结果数，右侧搜索 */}
 				<div className="mb-6 flex items-center gap-3">
-					<SkillFilter className="min-w-0 flex-1" />
+					<Filter className="min-w-0 flex-1" />
 					{/* 结果数：加载中卸下时淡出，出现时淡入上浮 */}
 					<AnimatePresence initial={false}>
 						{!isLoading ? (
@@ -194,7 +194,7 @@ export function DiscoverSkillsPage({
 					/>
 				</div>
 				{renderSkillsBody()}
-			</PageWidthWrapper>
+			</WidthWrapper>
 		</ToolbarPageShell>
 	);
 }

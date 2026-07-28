@@ -7,8 +7,8 @@ import { useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getDrafts } from "@/entities/prompt";
-import { FolderCombobox } from "@/features/folder-combobox";
-import { SearchInput } from "@/features/search-input";
+import { Combobox as FolderCombobox } from "@/features/folder-combobox";
+import { Input as SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
 import { useHotkey, useInView, useThumbSmooth } from "@/shared/hooks";
 import type { DraftListVo, ListDraftsDto } from "@/shared/lib/zod/schemas/prompt/draft";
@@ -18,11 +18,11 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { Kbd } from "@/shared/ui/kbd";
-import { EmptyState } from "@/widgets/empty-state";
-import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
-import { DraftsMutateProvider } from "../model/drafts-mutate-context";
-import { CreateDraftDialog } from "./create-draft-dialog";
-import { DraftsGrid } from "./drafts-grid";
+import { State } from "@/widgets/empty-state";
+import { ToolbarPageShell, WidthWrapper } from "@/widgets/page-shell";
+import { MutateProvider } from "../model/mutate-context";
+import { CreateDialog } from "./create-dialog";
+import { Grid } from "./grid";
 
 // # 个人草稿页：SWR Infinite 拉取 GET /api/prompt/drafts，底部哨兵进入视口时自动加载下一页
 export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.Element {
@@ -91,11 +91,11 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 			return <CenteredLoader />;
 		}
 		if (total === 0) {
-			return <EmptyState icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />;
+			return <State icon={Icons.prompt} description="还没有草稿，随手记下你的灵感吧" />;
 		}
 		return (
 			<>
-				<DraftsGrid drafts={drafts} />
+				<Grid drafts={drafts} />
 				<InfiniteListFooter
 					hasMore={hasMore}
 					hasPaged={hasPaged}
@@ -108,8 +108,8 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 	};
 
 	return (
-		// > 包裹 DraftsMutateProvider：让子树（卡片删除/新建/编辑弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
-		<DraftsMutateProvider mutate={() => mutateDrafts()}>
+		// > 包裹 MutateProvider：让子树（卡片删除/新建/编辑弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
+		<MutateProvider mutate={() => mutateDrafts()}>
 			<ToolbarPageShell
 				title="草稿"
 				help={<HelpTooltip content="随手记录灵感，可复用到收录库、Agent.md 等位置" />}
@@ -138,13 +138,13 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 									{HOTKEYS.createNew.label}
 								</Kbd>
 							</Button>
-							<CreateDraftDialog open={createOpen} onOpenChange={setCreateOpen} />
+							<CreateDialog open={createOpen} onOpenChange={setCreateOpen} />
 						</>
 					) : undefined
 				}
 			>
-				<PageWidthWrapper fill>{renderDraftsBody()}</PageWidthWrapper>
+				<WidthWrapper fill>{renderDraftsBody()}</WidthWrapper>
 			</ToolbarPageShell>
-		</DraftsMutateProvider>
+		</MutateProvider>
 	);
 }

@@ -6,8 +6,10 @@
 import { type JSX, useState } from "react";
 
 import { PanelTrigger } from "@/features/panel-trigger";
-import { TagCombobox } from "@/features/tag-combobox";
-import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
+import {
+	Combobox as TagCombobox,
+	SelectTrigger as TagSelectTrigger,
+} from "@/features/tag-combobox";
 import {
 	DropdownMenuSub,
 	DropdownMenuSubContent,

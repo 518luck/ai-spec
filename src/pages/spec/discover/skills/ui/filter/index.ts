@@ -1,1 +1,1 @@
-export { SkillFilter } from "./skill-filter";
+export { Filter } from "./filter";

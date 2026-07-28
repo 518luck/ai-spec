@@ -10,23 +10,23 @@ import useSWR from "swr";
 import { getRules } from "@/entities/rule";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
-import { EmptyState } from "@/widgets/empty-state";
+import { State } from "@/widgets/empty-state";
 import { LIST_SWITCH_MOTION } from "../lib/list-motion";
-import { RuleGrid } from "./grid";
-import { RuleTable } from "./table";
-import type { RuleView } from "./view-toggle";
+import { Grid } from "./grid";
+import { Table } from "./table";
+import type { RuleViewType } from "./view-toggle";
 
-type RuleListProps = {
+type ListProps = {
 	folderId?: string;
 	// 当前领域空间：顶层隔离，只查该空间内的规约
 	spaceId?: string;
 	tagIds?: string;
 	q?: string;
 	// 当前视图：表格或卡片，来自 URL ?view=
-	view: RuleView;
+	view: RuleViewType;
 };
 
-export function RuleList({ folderId, spaceId, tagIds, q, view }: RuleListProps): JSX.Element {
+export function List({ folderId, spaceId, tagIds, q, view }: ListProps): JSX.Element {
 	// 获取规约列表，支持空间/文件夹/标签筛选和搜索
 	const { data, isLoading } = useSWR(["rules", folderId, spaceId, tagIds, q], () =>
 		getRules({ folderId, spaceId, tagIds, q }),
@@ -50,9 +50,9 @@ export function RuleList({ folderId, spaceId, tagIds, q, view }: RuleListProps):
 
 		if (rules.length === 0) {
 			return (
-				// flex flex-1 flex-col 让 EmptyState 的 flex-1 仍能撑开并垂直居中
+				// flex flex-1 flex-col 让 State 的 flex-1 仍能撑开并垂直居中
 				<motion.div key="empty" className="flex flex-1 flex-col" {...LIST_SWITCH_MOTION}>
-					<EmptyState
+					<State
 						icon={Icons.rulesLibrary}
 						description={
 							folderId || tagIds || q
@@ -64,8 +64,8 @@ export function RuleList({ folderId, spaceId, tagIds, q, view }: RuleListProps):
 			);
 		}
 
-		if (view === "grid") return <RuleGrid key="grid" rules={rules} />;
-		return <RuleTable key="table" rules={rules} />;
+		if (view === "grid") return <Grid key="grid" rules={rules} />;
+		return <Table key="table" rules={rules} />;
 	};
 
 	// ! mode="wait"：表格是撑满视口的固定高度、卡片网格是内容高度，同时在场会互相挤位，必须等旧的退完再进新的

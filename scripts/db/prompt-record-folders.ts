@@ -1,6 +1,6 @@
 import "dotenv/config";
 
-import { FOLDER_PRESET_COLORS } from "@/features/folder-combobox/config/folder-colors";
+import { PRESET_COLORS as FOLDER_PRESET_COLORS } from "@/features/folder-combobox/config/colors";
 import prisma from "@/shared/db";
 
 // 模拟当前用户（luck2 zhang / zhangluck598@gmail.com）在数据库中的 ID

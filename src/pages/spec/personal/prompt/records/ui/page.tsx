@@ -6,8 +6,8 @@ import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
 import { getRecords } from "@/entities/prompt";
-import { FolderCombobox } from "@/features/folder-combobox";
-import { SearchInput } from "@/features/search-input";
+import { Combobox as FolderCombobox } from "@/features/folder-combobox";
+import { Input as SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
 import { useHotkey, useInView, useThumbSmooth } from "@/shared/hooks";
 import type { ListRecordsDto, RecordListVo } from "@/shared/lib/zod/schemas/prompt/record";
@@ -17,14 +17,14 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { Kbd } from "@/shared/ui/kbd";
-import { EmptyState } from "@/widgets/empty-state";
-import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
-import { RecordsMutateProvider } from "../model/records-mutate-context";
-import { CreateRecordDialog } from "./create-record-dialog";
-import { EditRecordDialog } from "./edit-record-dialog";
-import { recordMorphId } from "./record-card";
-import { RecordFilter } from "./record-filter";
-import { RecordsGrid } from "./records-grid";
+import { State } from "@/widgets/empty-state";
+import { ToolbarPageShell, WidthWrapper } from "@/widgets/page-shell";
+import { MutateProvider } from "../model/mutate-context";
+import { morphId } from "./card";
+import { CreateDialog } from "./create-dialog";
+import { EditDialog } from "./edit-dialog";
+import { Filter } from "./filter";
+import { Grid } from "./grid";
 
 // # 个人收录页：SWR Infinite 拉取 GET /api/prompt/records，底部哨兵进入视口时自动加载下一页
 export function PersonalRecordsPage({
@@ -130,11 +130,11 @@ export function PersonalRecordsPage({
 			return <CenteredLoader />;
 		}
 		if (total === 0) {
-			return <EmptyState icon={Icons.prompt} description="还没有收录，把常用提示词归档进来吧" />;
+			return <State icon={Icons.prompt} description="还没有收录，把常用提示词归档进来吧" />;
 		}
 		return (
 			<>
-				<RecordsGrid records={records} onEdit={setEditingId} editingId={editingId} />
+				<Grid records={records} onEdit={setEditingId} editingId={editingId} />
 				<InfiniteListFooter
 					hasMore={hasMore}
 					hasPaged={hasPaged}
@@ -147,16 +147,16 @@ export function PersonalRecordsPage({
 	};
 
 	return (
-		// > 包裹 RecordsMutateProvider：让子树（创建弹窗、编辑弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
-		<RecordsMutateProvider mutate={() => mutateRecords()}>
+		// > 包裹 MutateProvider：让子树（创建弹窗、编辑弹窗）能通过 useSWRInfinite 的 bound mutate 重拉列表
+		<MutateProvider mutate={() => mutateRecords()}>
 			{/* // @ 全局编辑器：唯一实例，由 editingId 驱动打开，不依赖卡片是否在当前分页内 */}
-			<EditRecordDialog
+			<EditDialog
 				id={editingId ?? ""}
 				open={editingId !== null}
 				onOpenChange={handleEditOpenChange}
 				useVersionId={pendingVersionId}
 				// 形变锚点：对上正在编辑那张卡；卡片不在当前分页时锚点不存在，motion 自动退化成原地展开
-				morphId={editingId ? recordMorphId(editingId) : undefined}
+				morphId={editingId ? morphId(editingId) : undefined}
 			/>
 			<ToolbarPageShell
 				title="收录"
@@ -182,15 +182,15 @@ export function PersonalRecordsPage({
 									{HOTKEYS.createNew.label}
 								</Kbd>
 							</Button>
-							<CreateRecordDialog open={createOpen} onOpenChange={setCreateOpen} />
+							<CreateDialog open={createOpen} onOpenChange={setCreateOpen} />
 						</>
 					) : undefined
 				}
 			>
-				<PageWidthWrapper fill>
+				<WidthWrapper fill>
 					{/* // @ 筛选条带：筛选容器贴左、搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 					<div className="mb-6 flex items-center justify-between gap-3">
-						<RecordFilter />
+						<Filter />
 						<SearchInput
 							className="max-w-80"
 							filters={["title", "content"]}
@@ -198,8 +198,8 @@ export function PersonalRecordsPage({
 						/>
 					</div>
 					{renderRecordsBody()}
-				</PageWidthWrapper>
+				</WidthWrapper>
 			</ToolbarPageShell>
-		</RecordsMutateProvider>
+		</MutateProvider>
 	);
 }

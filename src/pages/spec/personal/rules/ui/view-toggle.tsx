@@ -11,31 +11,35 @@ import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
 // 列表视图：表格（默认）或卡片网格
-export type RuleView = "table" | "grid";
+export type RuleViewType = "table" | "grid";
 
 // URL 参数名；缺省或非法值一律回落表格
 export const RULE_VIEW_PARAM = "view";
 
 // 从 URL 参数解析视图，只认 "grid"，其余都是表格
-export const parseRuleView = (value: string | undefined | null): RuleView =>
+export const parseView = (value: string | undefined | null): RuleViewType =>
 	value === "grid" ? "grid" : "table";
 
 const VIEW_OPTIONS = [
 	{ value: "table", label: "表格", icon: Icons.viewTable },
 	{ value: "grid", label: "卡片", icon: Icons.viewGrid },
-] as const satisfies readonly { value: RuleView; label: string; icon: typeof Icons.viewTable }[];
+] as const satisfies readonly {
+	value: RuleViewType;
+	label: string;
+	icon: typeof Icons.viewTable;
+}[];
 
 // > 选中态胶囊的共享布局 id：两个按钮下渲染的是同一个 layoutId，motion 会把它从旧位置平移到新位置，而不是一边消失一边出现
 const VIEW_INDICATOR_LAYOUT_ID = "rule-view-indicator";
 
-type RuleViewToggleProps = {
+type ViewToggleProps = {
 	// 当前选中的视图
-	value: RuleView;
+	value: RuleViewType;
 	// 点击切换；写 URL 由调用方负责
-	onChange: (next: RuleView) => void;
+	onChange: (next: RuleViewType) => void;
 };
 
-export function RuleViewToggle({ value, onChange }: RuleViewToggleProps): JSX.Element {
+export function ViewToggle({ value, onChange }: ViewToggleProps): JSX.Element {
 	return (
 		<div className="flex h-9 shrink-0 items-center gap-0.5 rounded-md border p-0.5">
 			{VIEW_OPTIONS.map((option) => (

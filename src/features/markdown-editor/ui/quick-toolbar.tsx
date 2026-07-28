@@ -1,7 +1,7 @@
 "use client";
 
 // # 快捷栏：快捷胶囊栏（可拖拽排序）+ 更多操作下拉（格式/显示设置/主题）
-// > 偏好/预览/光标格式从 useEditorStore 订阅；editorRef 由编排层传入（执行 executeFormat）；对外只剩 editorRef + isExpanded
+// > 偏好/预览/光标格式从 useStore 订阅；editorRef 由编排层传入（执行 executeFormat）；对外只剩 editorRef + isExpanded
 
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { Reorder } from "motion/react";
@@ -36,9 +36,9 @@ import {
 	type MenuItem,
 	type ToolId,
 } from "../config/editor";
-import { resolveEditorColors } from "../lib/editor-colors";
-import { useEditorStore } from "../model/editor-store";
+import { resolveColors } from "../lib/colors";
 import { isItemActive } from "../model/is-item-active";
+import { useStore } from "../model/store";
 
 // 工具动作类型：tool=格式化（用 editorRef）、display=视图设置开关、preview=切预览
 type ToolbarActionType = "tool" | "display" | "preview";
@@ -57,18 +57,18 @@ type QuickToolbarProps = {
 export function QuickToolbar({ editorRef, isExpanded }: QuickToolbarProps): JSX.Element {
 	const { resolvedTheme } = useTheme();
 	// 订阅需要的字段 + actions（selector 细粒度订阅）
-	const activeFormats = useEditorStore((s) => s.activeFormats);
-	const editorSettings = useEditorStore((s) => s.editorSettings);
-	const editorThemeId = useEditorStore((s) => s.editorThemeId);
-	const isPreview = useEditorStore((s) => s.isPreview);
-	const activeTools = useEditorStore((s) => s.activeTools);
-	const setEditorThemeId = useEditorStore((s) => s.setEditorThemeId);
-	const toggleDisplay = useEditorStore((s) => s.toggleDisplay);
-	const togglePreview = useEditorStore((s) => s.togglePreview);
-	const toggleTool = useEditorStore((s) => s.toggleTool);
-	const reorderTools = useEditorStore((s) => s.reorderTools);
+	const activeFormats = useStore((s) => s.activeFormats);
+	const editorSettings = useStore((s) => s.editorSettings);
+	const editorThemeId = useStore((s) => s.editorThemeId);
+	const isPreview = useStore((s) => s.isPreview);
+	const activeTools = useStore((s) => s.activeTools);
+	const setEditorThemeId = useStore((s) => s.setEditorThemeId);
+	const toggleDisplay = useStore((s) => s.toggleDisplay);
+	const togglePreview = useStore((s) => s.togglePreview);
+	const toggleTool = useStore((s) => s.toggleTool);
+	const reorderTools = useStore((s) => s.reorderTools);
 	// 派生：胶囊背景色（跟随主题）
-	const { toolbarBgColor } = resolveEditorColors(editorThemeId, resolvedTheme === "dark");
+	const { toolbarBgColor } = resolveColors(editorThemeId, resolvedTheme === "dark");
 
 	// 动作派发：tool→executeFormat(editorRef)、display→toggleDisplay、preview→togglePreview
 	const handleItemAction = (type: ToolbarActionType, id: string): void => {

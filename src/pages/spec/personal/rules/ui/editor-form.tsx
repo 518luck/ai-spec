@@ -8,14 +8,14 @@ import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 import { useEffect, useRef, useState } from "react";
-import { FolderCombobox } from "@/features/folder-combobox";
+import { Combobox as FolderCombobox } from "@/features/folder-combobox";
 import {
 	extractTitle,
-	MarkdownEditor,
+	Editor as MarkdownEditor,
 	QuickToolbar,
-	useEditorStore,
+	useStore as useEditorStore,
 } from "@/features/markdown-editor";
-import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
+import { SelectTrigger as TagSelectTrigger } from "@/features/tag-combobox";
 import { useMounted } from "@/shared/hooks";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";

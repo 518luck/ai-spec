@@ -1,0 +1,133 @@
+"use client";
+
+// # 密钥列表表格（客户端组件）
+// 固定高度表格 + 底部分页；数据已由服务端按页查询，翻页通过 router.push 改 URL 触发服务端重渲染
+
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import type { JSX } from "react";
+import { scopesToName } from "@/server/rbac/scopes";
+import type { TokenVo } from "@/shared/lib/zod/schemas/token";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { ScrollArea } from "@/shared/ui/scroll-area";
+import {
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	Table as UITable,
+} from "@/shared/ui/table";
+import { PAGE_SIZE } from "../config/constants";
+import { formatExpires } from "../lib/expires";
+import { TokenActions } from "./token-actions";
+
+type TableProps = {
+	tokens: TokenVo[];
+	// 当前页码（0-based，由 URL ?page=N 转换而来）
+	page: number;
+	// 密钥总条数（服务端 count 得到，用于分页栏计数与翻页边界）
+	total: number;
+};
+
+// 密钥列表：固定高度表格 + 底部分页（左侧计数、右侧上一页/下一页按钮）
+// 数据已由服务端按页查询，这里直接展示 tokens；翻页通过 router.push 改 URL 触发服务端重渲染
+export function Table({ tokens, page, total }: TableProps): JSX.Element {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
+	const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+	const start = total === 0 ? 0 : page * PAGE_SIZE + 1;
+	const end = Math.min((page + 1) * PAGE_SIZE, total);
+
+	// 翻页：用目标页码（1-based）更新 URL 的 ?page=N，触发服务端重新按页查询
+	const goToPage = (next: number): void => {
+		const params = new URLSearchParams(searchParams?.toString());
+		params.set("page", String(next + 1));
+		router.push(`${pathname}?${params.toString()}`);
+	};
+
+	return (
+		// 外层圆角边框：卡片式表格；h-full 撑满父级，overflow-hidden 让首尾行分隔线被圆角裁剪
+		<div className="flex h-full flex-col overflow-hidden rounded-lg border">
+			{/* 表格区：flex-1 占据剩余高度；窄屏横向溢出时由 ScrollArea 渲染美化滚动条（hover 淡入、移出隐藏） */}
+			<ScrollArea
+				orientation="horizontal"
+				className="min-h-0 flex-1"
+				// 滚动条左右内缩，与表格首末列的 pl-4/pr-4 内容边距对齐
+				scrollbarClassName="mx-4"
+			>
+				{/* // > containerClassName 关闭 Table 自带的内层 overflow-x-auto，避免与 ScrollArea 形成双重横向滚动 */}
+				<UITable className="table-fixed" containerClassName="overflow-x-visible">
+					<TableHeader className="bg-muted">
+						<TableRow>
+							<TableHead className="w-32 pl-4">名称</TableHead>
+							<TableHead className="w-48">描述</TableHead>
+							<TableHead className="w-40">密钥</TableHead>
+							<TableHead className="w-20 pl-3">权限</TableHead>
+							<TableHead className="w-28">剩余时间</TableHead>
+							<TableHead className="w-16 pr-4">操作</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{tokens.map((token) => (
+							<TableRow key={token.id}>
+								<TableCell className="truncate pl-4 font-medium">{token.name}</TableCell>
+								<TableCell className="truncate text-muted-foreground">
+									{token.description?.trim() || "—"}
+								</TableCell>
+								<TableCell>
+									<code className="block truncate font-mono text-muted-foreground text-xs">
+										{token.partialKey}
+									</code>
+								</TableCell>
+								<TableCell>
+									<Badge shape="square" variant="secondary">
+										{scopesToName(token.scopes?.split(" ") ?? []).name}
+									</Badge>
+								</TableCell>
+								<TableCell className="text-muted-foreground">
+									{formatExpires(token.expires)}
+								</TableCell>
+								<TableCell className="pr-4">
+									<TokenActions token={token} />
+								</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</UITable>
+			</ScrollArea>
+
+			{/* 分页栏：左侧「第 X-Y 条，共 Z 条」；右侧上一页/下一页按钮 */}
+			<div className="flex items-center justify-between border-t px-4 py-2 text-muted-foreground text-xs">
+				<span>
+					第 {start}-{end} 条，共 {total} 条
+				</span>
+				<div className="flex items-center gap-2">
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={page === 0}
+						onClick={() => goToPage(page - 1)}
+						aria-label="上一页"
+					>
+						<ChevronLeftIcon data-icon="inline-start" />
+						上一页
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={page >= pageCount - 1}
+						onClick={() => goToPage(page + 1)}
+						aria-label="下一页"
+					>
+						下一页
+						<ChevronRightIcon data-icon="inline-end" />
+					</Button>
+				</div>
+			</div>
+		</div>
+	);
+}

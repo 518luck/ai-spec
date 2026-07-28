@@ -5,37 +5,30 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
 import { startTransition, useOptimistic } from "react";
-import { FolderCombobox } from "@/features/folder-combobox";
-import { RuleSpaceCombobox } from "@/features/rule-space-combobox";
-import { SearchInput } from "@/features/search-input";
+import { Combobox as FolderCombobox } from "@/features/folder-combobox";
+import { Combobox as RuleSpaceCombobox } from "@/features/rule-space-combobox";
+import { Input as SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
 import { useHotkey } from "@/shared/hooks";
 import type { ListRulesDto } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
-import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
+import { ToolbarPageShell, WidthWrapper } from "@/widgets/page-shell";
 import { LayoutPopover } from "./layout-popover";
-import { RuleList } from "./list";
+import { List } from "./list";
 import { TagFilter } from "./tag-filter";
-import { parseRuleView, RULE_VIEW_PARAM, type RuleView, RuleViewToggle } from "./view-toggle";
+import { parseView, RULE_VIEW_PARAM, type RuleViewType, ViewToggle } from "./view-toggle";
 
-type PersonalRulesPageProps = ListRulesDto;
+type PersonalPageProps = ListRulesDto;
 
-export function PersonalRulesPage({
-	folderId,
-	spaceId,
-	tagIds,
-	q,
-}: PersonalRulesPageProps): JSX.Element {
+export function PersonalPage({ folderId, spaceId, tagIds, q }: PersonalPageProps): JSX.Element {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 	// ! 视图以 URL 为准，但 router.replace 要等一次 RSC 往返；用 useOptimistic 先本地翻页，导航落地后自动跟 URL 对齐，否则点按钮会明显卡一下
-	const [view, setOptimisticView] = useOptimistic(
-		parseRuleView(searchParams?.get(RULE_VIEW_PARAM)),
-	);
+	const [view, setOptimisticView] = useOptimistic(parseView(searchParams?.get(RULE_VIEW_PARAM)));
 
 	// 切换视图：先乐观翻页，再把参数写回 URL；默认的表格视图不写参数保持 URL 干净，其余筛选参数原样保留
-	const handleViewChange = (next: RuleView): void => {
+	const handleViewChange = (next: RuleViewType): void => {
 		startTransition(() => {
 			setOptimisticView(next);
 			const params = new URLSearchParams(searchParams?.toString() ?? "");
@@ -67,7 +60,7 @@ export function PersonalRulesPage({
 				</Button>
 			}
 		>
-			<PageWidthWrapper fill>
+			<WidthWrapper fill>
 				{/* // @ 筛选条带：空间 + 标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 				<div className="mb-6 flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2">
@@ -76,7 +69,7 @@ export function PersonalRulesPage({
 					</div>
 					<div className="flex items-center gap-2">
 						<LayoutPopover />
-						<RuleViewToggle value={view} onChange={handleViewChange} />
+						<ViewToggle value={view} onChange={handleViewChange} />
 						<SearchInput
 							className="max-w-80"
 							filters={["title", "content"]}
@@ -84,8 +77,8 @@ export function PersonalRulesPage({
 						/>
 					</div>
 				</div>
-				<RuleList folderId={folderId} spaceId={spaceId} tagIds={tagIds} q={q} view={view} />
-			</PageWidthWrapper>
+				<List folderId={folderId} spaceId={spaceId} tagIds={tagIds} q={q} view={view} />
+			</WidthWrapper>
 		</ToolbarPageShell>
 	);
 }

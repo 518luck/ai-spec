@@ -19,7 +19,7 @@ import {
 import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { TAG_DEFAULT_COLOR, TAG_PRESET_COLORS } from "../config/tag-colors";
+import { DEFAULT_COLOR, PRESET_COLORS } from "../config/colors";
 
 type CreateTagDialogProps = {
 	open: boolean;
@@ -38,13 +38,13 @@ export function CreateTagDialog({
 	onSubmit,
 }: CreateTagDialogProps): JSX.Element {
 	const [name, setName] = useState(initialName);
-	const [color, setColor] = useState<string>(TAG_DEFAULT_COLOR);
+	const [color, setColor] = useState<string>(DEFAULT_COLOR);
 
 	// open 打开时同步预填名称，重置颜色
 	useEffect(() => {
 		if (open) {
 			setName(initialName);
-			setColor(TAG_DEFAULT_COLOR);
+			setColor(DEFAULT_COLOR);
 		}
 	}, [open, initialName]);
 
@@ -86,7 +86,7 @@ export function CreateTagDialog({
 							/>
 						</div>
 						<div className="grid grid-cols-6 gap-2">
-							{TAG_PRESET_COLORS.map((preset) => (
+							{PRESET_COLORS.map((preset) => (
 								<Button
 									key={preset}
 									variant="ghost"

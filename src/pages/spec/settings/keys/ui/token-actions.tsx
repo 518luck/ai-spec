@@ -17,7 +17,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
-import { EditKeyDialog } from "./edit-key-dialog";
+import { EditDialog } from "./edit-dialog";
 
 // # 密钥行操作入口（客户端组件）
 // 「...」按钮触发下拉菜单，含编辑、删除；删除经 ConfirmDialog 二次确认
@@ -99,7 +99,7 @@ export function TokenActions({ token }: { token: TokenVo }): JSX.Element {
 				</div>
 			</ConfirmDialog>
 
-			<EditKeyDialog open={editOpen} onOpenChange={setEditOpen} token={token} />
+			<EditDialog open={editOpen} onOpenChange={setEditOpen} token={token} />
 		</>
 	);
 }

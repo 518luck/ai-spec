@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 
 import { DiscoverSkillsPage } from "@/pages/spec/discover/skills";
-import { parseSkillDescLang } from "@/pages/spec/discover/skills/lib/desc-lang";
+import { parseDescLang } from "@/pages/spec/discover/skills/lib/desc-lang";
 import { DISCOVER_SKILL_DESC_LANG_COOKIE } from "@/shared/lib/cookie/cookies";
 import { listDiscoverSkillsDtoSchema } from "@/shared/lib/zod/schemas/discover-skill";
 
@@ -21,9 +21,7 @@ export default async function Page({
 	});
 	// 描述语言偏好：SSR 读 cookie，首屏与切换后一致，避免闪一下中文再变英文
 	const cookieStore = await cookies();
-	const initialDescLang = parseSkillDescLang(
-		cookieStore.get(DISCOVER_SKILL_DESC_LANG_COOKIE)?.value,
-	);
+	const initialDescLang = parseDescLang(cookieStore.get(DISCOVER_SKILL_DESC_LANG_COOKIE)?.value);
 	return (
 		<DiscoverSkillsPage
 			q={parsed.q}

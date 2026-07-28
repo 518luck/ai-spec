@@ -1,6 +1,6 @@
 "use client";
 
-// # 规则行操作入口：「…」按钮触发下拉菜单，含编辑、删除；删除经 DeleteRuleDialog 二次确认
+// # 规则行操作入口：「…」按钮触发下拉菜单，含编辑、删除；删除经 DeleteDialog 二次确认
 
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
@@ -14,7 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
-import { DeleteRuleDialog } from "./delete-rule-dialog";
+import { DeleteDialog } from "./delete-dialog";
 
 type TableActionsProps = {
 	rule: RuleListItemVo;
@@ -55,7 +55,7 @@ export function TableActions({ rule }: TableActionsProps): JSX.Element {
 				</DropdownMenuContent>
 			</DropdownMenu>
 
-			<DeleteRuleDialog rule={rule} open={deleteOpen} onOpenChange={setDeleteOpen} />
+			<DeleteDialog rule={rule} open={deleteOpen} onOpenChange={setDeleteOpen} />
 		</>
 	);
 }
