@@ -197,6 +197,8 @@ export function FolderCombobox({
 		? (emptyOverride?.color ?? FOLDER_NEUTRAL_COLOR)
 		: (selectedOption?.color ?? FOLDER_NEUTRAL_COLOR);
 	const triggerIcon: Icon | undefined = overrideActive ? emptyOverride?.icon : undefined;
+	// 新建入口前的分隔线只在中间存在加载或文件夹内容时显示
+	const showCreateSeparator = isLoading || folders.length > 0;
 
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
@@ -285,7 +287,7 @@ export function FolderCombobox({
 							)}
 
 							{/* // > 新建文件夹：作为列表项放在分组里，和文件夹列表视觉统一 */}
-							<CommandSeparator />
+							{showCreateSeparator && <CommandSeparator />}
 							<CommandGroup>
 								<CommandItem
 									value="新建文件夹 创建 new create"
