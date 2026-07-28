@@ -50,8 +50,10 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 		<ContentCard
 			name={name}
 			preview={preview}
-			onCopy={handleCopy}
-			isCopying={isCopying}
+			previewClassName="font-mono"
+			onClick={handleCopy}
+			clickAriaLabel="复制"
+			isPending={isCopying}
 			morphId={morphId}
 			isMorphing={editOpen}
 			// > 底部 hover 遮罩的操作：编辑 + 复用 + 删除（各自独立子组件）

@@ -42,8 +42,10 @@ export function RuleCard({ rule }: RuleCardProps): JSX.Element {
 		<ContentCard
 			name={rule.name}
 			preview={rule.preview}
-			onCopy={handleCopy}
-			isCopying={isCopying}
+			previewClassName="font-mono"
+			onClick={handleCopy}
+			clickAriaLabel="复制"
+			isPending={isCopying}
 			// > 底部 hover 遮罩的操作：编辑（跳编辑页）+ 删除（二次确认）
 			actions={
 				<>

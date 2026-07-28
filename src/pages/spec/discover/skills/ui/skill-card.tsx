@@ -1,12 +1,13 @@
 "use client";
 
-// # Skill 广场卡片：名称 + star + 描述 + 署名；支持反馈（收集-only）
+// # Skill 广场卡片：通用 ContentCard；来源/回链/反馈放 actions，尺寸与收录卡对齐
 
-import { type JSX, useLayoutEffect, useRef, useState } from "react";
+import { type JSX, useState } from "react";
 
 import type { DiscoverSkillListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
@@ -18,15 +19,15 @@ type SkillCardProps = {
 	skill: DiscoverSkillListItemVo;
 	// 描述展示语言：中文优先 descriptionZh，缺译回落原文
 	lang?: SkillDescLang;
-	// 是否允许反馈（需登录）；未登录不展示按钮
+	// 是否允许反馈（需登录）
 	canReport?: boolean;
-	// 本会话是否已反馈（由页面 Set 驱动）
+	// 本会话是否已反馈
 	reported?: boolean;
 	// 反馈成功后回写页面状态
 	onReported?: (skillId: string) => void;
 };
 
-// # Skill 广场卡片：名称 + star 数 + 描述 + 来源署名与回链 + 反馈
+// # Skill 广场卡片：只读 ContentCard；视觉尺寸与收录共用 aspect-4/3
 export function SkillCard({
 	skill,
 	lang = "zh",
@@ -45,114 +46,87 @@ export function SkillCard({
 		authorName,
 		stars,
 	} = skill;
-	// 中文态：有译用译，无译回落原文；英文态始终原文
 	const displayDescription = lang === "zh" ? descriptionZh?.trim() || description : description;
-	// license 始终展示：有 SPDX 用原值，无协议标明「无协议」
 	const licenseLabel = license?.trim() || "无协议";
-	// 回链优先 sourceUrl，缺省时用 sourceRepo 拼仓库主页
 	const repoHref = sourceUrl ?? (sourceRepo ? `https://github.com/${sourceRepo}` : null);
+	const sourceLabel = sourceRepo ?? authorName ?? "";
 
-	const descRef = useRef<HTMLParagraphElement>(null);
-	// 描述是否被 line-clamp 截断；仅截断时才挂 Tooltip
-	const [truncated, setTruncated] = useState(false);
 	const [reportOpen, setReportOpen] = useState(false);
 
-	// 文案或语言变化后测量是否超出 3 行（依赖文案本身，不读 ref 身份）
-	// biome-ignore lint/correctness/useExhaustiveDependencies: displayDescription 是测量触发信号，body 只读 DOM 几何
-	useLayoutEffect(() => {
-		const el = descRef.current;
-		if (!el) return;
-		setTruncated(el.scrollHeight > el.clientHeight + 1);
-	}, [displayDescription]);
+	// 描述偏长时给全文 Tooltip（不改卡片尺寸测量逻辑，避免自定义 preview 撑破比例）
+	const showDescTooltip = displayDescription.length > 80;
 
-	// 反馈按钮：已反馈禁用；未反馈打开弹窗
-	const reportButton = canReport ? (
-		<Button
-			type="button"
-			variant="ghost"
-			size="icon-sm"
-			disabled={reported}
-			aria-label={reported ? "已反馈" : "反馈此 Skill"}
-			title={reported ? "已反馈" : "反馈"}
-			className="text-muted-foreground hover:text-foreground"
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				if (!reported) setReportOpen(true);
-			}}
-		>
-			<Icons.flag className="size-3.5" />
-		</Button>
-	) : null;
-
-	const cardBody = (
-		<>
-			<div className="flex items-start justify-between gap-2">
-				<h3 className="truncate font-semibold text-sm">{name}</h3>
-				<div className="flex shrink-0 items-center gap-0.5">
-					{/* // 反馈：桌面 hover 显现，触控设备常显；已反馈仍可见但禁用 */}
-					{reportButton ? (
-						<span className="opacity-100 transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
-							{reportButton}
-						</span>
-					) : null}
-
-					<span className="flex items-center gap-1 text-muted-foreground text-xs">
-						<Icons.star className="size-3.5" />
-						{formatStars(stars)}
-					</span>
+	const card = (
+		<ContentCard
+			name={name}
+			preview={displayDescription}
+			headerExtra={
+				<span className="flex items-center gap-1 pt-0.5 text-muted-foreground text-xs">
+					<Icons.star className="size-3.5" />
+					{formatStars(stars)}
+				</span>
+			}
+			actions={
+				<div className="flex w-full min-w-0 items-center justify-between gap-2">
+					<span className="min-w-0 truncate text-muted-foreground text-xs">{sourceLabel}</span>
+					<div className="flex shrink-0 items-center gap-1">
+						<Badge variant="outline" className="max-w-24 truncate text-xs">
+							{licenseLabel}
+						</Badge>
+						{repoHref ? (
+							<a
+								href={repoHref}
+								target="_blank"
+								rel="noreferrer"
+								aria-label="在 GitHub 查看源仓库"
+								className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+								onClick={(e) => e.stopPropagation()}
+							>
+								<Icons.github className="size-4" />
+							</a>
+						) : null}
+						{canReport ? (
+							<Button
+								type="button"
+								variant="ghost"
+								size="icon-sm"
+								disabled={reported}
+								aria-label={reported ? "已反馈" : "反馈此 Skill"}
+								title={reported ? "已反馈" : "反馈"}
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									if (!reported) setReportOpen(true);
+								}}
+							>
+								<Icons.flag className="size-4" />
+							</Button>
+						) : null}
+					</div>
 				</div>
-			</div>
-			<p ref={descRef} className="line-clamp-3 flex-1 text-muted-foreground text-xs">
-				{displayDescription}
-			</p>
-			{/* // @ 底部署名条：来源仓库 + license（含无协议）+ GitHub 回链，二者始终展示 */}
-			<div className="flex items-center justify-between gap-2 pt-1">
-				<span className="truncate text-muted-foreground text-xs">{sourceRepo ?? authorName}</span>
-				<div className="flex shrink-0 items-center gap-1.5">
-					<Badge variant="outline" className="max-w-28 truncate text-xs">
-						{licenseLabel}
-					</Badge>
-					{repoHref ? (
-						<a
-							href={repoHref}
-							target="_blank"
-							rel="noreferrer"
-							aria-label="在 GitHub 查看源仓库"
-							className="text-muted-foreground transition-colors hover:text-foreground"
-							onClick={(e) => e.stopPropagation()}
-						>
-							<Icons.github className="size-4" />
-						</a>
-					) : null}
-				</div>
-			</div>
-		</>
-	);
-
-	const cardClassName =
-		"group relative flex h-full flex-col gap-2 rounded-xl border bg-card p-4 transition-colors hover:border-ring/40";
-
-	// 未截断：不包 Tooltip，避免短描述也弹层
-	const card = !truncated ? (
-		<div className={cardClassName}>{cardBody}</div>
-	) : (
-		// 截断：hover 卡片任意位置展示完整描述
-		<Tooltip>
-			<TooltipTrigger render={<div className={cardClassName} />}>{cardBody}</TooltipTrigger>
-			<TooltipContent
-				showArrow={false}
-				side="top"
-				className="max-w-xs whitespace-pre-wrap text-left leading-relaxed"
-			>
-				{displayDescription}
-			</TooltipContent>
-		</Tooltip>
+			}
+		/>
 	);
 
 	return (
 		<>
-			{card}
+			{/* // 网格单元内拉满宽度，保证与邻卡同宽同高（aspect 由 ContentCard 决定） */}
+			<div className="w-full min-w-0">
+				{showDescTooltip ? (
+					<Tooltip>
+						<TooltipTrigger render={<div className="w-full min-w-0" />}>{card}</TooltipTrigger>
+						<TooltipContent
+							showArrow={false}
+							side="top"
+							className="max-w-xs whitespace-pre-wrap text-left leading-relaxed"
+						>
+							{displayDescription}
+						</TooltipContent>
+					</Tooltip>
+				) : (
+					card
+				)}
+			</div>
 			{canReport ? (
 				<ReportSkillDialog
 					skillId={id}
@@ -166,6 +140,6 @@ export function SkillCard({
 	);
 }
 
-// star 数缩写：1240 → "1.2k"，避免长数字撑破卡片
+// star 数缩写：1240 → "1.2k"
 const formatStars = (stars: number): string =>
 	stars >= 1000 ? `${(stars / 1000).toFixed(stars >= 10_000 ? 0 : 1)}k` : String(stars);

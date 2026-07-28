@@ -87,8 +87,8 @@ export function ReportSkillDialog({
 				<DialogHeader>
 					<DialogTitle>反馈此 Skill</DialogTitle>
 					<DialogDescription>
-							觉得「{skillName}」不太合适？告诉我们原因就好，我们会认真看看。
-						</DialogDescription>
+						觉得「{skillName}」不太合适？告诉我们原因就好，我们会认真看看。
+					</DialogDescription>
 				</DialogHeader>
 
 				<DialogContentBody className="space-y-4">

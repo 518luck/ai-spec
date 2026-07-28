@@ -1,8 +1,9 @@
 "use client";
 
-// # 内容卡片：整卡复制层 + 标题 + 预览，外加底部 hover 操作遮罩；提示词草稿/收录、规约卡片共用
-// > 主体（复制层/标题/预览）由本组件内置；actions 放 hover 操作按钮；headerExtra 是标题行右侧常驻插槽；children 留给调用方挂各自业务弹窗
-// ! 复制走 onCopy 拉全文，绝不能复制截断的 preview（列表接口只返回预览）。拉取中由调用方传入 isCopying 触发整体 loading 蒙层
+// # 通用规格卡片：统一视觉壳 + 可选整卡点击 + 标题/正文/hover 操作；收录与广场等共用
+// > 传 onClick 即整卡可点（复制等）；不传则为只读展示卡。loading 用 isPending 蒙层。
+// ! 若 onClick 是复制，调用方必须拉全文，绝不能复制列表里的截断 preview
+// ! 可点击控件（回链、反馈等）一律放 actions，避免被底部 hover 遮罩挡住
 
 import { motion } from "motion/react";
 import type { JSX, ReactNode } from "react";
@@ -14,39 +15,55 @@ import { Spinner } from "@/shared/ui/spinner";
 type ContentCardProps = {
 	// 标题
 	name: string;
-	// 正文预览（截断后的内容）
-	preview: string;
-	// > 点击复制触发器：由调用方实现（拉全文 → copy → toast）；签名同步，loading 由 isCopying 反馈
-	onCopy: () => void;
-	// 复制进行中（来自调用方的 mutation isMutating）：为 true 时叠加整卡 loading 蒙层并禁用点击
-	isCopying?: boolean;
-	// 底部 hover 遮罩内的操作按钮；遮罩层永远渲染以保持 hover 视觉一致，按钮可有可无
+	// 正文区（字符串预览或自定义节点）
+	preview?: ReactNode;
+	// 可选整卡点击（如复制）；不传则只读
+	onClick?: () => void;
+	// 整卡点击的无障碍文案（有 onClick 时建议传）
+	clickAriaLabel?: string;
+	// 整卡操作进行中：蒙层 + 禁用点击
+	isPending?: boolean;
+	// 底部 hover 操作区（按钮、回链等可点控件放这里）
 	actions?: ReactNode;
-	// 标题行右侧的常驻插槽（如收藏★按钮）；浮在透明复制层 z-0 之上，z-10 保证可点击
+	// 标题行右侧常驻插槽（收藏★、star 数等）
 	headerExtra?: ReactNode;
-	// > 形变锚点 id：与编辑弹窗共用同一个 layoutId，弹窗打开时由弹窗那侧接管，让面板从这张卡的位置长出来
+	// 与弹窗共用的形变锚点
 	morphId?: string;
-	// ! 锚点是否已交给弹窗（该卡的编辑弹窗打开中）：为 true 时这侧必须撤掉，同一 layoutId 同时存在两个会互相拉扯
+	// 弹窗已接管锚点时淡出本卡
 	isMorphing?: boolean;
-	// 附加内容（弹窗等非视觉 DOM），渲染在主体之后
+	// 正文区额外 class（如等宽字体、行数）
+	previewClassName?: string;
+	// 附加内容（业务弹窗等）
 	children?: ReactNode;
+	className?: string;
 };
 
 export function ContentCard({
 	name,
 	preview,
-	onCopy,
-	isCopying = false,
+	onClick,
+	clickAriaLabel = "打开",
+	isPending = false,
 	actions,
 	headerExtra,
 	morphId,
 	isMorphing = false,
+	previewClassName,
 	children,
+	className,
 }: ContentCardProps): JSX.Element {
+	const clickable = typeof onClick === "function";
+
 	return (
-		// ! 形变期间整张卡淡出：面板是从这张卡的矩形飞走的，卡还留在原地就会和飞行中的面板凑成一组重影
-		<div className={cn(CONTENT_CARD_CLASS, isMorphing && "opacity-0")}>
-			{/* 形变锚点：不画任何东西，只提供一个和卡片等大的矩形供 motion 测量起点 */}
+		<div
+			className={cn(
+				SHELL_CLASS,
+				clickable ? "cursor-pointer" : "cursor-default",
+				isMorphing && "opacity-0",
+				className,
+			)}
+		>
+			{/* 形变锚点：等大透明矩形，供 motion 测量起点 */}
 			{morphId && !isMorphing ? (
 				<motion.div
 					layoutId={morphId}
@@ -55,39 +72,49 @@ export function ContentCard({
 					className="pointer-events-none absolute inset-0"
 				/>
 			) : null}
-			{/* // > 透明点击层：覆盖整个卡片，点击即触发调用方拉全文并复制；操作按钮通过 z-index 浮在上层，互不干扰 */}
-			<button
-				type="button"
-				aria-label="复制"
-				className="absolute inset-0 z-0"
-				onClick={onCopy}
-				disabled={isCopying}
-			/>
+
+			{/* // > 透明点击层：仅在传入 onClick 时渲染；操作按钮 z-index 更高 */}
+			{clickable ? (
+				<button
+					type="button"
+					aria-label={clickAriaLabel}
+					className="absolute inset-0 z-0"
+					onClick={onClick}
+					disabled={isPending}
+				/>
+			) : null}
+
 			{/* 标题行 */}
 			<div className="flex items-start justify-between gap-2">
 				<h3 className="line-clamp-2 flex-1 font-medium text-sm leading-snug">{name}</h3>
 				{headerExtra ? <div className="relative z-10 shrink-0">{headerExtra}</div> : null}
 			</div>
 
-			{/* 内容预览 */}
-			<p className="wrap-break-word line-clamp-6 flex-1 whitespace-pre-wrap font-mono text-muted-foreground text-xs leading-relaxed">
-				{preview || "（无内容）"}
-			</p>
+			{/* 正文 */}
+			{preview != null && preview !== "" ? (
+				typeof preview === "string" ? (
+					<p
+						className={cn(
+							"wrap-break-word line-clamp-6 flex-1 whitespace-pre-wrap text-muted-foreground text-xs leading-relaxed",
+							previewClassName,
+						)}
+					>
+						{preview}
+					</p>
+				) : (
+					<div className={cn("min-h-0 flex-1", previewClassName)}>{preview}</div>
+				)
+			) : (
+				<p className="flex-1 text-muted-foreground text-xs leading-relaxed">（无内容）</p>
+			)}
 
-			{/* 调用方挂载的附加内容（各自的弹窗） */}
 			{children}
 
-			<div
-				className={cn(
-					// 底部渐变遮罩：hover 卡片时淡入；z-10 让它浮在透明点击层（z-0）之上，按钮可点
-					"pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-center justify-end gap-1 bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100",
-				)}
-			>
-				{actions}
-			</div>
+			{/* // 底部渐变操作条：hover 淡入；可点控件统一放 actions */}
+			{actions != null ? <div className={ACTIONS_CLASS}>{actions}</div> : null}
 
-			{/* // ! 复制中：整卡半透明蒙层 + 居中 spinner，阻断重复点击 */}
-			{isCopying ? (
+			{/* // ! 进行中：半透明蒙层 + spinner */}
+			{isPending ? (
 				<div className="absolute inset-0 z-20 flex items-center justify-center bg-card/60 backdrop-blur-[1px]">
 					<Spinner className="size-5" />
 				</div>
@@ -96,13 +123,14 @@ export function ContentCard({
 	);
 }
 
-// 卡片容器样式：aspect-4/3 比例 + hover 抬升 + 亮/暗色投影
-const CONTENT_CARD_CLASS = [
-	// 基础布局
-	"group relative flex aspect-4/3 cursor-pointer flex-col gap-3 overflow-hidden rounded-lg border bg-card p-4 transition-all hover:-translate-y-0.5",
-	// 亮色：右下投影 + inset 左上高光右下暗影（只在边缘做明暗，中间保持平面）
+// 容器质感：aspect-4/3 + hover 抬升 + 亮/暗色投影
+const SHELL_CLASS = [
+	"group relative flex aspect-4/3 flex-col gap-3 overflow-hidden rounded-lg border bg-card p-4 transition-all hover:-translate-y-0.5",
 	"shadow-[1px_2px_4px_-1px_rgba(0,0,0,0.1),3px_6px_16px_-4px_rgba(0,0,0,0.06)] hover:bg-accent/30 hover:shadow-[1px_2px_4px_-1px_rgba(0,0,0,0.12),6px_12px_28px_-4px_rgba(0,0,0,0.1)]",
 	"inset-shadow-[1px_1px_0_white/30] inset-shadow-[-1px_-1px_0_rgba(0,0,0,0.06)]",
-	// 暗色：去掉投影，用表面提亮 + inset 边缘明暗
 	"dark:shadow-none dark:border-white/5 dark:bg-[oklch(0.235_0_0)] dark:inset-shadow-[1px_1px_0_white/8] dark:inset-shadow-[-1px_-1px_0_rgba(0,0,0,0.3)] dark:hover:border-white/10 dark:hover:bg-[oklch(0.265_0_0)]",
 ].join(" ");
+
+// 底部 hover 操作条（全宽，便于左右分布：来源 | 按钮）
+const ACTIONS_CLASS =
+	"pointer-events-none absolute inset-x-0 bottom-0 z-10 flex w-full items-center justify-end gap-1 bg-linear-to-t from-foreground/10 via-foreground/5 to-foreground/0 p-2 opacity-0 backdrop-blur-[1px] transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100";

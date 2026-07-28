@@ -73,8 +73,10 @@ export function RecordCard({
 		<ContentCard
 			name={name}
 			preview={preview}
-			onCopy={handleCopy}
-			isCopying={isCopying}
+			previewClassName="font-mono"
+			onClick={handleCopy}
+			clickAriaLabel="复制"
+			isPending={isCopying}
 			morphId={recordMorphId(id)}
 			isMorphing={isEditing}
 			// > 标题行右侧常驻★按钮：浮在透明复制层之上，可独立点击
