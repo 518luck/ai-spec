@@ -89,28 +89,22 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 		if (!next) setCreateDialogOpen(false);
 	};
 
-	const TriggerIcon = resolveSpaceIcon(activeSpace?.icon);
-
 	return (
 		<Popover open={open} onOpenChange={handlePopoverOpenChange}>
 			<PopoverTrigger
 				render={
 					<Button
 						variant="ghost"
+						size="icon-sm"
 						role="combobox"
+						aria-label={activeSpace?.name ?? "领域空间"}
+						title={activeSpace?.name ?? "领域空间"}
 						aria-expanded={open}
-						className={cn(
-							"flex h-8 w-40 shrink-0 justify-start gap-1.5 px-2 font-normal",
-							className,
-						)}
+						className={className}
 					/>
 				}
 			>
-				<TriggerIcon className="size-4 shrink-0 text-muted-foreground" />
-				<span className={cn("min-w-0 truncate", !activeSpace && "text-muted-foreground")}>
-					{activeSpace?.name ?? "领域空间"}
-				</span>
-				<Icons.selector className="size-3.5 opacity-50" />
+				<Icons.domain className="size-4 text-muted-foreground" />
 			</PopoverTrigger>
 
 			<PopoverContent className="w-45 p-0" align="start">

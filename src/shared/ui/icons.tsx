@@ -17,6 +17,7 @@ import {
 	IconBrightness,
 	IconCalendar,
 	IconCamera,
+	IconCategory,
 	IconCheck,
 	IconChevronDown,
 	IconChevronLeft,
@@ -108,8 +109,10 @@ export const Icons = {
 
 	prompt: IconNote,
 	agentsMd: IconFileAi,
-	rulesLibrary: IconFolder,
-	skills: IconBook,
+		rulesLibrary: IconFolder,
+		domain: IconCategory,
+		skills: IconBook,
+
 	github: IconBrandGithub, // skill 广场条目回链源仓库
 	aiAgents: IconBrandMetabrainz,
 	plugins: IconPlug,

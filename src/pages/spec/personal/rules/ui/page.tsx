@@ -1,6 +1,6 @@
 "use client";
 
-// # 个人规约库页：规则列表表格，toolbar 含文件夹筛选，筛选条带含标签过滤 + 搜索
+// # 个人规约库页：规则列表表格，toolbar 含文件夹筛选，筛选条带含空间/标签过滤 + 搜索
 
 import { useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
@@ -55,13 +55,8 @@ export function PersonalRulesPage({
 	return (
 		<ToolbarPageShell
 			title="规约库"
-			// @ 筛选层级：领域空间（顶层隔离）→ 文件夹（空间内分类）
-			filter={
-				<div className="flex items-center gap-1">
-					<RuleSpaceCombobox />
-					<FolderCombobox resourceType="rules" spaceId={spaceId} />
-				</div>
-			}
+			// 文件夹筛选跟随当前领域空间，只展示空间内分类
+			filter={<FolderCombobox resourceType="rules" spaceId={spaceId} />}
 			actions={
 				<Button size="sm" variant="outline" className="gap-2" onClick={handleCreateRule}>
 					新增规约
@@ -72,9 +67,12 @@ export function PersonalRulesPage({
 			}
 		>
 			<PageWidthWrapper fill>
-				{/* // @ 筛选条带：标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
+				{/* // @ 筛选条带：空间 + 标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 				<div className="mb-6 flex items-center justify-between gap-3">
-					<RuleTagFilter />
+					<div className="flex items-center gap-1">
+						<RuleSpaceCombobox />
+						<RuleTagFilter />
+					</div>
 					<div className="flex items-center gap-2">
 						<RuleViewToggle value={view} onChange={handleViewChange} />
 						<SearchInput

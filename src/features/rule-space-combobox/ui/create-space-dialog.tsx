@@ -61,7 +61,7 @@ export function CreateSpaceDialog({
 				<DialogHeader className="relative">
 					<DialogTitle>新建领域空间</DialogTitle>
 					<DialogDescription>
-						空间之间彼此隔离，代码和创作的规约不会串门，先给它取个名字吧。
+						领域空间之间彼此隔离，标签只在同一空间内跨文件夹筛选，先给它取个名字吧。
 					</DialogDescription>
 					<PreviewIcon className="absolute top-4 right-4 size-8 text-muted-foreground" />
 				</DialogHeader>
