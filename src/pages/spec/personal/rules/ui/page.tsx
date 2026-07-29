@@ -15,9 +15,8 @@ import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
-import { type RuleView } from "./rule-layout-trigger";
 import { RuleFilterTrigger } from "./rule-filter-trigger";
-import { RuleLayoutTrigger } from "./rule-layout-trigger";
+import { RuleLayoutTrigger, type RuleView } from "./rule-layout-trigger";
 
 // URL 参数名；缺省或非法值一律回落表格
 const RULE_VIEW_PARAM = "view";

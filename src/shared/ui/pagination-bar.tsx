@@ -2,13 +2,14 @@
 
 // # 分页栏：左侧「第 X-Y 条，共 Z 条」+ 右侧上一页/下一页按钮
 
-import { useSearchParams } from "next/navigation";
 import type { JSX } from "react";
 
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 
 type PaginationBarProps = {
+	// 当前页码（0-based，由列表容器维护）
+	page: number;
 	// 数据总条数（来自 API）
 	total: number;
 	// 是否有下一页（来自 API）
@@ -21,14 +22,13 @@ type PaginationBarProps = {
 
 // > 通用分页栏：样式与 settings/keys 分页一致，供多处复用
 export function PaginationBar({
+	page,
 	total,
 	hasMore,
 	pageSize,
 	onPageChange,
 }: PaginationBarProps): JSX.Element {
-	// 从 URL 读取页码，计算分页显示信息
-	const searchParams = useSearchParams();
-	const page = Math.max(0, (Number(searchParams?.get("page")) || 1) - 1);
+	// 根据当前页码计算分页显示信息
 	const start = total === 0 ? 0 : page * pageSize + 1;
 	const end = Math.min((page + 1) * pageSize, total);
 

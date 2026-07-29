@@ -14,6 +14,17 @@ import { RuleTable } from "./table";
 // 表格分页每页条数
 const PAGE_SIZE = 10;
 
+// URL 中的页码参数名
+const PAGE_PARAM = "page";
+
+// 将 URL 里的 1-based 正整数页码转为内部 0-based 页码
+const parsePage = (value: string | null): number => {
+	if (!value || !/^[1-9]\d*$/.test(value)) return 0;
+
+	const page = Number(value);
+	return Number.isSafeInteger(page) ? page - 1 : 0;
+};
+
 type RuleTableContainerProps = {
 	folderId?: string;
 	spaceId?: string;
@@ -32,8 +43,8 @@ export function RuleTableContainer({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 
-	// 分页：从 URL 读页码（1-based），内部 0-based
-	const page = Math.max(0, (Number(searchParams?.get("page")) || 1) - 1);
+	// 从 URL 读取页码，换算为 API 所需的偏移量
+	const page = parsePage(searchParams?.get(PAGE_PARAM) ?? null);
 	const offset = page * PAGE_SIZE;
 
 	// 获取规约列表，支持空间/文件夹/标签筛选和搜索 + 分页
@@ -45,12 +56,14 @@ export function RuleTableContainer({
 	const total = data?.total ?? 0;
 	const hasMore = data?.hasMore ?? false;
 
-	// 翻页：更新 URL ?page=N，触发 SWR 重新请求
+	// 翻页：更新 URL 页码，触发 SWR 重新请求
 	const handlePageChange = (direction: "prev" | "next"): void => {
-		const target = direction === "prev" ? page - 1 : page + 1;
+		const targetPage = direction === "prev" ? page - 1 : page + 1;
 		const params = new URLSearchParams(searchParams?.toString() ?? "");
-		if (target === 0) params.delete("page");
-		else params.set("page", String(target + 1));
+
+		if (targetPage <= 0) params.delete(PAGE_PARAM);
+		else params.set(PAGE_PARAM, String(targetPage + 1));
+
 		router.push(`${pathname}?${params.toString()}`, { scroll: false });
 	};
 
@@ -64,6 +77,7 @@ export function RuleTableContainer({
 		>
 			<RuleTable rules={rules} isLoading={isLoading} />
 			<PaginationBar
+				page={page}
 				total={total}
 				hasMore={hasMore}
 				pageSize={PAGE_SIZE}
