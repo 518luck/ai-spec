@@ -86,3 +86,25 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 4: 规约表格分页增强：每页条数选择 + 首页按钮 + 动画
+
+**Date**: 2026-07-30
+**Task**: 规约表格分页增强：每页条数选择 + 首页按钮 + 动画
+**Branch**: `main`
+
+### Summary
+
+RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快速跳转按钮（使用 chevronLeftPipe 图标），并添加淡入淡出动画。PaginationBar 组件新增 pageSizeOptions/onPageSizeChange/onFirstPage 可选 props，保持向后兼容。RuleTableContainer 改为从 URL ?pageSize=N 读取每页条数，切换时自动重置到首页。修复服务端组件 page.tsx 未剥离 pageSize 参数导致的 ZodError。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `31d919f` | (see git log) |
+| `1c46c20` | (see git log) |
+
+### Status
+
+[OK] **Completed**
