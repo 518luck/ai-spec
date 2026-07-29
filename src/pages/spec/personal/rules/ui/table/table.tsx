@@ -11,7 +11,7 @@ import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { AnimatedEmptySearch, EmptyFolderAction } from "@/widgets/empty-state";
+import { EmptyAction } from "@/widgets/empty-state";
 import { itemTransition, ROW_ITEM_MOTION } from "../../lib/list-motion";
 import { TableActions } from "../table-actions";
 
@@ -34,18 +34,10 @@ export function RuleTable({ rules, isLoading, q, onCreate }: RuleTableProps): JS
 
 	// 空状态：在表格外部显示，避免表格元素的布局限制
 	if (rules.length === 0) {
-		// 搜索无结果：放大镜扫描搜寻动画
-		if (q) {
-			return (
-				<div className="flex h-full items-center justify-center">
-					<AnimatedEmptySearch />
-				</div>
-			);
-		}
-
 		return (
 			<div className="flex h-full items-center justify-center">
-				<EmptyFolderAction
+				<EmptyAction
+					q={q}
 					icon={<Icons.rulesLibrary />}
 					actionLabel="新增规约"
 					onAction={onCreate}

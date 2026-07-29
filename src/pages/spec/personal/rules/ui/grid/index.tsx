@@ -12,7 +12,7 @@ import type { RuleListVo } from "@/shared/lib/zod/schemas/rule";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
-import { AnimatedEmptySearch, EmptyFolderAction } from "@/widgets/empty-state";
+import { EmptyAction } from "@/widgets/empty-state";
 import { RuleGrid } from "./grid";
 
 // 卡片无限滚动每页条数
@@ -65,18 +65,10 @@ export function RuleGridContainer({
 	}
 
 	if (rules.length === 0) {
-		// 搜索无结果：放大镜扫描搜寻动画
-		if (q) {
-			return (
-				<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
-					<AnimatedEmptySearch />
-				</div>
-			);
-		}
-
 		return (
 			<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
-				<EmptyFolderAction
+				<EmptyAction
+					q={q}
 					icon={<Icons.rulesLibrary />}
 					actionLabel="新增规约"
 					onAction={onCreate}
