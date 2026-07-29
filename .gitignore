@@ -54,6 +54,7 @@ next-env.d.ts
 
 # ZCode 本地配置
 .zcode/
+.playwright-mcp/
 
 # fumadocs-mdx 生成目录
 .source/
