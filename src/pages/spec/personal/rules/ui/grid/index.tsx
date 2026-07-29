@@ -10,6 +10,7 @@ import { getRules } from "@/entities/rule";
 import { useInfiniteLoad } from "@/shared/hooks";
 import type { RuleListVo } from "@/shared/lib/zod/schemas/rule";
 import { AnimatedEmptyFolder } from "@/shared/ui/animated-empty-folder";
+import { EmptySearch } from "@/shared/ui/animated-empty-search";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
@@ -63,14 +64,21 @@ export function RuleGridContainer({
 	}
 
 	if (rules.length === 0) {
+		// 搜索无结果：放大镜扫描搜寻动画
+		if (q) {
+			return (
+				<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
+					<EmptySearch />
+				</div>
+			);
+		}
+
 		return (
 			<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
 				<AnimatedEmptyFolder
 					icon={<Icons.rulesLibrary />}
-					title={folderId || tagIds || q ? "当前筛选条件下暂无规约" : "还没有规约"}
-					description={
-						folderId || tagIds || q ? "试试其他筛选条件" : "点右上角「新增规约」写一条吧"
-					}
+					title={folderId || tagIds ? "当前筛选条件下暂无规约" : "还没有规约"}
+					description={folderId || tagIds ? "试试其他筛选条件" : "点右上角「新增规约」写一条吧"}
 				/>
 			</div>
 		);

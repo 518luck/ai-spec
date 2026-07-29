@@ -75,7 +75,7 @@ export function RuleTableContainer({
 			className="flex flex-col overflow-hidden rounded-lg border"
 			style={{ height: TABLE_HEIGHT }}
 		>
-			<RuleTable rules={rules} isLoading={isLoading} />
+			<RuleTable rules={rules} isLoading={isLoading} q={q} />
 			<PaginationBar
 				page={page}
 				total={total}

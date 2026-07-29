@@ -8,6 +8,7 @@ import type { JSX } from "react";
 
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { AnimatedEmptyFolder } from "@/shared/ui/animated-empty-folder";
+import { EmptySearch } from "@/shared/ui/animated-empty-search";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { ScrollArea } from "@/shared/ui/scroll-area";
@@ -18,9 +19,10 @@ import { TableActions } from "../table-actions";
 type RuleTableProps = {
 	rules: RuleListItemVo[];
 	isLoading: boolean;
+	q?: string;
 };
 
-export function RuleTable({ rules, isLoading }: RuleTableProps): JSX.Element {
+export function RuleTable({ rules, isLoading, q }: RuleTableProps): JSX.Element {
 	// 加载状态
 	if (isLoading) {
 		return (
@@ -32,6 +34,15 @@ export function RuleTable({ rules, isLoading }: RuleTableProps): JSX.Element {
 
 	// 空状态：在表格外部显示，避免表格元素的布局限制
 	if (rules.length === 0) {
+		// 搜索无结果：放大镜扫描搜寻动画
+		if (q) {
+			return (
+				<div className="flex h-full items-center justify-center">
+					<EmptySearch />
+				</div>
+			);
+		}
+
 		return (
 			<div className="flex h-full items-center justify-center">
 				<AnimatedEmptyFolder
