@@ -12,7 +12,7 @@ type UseInfiniteLoadOptions = {
 	// 是否正在加载（来自 useSWRInfinite 的 isValidating）
 	isValidating: boolean;
 	// 触发加载下一页（来自 useSWRInfinite 的 setSize）
-	setSize: (fn: (size: number) => number) => Promise<any>;
+	setSize: (size: number | ((size: number) => number)) => Promise<unknown>;
 	// 提前多少像素触发加载，默认 200px
 	rootMargin?: string;
 	// 防抖延迟（ms），默认 100ms
