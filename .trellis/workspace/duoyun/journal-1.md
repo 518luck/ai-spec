@@ -26,3 +26,35 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 2: 空状态组件体系重构：搜索动画 + 文件夹动画 + 磁吸按钮 + 编排组件
+
+**Date**: 2026-07-29
+**Task**: 空状态组件体系重构：搜索动画 + 文件夹动画 + 磁吸按钮 + 编排组件
+**Branch**: `main`
+
+### Summary
+
+将规约列表空状态从单一 AnimatedEmptyFolder 扩展为完整组件体系：
+- 新增 AnimatedEmptySearch（扫描搜寻动画，搜索无结果时展示）
+- 新增 MagneticButton（磁吸按钮，独立可复用）
+- 新增 EmptyAction（编排组件，根据 q 自动切换搜索/文件夹空态）
+- 组件统一迁移至 widgets/empty-state 目录
+- AnimatedEmptyFolder 添加雾化弥散遮罩消除卡片突然出现的裂缝感
+- 按钮适配主题色和全局圆角规范
+- title/description 改为纯选填
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `f37e4b7` | (see git log) |
+| `cb96fe0` | (see git log) |
+| `bde6d41` | (see git log) |
+| `bab52ae` | (see git log) |
+| `c1d4496` | (see git log) |
+
+### Status
+
+[OK] **Completed**
