@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 2
-- **Last Active**: 2026-07-29
+- **Total Sessions**: 3
+- **Last Active**: 2026-07-30
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~60 | Active |
+| `journal-1.md` | ~88 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 3 | 2026-07-30 | 表格全选 + 批量删除：checkbox 列、批量操作栏、批量删除 API 端点 | `123b792`, `023e7ff` | `main` |
 | 2 | 2026-07-29 | 空状态组件体系重构：搜索动画 + 文件夹动画 + 磁吸按钮 + 编排组件 | `f37e4b7`, `cb96fe0`, `bde6d41`, `bab52ae`, `c1d4496` | `main` |
 | 1 | 2026-07-29 | 按真实技术栈重塑 .trellis/spec 规范 | `e90a2d5` | `main` |
 <!-- @@@/auto:session-history -->

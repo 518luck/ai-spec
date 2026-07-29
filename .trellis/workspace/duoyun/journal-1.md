@@ -58,3 +58,31 @@
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: 表格全选 + 批量删除：checkbox 列、批量操作栏、批量删除 API 端点
+
+**Date**: 2026-07-30
+**Task**: 表格全选 + 批量删除：checkbox 列、批量操作栏、批量删除 API 端点
+**Branch**: `main`
+
+### Summary
+
+给规约列表表格添加行选择与批量删除能力：
+- 新增 DELETE /api/rules/batch 端点（一次 deleteMany，归属校验）
+- 新增 deleteRules entity 函数，单次网络往返
+- 表格新增 checkbox 列：表头全选（三态） + 行选择
+- 选中时批量操作栏（motion 动画滑入）替换表头：取消选择 | 批量删除 | 已选 N 项
+- 批量删除确认弹窗：需输入'确认删除'，展示待删规约名称
+- 选中行 bg-muted 高亮
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `123b792` | (see git log) |
+| `023e7ff` | (see git log) |
+
+### Status
+
+[OK] **Completed**
