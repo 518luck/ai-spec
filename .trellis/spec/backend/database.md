@@ -1,419 +1,92 @@
-# Database Operations
+# 数据库（Prisma）
 
-This document covers database best practices using Drizzle ORM with PostgreSQL.
+> ORM 是 **Prisma**（`@prisma/client@^7.8.0` + driver adapter），不是 Drizzle。schema 规范权威源：`prisma/AGENTS.md`。
 
-## Critical Rules
+## Prisma Client
 
-### 1. NO `await` in Loops (N+1 Problem)
+- 单例从 `@/shared/db` 导入默认 `prisma`：
 
-Never use `await` inside a loop. This creates the N+1 query problem, causing severe performance degradation.
+```ts
+import prisma from "@/shared/db";
+import { Prisma } from "@/shared/db/generator/client";
 
-```typescript
-// BAD - N+1 queries (1 query per iteration)
-const orders = await db.select().from(orderTable).where(eq(orderTable.userId, userId));
-for (const order of orders) {
-  const items = await db.select().from(orderItemTable).where(eq(orderItemTable.orderId, order.id));
-  order.items = items;
+const folders = await prisma.folder.findMany({ where: { ownerId: session.user.id } });
+```
+
+- client 由 `prisma-client` generator 生成到 `src/shared/db/generator/`（`prisma/schema/schema.prisma` 的 `generator client { output = "../../src/shared/db/generator" }`）。
+- **`src/shared/db/generator/` 严禁手改**，由脚本自动生成。
+
+## schema 工作流（强制）
+
+1. 在 `prisma/schema/*.prisma` 定义/修改 model。
+2. `pnpm run prisma:generate` 生成 Prisma Client。
+3. 需同步数据库结构时 `pnpm run prisma:migrate`。
+
+## 多 schema
+
+`datasource db` 声明多个 schema（`auth/token/prompt/folder/team/shared/rule/agents/discover`），每个 model 带 `@@schema("域")`：
+
+```prisma
+datasource db {
+  schemas = ["auth", "token", "prompt", "folder", "team", "shared", "rule", "agents", "discover"]
+}
+model PromptRecord { /* ... */ @@schema("prompt") }
+```
+
+## 命名与字段排列
+
+详见 `prisma/AGENTS.md`，要点：
+
+- 字段 camelCase + `@map("snake_case")`（DB 列名保持 snake_case，无需数据迁移）。单个单词字段不加 `@map`（`id`/`name`/`content`）。关系字段 camelCase 且**不加 `@map`**（关系无对应列）。`@relation("Name")` 字符串是关系标识，改名不动它。
+- Model / Enum 用 PascalCase。
+- 字段排列分区（空行分隔）：①主键 → ②业务字段 → ③时间戳 → ④外键列 → ⑤关联关系（含反向关系）→ ⑥索引/约束/`@@schema`。
+- 每个字段加行内注释说明业务用途。
+- **第三方库固定表结构**（如 better-auth 的 `Account`/`Session`）不适用本规范，保持库原生命名，禁止改名。
+
+## 查询模式
+
+### 避免循环内 await（N+1）
+
+```ts
+// ❌ N+1
+for (const r of records) {
+  r.versions = await prisma.version.findMany({ where: { recordId: r.id } });
 }
 
-// GOOD - 2 queries total using inArray
-const orders = await db.select().from(orderTable).where(eq(orderTable.userId, userId));
-const orderIds = orders.map(o => o.id);
-
-// Single query for all items
-const allItems = await db
-  .select()
-  .from(orderItemTable)
-  .where(inArray(orderItemTable.orderId, orderIds));
-
-// Group items by orderId in memory
-const itemsByOrder = new Map<string, typeof allItems>();
-for (const item of allItems) {
-  const existing = itemsByOrder.get(item.orderId) || [];
-  existing.push(item);
-  itemsByOrder.set(item.orderId, existing);
-}
-
-// Attach to orders
-const ordersWithItems = orders.map(order => ({
-  ...order,
-  items: itemsByOrder.get(order.id) || [],
-}));
-```
-
-### 2. Batch Insert Pattern
-
-Use batch inserts for multiple records instead of individual inserts.
-
-```typescript
-// BAD - Multiple insert statements
-for (const item of items) {
-  await db.insert(orderItemTable).values(item);
-}
-
-// GOOD - Single batch insert
-await db.insert(orderItemTable).values(items);
-
-// With returning clause
-const insertedItems = await db
-  .insert(orderItemTable)
-  .values(items)
-  .returning();
-```
-
-### 3. Conflict Handling with `onConflictDoUpdate`
-
-Handle upserts efficiently with conflict resolution.
-
-```typescript
-// Upsert single record
-await db
-  .insert(userSettingsTable)
-  .values({
-    userId,
-    theme: "dark",
-    notifications: true,
-  })
-  .onConflictDoUpdate({
-    target: userSettingsTable.userId,
-    set: {
-      theme: sql`excluded.theme`,
-      notifications: sql`excluded.notifications`,
-      updatedAt: sql`NOW()`,
-    },
-  });
-
-// Batch upsert with composite key
-const upsertedRecords = await db
-  .insert(inventoryTable)
-  .values(inventoryData)
-  .onConflictDoUpdate({
-    target: [inventoryTable.warehouseId, inventoryTable.productId],
-    set: {
-      quantity: sql`excluded.quantity`,
-      updatedAt: sql`NOW()`,
-    },
-  })
-  .returning({
-    id: inventoryTable.id,
-    productId: inventoryTable.productId,
-  });
-```
-
-## Query Organization
-
-Database queries should be organized in `packages/database/drizzle/queries/`.
-
-```
-packages/database/drizzle/queries/
-├── index.ts          # Re-exports all query modules
-├── types.ts          # Shared query types
-├── users.ts          # User-related queries
-├── orders.ts         # Order-related queries
-└── products.ts       # Product-related queries
-```
-
-**Example: `queries/orders.ts`**
-
-```typescript
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
-import { db } from "../client";
-import { order as orderTable, orderItem as orderItemTable } from "../schema/postgres";
-
-/**
- * Bulk upsert orders with conflict handling
- */
-export async function bulkUpsertOrders(
-  ordersData: Array<{
-    externalId: string;
-    customerId: string;
-    status: string;
-    total: number;
-  }>,
-) {
-  if (ordersData.length === 0) {
-    return [];
-  }
-
-  const upserted = await db
-    .insert(orderTable)
-    .values(ordersData)
-    .onConflictDoUpdate({
-      target: [orderTable.externalId],
-      set: {
-        status: sql`excluded.status`,
-        total: sql`excluded.total`,
-        updatedAt: sql`NOW()`,
-      },
-    })
-    .returning({
-      id: orderTable.id,
-      externalId: orderTable.externalId,
-    });
-
-  return upserted;
-}
-
-/**
- * Get orders with items for a user
- */
-export async function getOrdersWithItems(params: {
-  userId: string;
-  limit?: number;
-}) {
-  const { userId, limit = 20 } = params;
-
-  const orders = await db
-    .select()
-    .from(orderTable)
-    .where(eq(orderTable.userId, userId))
-    .orderBy(desc(orderTable.createdAt))
-    .limit(limit);
-
-  if (orders.length === 0) {
-    return [];
-  }
-
-  const orderIds = orders.map(o => o.id);
-  const items = await db
-    .select()
-    .from(orderItemTable)
-    .where(inArray(orderItemTable.orderId, orderIds));
-
-  const itemsByOrder = groupBy(items, "orderId");
-
-  return orders.map(order => ({
-    ...order,
-    items: itemsByOrder.get(order.id) || [],
-  }));
+// ✅ 两次查询 + 内存关联
+const ids = records.map((r) => r.id);
+const versions = await prisma.version.findMany({ where: { recordId: { in: ids } } });
+const byRecord = new Map<string, Version[]>();
+for (const v of versions) {
+  const arr = byRecord.get(v.recordId) ?? [];
+  arr.push(v);
+  byRecord.set(v.recordId, arr);
 }
 ```
 
-## Advanced SQL Patterns
+### 批量写
 
-### JSON Column Operations
+用 `createMany` / `updateMany` / `upsert`，不要循环单条写。
 
-When using PostgreSQL JSON/JSONB columns, proper casting is required for JSON functions.
+### 事务
 
-```typescript
-// BAD - Missing cast for jsonb functions
-const result = await db
-  .select()
-  .from(productTable)
-  .where(sql`${productTable.metadata}->>'category' = 'electronics'`);
+`prisma.$transaction(async (tx) => { /* 用 tx 代替 prisma */ })`；抛错自动回滚。
 
-// GOOD - Explicit cast for jsonb operations
-const result = await db
-  .select()
-  .from(productTable)
-  .where(sql`${productTable.metadata}::jsonb->>'category' = 'electronics'`);
+### 类型推断
 
-// JSON array contains check
-const withTag = await db
-  .select()
-  .from(productTable)
-  .where(sql`${productTable.tags}::jsonb ? 'featured'`);
-
-// JSON array length
-const withMultipleTags = await db
-  .select()
-  .from(productTable)
-  .where(sql`jsonb_array_length(${productTable.tags}::jsonb) > 3`);
+```ts
+type User = Prisma.UserGetPayload<{ select: { id: true; email: true } }>;
+// 或整行
+type Record = Prisma.PromptRecordGetPayload<{}>;
 ```
 
-### Raw SQL Column Names (camelCase)
+## 并行
 
-When using raw SQL with Drizzle, column names must use double quotes for camelCase names.
+独立操作用 `Promise.all`；外部 API 并发控制用 `bottleneck`（项目已装）。详见 `queue.md`。
 
-```typescript
-// BAD - PostgreSQL will lowercase unquoted identifiers
-await db.execute(sql`
-  UPDATE order
-  SET lastUpdatedAt = NOW()
-  WHERE userId = ${userId}
-`);
+## 反模式
 
-// GOOD - Double quotes preserve camelCase
-await db.execute(sql`
-  UPDATE "order"
-  SET "lastUpdatedAt" = NOW()
-  WHERE "userId" = ${userId}
-`);
-
-// Complex raw SQL example
-await db.execute(sql`
-  UPDATE "order" AS o
-  SET
-    "totalAmount" = sub."calculatedTotal",
-    "updatedAt" = NOW()
-  FROM (
-    SELECT
-      "orderId",
-      SUM("price" * "quantity") AS "calculatedTotal"
-    FROM "orderItem"
-    WHERE "orderId" = ANY(${sql.raw(arrayLiteral)})
-    GROUP BY "orderId"
-  ) AS sub
-  WHERE o.id = sub."orderId"
-`);
-```
-
-### Enum Comparison
-
-When comparing enum columns in raw SQL, cast the column to text.
-
-```typescript
-// BAD - Direct enum comparison may fail
-await db.execute(sql`
-  SELECT * FROM "order"
-  WHERE status != 'DRAFT'
-`);
-
-// GOOD - Cast enum column to text
-await db.execute(sql`
-  SELECT * FROM "order"
-  WHERE status::text != 'DRAFT'
-`);
-
-// In Drizzle query builder (works correctly)
-const orders = await db
-  .select()
-  .from(orderTable)
-  .where(ne(orderTable.status, "DRAFT"));
-```
-
-### Aggregation with Filtering
-
-Use FILTER clause for conditional aggregation.
-
-```typescript
-await db.execute(sql`
-  UPDATE "category" AS c
-  SET
-    "productCount" = sub."count",
-    "activeProductCount" = sub."activeCount",
-    "updatedAt" = NOW()
-  FROM (
-    SELECT
-      "categoryId",
-      COUNT(*)::int AS "count",
-      COUNT(*) FILTER (WHERE "status" = 'ACTIVE')::int AS "activeCount"
-    FROM "product"
-    WHERE "categoryId" = ANY(${sql.raw(categoryIds)})
-    GROUP BY "categoryId"
-  ) AS sub
-  WHERE c.id = sub."categoryId"
-`);
-```
-
-## Transaction Patterns
-
-### Basic Transaction
-
-```typescript
-import { db } from "@your-app/database";
-
-const result = await db.transaction(async (tx) => {
-  // All operations use tx instead of db
-  const [order] = await tx
-    .insert(orderTable)
-    .values({ userId, total: 0 })
-    .returning();
-
-  await tx.insert(orderItemTable).values(
-    items.map(item => ({
-      orderId: order.id,
-      ...item,
-    }))
-  );
-
-  // Update order total
-  const total = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  await tx
-    .update(orderTable)
-    .set({ total })
-    .where(eq(orderTable.id, order.id));
-
-  return order;
-});
-```
-
-### Transaction with Rollback
-
-```typescript
-try {
-  await db.transaction(async (tx) => {
-    await tx.insert(orderTable).values(orderData);
-
-    // This will cause rollback if payment fails
-    const paymentResult = await processPayment(orderData.total);
-    if (!paymentResult.success) {
-      throw new Error("Payment failed");
-    }
-
-    await tx.update(orderTable)
-      .set({ paymentId: paymentResult.id })
-      .where(eq(orderTable.id, orderData.id));
-  });
-} catch (error) {
-  // Transaction automatically rolled back
-  logger.error("Order creation failed", { error });
-}
-```
-
-## Query Performance Tips
-
-### Use Indexes
-
-Ensure your queries use appropriate indexes:
-
-```typescript
-// Good for index on (userId, createdAt DESC)
-const recentOrders = await db
-  .select()
-  .from(orderTable)
-  .where(eq(orderTable.userId, userId))
-  .orderBy(desc(orderTable.createdAt))
-  .limit(10);
-```
-
-### Select Only Needed Columns
-
-```typescript
-// BAD - Selects all columns including large text fields
-const orders = await db.select().from(orderTable);
-
-// GOOD - Select only needed columns
-const orders = await db
-  .select({
-    id: orderTable.id,
-    status: orderTable.status,
-    total: orderTable.total,
-  })
-  .from(orderTable);
-```
-
-### Use Relations for Complex Queries
-
-```typescript
-// Using Drizzle relations for nested data
-const ordersWithDetails = await db.query.order.findMany({
-  where: eq(orderTable.userId, userId),
-  with: {
-    items: {
-      with: {
-        product: true,
-      },
-    },
-    customer: {
-      columns: {
-        id: true,
-        name: true,
-        email: true,
-      },
-    },
-  },
-  orderBy: (orders, { desc }) => desc(orders.createdAt),
-  limit: 20,
-});
-```
+- 手改 `src/shared/db/generator/`。
+- 直接返回 Prisma 裸对象给前端（不经 Vo 校验/转换）。
+- 循环内 `await` 查询。
+- 不用 `@map` 导致 DB 列名与历史不一致（历史列名不变，无需迁移）。

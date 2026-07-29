@@ -1,340 +1,60 @@
-# Logging and Monitoring
+# 日志（Axiom）
 
-This document covers structured logging, error tracking with Sentry, and observability patterns.
+> 权威源：`src/server/infrastructure/axiom/AGENTS.md`。正式日志**不用 `console.log`**（临时调试可用）。
 
-## Critical Rules
+## 业务日志：createLogger(module)
 
-### NO `console.log` - Use Structured Logger
+```ts
+import { createLogger } from "@/server/infrastructure/axiom/server";
 
-Never use `console.log` in production code. Always use the structured logger from `@your-app/logs`.
-
-```typescript
-// BAD - Unstructured console logging
-console.log("Order created:", orderId);
-console.error("Failed to process:", error);
-
-// GOOD - Structured logging
-import { logger } from "@your-app/logs";
-
-logger.info("Order created", {
-  orderId,
-  userId,
-  total: order.total,
-});
-
-logger.error("Failed to process order", {
-  orderId,
-  error: error instanceof Error ? error.message : String(error),
-  stack: error instanceof Error ? error.stack : undefined,
-});
+const log = createLogger("UserService");
+log.info("用户登录成功", { userId: "123" });
+log.error("登录失败", { email, error: err.message });
 ```
 
-## Logger API
+- 返回带 `module` 上下文的 ScopedLogger（`src/server/infrastructure/axiom/server.ts:68`）。
+- 传**结构化对象**做上下文，不要字符串拼接：`log.info("订单创建", { orderId, userId })`，不要 `` log.info(`订单 ${orderId}`) ``。
+- 底层基于 `@axiomhq/logging` + `@axiomhq/nextjs`。
 
-```typescript
-import { logger } from "@your-app/logs";
+## Route Handler 日志：withAxiomBodyLog / withAxiom
 
-// Log levels
-logger.debug("Debug message", { context: "value" });
-logger.info("Info message", { orderId, status });
-logger.warn("Warning message", { userId, reason: "quota exceeded" });
-logger.error("Error message", { error: err.message, stack: err.stack });
+Route Handler 用 `withPersonal`/`withSession` 包裹，内部已含 `withAxiomBodyLog`/`withAxiom`（定义 `src/server/infrastructure/axiom/server.ts:92`/`:130`），自动记录请求/响应体。**不要**在 handler 里额外手写请求体日志。
+
+```ts
+export const POST = withAxiomBodyLog(handler); // 一般不直接用，经 withPersonal/withSession
 ```
 
-## Sentry Integration
+## 本地日志文件（开发环境）
 
-### Span Tracing
+开发环境（`NODE_ENV !== "production"`）`createLogger` 额外把每条日志写入项目根 `logs/server.log`（单行可读文本）：
 
-Use the tracing system to monitor performance and track operations.
-
-```typescript
-import { SpanPrefix, span } from "../../../lib/tracer";
-
-// Database operations
-const orders = await span(
-  `${SpanPrefix.DB}GetUserOrders`,
-  () => db.select().from(orderTable).where(eq(orderTable.userId, userId)),
-  { userId, limit: 20 }
-);
-
-// External API calls
-const response = await span(
-  `${SpanPrefix.Http}FetchInventory`,
-  () => inventoryClient.getStock(productIds),
-  { productCount: productIds.length }
-);
-
-// Redis cache operations
-const cached = await span(
-  `${SpanPrefix.Redis}GetSession`,
-  () => redis.get(sessionKey),
-  { sessionKey }
-);
+```
+2026-07-01 16:51:13.212 ERROR [server-action] column "hashed_key" does not exist {"stack":"..."}
 ```
 
-### SpanPrefix Constants
+- 仅开发环境落盘，生产不写本地文件。
+- `logs/` 已在 `.gitignore`，不提交。
+- 排查问题时直接翻 `logs/server.log` 或提供给 AI。
 
-Use standardized prefixes for consistent Sentry categorization:
+## 日志内容规范
 
-```typescript
-import { SpanPrefix } from "../../../lib/tracer";
+**记录**：外部 API 调用的请求/响应、数据库写操作、认证事件、业务关键操作、错误与异常。
+**谨慎**：用户输入（脱敏 PII）、请求载荷（脱敏密钥）。
+**绝不**：密码、token、信用卡号、API key、密钥。
 
-const SpanPrefix = {
-  /** Database operations - maps to Sentry op: db.query */
-  DB: "DB.",
+| 级别 | 用途 | 示例 |
+| --- | --- | --- |
+| `debug` | 开发诊断 | 变量值、流程跟踪 |
+| `info` | 正常操作 | 订单创建、用户登录 |
+| `warn` | 可恢复问题 | 限流临近、重试 |
+| `error` | 需关注故障 | API 调用失败、数据库错误 |
 
-  /** External HTTP API calls - maps to Sentry op: http.client */
-  Http: "Http.",
+## 批量操作日志
 
-  /** Redis cache operations - maps to Sentry op: db.redis */
-  Redis: "Redis.",
+批量任务记录总数 / 成功 / 失败计数；部分失败时 `warn` 汇总失败原因。
 
-  /** AI model invocations - maps to Sentry op: ai.run */
-  AI: "AI.",
+## 反模式
 
-  /** Generic cache operations - maps to Sentry op: cache */
-  Cache: "Cache.",
-
-  /** Queue/message operations - maps to Sentry op: queue */
-  Queue: "Queue.",
-} as const;
-```
-
-### Naming Convention
-
-```typescript
-// Pattern: ${SpanPrefix.Type}${Action}${Resource}
-
-// Database
-`${SpanPrefix.DB}GetUserOrders`
-`${SpanPrefix.DB}BatchUpdateProducts`
-`${SpanPrefix.DB}CreateOrder`
-
-// External APIs
-`${SpanPrefix.Http}FetchPaymentStatus`
-`${SpanPrefix.Http}SendNotification`
-
-// Redis
-`${SpanPrefix.Redis}GetSession`
-`${SpanPrefix.Redis}SetCache`
-
-// AI
-`${SpanPrefix.AI}ClassifyContent`
-`${SpanPrefix.AI}GenerateResponse`
-```
-
-### Error Capture
-
-```typescript
-import { captureError } from "../../../lib/tracer";
-
-try {
-  await processOrder(orderId);
-} catch (error) {
-  captureError(error, {
-    tags: {
-      operation: "processOrder",
-      orderId,
-    },
-    extra: {
-      userId: context.user.id,
-      orderStatus: order.status,
-    },
-  });
-
-  throw error; // Re-throw if needed
-}
-```
-
-### Trace Context
-
-For complex operations, use trace context to correlate logs:
-
-```typescript
-import { runWithTrace, getLogId } from "../../../lib/tracer";
-
-export async function processOrderBatch(orderIds: string[]) {
-  return runWithTrace(`batch-${Date.now()}`, async () => {
-    const logId = getLogId();
-
-    logger.info("Starting batch processing", {
-      logId,
-      orderCount: orderIds.length
-    });
-
-    for (const orderId of orderIds) {
-      await span(
-        `${SpanPrefix.DB}ProcessOrder`,
-        () => processSingleOrder(orderId),
-        { orderId }
-      );
-    }
-
-    logger.info("Batch processing complete", { logId });
-  });
-}
-```
-
-## AI SDK Telemetry
-
-When using the Vercel AI SDK, enable telemetry for token tracking:
-
-```typescript
-import { generateText } from "ai";
-import { openai } from "@ai-sdk/openai";
-
-const result = await generateText({
-  model: openai("gpt-4o"),
-  prompt: userPrompt,
-  experimental_telemetry: {
-    isEnabled: true,
-    functionId: "classify-content",
-    metadata: {
-      userId,
-      contentLength: content.length,
-    },
-  },
-});
-```
-
-### Telemetry Metadata
-
-Include relevant context in telemetry:
-
-```typescript
-experimental_telemetry: {
-  isEnabled: true,
-  functionId: "generate-response",  // Unique identifier for this AI function
-  metadata: {
-    // User context
-    userId: context.user.id,
-
-    // Input metrics
-    promptTokens: estimatedTokens,
-
-    // Business context
-    feature: "auto-reply",
-    priority: "high",
-  },
-}
-```
-
-## Error Handling Patterns
-
-### Structured Error Logging
-
-```typescript
-async function processPayment(orderId: string) {
-  try {
-    const result = await paymentGateway.charge(orderId);
-
-    logger.info("Payment processed", {
-      orderId,
-      transactionId: result.transactionId,
-      amount: result.amount,
-    });
-
-    return result;
-  } catch (error) {
-    logger.error("Payment processing failed", {
-      orderId,
-      error: error instanceof Error ? error.message : String(error),
-      errorCode: (error as any).code,
-    });
-
-    // Capture to Sentry with context
-    captureError(error, {
-      tags: { service: "payment", operation: "charge" },
-      extra: { orderId },
-    });
-
-    throw new ORPCError("INTERNAL_SERVER_ERROR", {
-      message: "Payment processing failed",
-    });
-  }
-}
-```
-
-### Batch Operation Logging
-
-```typescript
-async function batchUpdateInventory(updates: InventoryUpdate[]) {
-  const results: ProcessResult[] = [];
-
-  logger.info("Starting batch inventory update", {
-    updateCount: updates.length,
-  });
-
-  const processed = await Promise.allSettled(
-    updates.map(update => processUpdate(update))
-  );
-
-  const successful = processed.filter(r => r.status === "fulfilled").length;
-  const failed = processed.filter(r => r.status === "rejected").length;
-
-  logger.info("Batch inventory update complete", {
-    total: updates.length,
-    successful,
-    failed,
-  });
-
-  if (failed > 0) {
-    logger.warn("Some inventory updates failed", {
-      failedCount: failed,
-      errors: processed
-        .filter((r): r is PromiseRejectedResult => r.status === "rejected")
-        .map(r => r.reason?.message || "Unknown error"),
-    });
-  }
-
-  return { successful, failed };
-}
-```
-
-## Logging Best Practices
-
-### What to Log
-
-**Always log:**
-- Request/response for external API calls
-- Database write operations (create, update, delete)
-- Authentication events
-- Business-critical operations
-- Errors and exceptions
-
-**Log with care (avoid sensitive data):**
-- User inputs (sanitize PII)
-- Request payloads (redact secrets)
-
-**Never log:**
-- Passwords or tokens
-- Credit card numbers
-- Personal identification numbers
-- API keys or secrets
-
-### Log Levels Guide
-
-| Level | Use Case | Example |
-|-------|----------|---------|
-| `debug` | Development diagnostics | Variable values, flow tracing |
-| `info` | Normal operations | Order created, user logged in |
-| `warn` | Recoverable issues | Rate limit approaching, retry attempted |
-| `error` | Failures requiring attention | API call failed, database error |
-
-### Structured Context
-
-Always include relevant context as structured data:
-
-```typescript
-// BAD - String interpolation
-logger.info(`User ${userId} created order ${orderId} for $${total}`);
-
-// GOOD - Structured context
-logger.info("Order created", {
-  userId,
-  orderId,
-  total,
-  currency: "USD",
-  itemCount: items.length,
-});
-```
+- 正式日志用 `console.log`。
+- 字符串拼接上下文（`log.info(\`user ${id}\`)`）。
+- 记录敏感信息（token / 密钥 / PII 原文）。

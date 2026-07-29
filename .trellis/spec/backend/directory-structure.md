@@ -1,252 +1,48 @@
-# Directory Structure
+# 后端目录结构
 
-This document describes the module organization pattern for backend API development.
+> 权威源：`app/api/AGENTS.md`、`src/shared/lib/AGENTS.md`。
 
-## Module Structure
-
-Each API module follows a consistent directory structure:
+## 顶层分工
 
 ```
-packages/api/modules/[module]/
-├── types.ts          # Zod schemas and TypeScript types
-├── router.ts         # Hono router with route definitions
-├── lib/              # Core business logic (shared across procedures)
-│   ├── client.ts     # External service clients
-│   └── helpers.ts    # Helper functions
-├── procedures/       # HTTP endpoint handlers
-│   ├── create.ts
-│   ├── update.ts
-│   ├── delete.ts
-│   └── list.ts
-└── api/              # API documentation (optional)
-    ├── create.md
-    └── list.md
+app/api/**              ← 后端入口：Next.js Route Handler（export GET/POST/...），薄层
+src/server/             ← 后端实现
+├── middleware/         ← handler 高阶函数：withPersonal / withSession / resolveContext
+├── errors/             ← AiSpecError、ErrorCode→HTTP 映射、toErrorResponse
+├── rbac/               ← RBAC：actions / scopes / resource-ui
+├── actions/            ← next-safe-action Server Actions（safe-action.ts + 各域 action）
+└── infrastructure/     ← axiom（日志）/ queue / redis / storage / email 等第三方适配
+src/shared/lib/         ← 跨入口共享：auth（NextAuth 配置）/ zod（校验 schema）/ infrastructure / ohs / utils
 ```
 
-## File Responsibilities
+> `src/shared/` 不一定都是前端代码，也可能含后端共享逻辑。修改 `shared/` 下文件前先确认实际用途和调用方，不要默认按前端处理。`shared/db` 是脚本生成的代码，**严禁修改**。
 
-### `types.ts` - Schemas and Types
+## src/shared/lib 结构（后端基础设施核心）
 
-Define all Zod schemas and TypeScript types for the module.
+- `auth/`：NextAuth 配置（`auth.ts` 导出 `auth/handlers/signIn/signOut`）、`options.ts`、OTP/认证常量。
+- `zod/schemas/`：跨入口复用的 Zod schema（按业务域拆文件，Dto/Vo 命名，见 `shared/typescript.md`）。
+- `ohs/`（Open Host Service）：
+  - `ohs/local/appservice/`：应用服务层（用例编排、事务），对应 Server Actions。
+  - `ohs/remote/{adapter,controller,routers}/`：HTTP 适配/控制/路由注册薄层。
+  - `ohs/pl/`：ports 接口抽象。
+- `infrastructure/`：Redis、Axiom、Resend/react-email、BullMQ、环境配置等第三方服务适配。
+- `utils.ts`：少量跨模块通用工具。
 
-```typescript
-// types.ts
-import { z } from "zod";
+## 运行环境判断（关键约束）
 
-// Input Schemas
-export const createOrderInputSchema = z.object({
-  customerId: z.string(),
-  items: z.array(z.object({
-    productId: z.string(),
-    quantity: z.number().min(1),
-  })).min(1),
-});
+任何依赖 `next/headers`、`next/server`、`server-only`、Prisma、Redis、Resend、NextAuth 或进程环境变量的模块，**不得被客户端组件直接导入**。修改被客户端和服务端共同引用的文件前，先追踪调用方，避免把服务端依赖带入浏览器运行时。
 
-// Output Schemas
-export const orderResponseSchema = z.object({
-  success: z.boolean(),
-  reason: z.string(),
-  order: z.object({
-    id: z.string(),
-    status: z.string(),
-    total: z.number(),
-  }).optional(),
-});
+## 新增代码落点
 
-// Type exports
-export type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
-export type OrderResponse = z.infer<typeof orderResponseSchema>;
-```
+| 需求 | 落点 |
+| --- | --- |
+| 新增 HTTP API 入口 | `app/api/**`（Route Handler）|
+| 新增 Server Action | `src/server/actions/<域>/`（首行 `"use server"`，复用 `safe-action.ts` 的 client）|
+| 新增第三方服务接入 | `src/shared/lib/infrastructure/<服务>/` 对应子目录 |
+| 新增共享校验规则 | `src/shared/lib/zod/schemas/`（可被客户端导入，禁引入服务端依赖）|
+| 新增 HTTP 适配工具 | `ohs/remote/adapter/`（HTTP 入口仍在 `app/api/**`）|
 
-### `router.ts` - Route Definitions
+## 既有路径注意（勿误改）
 
-The router aggregates all procedures and defines the API routes.
-
-```typescript
-// router.ts
-import { Hono } from "hono";
-import { createOrder } from "./procedures/create";
-import { listOrders } from "./procedures/list";
-import { updateOrderStatus } from "./procedures/update";
-
-export const ordersRouter = new Hono()
-  .basePath("/orders")
-  .post("/", createOrder)
-  .get("/", listOrders)
-  .patch("/:id/status", updateOrderStatus);
-```
-
-### `lib/` - Business Logic
-
-Contains reusable business logic shared across procedures.
-
-```
-lib/
-├── client.ts       # External API clients (payment gateway, etc.)
-├── helpers.ts      # Pure helper functions
-├── validators.ts   # Business rule validators
-└── transformers.ts # Data transformation utilities
-```
-
-**Example: `lib/helpers.ts`**
-
-```typescript
-// lib/helpers.ts
-import type { Order } from "../types";
-
-/**
- * Calculate order total with tax
- */
-export function calculateOrderTotal(
-  items: Array<{ price: number; quantity: number }>,
-  taxRate: number = 0.1,
-): number {
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  return subtotal * (1 + taxRate);
-}
-
-/**
- * Generate order reference number
- */
-export function generateOrderReference(timestamp: Date): string {
-  const year = timestamp.getFullYear();
-  const month = String(timestamp.getMonth() + 1).padStart(2, "0");
-  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
-  return `ORD-${year}${month}-${random}`;
-}
-```
-
-### `procedures/` - Endpoint Handlers
-
-Each procedure handles a single API endpoint with clear responsibilities.
-
-```typescript
-// procedures/create.ts
-import { db } from "@your-app/database";
-import { order as orderTable } from "@your-app/database/drizzle/schema/postgres";
-import { logger } from "@your-app/logs";
-import { protectedProcedure } from "../../../orpc/procedures";
-import { calculateOrderTotal, generateOrderReference } from "../lib/helpers";
-import { createOrderInputSchema, orderResponseSchema } from "../types";
-
-export const createOrder = protectedProcedure
-  .route({
-    method: "POST",
-    path: "/orders",
-    tags: ["Orders"],
-    summary: "Create a new order",
-  })
-  .input(createOrderInputSchema)
-  .output(orderResponseSchema)
-  .handler(async ({ input, context: { user } }) => {
-    const { customerId, items } = input;
-
-    // Business logic
-    const total = calculateOrderTotal(items);
-    const reference = generateOrderReference(new Date());
-
-    // Database operation
-    const [newOrder] = await db
-      .insert(orderTable)
-      .values({
-        userId: user.id,
-        customerId,
-        reference,
-        total,
-        status: "PENDING",
-      })
-      .returning();
-
-    logger.info("Order created", {
-      orderId: newOrder.id,
-      userId: user.id,
-      total,
-    });
-
-    return {
-      success: true,
-      reason: "Order created successfully",
-      order: {
-        id: newOrder.id,
-        status: newOrder.status,
-        total: newOrder.total,
-      },
-    };
-  });
-```
-
-### `api/` - Documentation (Optional)
-
-Markdown documentation for each endpoint, useful for complex APIs.
-
-```markdown
-<!-- api/create.md -->
-# Create Order
-
-## Schema
-
-### Input
-- `customerId`: string - Customer identifier
-- `items`: array - Order items
-  - `productId`: string - Product identifier
-  - `quantity`: number - Quantity (min: 1)
-
-### Output
-- `success`: boolean
-- `reason`: string
-- `order`: object (optional)
-
-## Logic
-
-1. Validate user has permission to create orders for the customer
-2. Verify all products exist and are in stock
-3. Calculate total with applicable discounts
-4. Create order record
-5. Reserve inventory
-6. Return order details
-
-## Usage Example
-
-```typescript
-const result = await api.orders.create({
-  customerId: "cust_123",
-  items: [
-    { productId: "prod_456", quantity: 2 },
-  ],
-});
-```
-```
-
-## Naming Conventions
-
-### Files
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Procedures | Verb-based | `create.ts`, `list.ts`, `update-status.ts` |
-| Lib files | Noun-based | `helpers.ts`, `validators.ts`, `client.ts` |
-| Types | Always `types.ts` | `types.ts` |
-| Router | Always `router.ts` | `router.ts` |
-
-### Exports
-
-| Type | Convention | Example |
-|------|------------|---------|
-| Schemas | `{name}Schema` suffix | `createOrderInputSchema` |
-| Types | PascalCase | `CreateOrderInput` |
-| Procedures | camelCase verb | `createOrder`, `listOrders` |
-| Helpers | camelCase verb | `calculateTotal`, `generateReference` |
-
-## When to Create New Modules
-
-Create a new module when:
-
-1. The feature represents a distinct domain entity (users, orders, products)
-2. The feature has multiple related operations (CRUD + custom actions)
-3. The feature will be reused across multiple routes
-
-Avoid creating modules for:
-
-1. Single-use utility functions (place in existing `lib/`)
-2. Simple helpers (place in `@your-app/utils`)
-3. Database queries only (place in `packages/database/drizzle/queries/`)
+- `src/shared/lib/infrastructure/redis/reatlimit.ts` 是当前已有路径（拼写如此）；不要新建平行的 `ratelimit.ts`，如需更名必须同步更新所有调用方。
+- `infrastructure/email/**` 用 `react-email` 组件体系，父级"优先 shadcn"规则**不适用**于邮件模板。

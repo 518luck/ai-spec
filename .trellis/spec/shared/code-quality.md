@@ -1,315 +1,76 @@
-# Code Quality Guidelines
+# 代码质量硬规则
 
-> Mandatory code quality rules for all Next.js full-stack applications.
+> 全仓强制规则，与根 `AGENTS.md` 一致。Lint/类型检查用项目脚本，不直接跑底层工具。
 
----
+## 类型与抑制
 
-## No Non-Null Assertions
+- 禁 `any`（用 `unknown` + 收敛或具名类型）。
+- 禁非空断言 `!`（用提前返回 / `??` / 类型守卫）。
+- 禁 `@ts-ignore` / `@ts-expect-error`（修根因）。
+- 禁类型断言 `as`（除 `as const` 等惯用法）；优先 zod 解析或类型守卫。
+- 不可变结构用 `readonly` / `as const`。
 
-**NEVER** use non-null assertions (`!`). They bypass TypeScript's null checking and lead to runtime errors.
+## 命名
 
-```typescript
-// FORBIDDEN
-const name = user!.name;
-const value = data!.items![0]!;
+| 对象 | 约定 | 示例 |
+| --- | --- | --- |
+| 类、类型、React 组件 | PascalCase | `UserService`、`PromptRecord` |
+| 函数、变量、对象键 | camelCase | `getUserById` |
+| 高阶函数（注入 session/权限/路由等） | `withXxx` | `withSession`、`withPersonal`、`withPermission` |
+| 自定义 Hook | `useXxx`，**箭头函数** `const useXxx = () => {}` | `useLoginContext` |
+| 非组件函数 | 优先 `const` 箭头函数 | — |
+| React 组件 | `function` 声明 | `function LoginPage() {}` |
+| 文件名 | kebab-case | `create-token.ts` |
+| 常量 | camelCase；真正常量可 SCREAMING_SNAKE_CASE | `MAX_RETRY` |
+| 布尔变量 | `is/has/should/can` 前缀 | `isLoading` |
 
-// REQUIRED - Use explicit checks
-const user = getUser();
-if (!user) {
-  throw new Error('User not found');
-}
-const name = user.name;
+## 控制流与错误处理
 
-// REQUIRED - Use optional chaining with fallback
-const value = data?.items?.[0] ?? defaultValue;
+- 简洁优先，不写多余防御代码。
+- 提前返回 + 正向条件；避免双重否定、德摩根式判断。
+- 错误处理只在实际操作处 try/catch；异步逻辑保持线性，避免嵌套 try。
+- 能用 `?? ""` 等回退解决类型问题就不要 throw。
+- API 尽可能返回有类型的错误（本项目经 `AiSpecError` + `toErrorResponse`）。
 
-// REQUIRED - Use local variable after null check
-const project = getProject(id);
-if (!project) {
-  return { success: false, reason: 'Project not found' };
-}
-const projectName = project.name;
-```
+## Options Object（参数对象）
 
----
+函数/方法/构造函数满足**任一**条件即用参数对象，禁位置参数：参数 ≥ 2、含可选参数、含布尔标志、或多个同类型参数。
 
-## No `any` Type
-
-```typescript
-// BAD
-function process(data: any) { ... }
-
-// GOOD - Use proper types
-function process(data: ProcessInput) { ... }
-
-// GOOD - Use unknown for truly unknown data
-function parseJSON(input: string): unknown {
-  return JSON.parse(input);
-}
-
-// BAD - any in cache updates
-queryClient.setQueryData(['users'], (old: any) => ...);
-
-// GOOD - Properly typed cache updates
-queryClient.setQueryData<UserListData>(['users'], (old) => {
-  if (!old) return old;
-  return { ...old, items: old.items.filter((u) => u.id !== deletedId) };
-});
-```
-
----
-
-## No `@ts-expect-error` / `@ts-ignore`
-
-```typescript
-// FORBIDDEN
-// @ts-expect-error - field exists at runtime
-const value = user.customField;
-
-// @ts-ignore
-doSomething(invalidArg);
-
-// REQUIRED - Fix the type issue at the source
-// If a field exists at runtime but not in types, update the type definition.
-doSomething(validArg);
-```
-
----
-
-## No `console.log`
-
-Use structured logging instead of `console.log`. This applies to both frontend and backend code.
-
-```typescript
-// BAD
-console.log('User created:', userId);
-console.log('Error:', error);
-
-// GOOD - Backend: use structured logger
-logger.info('user_created', { userId });
-logger.error('operation_failed', { error, operationId });
-
-// GOOD - Frontend: remove debug logs before commit
-// Use browser dev tools for debugging, not console.log
-```
-
-**Exception**: `console.warn` and `console.error` are acceptable in frontend code for development-time warnings that will not appear in production.
-
----
-
-## Import Ordering
-
-Organize imports in this order, separated by blank lines:
-
-```typescript
-// 1. Node built-ins
-import path from 'node:path';
-
-// 2. External packages
-import { z } from 'zod';
-import { useQuery } from '@tanstack/react-query';
-
-// 3. Internal workspace packages
-import type { User } from '@your-app/api/modules/users/types';
-
-// 4. Local imports (relative paths)
-import { formatDate } from './utils';
-import type { Props } from './types';
-```
-
-Always use `import type` for type-only imports:
-
-```typescript
-// GOOD
-import type { User, Project } from './types';
-import { createUser } from './procedures';
-
-// BAD - Mixed imports without type annotation
-import { User, createUser } from './types';
-```
-
----
-
-## Naming Conventions
-
-### Files and Directories
-
-| Type            | Convention                  | Example                     |
-| --------------- | --------------------------- | --------------------------- |
-| React Component | PascalCase                  | `UserProfile.tsx`           |
-| Hook            | camelCase with `use` prefix | `useProject.ts`             |
-| Utility         | kebab-case                  | `date-utils.ts`             |
-| Type file       | kebab-case or `types.ts`    | `types.ts`, `user-types.ts` |
-| Test file       | Same name + `.test`         | `date-utils.test.ts`        |
-| Directory       | kebab-case                  | `user-profile/`             |
-
-### Variables and Functions
-
-| Type           | Convention                                  | Example                            |
-| -------------- | ------------------------------------------- | ---------------------------------- |
-| Variable       | camelCase                                   | `userName`, `isActive`             |
-| Constant       | SCREAMING_SNAKE_CASE                        | `MAX_RETRY_COUNT`                  |
-| Function       | camelCase                                   | `getUserById`                      |
-| Class          | PascalCase                                  | `UserService`                      |
-| Type/Interface | PascalCase                                  | `UserInput`, `ProjectOutput`       |
-| Enum           | PascalCase (type), SCREAMING_SNAKE (values) | `enum Status { ACTIVE, INACTIVE }` |
-
-### Boolean Variables
-
-Use `is`, `has`, `should`, `can` prefixes:
-
-```typescript
-// GOOD
-const isLoading = true;
-const hasPermission = user.role === 'admin';
-const shouldRefresh = Date.now() > expiresAt;
-const canEdit = isOwner || hasPermission;
-
-// BAD
-const loading = true;
-const permission = user.role === 'admin';
-```
-
----
-
-## Error Handling
-
-### Never Swallow Errors
-
-```typescript
-// BAD - Silent failure
-try {
-  await dangerousOperation();
-} catch (e) {
-  // nothing
-}
-
-// GOOD - Log and handle
-try {
-  await dangerousOperation();
-} catch (error) {
-  logger.error('operation_failed', { error });
-  throw new AppError('Operation failed', 'OPERATION_FAILED');
+```ts
+interface HttpErrorOptions { code: ErrorCode; message?: string }
+class AiSpecError extends Error {
+  constructor({ code, message = "" }: HttpErrorOptions) { /* ... */ }
 }
 ```
 
-### Consistent Error Response Format
+## 注释规范
 
-All API responses must use the standard `success` + `reason` format:
+- 新增/重写的函数、组件、类、导出常量、非平凡逻辑块上方加**一行简短中文注释**，写"做什么"不写"为什么改"。
+- 符号层次标记（`#` `@` `>` `!` `?`）只用于章节标题/重点，不是每条都加；大部分注释保持普通灰色。`#` 文件标题唯一，放 `"use client"`/`"use server"` 指令之后、`import` 之前。
+- JSX 内注释用 `{/* // @ 标题 */}` 形式（`/* */` 内带 `//` 才能被 Better Comments 识别）。
 
-```typescript
-// Success
-return {
-  success: true,
-  reason: 'Operation completed successfully',
-  data: result,
-};
+## React 事件类型
 
-// Error
-return {
-  success: false,
-  reason: 'Insufficient permissions to perform this action',
-};
-```
+表单 `onSubmit` 用从 `"react"` 导入的 `SubmitEvent<HTMLFormElement>` / `SubmitEventHandler<HTMLFormElement>`，禁用已弃用的 `FormEvent` / `FormEventHandler`。
 
----
+## Tailwind v4
 
-## Dead Code Elimination
+引用 CSS 变量的 arbitrary value 用 v4 简写 `prop-(--var)`，不写 `prop-[var(--var)]`；计算表达式（`[calc(...)]`、`[min(...)]`）除外。
 
-- Remove unused imports (Biome enforces this automatically)
-- Remove commented-out code blocks
-- Remove unused variables, functions, and types
-- Remove unreachable code after `return`, `throw`, `break`, `continue`
+## 类组织风格
 
-```typescript
-// BAD - Dead code
-function processOrder(order: Order) {
-  // const oldLogic = order.items.map(...);
-  const result = newLogic(order);
-  return result;
-  cleanup(); // unreachable
-}
+私有属性最前 → 构造函数 → 公开方法（核心在前、辅助在后）→ 私有方法（`_` 前缀）放最底。
 
-// GOOD - Clean
-function processOrder(order: Order) {
-  return newLogic(order);
-}
-```
-
----
-
-## Lint and Type Check Before Commit
+## 验证命令
 
 ```bash
-# MUST pass before every commit
-pnpm lint
-pnpm type-check
-
-# Production build check (catches additional issues)
-pnpm build
-
-# Or combined
-pnpm lint && pnpm type-check && pnpm build
+pnpm run typecheck   # 类型检查（不直接跑 tsc）
+pnpm run lint        # Biome check --write
 ```
 
----
+- 绝不用 `biome-ignore` 抑制 lint 错误，修根因。例外：确认是 biome 规则误报（如与 W3C/浏览器标准冲突）才用行内 `// biome-ignore lint/...: <依据>`，理由写明依据。
+- 绝不通过删/跳/注释测试使其通过。
 
-## Testing Guidelines
+## 死代码
 
-### Test File Location
-
-```
-src/
-  __tests__/              # Integration tests
-    api.test.ts
-app/
-  feature/
-    page.tsx
-    page.test.tsx         # Co-located test (when appropriate)
-```
-
-### Test Structure (AAA Pattern)
-
-```typescript
-describe('OrderService', () => {
-  describe('createOrder', () => {
-    it('should create an order with valid input', async () => {
-      // Arrange
-      const input = { items: [{ productId: '1', quantity: 2 }] };
-
-      // Act
-      const result = await createOrder(input);
-
-      // Assert
-      expect(result.success).toBe(true);
-      expect(result.order.items).toHaveLength(1);
-    });
-
-    it('should reject empty order', async () => {
-      // Arrange
-      const input = { items: [] };
-
-      // Act
-      const result = await createOrder(input);
-
-      // Assert
-      expect(result.success).toBe(false);
-    });
-  });
-});
-```
-
----
-
-## Summary
-
-| Rule                           | Reason              |
-| ------------------------------ | ------------------- |
-| No `!` assertions              | Runtime errors      |
-| No `any` type                  | Type safety         |
-| No `@ts-expect-error`          | Masks real issues   |
-| No `console.log`               | Use structured logs |
-| Lint + typecheck before commit | Consistent code     |
-| Structured errors              | Consistent handling |
-| Never swallow errors           | Debuggability       |
-| Remove dead code               | Maintainability     |
+移除未用 import、注释掉的代码块、未用变量/函数/类型、`return`/`throw` 后不可达代码。

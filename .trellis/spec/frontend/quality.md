@@ -1,137 +1,39 @@
-# Pre-commit Checklist
+# 前端提交前清单
 
-Complete this checklist before committing frontend code changes.
+提交前端代码前逐项核对。
 
-## Type Safety
+## 类型与质量
 
-- [ ] No `@ts-expect-error` or `@ts-ignore` comments added
-- [ ] No `any` types in new code
-- [ ] API response types are inferred or imported from backend (not redefined)
-- [ ] Cache updates in React Query are properly typed
-- [ ] When overriding mutation callbacks, explicit generics are provided
+- [ ] `pnpm run typecheck` 无错误（不直接跑 tsc）
+- [ ] `pnpm run lint` 无错误
+- [ ] 无 `any` / `!` / `@ts-ignore` / `@ts-expect-error`
+- [ ] 接口类型从 Dto/Vo schema 派生，未手写重复
+- [ ] 无 `console.log` 残留（临时调试除外）
 
-## Component Development
+## 目录与组件
 
-- [ ] Server Components used by default; `'use client'` only when necessary
-- [ ] Semantic HTML elements used (button, not div for clicks)
-- [ ] `next/image` used instead of `<img>` tags
-- [ ] Proper ARIA labels and accessibility attributes added
-- [ ] Props have TypeScript interfaces defined
+- [ ] 新代码放对 FSD layer（app/pages/widgets/features/entities/shared）
+- [ ] 跨 slice 经 `index.ts` 公有 API 导入，无深层导入
+- [ ] React 组件用 `function` 声明，Hook/普通函数用 `const` 箭头
+- [ ] 语义化 HTML（可点击用 `<button>`/`<Link>`，不用 `<div onClick>`）
+- [ ] Server Component 优先，仅在需要交互/hooks/浏览器 API 时加 `"use client"`
 
-## API Integration
+## UI 约定
 
-- [ ] API calls use oRPC client (not raw fetch for internal APIs)
-- [ ] React Query hooks follow established patterns
-- [ ] Loading and error states handled
-- [ ] Optimistic updates include rollback logic
-- [ ] Real-time subscriptions cleaned up on unmount
+- [ ] 先查 `shared/ui` 是否已有可复用 shadcn 组件
+- [ ] 图标经 `Icons.xxx` 使用，未在业务代码直接 import `@tabler/icons-react`
+- [ ] Loading 按场景选 `Spinner`（嵌入式）或 `ScaleLoaderWrap`（独立加载区）
+- [ ] 排版用 Tailwind `text-*` 标准档位
 
-## State Management
+## 数据与状态
 
-- [ ] Shareable state stored in URL with nuqs
-- [ ] Context used sparingly (not for server data)
-- [ ] URL and Context synchronized where necessary
-- [ ] No duplicate state across different systems
+- [ ] 数据请求用 `useSWR`，未自写失败 toast（全局 onError 已处理）
+- [ ] toast 从 `@/features/toast` 导入
+- [ ] 服务端数据未放入 Context / zustand
+- [ ] Context 含 `ContextType` + Provider + `useXxxContext`（缺失抛错）
 
-## CSS & Layout
+## 布局与跨端
 
-- [ ] `items-stretch` used on main flex containers (not `items-center`)
-- [ ] Parent provides external styles; child provides internal layout
-- [ ] Mobile touch: `WebkitTapHighlightColor: "transparent"` applied
-- [ ] Touch targets are minimum 44x44px
-- [ ] Responsive breakpoints tested
-
-## Cross-Environment Testing
-
-- [ ] Tested in development mode (`pnpm dev`)
-- [ ] Tested in production mode (`pnpm build && pnpm start`)
-- [ ] No visual differences between dev and prod
-- [ ] Animations respect `prefers-reduced-motion`
-
-## Code Quality
-
-- [ ] No console.log statements left in code
-- [ ] Unused imports removed
-- [ ] Components follow single responsibility principle
-- [ ] File and function names follow conventions
-- [ ] Barrel exports updated if new files added
-
-## Documentation
-
-- [ ] Complex logic has inline comments
-- [ ] New hooks have JSDoc comments
-- [ ] API changes reflected in backend documentation
-
----
-
-## Quick Commands
-
-```bash
-# Type check
-pnpm type-check
-
-# Lint
-pnpm lint
-
-# Format
-pnpm format
-
-# Build (catches production-only issues)
-pnpm build
-
-# Run all checks
-pnpm lint && pnpm type-check && pnpm build
-```
-
-## Common Issues to Watch
-
-### Type Safety
-```typescript
-// Bad
-queryClient.setQueryData(['users'], (old: any) => ...)
-
-// Good
-queryClient.setQueryData<UserListData>(['users'], (old) => ...)
-```
-
-### Components
-```typescript
-// Bad
-<div onClick={handleClick}>Click me</div>
-
-// Good
-<button onClick={handleClick}>Click me</button>
-```
-
-### Images
-```typescript
-// Bad
-<img src="/hero.jpg" alt="Hero" />
-
-// Good
-import Image from 'next/image';
-<Image src="/hero.jpg" alt="Hero" width={1200} height={600} />
-```
-
-### Layout
-```typescript
-// Bad - children won't fill height
-<div className="flex h-screen items-center">
-
-// Good - children fill available height
-<div className="flex h-screen">
-```
-
-### Mobile Touch
-```typescript
-// Bad - shows tap highlight on mobile
-<button onClick={handleClick}>Tap</button>
-
-// Good - no tap highlight
-<button
-  onClick={handleClick}
-  style={{ WebkitTapHighlightColor: 'transparent' }}
->
-  Tap
-</button>
-```
+- [ ] 主 flex 容器 `items-stretch`；可滚动子元素 `min-h-0`
+- [ ] 圆角交互元素处理了 tap-highlight
+- [ ] 同时在 `pnpm dev` 与 `pnpm build && pnpm start` 验证过布局

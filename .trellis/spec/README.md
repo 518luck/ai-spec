@@ -1,77 +1,52 @@
-# Next.js Full-Stack Development Guidelines
+# AI 规范中心（prompt-shelf）
 
-Universal development guidelines for production Next.js applications with oRPC API layer and PostgreSQL.
+> 本目录是 `.trellis/spec/`，供 Trellis 子代理（`trellis-implement` / `trellis-check`）按任务自动加载的项目规范。权威源是各目录的 `AGENTS.md`，本 spec 是其结构化镜像。
 
-## Structure
+## 技术栈
 
-### [Frontend](./frontend/index.md)
+- **前端**：Next.js 16 App Router + React 19 + TypeScript strict + Tailwind v4 + shadcn/ui
+- **数据请求**：SWR（非 React Query）
+- **表单**：react-hook-form + zodResolver
+- **状态**：useState / props / Context / zustand 按作用范围选
+- **后端入口**：Next.js Route Handler（非 oRPC）
+- **后端实现**：`src/server`（middleware / errors / rbac / actions / infrastructure）
+- **ORM**：Prisma（多 schema，单例 `@/shared/db`）
+- **认证**：NextAuth v5
+- **Server Actions**：next-safe-action
+- **校验**：Zod v4（Dto 入 / Vo 出）
+- **日志**：Axiom
+- **队列**：BullMQ + ioredis（独立 worker 进程）
+- **存储**：S3；**邮件**：Resend / react-email
+- **工具链**：Biome（lint）/ vitest / tsx
+- **项目结构**：单仓 FSD（`src/{app,pages,widgets,features,entities,shared}`），**非 monorepo**
 
-React 19 + Next.js 15 App Router frontend development patterns:
+## 结构导航
 
-- [Directory Structure](./frontend/directory-structure.md)
-- [Components](./frontend/components.md)
-- [State Management](./frontend/state-management.md)
-- [Hooks](./frontend/hooks.md)
-- [API Integration](./frontend/api-integration.md)
-- [oRPC Usage](./frontend/orpc-usage.md)
-- [Authentication](./frontend/authentication.md)
-- [AI SDK Integration](./frontend/ai-sdk-integration.md)
-- [CSS & Layout](./frontend/css-layout.md)
-- [Type Safety](./frontend/type-safety.md)
-- [Quality Checklist](./frontend/quality.md)
+### [shared/](./shared/index.md) — 通用规则（前后端通用）
+- [typescript.md](./shared/typescript.md) · [code-quality.md](./shared/code-quality.md) · [dependencies.md](./shared/dependencies.md)
 
-### [Backend](./backend/index.md)
+### [frontend/](./frontend/index.md) — 前端（`src/`）
+- [directory-structure.md](./frontend/directory-structure.md) · [components.md](./frontend/components.md) · [data-fetching.md](./frontend/data-fetching.md) · [state-management.md](./frontend/state-management.md) · [forms.md](./frontend/forms.md) · [toast-and-feedback.md](./frontend/toast-and-feedback.md) · [hooks.md](./frontend/hooks.md) · [css-layout.md](./frontend/css-layout.md) · [type-safety.md](./frontend/type-safety.md) · [quality.md](./frontend/quality.md)
 
-oRPC + Drizzle ORM backend development patterns:
+### [backend/](./backend/index.md) — 后端（`app/api` + `src/server`）
+- [directory-structure.md](./backend/directory-structure.md) · [route-handlers.md](./backend/route-handlers.md) · [error-handling.md](./backend/error-handling.md) · [authentication.md](./backend/authentication.md) · [server-actions.md](./backend/server-actions.md) · [database.md](./backend/database.md) · [logging.md](./backend/logging.md) · [queue.md](./backend/queue.md) · [redis.md](./backend/redis.md) · [storage.md](./backend/storage.md) · [type-safety.md](./backend/type-safety.md) · [quality.md](./backend/quality.md)
 
-- [Directory Structure](./backend/directory-structure.md)
-- [oRPC Usage](./backend/orpc-usage.md)
-- [Authentication](./backend/authentication.md)
-- [Database](./backend/database.md)
-- [AI SDK Integration](./backend/ai-sdk-integration.md)
-- [Logging](./backend/logging.md)
-- [Performance](./backend/performance.md)
-- [Type Safety](./backend/type-safety.md)
-- [Quality Checklist](./backend/quality.md)
+### [guides/](./guides/index.md) — 思维指南
+- [pre-implementation-checklist.md](./guides/pre-implementation-checklist.md) · [cross-layer-thinking-guide.md](./guides/cross-layer-thinking-guide.md)
 
-### [Shared](./shared/index.md)
+### [big-question/](./big-question/index.md) — 踩坑记录
+- [webkit-tap-highlight.md](./big-question/webkit-tap-highlight.md) · [turbopack-webpack-flexbox.md](./big-question/turbopack-webpack-flexbox.md)
 
-Cross-cutting concerns:
+## 常用命令
 
-- [Dependencies](./shared/dependencies.md)
-- [Code Quality](./shared/code-quality.md)
-- [TypeScript Conventions](./shared/typescript.md)
+| 命令 | 说明 |
+| --- | --- |
+| `pnpm dev` / `pnpm worker` / `pnpm dev:all` | 前端 / 队列 worker / 同时跑 |
+| `pnpm run typecheck` | 类型检查（不直接跑 tsc）|
+| `pnpm run lint` | Biome check --write |
+| `pnpm run test` | vitest run |
+| `pnpm run prisma:generate` / `prisma:migrate` | 生成 Client / 迁移 |
 
-### [Guides](./guides/index.md)
+## 权威源对照
 
-Development thinking guides:
-
-- [Pre-Implementation Checklist](./guides/pre-implementation-checklist.md)
-- [Cross-Layer Thinking Guide](./guides/cross-layer-thinking-guide.md)
-
-### [Common Issues / Pitfalls](./big-question/index.md)
-
-Common issues and solutions:
-
-- [PostgreSQL JSON vs JSONB](./big-question/postgres-json-jsonb.md)
-- [WebKit Tap Highlight](./big-question/webkit-tap-highlight.md)
-- [Sentry & next-intl Conflict](./big-question/sentry-nextintl-conflict.md)
-- [Turbopack vs Webpack Flexbox](./big-question/turbopack-webpack-flexbox.md)
-
-## Tech Stack
-
-- **Frontend**: Next.js 15, React 19, TailwindCSS 4, Radix UI, React Query
-- **Backend**: oRPC, Drizzle ORM, PostgreSQL, better-auth
-- **AI**: Vercel AI SDK (multi-provider)
-- **Real-time**: Ably / WebSocket / SSE
-- **Build**: Turborepo + pnpm (monorepo)
-- **Monitoring**: Sentry + OpenTelemetry
-
-## Usage
-
-These guidelines can be used as:
-
-1. **New Project Template** - Copy the entire structure for new Next.js projects
-2. **Reference Documentation** - Consult specific guides when implementing features
-3. **Code Review Checklist** - Verify implementations against established patterns
-4. **Onboarding Material** - Help new developers understand project conventions
+本 spec 内容来自项目现成的 `AGENTS.md`（根、`app/`、`app/api/`、`src/`、`prisma/`、`src/shared/lib/`、`src/shared/lib/zod/`、`src/shared/hooks/`、`src/server/infrastructure/{axiom,queue,redis,storage}/`）。冲突时以 `AGENTS.md` 为准。

@@ -1,316 +1,47 @@
-# Type Safety Guidelines
+# 后端类型安全
 
-This document covers TypeScript best practices and type safety patterns for backend development.
+> 通用规则见 `shared/typescript.md`；接口数据类型规则见 `src/shared/lib/zod/AGENTS.md`。
 
-## Critical Rules
+## 校验分层（权威防线在后端）
 
-### 1. NO Non-null Assertions (`!`)
+| 层 | 职责 |
+| --- | --- |
+| Route Handler / Server Action | **唯一权威防线**：入参用 Dto schema 校验，出参用 Vo schema 校验后再返回 |
+| 业务逻辑 | 收到的是已校验类型，专注业务规则（权限、归属、限流等不在 schema 内）|
+| 前端 | 提交前预校验（体验层），非权威 |
 
-Never use the non-null assertion operator (`!`). It bypasses TypeScript's null checking and can lead to runtime errors.
+- 入参 Dto / 出参 Vo 严格分层，不混用。
+- 出参**必须**经 Vo 校验后再返回，不直接返回 Prisma 裸对象。
 
-```typescript
-// BAD - Non-null assertion
-const user = users.find(u => u.id === id);
-await processUser(user!); // Dangerous!
+## schema 设计
 
-// GOOD - Use local variable for type narrowing
-const user = users.find(u => u.id === id);
-if (!user) {
-  return { success: false, reason: "User not found" };
-}
-// TypeScript now knows user is defined
-await processUser(user);
+- 复用基础字段 schema（`emailSchema`/`passwordSchema`），不复制通用规则。
+- 输入差异用 `.extend()`/`.pick()`/`.omit()`/`.partial()` 组合，不另起重复定义。
+- `trim`、邮箱小写等通用规范化写在 schema，让所有入口自动一致。
+- 面向用户的字段错误文案写在 schema，简洁可直接展示。
+- schema 只负责形状/格式/长度/基础规则；**不**在 schema 内查库、处理权限/归属/限流。
+
+## schema 边界
+
+`zod/**` 可能被客户端导入，**禁止**引入 Prisma、Redis、NextAuth、`next/headers`、`next/server`、`server-only` 或直接读环境变量。通过 schema 解析获得类型安全，避免 `any` 和不必要断言。
+
+## 类型推断
+
+```ts
+// 从 Prisma 推断
+type User = Prisma.UserGetPayload<{ select: { id: true; email: true } }>;
+
+// 从 Zod schema 推断（接口类型）
+type CreateTokenDto = z.infer<typeof createTokenDtoSchema>;
+type TokenVo = z.infer<typeof tokenVoSchema>;
 ```
 
-**Why this matters:**
+## ErrorCode 类型
 
-- Non-null assertions (`!`) tell TypeScript to trust you, but runtime doesn't care
-- If the value is actually `null` or `undefined`, you get a runtime crash
-- Local variable narrowing is verifiable at both compile-time and runtime
+`ErrorCode` 枚举（`src/shared/lib/zod/schemas/error.ts`）是错误 code 与其类型的**唯一来源**，抛 `AiSpecError` 时用 `ErrorCode.NOT_FOUND` 等，不要用裸字符串。
 
-### 2. All Inputs/Outputs Must Have Zod Schemas
+## 禁止
 
-Every API endpoint must define explicit input and output schemas using Zod.
-
-```typescript
-// types.ts
-import { z } from "zod";
-
-// Input Schema
-export const updateUserInputSchema = z.object({
-  userId: z.string(),
-  name: z.string().min(1).max(100).optional(),
-  email: z.string().email().optional(),
-  settings: z.object({
-    notifications: z.boolean(),
-    theme: z.enum(["light", "dark"]),
-  }).optional(),
-});
-
-// Output Schema
-export const updateUserOutputSchema = z.object({
-  success: z.boolean(),
-  reason: z.string(),
-  user: z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string(),
-  }).optional(),
-});
-
-// Type exports (inferred from schemas)
-export type UpdateUserInput = z.infer<typeof updateUserInputSchema>;
-export type UpdateUserOutput = z.infer<typeof updateUserOutputSchema>;
-```
-
-**Using schemas in procedures:**
-
-```typescript
-// procedures/update.ts
-export const updateUser = protectedProcedure
-  .route({
-    method: "PATCH",
-    path: "/users/:userId",
-    tags: ["Users"],
-    summary: "Update user profile",
-  })
-  .input(updateUserInputSchema)
-  .output(updateUserOutputSchema)
-  .handler(async ({ input, context }) => {
-    // input is fully typed as UpdateUserInput
-    const { userId, name, email, settings } = input;
-
-    // ... implementation
-
-    return {
-      success: true,
-      reason: "User updated successfully",
-      user: { id: userId, name: updatedName, email: updatedEmail },
-    };
-  });
-```
-
-### 3. Import Enums from Shared Utils Package
-
-**Never import enums directly from the database package.** The database package includes the PostgreSQL client, which can cause issues in certain environments (edge runtime, client-side code).
-
-```typescript
-// BAD - Imports database client as side effect
-import { messageCategoryEnum } from "@your-app/database/drizzle/schema/postgres";
-
-// GOOD - Import from utils (no database client dependency)
-import {
-  messageCategoryZodSchema,
-  type MessageCategory,
-  MESSAGE_CATEGORY_VALUES,
-} from "@your-app/utils";
-```
-
-**How enums are organized in the utils package:**
-
-```typescript
-// packages/utils/lib/enum-types.ts
-import { z } from "zod";
-
-// Import enum values from schema (not the full database package)
-import {
-  statusEnum
-} from "@your-app/database/drizzle/schema";
-
-// Export as Zod schema and TypeScript type
-export const ORDER_STATUS_VALUES = statusEnum.enumValues;
-export const orderStatusZodSchema = z.enum(ORDER_STATUS_VALUES);
-export type OrderStatus = z.infer<typeof orderStatusZodSchema>;
-```
-
-### 4. Standard Response Format
-
-All API responses must include `success` and `reason` fields for consistent error handling.
-
-```typescript
-// Output schema pattern
-export const operationResultSchema = z.object({
-  success: z.boolean(),
-  reason: z.string(),
-  // Additional fields as needed
-  data: z.unknown().optional(),
-});
-
-// Success response
-return {
-  success: true,
-  reason: "Operation completed successfully",
-  data: result,
-};
-
-// Error response
-return {
-  success: false,
-  reason: "Insufficient permissions to perform this action",
-};
-```
-
-**Batch operation response pattern:**
-
-```typescript
-export const batchOperationResultSchema = z.object({
-  success: z.boolean(),
-  total: z.number(),
-  processed: z.number(),
-  failed: z.number(),
-  errors: z.array(z.object({
-    itemId: z.string(),
-    error: z.string(),
-  })).optional(),
-});
-```
-
-## Type Narrowing Patterns
-
-### Array Operations
-
-```typescript
-// BAD - Assumes array has elements
-const firstOrder = orders[0];
-await processOrder(firstOrder!);
-
-// GOOD - Check first
-const firstOrder = orders[0];
-if (!firstOrder) {
-  return { success: false, reason: "No orders found" };
-}
-await processOrder(firstOrder);
-```
-
-### Optional Chaining with Fallback
-
-```typescript
-// BAD - Non-null assertion on optional property
-const userName = user.profile!.name!;
-
-// GOOD - Safe access with fallback
-const userName = user.profile?.name ?? "Unknown";
-
-// GOOD - When value is required, validate first
-const profile = user.profile;
-if (!profile?.name) {
-  throw new ORPCError("BAD_REQUEST", { message: "Profile name is required" });
-}
-const userName = profile.name;
-```
-
-### Map/Find Operations
-
-```typescript
-// BAD - Assuming find always succeeds
-const account = accounts.find(a => a.id === accountId)!;
-
-// GOOD - Handle the undefined case
-const account = accounts.find(a => a.id === accountId);
-if (!account) {
-  throw new ORPCError("NOT_FOUND", { message: "Account not found" });
-}
-// account is now guaranteed to be defined
-```
-
-## Zod Schema Best Practices
-
-### Reusable Base Schemas
-
-```typescript
-// Define reusable schemas
-const paginationSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(20),
-});
-
-const timestampSchema = z.object({
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
-
-// Compose into larger schemas
-export const listOrdersInputSchema = paginationSchema.extend({
-  status: orderStatusZodSchema.optional(),
-  customerId: z.string().optional(),
-});
-
-export const orderSchema = z.object({
-  id: z.string(),
-  status: orderStatusZodSchema,
-  total: z.number(),
-}).merge(timestampSchema);
-```
-
-### Discriminated Unions
-
-```typescript
-// For polymorphic responses
-export const notificationSchema = z.discriminatedUnion("type", [
-  z.object({
-    type: z.literal("email"),
-    recipient: z.string().email(),
-    subject: z.string(),
-  }),
-  z.object({
-    type: z.literal("sms"),
-    phoneNumber: z.string(),
-    message: z.string(),
-  }),
-  z.object({
-    type: z.literal("push"),
-    deviceToken: z.string(),
-    title: z.string(),
-    body: z.string(),
-  }),
-]);
-```
-
-### Transform and Refine
-
-```typescript
-// Transform input data
-export const createProductInputSchema = z.object({
-  name: z.string().transform(s => s.trim()),
-  price: z.string().transform(s => parseFloat(s)),
-  tags: z.string().transform(s => s.split(",").map(t => t.trim())),
-});
-
-// Add custom validation
-export const dateRangeSchema = z.object({
-  startDate: z.string().datetime(),
-  endDate: z.string().datetime(),
-}).refine(
-  data => new Date(data.endDate) > new Date(data.startDate),
-  { message: "End date must be after start date" }
-);
-```
-
-## Error Handling Types
-
-Use typed errors with oRPC:
-
-```typescript
-import { ORPCError } from "@orpc/server";
-
-// Standard error codes
-throw new ORPCError("NOT_FOUND", { message: "Resource not found" });
-throw new ORPCError("FORBIDDEN", { message: "Access denied" });
-throw new ORPCError("BAD_REQUEST", { message: "Invalid input" });
-throw new ORPCError("UNAUTHORIZED", { message: "Authentication required" });
-throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Unexpected error" });
-```
-
-## Type Inference Helpers
-
-```typescript
-// Infer types from Drizzle tables
-type User = typeof userTable.$inferSelect;
-type NewUser = typeof userTable.$inferInsert;
-
-// Infer from Zod schemas
-type CreateOrderInput = z.infer<typeof createOrderInputSchema>;
-
-// Utility types for partial updates
-type UpdateOrderInput = Partial<Omit<CreateOrderInput, "id">>;
-```
+- `any` / `!` / `@ts-ignore`（见 `shared/code-quality.md`）。
+- 循环内 `await` 查询（见 `database.md`）。
+- schema 内做服务端业务规则。

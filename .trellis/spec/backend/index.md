@@ -1,153 +1,42 @@
-# Backend Development Guidelines Index
+# 后端规范（backend）
 
-> **Tech Stack**: Next.js 15 API Routes + oRPC + Drizzle ORM + PostgreSQL
+> 后端入口在 `app/api/**`，后端实现在 `src/server/**`（middleware / errors / rbac / actions / infrastructure），共享基础设施在 `src/shared/lib/**`（auth / zod / infrastructure）。权威源：`app/api/AGENTS.md`、`src/shared/lib/AGENTS.md` 及各 `src/server/infrastructure/*/AGENTS.md`。
 
-## Related Guidelines
+## 技术栈
 
-| Guideline                 | Location     | When to Read                 |
-| ------------------------- | ------------ | ---------------------------- |
-| **Shared Code Standards** | `../shared/` | Always - applies to all code |
+- Next.js 16 Route Handler（非 oRPC / tRPC）
+- ORM：**Prisma**（`@/shared/db` 单例，多 schema）
+- 认证：**NextAuth v5**
+- Server Actions：**next-safe-action**
+- 校验：**Zod v4**
+- 日志：**Axiom**
+- 队列：**BullMQ** + ioredis
+- 存储：S3；邮件：Resend / react-email
 
----
+## 文档索引
 
-## Documentation Files
+| 文件 | 内容 | 优先级 |
+| --- | --- | --- |
+| [directory-structure.md](./directory-structure.md) | `app/api` 薄入口 + `src/server` 分层 | **必读** |
+| [route-handlers.md](./route-handlers.md) | Route Handler + `withPersonal`/`withSession` + `withAxiomBodyLog` | **必读** |
+| [error-handling.md](./error-handling.md) | `AiSpecError` + `ErrorCode` + `toErrorResponse` | **必读** |
+| [authentication.md](./authentication.md) | NextAuth v5：`auth()` / `resolveContext` / RBAC | **必读** |
+| [server-actions.md](./server-actions.md) | next-safe-action：`actionClient` / `authUserActionClient` | **必读** |
+| [database.md](./database.md) | Prisma 单例、多 schema、schema 工作流、查询模式 | **必读** |
+| [logging.md](./logging.md) | Axiom：`createLogger` / `withAxiomBodyLog` | 参考 |
+| [queue.md](./queue.md) | BullMQ 单队列 + job name 路由、独立 worker | 参考 |
+| [redis.md](./redis.md) | 两连接、限流积分模型、key 命名 | 参考 |
+| [storage.md](./storage.md) | S3 `getS3StorageClient()` | 参考 |
+| [type-safety.md](./type-safety.md) | 后端 Zod 校验分层、Prisma 类型推断 | 参考 |
+| [quality.md](./quality.md) | 提交前清单 | 参考 |
 
-| File                                                 | Description                                        | When to Read                       |
-| ---------------------------------------------------- | -------------------------------------------------- | ---------------------------------- |
-| [directory-structure.md](./directory-structure.md)   | Module organization and directory layout           | Starting a new feature             |
-| [orpc-usage.md](./orpc-usage.md)                     | oRPC router, procedures, middleware patterns       | Creating/modifying API endpoints   |
-| [type-safety.md](./type-safety.md)                   | Zod schemas, type narrowing, response patterns     | Type-related decisions             |
-| [database.md](./database.md)                         | Drizzle ORM, queries, transactions, SQL patterns   | Database operations                |
-| [authentication.md](./authentication.md)             | better-auth, sessions, OAuth, protected procedures | Auth-related features              |
-| [logging.md](./logging.md)                           | Structured logging, Sentry tracing, telemetry      | Debugging, observability           |
-| [performance.md](./performance.md)                   | Concurrency, caching, batch processing, streaming  | Performance optimization           |
-| [ai-sdk-integration.md](./ai-sdk-integration.md)     | Vercel AI SDK, tool calling, prompt patterns       | AI-powered features                |
-| [quality.md](./quality.md)                           | Pre-commit checklist for backend code              | Before committing                  |
+## 核心规则速查
 
----
-
-## Quick Navigation
-
-### Service Module Structure
-
-| Task                          | File                                               |
-| ----------------------------- | -------------------------------------------------- |
-| Project structure             | [directory-structure.md](./directory-structure.md) |
-| Domain module pattern         | [directory-structure.md](./directory-structure.md) |
-| Write types.ts                | [directory-structure.md](./directory-structure.md) |
-| Write procedure               | [directory-structure.md](./directory-structure.md) |
-| Write lib/ helpers            | [directory-structure.md](./directory-structure.md) |
-| Router setup                  | [orpc-usage.md](./orpc-usage.md)                   |
-| Middleware composition        | [orpc-usage.md](./orpc-usage.md)                   |
-| Naming conventions            | [directory-structure.md](./directory-structure.md) |
-
-### Type Safety
-
-| Task                 | File                               |
-| -------------------- | ---------------------------------- |
-| Type safety patterns | [type-safety.md](./type-safety.md) |
-| Discriminated unions | [type-safety.md](./type-safety.md) |
-| Zod-first types      | [type-safety.md](./type-safety.md) |
-| Zod error handling   | [type-safety.md](./type-safety.md) |
-| Standard response    | [type-safety.md](./type-safety.md) |
-
-### Database (Drizzle + PostgreSQL)
-
-| Task                    | File                         |
-| ----------------------- | ---------------------------- |
-| Query organization      | [database.md](./database.md) |
-| Batch queries (inArray) | [database.md](./database.md) |
-| Conflict handling       | [database.md](./database.md) |
-| Transactions            | [database.md](./database.md) |
-| JSON column operations  | [database.md](./database.md) |
-| Raw SQL camelCase       | [database.md](./database.md) |
-| Enum comparison         | [database.md](./database.md) |
-
-### Error Handling / Logging
-
-| Task                        | File                           |
-| --------------------------- | ------------------------------ |
-| Structured logging          | [logging.md](./logging.md)     |
-| Sentry span tracing         | [logging.md](./logging.md)     |
-| Error capture               | [logging.md](./logging.md)     |
-| oRPC error codes            | [orpc-usage.md](./orpc-usage.md) |
-| Batch operation logging     | [logging.md](./logging.md)     |
-
-### Performance
-
-| Task                          | File                               |
-| ----------------------------- | ---------------------------------- |
-| Parallel execution            | [performance.md](./performance.md) |
-| Concurrency control (p-limit) | [performance.md](./performance.md) |
-| Exponential backoff retry     | [performance.md](./performance.md) |
-| Redis caching                 | [performance.md](./performance.md) |
-| Distributed locks             | [performance.md](./performance.md) |
-| Chunked batch processing      | [performance.md](./performance.md) |
-| Streaming large datasets      | [performance.md](./performance.md) |
-
-### Authentication
-
-| Task                        | File                                   |
-| --------------------------- | -------------------------------------- |
-| Protected procedures        | [authentication.md](./authentication.md) |
-| Admin procedures            | [authentication.md](./authentication.md) |
-| Session caching (Redis)     | [authentication.md](./authentication.md) |
-| OAuth integration           | [authentication.md](./authentication.md) |
-| Role-based access control   | [authentication.md](./authentication.md) |
-| Client-side auth            | [authentication.md](./authentication.md) |
-
-### AI Integration
-
-| Task                        | File                                           |
-| --------------------------- | ---------------------------------------------- |
-| generateText / generateObject | [ai-sdk-integration.md](./ai-sdk-integration.md) |
-| Streaming (streamText)      | [ai-sdk-integration.md](./ai-sdk-integration.md) |
-| Tool calling                | [ai-sdk-integration.md](./ai-sdk-integration.md) |
-| Telemetry configuration     | [ai-sdk-integration.md](./ai-sdk-integration.md) |
-| Prompt engineering          | [ai-sdk-integration.md](./ai-sdk-integration.md) |
-| AI error handling           | [ai-sdk-integration.md](./ai-sdk-integration.md) |
-
----
-
-## Core Rules Summary
-
-| Rule                                                             | Reference                                          |
-| ---------------------------------------------------------------- | -------------------------------------------------- |
-| **No `await` in loops** - use `inArray` for batch queries        | [database.md](./database.md)                       |
-| **No `console.log`** - use structured logger                     | [logging.md](./logging.md)                         |
-| **No non-null assertions `!`** - use type narrowing              | [type-safety.md](./type-safety.md)                 |
-| **All API inputs/outputs have Zod schemas**                      | [type-safety.md](./type-safety.md)                 |
-| **Import enums from utils** - not from database package          | [type-safety.md](./type-safety.md)                 |
-| **Standard response format** - always include `success`/`reason` | [type-safety.md](./type-safety.md)                 |
-| **Use `protectedProcedure`** for authenticated endpoints         | [authentication.md](./authentication.md)           |
-| **One procedure per file** - keep procedures focused             | [orpc-usage.md](./orpc-usage.md)                   |
-| **Service modules follow domain layout**                         | [directory-structure.md](./directory-structure.md) |
-| **Use `Promise.all`** for independent parallel operations        | [performance.md](./performance.md)                 |
-| **Use `p-limit`** for external API concurrency control           | [performance.md](./performance.md)                 |
-| **Always enable AI telemetry** for token tracking                | [ai-sdk-integration.md](./ai-sdk-integration.md)   |
-| **Cast `::jsonb`** for PostgreSQL JSON operations                | [database.md](./database.md)                       |
-| **Double-quote camelCase** column names in raw SQL               | [database.md](./database.md)                       |
-| **Use structured context** in logs - no string interpolation     | [logging.md](./logging.md)                         |
-| **Run pre-commit checklist** before committing                   | [quality.md](./quality.md)                         |
-
----
-
-## Reference Files
-
-| Feature              | Typical Location                        |
-| -------------------- | --------------------------------------- |
-| Drizzle Client       | `packages/database/drizzle/client.ts`   |
-| Schema Definition    | `packages/database/drizzle/schema/`     |
-| Database Queries     | `packages/database/drizzle/queries/`    |
-| oRPC Router          | `packages/api/orpc/router.ts`           |
-| Base Procedures      | `packages/api/orpc/procedures.ts`       |
-| Middleware           | `packages/api/orpc/middleware/`         |
-| Service Module       | `packages/api/modules/{domain}/`        |
-| Module Types (Zod)   | `packages/api/modules/{domain}/types.ts`|
-| Auth Configuration   | `packages/auth/auth.ts`                 |
-| Auth Client          | `packages/auth/client.ts`               |
-| Shared Utils/Enums   | `packages/utils/`                       |
-
----
-
-**Language**: All documentation must be written in **English**.
+| 规则 | 出处 |
+| --- | --- |
+| 业务错误抛 `AiSpecError`，**禁止** handler 手写 `NextResponse.json({ error })` | error-handling.md |
+| 入参 Dto / 出参 Vo，均经 Zod 校验 | type-safety.md |
+| Route Handler 用 `withPersonal`/`withSession` 包裹（内部已含 `withAxiomBodyLog` + 鉴权 + 错误归一）| route-handlers.md |
+| 日志用 `createLogger(module)`，正式日志禁 `console.log` | logging.md |
+| 后台任务走 BullMQ（`infrastructure/queue`），不用 `next/after` 跑业务任务 | queue.md |
+| Prisma client 从 `@/shared/db` 导入，`generator/` 严禁手改 | database.md |

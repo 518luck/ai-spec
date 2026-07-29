@@ -1,34 +1,27 @@
-# Common Issues and Solutions
+# 踩坑记录
 
-> Documented pitfalls discovered while building production Next.js fullstack applications.
-> These issues apply to any project using Next.js with PostgreSQL, Drizzle ORM, Tailwind CSS, and i18n.
+> 开发中沉淀的真实坑与解法。本项目相关条目。
 
-## Severity Levels
+## 严重级别
 
-| Level    | Description                                          |
-| -------- | ---------------------------------------------------- |
-| Critical | Build fails or data corruption                       |
-| Warning  | Degraded experience, workaround exists               |
-| Info     | Minor visual issue, easy to fix once identified      |
+| 级别 | 说明 |
+| --- | --- |
+| Critical | 构建失败或数据损坏 |
+| Warning | 体验降级，有 workaround |
+| Info | 轻微视觉问题，定位后易修 |
 
----
+## 条目
 
-## Issue Index
+| 问题 | 类别 | 严重 |
+| --- | --- | --- |
+| [webkit-tap-highlight.md](./webkit-tap-highlight.md) | 移动端 / CSS | Info |
+| [turbopack-webpack-flexbox.md](./turbopack-webpack-flexbox.md) | 构建系统 / 布局 | Warning |
 
-| Issue                                                            | Category         | Severity |
-| ---------------------------------------------------------------- | ---------------- | -------- |
-| [postgres-json-jsonb.md](./postgres-json-jsonb.md)               | Database/ORM     | Critical |
-| [sentry-nextintl-conflict.md](./sentry-nextintl-conflict.md)    | Plugin Conflicts | Critical |
-| [turbopack-webpack-flexbox.md](./turbopack-webpack-flexbox.md)   | Build System     | Warning  |
-| [webkit-tap-highlight.md](./webkit-tap-highlight.md)             | Mobile/CSS       | Info     |
+## 贡献
 
----
+发现新坑：
 
-## How to Contribute
-
-Found a new pitfall? Add it to this directory:
-
-1. Create a new `.md` file with a descriptive kebab-case name
-2. Follow the existing format: Problem, Root Cause, Solution, Key Takeaways
-3. Update this index table with the correct category and severity
-4. Include reproducible code examples whenever possible
+1. 新建 kebab-case 命名的 `.md`。
+2. 按格式：问题 / 根因 / 解决 / 要点。
+3. 更新本索引表（类别 + 严重）。
+4. 尽量附可复现代码示例。

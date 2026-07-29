@@ -1,81 +1,38 @@
-# Pre-commit Checklist
+# 后端提交前清单
 
-Run through this checklist before committing backend code.
+提交后端代码前逐项核对。
 
-## Type Safety
+## 类型与质量
 
-- [ ] **No non-null assertions (`!`)** - Use local variables and conditionals for type narrowing
-- [ ] **All API inputs have Zod schemas** - Defined in `types.ts`
-- [ ] **All API outputs have Zod schemas** - Including `success` and `reason` fields
-- [ ] **Enums imported from `@your-app/utils`** - Not from database package
+- [ ] `pnpm run typecheck` 无错误（不直接跑 tsc）
+- [ ] `pnpm run lint` 无错误
+- [ ] 无 `any` / `!` / `@ts-ignore` / `@ts-expect-error`
+- [ ] 入参 Dto / 出参 Vo，均经 Zod 校验
+- [ ] 接口类型从 schema 派生，未手写重复
 
-## Database Operations
+## Route Handler / Server Action
 
-- [ ] **No `await` in loops** - Use `inArray` for batch queries
-- [ ] **Batch inserts used** - Not individual inserts in loops
-- [ ] **Conflict handling considered** - Use `onConflictDoUpdate` when appropriate
-- [ ] **JSON columns cast properly** - `::jsonb` for jsonb functions
-- [ ] **Raw SQL column names quoted** - Double quotes for camelCase columns
+- [ ] Route Handler 用 `withPersonal`/`withSession` 包裹（含日志 + 鉴权 + 错误归一）
+- [ ] 需登录的 Server Action 用 `authUserActionClient`，无需登录用 `actionClient`
+- [ ] 业务错误抛 `AiSpecError`，**未**在 handler 手写 `NextResponse.json({ error })`
+- [ ] 出参经 Vo 校验，未返回 Prisma 裸对象
 
-## Logging
+## 数据库
 
-- [ ] **No `console.log`** - Use `logger` from `@your-app/logs`
-- [ ] **Structured logging used** - Pass objects, not string interpolation
-- [ ] **Errors logged with context** - Include relevant IDs and stack traces
-- [ ] **Sensitive data excluded** - No passwords, tokens, or PII in logs
+- [ ] `src/shared/db/generator/` 未被手改
+- [ ] 无循环内 `await` 查询（N+1）；批量写用 `createMany`/`updateMany`
+- [ ] schema 字段 camelCase + `@map`，字段排列分区正确，每个字段有行内注释
+- [ ] 新 model 带 `@@schema("域")`
 
-## Performance
+## 日志 / 异步
 
-- [ ] **Parallel execution where possible** - Use `Promise.all` for independent operations
-- [ ] **Concurrency control for external APIs** - Use `p-limit` for rate-limited APIs
-- [ ] **Retry logic for rate limits** - Exponential backoff implemented
-- [ ] **Caching considered** - For expensive or frequently accessed data
+- [ ] 正式日志用 `createLogger(module)`，未用 `console.log`
+- [ ] 日志上下文是结构化对象，未字符串拼接
+- [ ] 未记录敏感信息（token / 密钥 / PII 原文）
+- [ ] 业务后台任务走 BullMQ，未用 `next/after` 跑业务任务
 
-## Error Handling
+## 运行环境
 
-- [ ] **Errors properly caught and logged** - With Sentry context when applicable
-- [ ] **Appropriate error codes returned** - `NOT_FOUND`, `FORBIDDEN`, `BAD_REQUEST`, etc.
-- [ ] **Batch operations handle partial failures** - Return detailed error information
-
-## Code Organization
-
-- [ ] **Code in correct location** - Procedures, lib, types in right directories
-- [ ] **Reusable logic extracted** - Shared code in `lib/` directory
-- [ ] **Naming conventions followed** - Schemas, types, functions named correctly
-
-## Quick Reference
-
-### Response Format
-```typescript
-return {
-  success: true,
-  reason: "Operation completed successfully",
-  // additional fields
-};
-```
-
-### Batch Query Pattern
-```typescript
-const items = await db
-  .select()
-  .from(itemTable)
-  .where(inArray(itemTable.parentId, parentIds));
-
-const itemsByParent = groupBy(items, "parentId");
-```
-
-### Logging Pattern
-```typescript
-logger.info("Operation completed", {
-  operationId,
-  userId,
-  itemCount: items.length,
-});
-```
-
-### Error Pattern
-```typescript
-if (!resource) {
-  throw new ORPCError("NOT_FOUND", { message: "Resource not found" });
-}
-```
+- [ ] 服务端依赖模块未被客户端组件直接导入
+- [ ] 新增第三方服务接入放 `src/shared/lib/infrastructure/<服务>/`
+- [ ] RBAC 改动同步检查 `actions.ts` 与 `scopes.ts`

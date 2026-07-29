@@ -1,328 +1,38 @@
-# Hook Development Patterns
+# Hooks 规范
 
-This document covers React hook patterns for data fetching, mutations, and state management using React Query with oRPC.
+> 权威源：`src/shared/hooks/AGENTS.md`、`src/AGENTS.md`。自定义 Hook 用 `const` 箭头函数（`const useXxx = () => {}`）。
 
-## Query Hooks
+## Barrel 唯一出口
 
-### Basic Query Pattern
+`src/shared/hooks/index.ts` 是本目录**唯一对外出口**。所有 hook 统一从这里导入，**禁止**直接引用具体文件，**禁止**业务代码直接 `import ... from "react-use"`：
 
-```typescript
-import { useQuery } from '@tanstack/react-query';
-import { orpcClient } from '@/lib/orpc';
-
-export function useUsers() {
-  return useQuery({
-    queryKey: ['users'],
-    queryFn: () => orpcClient.users.list(),
-  });
-}
+```ts
+// ✅
+import { useMounted, useLocalStorage } from "@/shared/hooks";
+// ❌ 直接引用文件
+import { useMounted } from "@/shared/hooks/use-mounted";
+// ❌ 直接引用 react-use
+import { useLocalStorage } from "react-use";
 ```
 
-### Query with Parameters
+新增 hook 在 `index.ts` 登记 re-export，行末加简短注释标明作用。
 
-```typescript
-export function useUser(userId: string) {
-  return useQuery({
-    queryKey: ['users', userId],
-    queryFn: () => orpcClient.users.get({ id: userId }),
-    enabled: !!userId, // Only fetch when userId is available
-  });
-}
+## 优先用 react-use，不自实现
+
+通用 hooks（防抖、节流、事件监听、元素尺寸等）**优先用 react-use**，查阅 [react-use 文档](https://github.com/streamich/react-use) 确认 hook 名称和行为。只有 react-use 没有对应 hook、或同类但 API/行为不满足时才自实现。
+
+`index.ts` 内以深层路径转发 react-use 以利 tree-shaking：
+
+```ts
+export { default as useDebounce } from "react-use/lib/useDebounce";
 ```
 
-### Query with Filters
+## 已知例外（必须用项目自实现版）
 
-```typescript
-interface UseOrdersOptions {
-  status?: string;
-  page?: number;
-  pageSize?: number;
-}
+- **`useLocalStorage`**：不用 react-use 版（有 stale closure bug，[issue #2512](https://github.com/streamich/react-use/issues/2512)，函数式更新拿到旧值），用项目自实现版（`@/shared/hooks`，setter 支持函数式更新）。
 
-export function useOrders(options: UseOrdersOptions = {}) {
-  const { status, page = 1, pageSize = 20 } = options;
+现有 hook 清单见 `index.ts`，每行 export 末尾注释标明作用（如 `useHotkey`、`useInertialScroll` 等自实现 hook 也注明了为何不用 react-use 版）。
 
-  return useQuery({
-    queryKey: ['orders', { status, page, pageSize }],
-    queryFn: () => orpcClient.orders.list({ status, page, pageSize }),
-    placeholderData: (previousData) => previousData, // Keep previous data while fetching
-  });
-}
-```
+## 常用 hooks
 
-## Mutation Hooks
-
-### Basic Mutation Pattern
-
-```typescript
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { orpcClient } from '@/lib/orpc';
-
-export function useCreateUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateUserInput) => orpcClient.users.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-  });
-}
-```
-
-### Mutation with Optimistic Updates
-
-```typescript
-type OrderListData = Awaited<ReturnType<typeof orpcClient.orders.list>>;
-
-export function useUpdateOrderStatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, status }: { id: string; status: string }) =>
-      orpcClient.orders.updateStatus({ id, status }),
-
-    onMutate: async ({ id, status }) => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: ['orders'] });
-
-      // Snapshot previous value
-      const previousOrders = queryClient.getQueryData<OrderListData>(['orders']);
-
-      // Optimistically update
-      queryClient.setQueryData<OrderListData>(['orders'], (old) => {
-        if (!old) return old;
-        return {
-          ...old,
-          items: old.items.map((order) =>
-            order.id === id ? { ...order, status } : order
-          ),
-        };
-      });
-
-      return { previousOrders };
-    },
-
-    onError: (_err, _variables, context) => {
-      // Rollback on error
-      if (context?.previousOrders) {
-        queryClient.setQueryData(['orders'], context.previousOrders);
-      }
-    },
-
-    onSettled: () => {
-      // Always refetch after mutation
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    },
-  });
-}
-```
-
-## Overriding Mutation Callbacks
-
-When overriding mutation callbacks at the call site, you MUST add explicit generics to maintain type safety:
-
-### Problem: Lost Type Safety
-
-```typescript
-// Hook definition
-export function useDeleteUser() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => orpcClient.users.delete({ id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['users'] });
-    },
-  });
-}
-
-// Bad: Overriding without generics loses type safety
-const deleteUser = useDeleteUser();
-deleteUser.mutate(userId, {
-  onSuccess: (data) => {
-    // 'data' is typed as 'unknown' here!
-    console.log(data.id); // TypeScript error or runtime error
-  },
-});
-```
-
-### Solution: Explicit Generics
-
-```typescript
-// Infer types for the mutation
-type DeleteUserData = Awaited<ReturnType<typeof orpcClient.users.delete>>;
-type DeleteUserVariables = string;
-
-// Good: Add explicit generics when overriding callbacks
-deleteUser.mutate<DeleteUserData, Error, DeleteUserVariables>(userId, {
-  onSuccess: (data) => {
-    // 'data' is properly typed
-    console.log(data.id); // Works correctly
-  },
-});
-```
-
-### Alternative: Define Types in Hook
-
-```typescript
-// Export types from the hook file
-export type DeleteUserMutationData = Awaited<
-  ReturnType<typeof orpcClient.users.delete>
->;
-
-// Usage with exported types
-deleteUser.mutate(userId, {
-  onSuccess: (data: DeleteUserMutationData) => {
-    console.log(data.id);
-  },
-});
-```
-
-## Using orpcClient Directly in Hooks
-
-Inside hooks, use `orpcClient` directly instead of wrapping with `useMutation`:
-
-### DO: Direct orpcClient Usage
-
-```typescript
-export function useOrderActions() {
-  const queryClient = useQueryClient();
-
-  const updateOrder = useMutation({
-    mutationFn: (data: UpdateOrderInput) => orpcClient.orders.update(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    },
-  });
-
-  const deleteOrder = useMutation({
-    mutationFn: (id: string) => orpcClient.orders.delete({ id }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] });
-    },
-  });
-
-  return {
-    updateOrder: updateOrder.mutate,
-    deleteOrder: deleteOrder.mutate,
-    isUpdating: updateOrder.isPending,
-    isDeleting: deleteOrder.isPending,
-  };
-}
-```
-
-### DON'T: Nested Hooks
-
-```typescript
-// Bad: Don't create hooks that use other mutation hooks
-export function useOrderActions() {
-  // Don't do this - creates unnecessary abstraction
-  const updateMutation = useUpdateOrder();
-  const deleteMutation = useDeleteOrder();
-
-  return {
-    updateOrder: updateMutation.mutate,
-    deleteOrder: deleteMutation.mutate,
-  };
-}
-```
-
-## Compound Hooks
-
-Combine related queries and mutations into a single hook:
-
-```typescript
-export function useProduct(productId: string) {
-  const queryClient = useQueryClient();
-
-  const query = useQuery({
-    queryKey: ['products', productId],
-    queryFn: () => orpcClient.products.get({ id: productId }),
-    enabled: !!productId,
-  });
-
-  const update = useMutation({
-    mutationFn: (data: UpdateProductInput) =>
-      orpcClient.products.update({ id: productId, ...data }),
-    onSuccess: (updatedProduct) => {
-      queryClient.setQueryData(['products', productId], updatedProduct);
-    },
-  });
-
-  const remove = useMutation({
-    mutationFn: () => orpcClient.products.delete({ id: productId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['products'] });
-    },
-  });
-
-  return {
-    product: query.data,
-    isLoading: query.isLoading,
-    error: query.error,
-    updateProduct: update.mutate,
-    deleteProduct: remove.mutate,
-    isUpdating: update.isPending,
-    isDeleting: remove.isPending,
-  };
-}
-```
-
-## Infinite Query Pattern
-
-```typescript
-export function useInfiniteOrders() {
-  return useInfiniteQuery({
-    queryKey: ['orders', 'infinite'],
-    queryFn: ({ pageParam = 1 }) =>
-      orpcClient.orders.list({ page: pageParam, pageSize: 20 }),
-    getNextPageParam: (lastPage) =>
-      lastPage.hasMore ? lastPage.page + 1 : undefined,
-    initialPageParam: 1,
-  });
-}
-```
-
-## Dependent Queries
-
-```typescript
-export function useUserOrders(userId: string) {
-  // First query: get user
-  const userQuery = useQuery({
-    queryKey: ['users', userId],
-    queryFn: () => orpcClient.users.get({ id: userId }),
-    enabled: !!userId,
-  });
-
-  // Second query: depends on user data
-  const ordersQuery = useQuery({
-    queryKey: ['orders', { userId }],
-    queryFn: () => orpcClient.orders.list({ userId }),
-    enabled: !!userQuery.data, // Only run when user is loaded
-  });
-
-  return {
-    user: userQuery.data,
-    orders: ordersQuery.data,
-    isLoading: userQuery.isLoading || ordersQuery.isLoading,
-  };
-}
-```
-
-## Best Practices
-
-1. **Single Responsibility**: Each hook should have one clear purpose
-2. **Consistent Naming**: `useXxx` for hooks, `useXxxQuery` for queries, `useXxxMutation` for mutations
-3. **Error Handling**: Always consider error states in your hooks
-4. **Loading States**: Expose loading states for UI feedback
-5. **Cache Keys**: Use consistent, hierarchical query keys
-6. **Type Safety**: Always maintain proper TypeScript types
-
-## Common Pitfalls
-
-- Forgetting to invalidate related queries after mutations
-- Not handling race conditions with `cancelQueries`
-- Missing `enabled` flag for conditional queries
-- Not providing explicit generics when overriding callbacks
-- Creating too many small hooks instead of compound hooks
+`useSetState`（对象状态自动合并）、`useToggle`、`useDebounce`、`useThrottle`、`usePrevious`、`useClickAway`、`useScroll`、`useWindowSize`、`useAsync`/`useAsyncFn`、`useInView`（转发自 react-intersection-observer）。

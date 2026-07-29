@@ -1,381 +1,63 @@
-# CSS & Layout Best Practices
+# CSS 与布局
 
-This document covers CSS patterns, layout strategies, and cross-environment compatibility considerations.
+> Tailwind v4。引用 CSS 变量的 arbitrary value 用 v4 简写 `prop-(--var)`，不写 `prop-[var(--var)]`；计算表达式（`[calc(...)]`、`[min(...)]`）除外。
 
-## Flexbox Patterns
+## Flexbox 主容器
 
-### Use items-stretch on Main Flex Containers
+主 flex 容器需要子元素填满高度时，保持默认 `items-stretch`（不要误用 `items-center` 导致子元素只撑到内容高度）：
 
-For full-height layouts where children should fill the available space:
-
-```typescript
-// Good: items-stretch (default) allows children to fill height
-<div className="flex h-screen">
-  <aside className="w-64 bg-gray-100">
-    {/* Sidebar fills full height */}
-  </aside>
-  <main className="flex-1">
-    {/* Main content fills full height */}
-  </main>
-</div>
+```tsx
+// ✅ 子元素填满高度
+<div className="flex h-screen">{/* ... */}</div>
+// ❌ 子元素只有内容高度
+<div className="flex h-screen items-center">{/* ... */}</div>
 ```
 
-```typescript
-// Bad: items-center prevents children from filling container height
-<div className="flex h-screen items-center">
-  <aside className="w-64 bg-gray-100">
-    {/* Sidebar only as tall as its content */}
-  </aside>
-  <main className="flex-1">
-    {/* Main content only as tall as its content */}
-  </main>
-</div>
-```
+## 可滚动 flex 子元素用 min-h-0
 
-### Nested Flex Containers
+flex 子元素需内部滚动时加 `min-h-0`（flex 子默认 `min-height: auto` 会阻止 overflow 生效）：
 
-```typescript
+```tsx
 <div className="flex h-screen flex-col">
-  {/* Header - fixed height */}
-  <header className="h-16 shrink-0 border-b">
-    <nav>...</nav>
-  </header>
-
-  {/* Main area - fills remaining space */}
+  <header className="h-16 shrink-0 border-b">{/* 固定高度 */}</header>
   <div className="flex min-h-0 flex-1">
-    {/* Sidebar - fixed width, full height */}
-    <aside className="w-64 shrink-0 overflow-y-auto border-r">
-      <nav>...</nav>
-    </aside>
-
-    {/* Content - fills remaining width */}
-    <main className="flex-1 overflow-y-auto">
-      <div className="p-6">...</div>
-    </main>
+    <aside className="w-64 shrink-0 overflow-y-auto border-r">{/* 侧栏 */}</aside>
+    <main className="min-w-0 flex-1 overflow-y-auto">{/* 滚动内容 */}</main>
   </div>
 </div>
 ```
 
-### min-h-0 for Overflow Control
+## 父子职责分离
 
-When using flex containers with scrollable children:
+- 父组件控制外部样式：定位（absolute/grid span）、外部间距（margin/gap）、尺寸约束（width/max-width）。
+- 子组件控制内部样式：内边距、内部布局（flex/grid）、背景/边框/阴影、排版。
 
-```typescript
-// Without min-h-0, content may overflow
-<div className="flex h-screen flex-col">
-  <div className="flex-1">
-    {/* This might overflow if content is tall */}
-  </div>
+```tsx
+// 父：grid 位置 + 间距
+<div className="grid gap-6 lg:grid-cols-3">
+  <Card className="lg:col-span-2" />
 </div>
 
-// With min-h-0, overflow is properly contained
-<div className="flex h-screen flex-col">
-  <div className="min-h-0 flex-1 overflow-y-auto">
-    {/* Content scrolls within container */}
-  </div>
-</div>
+// 子：内部样式 + 透传 className
+export const Card = ({ className }: { className?: string }) => (
+  <div className={cn("rounded-lg border bg-card p-4 shadow-sm", className)} />
+);
 ```
 
-## Parent-Child Styling Pattern
+## 移动端触摸
 
-### Parent Provides External Styles
+- 禁用 WebKit 默认点击高亮（高亮层忽略 `border-radius`，圆角元素会出现方角闪烁）：交互元素加 `WebkitTapHighlightColor: "transparent"`（或 Tailwind `[-webkit-tap-highlight-color:transparent]`）。详见 `big-question/webkit-tap-highlight.md`。
+- 触摸目标不小于 44×44px。
+- 自定义滚动区防下拉刷新：`overscroll-contain` + `touchAction: "pan-y"`。
 
-The parent component controls:
-- Positioning (absolute, relative, grid placement)
-- External spacing (margin, gap)
-- Size constraints (width, max-width)
+## 响应式
 
-```typescript
-// Parent component
-<div className="grid grid-cols-3 gap-4">
-  <Card className="col-span-2" />  {/* Parent sets grid span */}
-  <Card />
-</div>
-```
+移动优先，自小屏向上加断点：`p-4 md:p-6 lg:p-8`。
 
-### Child Provides Internal Layout
+## 动画
 
-The child component controls:
-- Internal padding
-- Internal layout (flex, grid)
-- Background, borders, shadows
-- Typography
+尊重 `prefers-reduced-motion`：`motion-reduce:transition-none`、`motion-reduce:hover:scale-100`。项目用 `motion`（ex framer-motion）做较复杂动画。
 
-```typescript
-// Child component
-export function Card({ className, children }: CardProps) {
-  return (
-    <div
-      className={cn(
-        // Internal styles owned by Card
-        'rounded-lg border bg-white p-4 shadow-sm',
-        // External styles from parent
-        className
-      )}
-    >
-      {children}
-    </div>
-  );
-}
-```
+## dev / prod 差异
 
-### Complete Example
-
-```typescript
-// Page layout (parent)
-export function DashboardPage() {
-  return (
-    <div className="grid gap-6 p-6 lg:grid-cols-3">
-      {/* Parent controls: grid position, external spacing */}
-      <StatsCard className="lg:col-span-2" />
-      <ActivityFeed className="lg:row-span-2" />
-      <RecentOrders />
-    </div>
-  );
-}
-
-// Card component (child)
-export function StatsCard({ className }: { className?: string }) {
-  return (
-    <div
-      className={cn(
-        // Child controls: internal padding, background, border
-        'flex flex-col gap-4 rounded-xl bg-white p-6 shadow',
-        className
-      )}
-    >
-      {/* Internal layout */}
-    </div>
-  );
-}
-```
-
-## Cross-Environment Testing
-
-### Dev Mode (Turbopack) vs Production (Webpack)
-
-CSS may behave differently between development and production builds:
-
-```bash
-# Test in development (Turbopack)
-pnpm dev
-
-# Test in production (Webpack)
-pnpm build && pnpm start
-```
-
-### Common Differences
-
-1. **CSS Order**: Tailwind classes may be applied in different orders
-2. **Purging**: Unused classes removed in production
-3. **Minification**: Class names optimized
-
-### Testing Checklist
-
-- [ ] Run `pnpm dev` and test all features
-- [ ] Run `pnpm build && pnpm start` and test again
-- [ ] Check for visual differences
-- [ ] Verify responsive breakpoints work
-- [ ] Test animations and transitions
-
-## Mobile Touch Optimization
-
-### Disable Tap Highlight
-
-Prevent the default blue/gray highlight on mobile tap:
-
-```typescript
-// Using Tailwind
-<button className="[-webkit-tap-highlight-color:transparent]">
-  Tap me
-</button>
-
-// Using inline styles (when needed)
-<button style={{ WebkitTapHighlightColor: 'transparent' }}>
-  Tap me
-</button>
-
-// Global reset in CSS
-@layer base {
-  button, a, [role="button"] {
-    -webkit-tap-highlight-color: transparent;
-  }
-}
-```
-
-### Touch-Friendly Sizing
-
-```typescript
-// Minimum touch target: 44x44px
-<button className="min-h-[44px] min-w-[44px] p-3">
-  <Icon size={20} />
-</button>
-
-// For lists
-<ul className="divide-y">
-  {items.map((item) => (
-    <li key={item.id}>
-      <button className="w-full px-4 py-3 text-left">
-        {item.label}
-      </button>
-    </li>
-  ))}
-</ul>
-```
-
-### Prevent Pull-to-Refresh
-
-When implementing custom scroll behaviors:
-
-```typescript
-<div
-  className="h-screen overflow-y-auto overscroll-contain"
-  style={{ touchAction: 'pan-y' }}
->
-  {/* Scrollable content */}
-</div>
-```
-
-## Responsive Design Patterns
-
-### Mobile-First Approach
-
-```typescript
-// Start with mobile styles, add breakpoints for larger screens
-<div className="
-  p-4           // Mobile: small padding
-  md:p-6        // Tablet: medium padding
-  lg:p-8        // Desktop: large padding
-">
-  <h1 className="
-    text-xl       // Mobile: small heading
-    md:text-2xl   // Tablet: medium heading
-    lg:text-3xl   // Desktop: large heading
-  ">
-    Title
-  </h1>
-</div>
-```
-
-### Container Queries (Tailwind v4)
-
-```typescript
-// Container-based responsive styles
-<div className="@container">
-  <div className="
-    flex flex-col
-    @md:flex-row    // Row layout when container >= md
-    @lg:gap-6       // Larger gap when container >= lg
-  ">
-    {/* Content */}
-  </div>
-</div>
-```
-
-### Hiding/Showing Elements
-
-```typescript
-// Hide on mobile, show on desktop
-<div className="hidden lg:block">
-  Desktop only content
-</div>
-
-// Show on mobile, hide on desktop
-<div className="lg:hidden">
-  Mobile only content
-</div>
-```
-
-## Z-Index Management
-
-### Establish a Scale
-
-```css
-/* In your CSS or Tailwind config */
-:root {
-  --z-dropdown: 10;
-  --z-sticky: 20;
-  --z-fixed: 30;
-  --z-modal-backdrop: 40;
-  --z-modal: 50;
-  --z-popover: 60;
-  --z-tooltip: 70;
-}
-```
-
-### Tailwind Config
-
-```javascript
-// tailwind.config.js
-module.exports = {
-  theme: {
-    extend: {
-      zIndex: {
-        dropdown: '10',
-        sticky: '20',
-        fixed: '30',
-        modalBackdrop: '40',
-        modal: '50',
-        popover: '60',
-        tooltip: '70',
-      },
-    },
-  },
-};
-```
-
-### Usage
-
-```typescript
-<div className="z-modal">Modal content</div>
-<div className="z-tooltip">Tooltip</div>
-```
-
-## Animation Best Practices
-
-### Use CSS Transitions
-
-```typescript
-<button className="
-  transition-colors duration-200 ease-out
-  hover:bg-primary-dark
-">
-  Hover me
-</button>
-```
-
-### Respect Motion Preferences
-
-```typescript
-// Disable animations for users who prefer reduced motion
-<div className="
-  transition-transform duration-300
-  motion-reduce:transition-none
-  hover:scale-105
-  motion-reduce:hover:scale-100
-">
-  Animated element
-</div>
-```
-
-### Hardware Acceleration
-
-```typescript
-// Use transform for smooth animations
-<div className="
-  translate-x-0 transition-transform
-  group-hover:translate-x-2
-">
-  Slides on hover
-</div>
-```
-
-## Best Practices Summary
-
-1. **items-stretch**: Default for main flex containers
-2. **Parent External, Child Internal**: Clear separation of concerns
-3. **Test Both Modes**: Always verify in dev AND production
-4. **Touch Optimization**: Disable tap highlight, ensure touch targets
-5. **Mobile First**: Build up from smallest screens
-6. **Consistent Z-Index**: Use a defined scale
-7. **Respect Accessibility**: Honor motion preferences
+Turbopack（dev）与 Webpack（prod）对 CSS 处理有细微差异（class 顺序、purge）。布局改完**务必同时验证** `pnpm dev` 与 `pnpm build && pnpm start`，尤其 flexbox 行为。详见 `big-question/turbopack-webpack-flexbox.md`。

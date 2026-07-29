@@ -1,441 +1,79 @@
-# TypeScript Best Practices
+# TypeScript 与类型规范
 
-> TypeScript guidelines for Next.js full-stack applications.
+> 继承根 `AGENTS.md`，聚焦类型安全。接口数据类型的完整规则见 `src/shared/lib/zod/AGENTS.md`。
 
----
+## 核心原则
 
-## Zod-First Type Definitions
+1. **Zod-first**：先写 Zod schema，再用 `z.infer<typeof xxxSchema>` 推导类型；不手写与 schema 重复的接口类型。
+2. **类型从 schema 派生，跨层复用**：前端、API 客户端禁止手写与 Dto/Vo 重复的类型，必须 `import type { XxxVo } from "..."`。组件 props、内部状态等非接口类型不受此约束。
+3. **`import type`**：类型专用导入一律用 `import type`（或 `import { type X }`）。
+4. **禁类型断言 `as`**：优先通过 zod 解析、类型守卫或函数签名约束获得类型安全；`as const` 等惯用写法除外。
 
-Define Zod schemas first, then infer TypeScript types from them. Never define types manually when a Zod schema exists.
+## 禁止
 
-```typescript
-import { z } from 'zod';
+- `any`——用 `unknown` + 收敛，或定义具体类型。
+- 非空断言 `!`——用提前返回 / 局部变量收敛 / `??` 回退。
+- `@ts-ignore`、`@ts-expect-error`——修根因，不抑制。
 
-// 1. Define the schema (single source of truth)
-export const createUserInputSchema = z.object({
-  name: z.string().min(1).max(100),
-  email: z.string().email(),
-  role: z.enum(['admin', 'member', 'viewer']),
-});
-
-export const createUserOutputSchema = z.object({
-  success: z.boolean(),
-  reason: z.string(),
-  user: z.object({
-    id: z.string(),
-    name: z.string(),
-    email: z.string(),
-  }).optional(),
-});
-
-// 2. Derive types from schemas
-export type CreateUserInput = z.infer<typeof createUserInputSchema>;
-export type CreateUserOutput = z.infer<typeof createUserOutputSchema>;
-
-// BAD - Manual type that duplicates schema
-interface CreateUserInput {
-  name: string;
-  email: string;
-  role: 'admin' | 'member' | 'viewer';
-}
-```
-
-### Reusable Base Schemas
-
-```typescript
-const paginationSchema = z.object({
-  page: z.number().min(1).default(1),
-  limit: z.number().min(1).max(100).default(20),
-});
-
-const timestampSchema = z.object({
-  createdAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
-});
-
-// Compose into larger schemas
-export const listOrdersInputSchema = paginationSchema.extend({
-  status: orderStatusZodSchema.optional(),
-  customerId: z.string().optional(),
-});
-```
-
----
-
-## Type Inference from API
-
-Import types from the backend or infer them from the API client. Never redefine backend types on the frontend.
-
-### Import from Backend Package
-
-```typescript
-// GOOD - Import from the API package
-import type { User, Order } from '@your-app/api/modules/users/types';
-import type { OrderStatus } from '@your-app/api/modules/orders/types';
-
-// BAD - Redefining types that exist in backend
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-```
-
-### Infer from API Client
-
-```typescript
-import { orpcClient } from '@/lib/orpc';
-
-// Infer the response type from the API client
-type UsersResponse = Awaited<ReturnType<typeof orpcClient.users.list>>;
-
-// Infer a single item type from array response
-type User = UsersResponse['items'][number];
-
-// Infer input types
-type CreateUserInput = Parameters<typeof orpcClient.users.create>[0];
-```
-
-### Type Inference in Hooks
-
-```typescript
-// The return type is automatically inferred from oRPC
-export function useUsers() {
-  return useQuery({
-    queryKey: ['users'],
-    queryFn: () => orpcClient.users.list(),
-  });
-}
-
-// For complex transformations, use explicit inference
-type UserListData = Awaited<ReturnType<typeof orpcClient.users.list>>;
-
-export function useFormattedUsers() {
-  return useQuery({
-    queryKey: ['users', 'formatted'],
-    queryFn: async () => {
-      const data = await orpcClient.users.list();
-      return transformUsers(data);
-    },
-  });
-}
-```
-
----
-
-## Discriminated Unions
-
-Use discriminated unions for types that can be one of several shapes. Use strict equality (`=== true`) for narrowing.
-
-### TypeScript Discriminated Union
-
-```typescript
-type Result<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-const result: Result<User> = doSomething();
-
-// CORRECT: Use === true for narrowing
-if (result.success === true) {
-  console.log(result.data); // TypeScript knows data exists
-} else {
-  console.log(result.error); // TypeScript knows error exists
-}
-```
-
-### Zod Discriminated Union
-
-```typescript
-export const notificationSchema = z.discriminatedUnion('type', [
-  z.object({
-    type: z.literal('email'),
-    recipient: z.string().email(),
-    subject: z.string(),
-  }),
-  z.object({
-    type: z.literal('sms'),
-    phoneNumber: z.string(),
-    message: z.string(),
-  }),
-  z.object({
-    type: z.literal('push'),
-    deviceToken: z.string(),
-    title: z.string(),
-    body: z.string(),
-  }),
-]);
-
-type Notification = z.infer<typeof notificationSchema>;
-```
-
----
-
-## Generic Patterns
-
-### Generic Result Type
-
-```typescript
-type Result<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-function createResult<T>(data: T): Result<T> {
-  return { success: true, data };
-}
-```
-
-### Generic Paginated Response
-
-```typescript
-type PaginatedResponse<T> = {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-};
-
-type UserListResponse = PaginatedResponse<User>;
-```
-
-### Generic with Constraints
-
-```typescript
-function getProperty<T, K extends keyof T>(obj: T, key: K): T[K] {
-  return obj[key];
-}
-```
-
-### Common Utility Types
-
-```typescript
-// Extract array element type
-type ArrayElement<T> = T extends (infer E)[] ? E : never;
-
-// Make specific properties optional
-type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-
-// Make specific properties required
-type RequiredBy<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
-```
-
----
-
-## Standard Response Format
-
-All API responses must include `success` and `reason` fields.
-
-```typescript
-// Output schema pattern
-export const operationResultSchema = z.object({
-  success: z.boolean(),
-  reason: z.string(),
-  data: z.unknown().optional(),
-});
-
-// Success response
-return {
-  success: true,
-  reason: 'User created successfully',
-  user: { id, name, email },
-};
-
-// Error response
-return {
-  success: false,
-  reason: 'Email address is already in use',
-};
-```
-
-### Batch Operation Response
-
-```typescript
-export const batchOperationResultSchema = z.object({
-  success: z.boolean(),
-  total: z.number(),
-  processed: z.number(),
-  failed: z.number(),
-  errors: z.array(z.object({
-    itemId: z.string(),
-    error: z.string(),
-  })).optional(),
-});
-```
-
----
-
-## Forbidden Patterns
-
-### No `any`
-
-```typescript
-// BAD
-function process(data: any) { ... }
-
-// GOOD
-function process(data: unknown) { ... }
-function process(data: ProcessInput) { ... }
-```
-
-### No Non-null Assertion
-
-```typescript
-// BAD
+```ts
+// ❌
 const name = user!.name;
 const first = items[0]!;
+const data = res as User;
 
-// GOOD
-if (user) {
-  const name = user.name;
-}
+// ✅ 提前返回收敛
+const user = await findUser(id);
+if (!user) throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "用户不存在" });
+const name = user.name;
 
+// ✅ 索引访问收敛
 const first = items[0];
-if (!first) {
-  return { success: false, reason: 'No items found' };
+if (!first) return { success: false }; // 或 throw
+```
+
+## 接口类型分层（Dto / Vo）
+
+| 后缀 | 含义 | 方向 |
+| --- | --- | --- |
+| `XxxDtoSchema` / `XxxDto` | 请求入参 | 客户端 → 服务端 |
+| `XxxVoSchema` / `XxxVo` | 响应出参 | 服务端 → 客户端 |
+
+- 命名公式：`[操作动词][实体](Dto|Vo)Schema`，动词用 `Create/Update/Patch/Delete/List/Get`，实体单数（列表用复数）。
+- 基础字段 schema（如 `emailSchema`、`passwordSchema`）不带 Dto/Vo 后缀，仅供拼装复用。
+- 默认 `z.infer` 就地推导；仅当类型被多处引用才显式导出别名（去掉 `Schema` 后缀）。
+
+详细命名、文件内顺序、章节标记见 `src/shared/lib/zod/AGENTS.md`。
+
+## Zod 导入
+
+统一从 `zod/v4` 命名空间导入：
+
+```ts
+import * as z from "zod/v4";
+```
+
+## 判别联合收敛
+
+判别联合用 `===` 严格相等收敛，不用真值短路：
+
+```ts
+type Result<T> = { success: true; data: T } | { success: false; error: string };
+if (result.success === true) {
+  result.data; // 收敛成功
 }
 ```
 
-### No `@ts-expect-error` / `@ts-ignore`
+## 显式返回类型
 
-```typescript
-// BAD
-// @ts-expect-error - customField exists at runtime
-const value = user.customField;
+对外导出的函数 / 公共 API 优先声明显式返回类型。
 
-// GOOD - Update the type definition instead
-interface User {
-  customField: string;
-  // ...
-}
+## 校验边界
+
+- 外部数据（API 响应、localStorage、用户输入）经 Zod `parse`/`safeParse` 后再使用。
+- `zod/**` 可能被客户端导入，**禁止**引入 Prisma、Redis、NextAuth、`next/headers`、`next/server`、`server-only` 或直接读环境变量。
+
+## 类型检查
+
+```bash
+pnpm run typecheck   # 不直接跑 tsc
 ```
-
-### No Type Assertions Without Validation
-
-```typescript
-// BAD - Blind assertion
-const user = data as User;
-
-// GOOD - Runtime validation with Zod
-const user = userSchema.parse(data);
-
-// GOOD - Type guard
-function isUser(data: unknown): data is User {
-  return (
-    typeof data === 'object' &&
-    data !== null &&
-    'id' in data &&
-    'email' in data
-  );
-}
-```
-
----
-
-## Type Imports
-
-Always use `import type` for type-only imports:
-
-```typescript
-// GOOD
-import type { User, Project } from './types';
-import { createUser } from './procedures';
-
-// Also acceptable
-import { type User, createUser } from './types';
-
-// BAD
-import { User, createUser } from './types';
-```
-
----
-
-## Explicit Return Types for Exports
-
-Always annotate explicit return types on exported functions:
-
-```typescript
-// BAD - Implicit return type
-export function getUser(id: string) {
-  return db.query.users.findFirst({ where: eq(users.id, id) });
-}
-
-// GOOD - Explicit return type
-export function getUser(id: string): Promise<User | undefined> {
-  return db.query.users.findFirst({ where: eq(users.id, id) });
-}
-```
-
----
-
-## TypeScript Configuration
-
-Ensure strict mode is enabled:
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noImplicitAny": true,
-    "strictNullChecks": true,
-    "noImplicitReturns": true,
-    "noUncheckedIndexedAccess": true
-  }
-}
-```
-
----
-
-## Drizzle Type Inference
-
-```typescript
-// Infer types from Drizzle tables
-type User = typeof userTable.$inferSelect;
-type NewUser = typeof userTable.$inferInsert;
-
-// Combine with Zod via drizzle-zod
-import { createSelectSchema, createInsertSchema } from 'drizzle-zod';
-const userSelectSchema = createSelectSchema(userTable);
-const userInsertSchema = createInsertSchema(userTable);
-```
-
----
-
-## View Model Types
-
-When the frontend needs computed properties, extend backend types rather than redefining them:
-
-```typescript
-import type { Order } from '@your-app/api/modules/orders/types';
-
-export interface OrderViewModel extends Order {
-  formattedTotal: string;
-  statusLabel: string;
-  isEditable: boolean;
-}
-
-export function toOrderViewModel(order: Order): OrderViewModel {
-  return {
-    ...order,
-    formattedTotal: formatCurrency(order.total),
-    statusLabel: getStatusLabel(order.status),
-    isEditable: order.status === 'draft',
-  };
-}
-```
-
----
-
-## Summary
-
-| Practice                    | Reason                        |
-| --------------------------- | ----------------------------- |
-| Zod-first types             | Single source of truth        |
-| Import, don't redefine      | No type drift                 |
-| `=== true` for unions       | Proper narrowing              |
-| Generics for reuse          | DRY, type-safe                |
-| `success` + `reason` format | Consistent API responses      |
-| No `any`                    | Type safety                   |
-| No `!` assertions           | Runtime safety                |
-| No `@ts-expect-error`       | Masks real issues             |
-| `import type`               | Clear separation, tree-shake  |
-| Explicit return types       | Documentation, catch errors   |

@@ -1,372 +1,62 @@
-# State Management
+# 状态管理
 
-This document covers state management patterns including URL state with nuqs, React Context guidelines, and synchronization strategies.
+> 权威源：`src/AGENTS.md`。按作用范围选方案，不过度抽象。
 
-## State Categories
+## 选型优先级
 
-| Category | Tool | When to Use |
-|----------|------|-------------|
-| Server State | React Query | API data, cached responses |
-| URL State | nuqs | Filters, pagination, selected items |
-| Local UI State | useState | Transient UI (modals, dropdowns) |
-| Shared UI State | Context | Cross-component UI state |
+| 场景 | 方案 |
+| --- | --- |
+| 只属于当前组件 | `useState` / 组件局部状态 |
+| 父子组件少量直接传递 | props |
+| 多个兄弟组件读写同一份状态 | Context |
+| 跨页面 / 全局业务状态，需持久化 | zustand（如 `src/features/markdown-editor/model/editor-store.ts` 用 `persist`）|
+| 服务端数据 | **数据请求层（SWR）**，不放入 Context / zustand |
 
-## URL State with nuqs
+判断关键：状态的**作用范围**，而非为了统一而抽象。局部状态留在组件内，页面/功能流程级共享才上浮。
 
-### Why URL State?
+## 什么时候用 Context
 
-- Shareable: Users can share links with specific state
-- Bookmarkable: Browser history navigation works
-- SEO-friendly: Search engines can index different states
-- Persistent: Survives page refreshes
+- 同一份状态被多个兄弟组件读写。
+- 状态不只属于某个组件，而属于整个页面或功能流程。
+- 不用 Context 会出现明显 props drilling。
+- 状态含多个相关字段和操作方法（表单步骤、登录方式、当前选中项、展开状态等）。
 
-### Basic Usage
+Context 放在当前 slice 的 `model/` 目录，如 `src/pages/xxx/model/xxx-context.tsx` 或 `src/features/xxx/model/xxx-context.tsx`。
 
-```typescript
-import { useQueryState } from 'nuqs';
+## 什么时候不用 Context
 
-export function useOrderFilters() {
-  const [status, setStatus] = useQueryState('status');
-  const [page, setPage] = useQueryState('page', {
-    parse: (value) => parseInt(value, 10) || 1,
-    serialize: String,
-  });
+- 状态只被一个组件使用。
+- 只是父组件传给一两个直接子组件。
+- 纯 UI 临时状态（按钮 loading、弹窗开关）。
+- 可简单通过 props 表达且不会层层传递。
+- 服务端数据（应走 SWR）。
 
-  return { status, setStatus, page, setPage };
-}
-```
+## Context 编写要求
 
-### With Default Values
+Context 文件必须包含：明确 `ContextType` 类型 + Provider 组件 + `useXxxContext` 自定义 Hook。
 
-```typescript
-import { useQueryState, parseAsInteger, parseAsString } from 'nuqs';
+```tsx
+const XxxContext = createContext<XxxContextType | null>(null);
 
-export function useProductFilters() {
-  const [category, setCategory] = useQueryState('category', {
-    defaultValue: 'all',
-    parse: parseAsString,
-  });
+// 提供当前功能流程内共享的页面状态
+export function XxxProvider({ children }: PropsWithChildren): JSX.Element { /* ... */ }
 
-  const [page, setPage] = useQueryState('page', {
-    defaultValue: 1,
-    parse: parseAsInteger,
-  });
-
-  const [sortBy, setSortBy] = useQueryState('sort', {
-    defaultValue: 'newest',
-  });
-
-  return {
-    category,
-    setCategory,
-    page,
-    setPage,
-    sortBy,
-    setSortBy,
-  };
-}
-```
-
-### Complex Filter Objects
-
-```typescript
-import { useQueryStates, parseAsString, parseAsInteger } from 'nuqs';
-
-const filterParsers = {
-  search: parseAsString.withDefault(''),
-  category: parseAsString.withDefault('all'),
-  minPrice: parseAsInteger,
-  maxPrice: parseAsInteger,
-  page: parseAsInteger.withDefault(1),
-};
-
-export function useAdvancedFilters() {
-  const [filters, setFilters] = useQueryStates(filterParsers);
-
-  const updateFilter = <K extends keyof typeof filters>(
-    key: K,
-    value: (typeof filters)[K]
-  ) => {
-    setFilters({ [key]: value, page: 1 }); // Reset page on filter change
-  };
-
-  const resetFilters = () => {
-    setFilters({
-      search: '',
-      category: 'all',
-      minPrice: null,
-      maxPrice: null,
-      page: 1,
-    });
-  };
-
-  return { filters, updateFilter, resetFilters };
-}
-```
-
-### Shallow Routing
-
-Prevent full page reloads when updating URL state:
-
-```typescript
-const [tab, setTab] = useQueryState('tab', {
-  shallow: true, // Default is true in nuqs
-  history: 'push', // or 'replace'
-});
-```
-
-## React Context Guidelines
-
-### When to Use Context
-
-- Theme/appearance settings
-- User preferences
-- Feature flags
-- Cross-cutting concerns (toast notifications, modals)
-
-### When NOT to Use Context
-
-- Server data (use React Query instead)
-- Form state (use form libraries)
-- Single-component state (use useState)
-- State that should be in URL
-
-### Context Pattern
-
-```typescript
-// context/DashboardContext.tsx
-import { createContext, useContext, useState, ReactNode } from 'react';
-
-interface DashboardState {
-  sidebarCollapsed: boolean;
-  activeWidget: string | null;
-}
-
-interface DashboardContextValue extends DashboardState {
-  toggleSidebar: () => void;
-  setActiveWidget: (widget: string | null) => void;
-}
-
-const DashboardContext = createContext<DashboardContextValue | null>(null);
-
-export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<DashboardState>({
-    sidebarCollapsed: false,
-    activeWidget: null,
-  });
-
-  const toggleSidebar = () => {
-    setState((prev) => ({
-      ...prev,
-      sidebarCollapsed: !prev.sidebarCollapsed,
-    }));
-  };
-
-  const setActiveWidget = (widget: string | null) => {
-    setState((prev) => ({ ...prev, activeWidget: widget }));
-  };
-
-  return (
-    <DashboardContext.Provider
-      value={{ ...state, toggleSidebar, setActiveWidget }}
-    >
-      {children}
-    </DashboardContext.Provider>
-  );
-}
-
-export function useDashboard() {
-  const context = useContext(DashboardContext);
-  if (!context) {
-    throw new Error('useDashboard must be used within DashboardProvider');
+// 读取当前功能流程内的共享页面状态
+export const useXxxContext = (): XxxContextType => {
+  const context = useContext(XxxContext);
+  if (context === null) {
+    throw new Error("useXxxContext 必须在 XxxProvider 内部使用。");
   }
   return context;
-}
+};
 ```
 
-### Split Context for Performance
+- `useXxxContext` 内必须检查是否在 Provider 内使用，缺失时抛明确错误。
+- 不直接导出原始 Context，外部统一经 `useXxxContext` 访问。
+- Provider 只包裹真正需要共享状态的页面区域，不无意义扩大范围。
 
-Separate frequently-changing values to prevent unnecessary re-renders:
+真实范例：`src/pages/spec/auth/login/model/login-context.tsx`、`src/widgets/dual-sidebar/model/dual-sidebar-context.tsx`、`src/pages/spec/personal/prompt/records/model/records-mutate-context.tsx`。
 
-```typescript
-// Separate contexts for state and actions
-const DashboardStateContext = createContext<DashboardState | null>(null);
-const DashboardActionsContext = createContext<DashboardActions | null>(null);
+## zustand
 
-export function DashboardProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<DashboardState>(initialState);
-
-  // Memoize actions to prevent re-renders
-  const actions = useMemo(
-    () => ({
-      toggleSidebar: () =>
-        setState((prev) => ({
-          ...prev,
-          sidebarCollapsed: !prev.sidebarCollapsed,
-        })),
-      setActiveWidget: (widget: string | null) =>
-        setState((prev) => ({ ...prev, activeWidget: widget })),
-    }),
-    []
-  );
-
-  return (
-    <DashboardStateContext.Provider value={state}>
-      <DashboardActionsContext.Provider value={actions}>
-        {children}
-      </DashboardActionsContext.Provider>
-    </DashboardStateContext.Provider>
-  );
-}
-
-// Separate hooks for state and actions
-export function useDashboardState() {
-  const context = useContext(DashboardStateContext);
-  if (!context) throw new Error('Missing DashboardProvider');
-  return context;
-}
-
-export function useDashboardActions() {
-  const context = useContext(DashboardActionsContext);
-  if (!context) throw new Error('Missing DashboardProvider');
-  return context;
-}
-```
-
-## Context and URL Synchronization
-
-When state needs to be both in context (for easy access) and URL (for shareability):
-
-### Pattern: URL as Source of Truth
-
-```typescript
-import { useQueryState } from 'nuqs';
-import { createContext, useContext, ReactNode } from 'react';
-
-interface FilterContextValue {
-  selectedId: string | null;
-  setSelectedId: (id: string | null) => void;
-  view: 'grid' | 'list';
-  setView: (view: 'grid' | 'list') => void;
-}
-
-const FilterContext = createContext<FilterContextValue | null>(null);
-
-export function FilterProvider({ children }: { children: ReactNode }) {
-  // URL state as the single source of truth
-  const [selectedId, setSelectedId] = useQueryState('selected');
-  const [view, setView] = useQueryState('view', {
-    defaultValue: 'grid' as const,
-    parse: (v) => (v === 'list' ? 'list' : 'grid'),
-  });
-
-  return (
-    <FilterContext.Provider
-      value={{
-        selectedId,
-        setSelectedId,
-        view,
-        setView,
-      }}
-    >
-      {children}
-    </FilterContext.Provider>
-  );
-}
-
-export function useFilters() {
-  const context = useContext(FilterContext);
-  if (!context) throw new Error('Missing FilterProvider');
-  return context;
-}
-```
-
-### Pattern: Sync Context to URL
-
-When context state needs to be reflected in URL for specific scenarios:
-
-```typescript
-export function useSyncToUrl() {
-  const { selectedId } = useItemSelection(); // From context
-  const [, setUrlSelectedId] = useQueryState('selected');
-
-  // Sync context changes to URL
-  useEffect(() => {
-    setUrlSelectedId(selectedId);
-  }, [selectedId, setUrlSelectedId]);
-}
-```
-
-### Pattern: Initialize Context from URL
-
-```typescript
-export function SelectionProvider({ children }: { children: ReactNode }) {
-  // Read initial value from URL
-  const [urlSelectedId] = useQueryState('selected');
-
-  const [selectedId, setSelectedId] = useState<string | null>(
-    urlSelectedId // Initialize from URL
-  );
-
-  // Keep context in sync with URL changes
-  useEffect(() => {
-    setSelectedId(urlSelectedId);
-  }, [urlSelectedId]);
-
-  return (
-    <SelectionContext.Provider value={{ selectedId, setSelectedId }}>
-      {children}
-    </SelectionContext.Provider>
-  );
-}
-```
-
-## State Debugging
-
-### React Query DevTools
-
-```typescript
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-
-function App() {
-  return (
-    <>
-      <AppContent />
-      <ReactQueryDevtools initialIsOpen={false} />
-    </>
-  );
-}
-```
-
-### Context Debug Component
-
-```typescript
-function DebugContext() {
-  const state = useDashboardState();
-
-  if (process.env.NODE_ENV !== 'development') return null;
-
-  return (
-    <pre className="fixed bottom-4 right-4 p-2 bg-black/80 text-white text-xs">
-      {JSON.stringify(state, null, 2)}
-    </pre>
-  );
-}
-```
-
-## Best Practices
-
-1. **URL First**: Default to URL state for shareable data
-2. **Minimal Context**: Keep context small and focused
-3. **Separate Concerns**: Don't mix server state with UI state
-4. **Type Everything**: Use TypeScript for all state types
-5. **Default Values**: Always provide sensible defaults
-6. **Single Source**: Avoid duplicating state across systems
-
-## Anti-Patterns
-
-- Storing server data in context (use React Query)
-- Using context for form state (use form libraries)
-- Deep nesting of providers
-- Not memoizing context actions
-- Duplicating URL state in useState
+跨页面/全局、需持久化的业务状态用 zustand（带 `persist` 中间件）。范例：`src/features/markdown-editor/model/editor-store.ts`。不要把请求层服务端数据塞进 zustand。

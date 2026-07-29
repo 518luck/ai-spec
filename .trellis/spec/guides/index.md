@@ -1,122 +1,51 @@
-# Thinking Guides for Next.js Full-Stack Projects
+# 思维指南
 
-> **Purpose**: Systematic thinking guides to catch issues before they become bugs.
->
-> **Core Philosophy**: 30 minutes of thinking saves 3 hours of debugging.
+> 目的：在写代码前问对问题，把"没想到"变成"已考虑"。核心理念：30 分钟思考省 3 小时调试。
 
----
+## 指南
 
-## Why Thinking Guides?
+| 指南 | 目的 | 何时用 |
+| --- | --- | --- |
+| [实现前清单](./pre-implementation-checklist.md) | 写代码前核对就绪度 | 开始任何功能实现前 |
+| [跨层思维指南](./cross-layer-thinking-guide.md) | 串通数据流经各层 | 功能跨 3+ 层时 |
 
-**Most bugs and tech debt come from "didn't think of that"**, not from lack of skill:
+## 本项目分层
 
-- Didn't think about what happens at layer boundaries -> cross-layer bugs
-- Didn't think about code patterns repeating -> duplicated code everywhere
-- Didn't think about edge cases -> runtime errors
-- Didn't think about future maintainers -> unreadable code
+```
+Server Component (RSC，数据获取、静态渲染)
+        ↓
+Client Component ('use client'，交互、SWR)
+        ↓
+Route Handler / Server Action (校验、业务逻辑)
+        ↓
+业务逻辑 (Prisma 查询、领域规则)
+        ↓
+数据库层 (Prisma ORM、PostgreSQL、多 schema)
+```
 
-These guides help you **ask the right questions before coding**.
+每个边界都是潜在 bug 源：
 
----
+- **序列化**：跨 RSC/Client 边界只传可序列化数据（无函数、无 `Date` 对象、无 `Map`）。
+- **类型不匹配**：Dto/Vo schema 与前端预期可能不一致。
+- **鉴权上下文**：Server Component、Route Handler、Server Action 的 session 可用性不同。
+- **渲染模式**：Server / Client Component 能力与约束不同。
+- **异步时序**：SWR 缓存、stale 数据、竞态。
 
-## Available Thinking Guides
+## 核心原则
 
-| Guide                                                             | Purpose                                       | When to Use                                      |
-| ----------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------ |
-| [Cross-Layer Thinking](./cross-layer-thinking-guide.md)           | Think through data flow across layers         | Before implementing features that span 3+ layers |
-| [Pre-Implementation Checklist](./pre-implementation-checklist.md) | Verify readiness before coding                | Before starting any feature implementation       |
+1. **先搜后写**：创建新东西前先搜现有模式（`rg`）。
+2. **先想后码**：5 分钟清单省 50 分钟调试。
+3. **显化假设**：把隐含假设写出来。
+4. **核对所有层**：一处改动常需多处同步。
+5. **从 bug 学习**：修完非平凡 bug 后补充到本目录。
 
----
+## 修改前铁律
 
-## Quick Reference: When to Use Which Guide
-
-### Cross-Layer Issues
-
-Use [Cross-Layer Thinking Guide](./cross-layer-thinking-guide.md) when:
-
-- [ ] Feature touches 3+ layers (Server Component, Client Component, oRPC, Database)
-- [ ] Data format changes between layers
-- [ ] Multiple consumers need the same data
-- [ ] You're not sure where to put some logic
-- [ ] Integrates with external services or third-party APIs
-
-### Before Writing Code
-
-Use [Pre-Implementation Checklist](./pre-implementation-checklist.md) when:
-
-- [ ] About to add a constant or config value
-- [ ] About to implement new logic
-- [ ] About to define a type or Zod schema
-- [ ] About to create a component or hook
-- [ ] About to add an oRPC procedure
-- [ ] Feels like you've seen similar code before
-
----
-
-## The Pre-Modification Rule (CRITICAL)
-
-> **Before changing ANY value, ALWAYS search first!**
+> 改任何值之前，先搜！
 
 ```bash
-# Search for the value you're about to change
-rg "value_to_change" --type ts
-
-# Check how many files define this value
-rg "CONFIG_NAME" --type ts -c
+rg "要改的值" --type ts
+rg "CONFIG_NAME" --type ts -c   # 看有几个文件定义它
 ```
 
-This single habit prevents most "forgot to update X" bugs.
-
----
-
-## Next.js-Specific Layers
-
-In Next.js full-stack projects with oRPC and Drizzle, these are the typical layers:
-
-```
-Server Components (RSC - data fetching, static rendering)
-        |
-        v
-Client Components ('use client' - interactivity, React Query)
-        |
-        v
-API Routes / oRPC Router (type-safe RPC, middleware, validation)
-        |
-        v
-Service / Business Logic (shared utilities, domain rules)
-        |
-        v
-Database Layer (Drizzle ORM, PostgreSQL, migrations)
-```
-
-Each boundary is a potential source of bugs due to:
-
-- **Serialization** - Only serializable data crosses the RSC/Client boundary (no functions, no Date objects, no Maps)
-- **Type mismatches** - Zod schemas on oRPC may not match what the frontend expects
-- **Auth context** - Session availability differs between Server Components, API routes, and middleware
-- **Rendering mode** - Server Components vs Client Components have different capabilities and constraints
-- **Async timing** - React Query caching, stale data, and race conditions
-
----
-
-## Core Principles
-
-1. **Search Before Write** - Always search for existing patterns before creating new ones
-2. **Think Before Code** - 5 minutes of checklist saves 50 minutes of debugging
-3. **Document Assumptions** - Make implicit assumptions explicit
-4. **Verify All Layers** - Changes often need updates in multiple places
-5. **Learn From Bugs** - Add lessons to these guides after fixing non-trivial bugs
-
----
-
-## Contributing
-
-Found a new "didn't think of that" moment? Add it:
-
-1. If it's a **general thinking pattern** -> Add to existing guide or create new one
-2. If it caused a bug -> Add to "Lessons Learned" section in the relevant guide
-3. If it's **project-specific** -> Create a separate project-specific guide
-
----
-
-**Language**: All documentation should be written in **English**.
+这一条习惯能避免大多数"忘了改 X"的 bug。

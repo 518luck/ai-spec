@@ -1,125 +1,39 @@
-# Next.js Frontend Development Guidelines
+# 前端规范（frontend）
 
-> Universal frontend development guidelines for Next.js full-stack applications with React + TypeScript + TailwindCSS.
+> 适用于 `src/` 下前端代码。权威源：`src/AGENTS.md` 及 `src/shared/hooks/AGENTS.md`、`src/shared/lib/AGENTS.md`。
 
-## Tech Stack
+## 技术栈
 
-- **Framework**: Next.js 15, React 19
-- **Language**: TypeScript (strict mode)
-- **Styling**: TailwindCSS 4, Radix UI
-- **API**: oRPC (OpenAPI RPC), React Query (TanStack Query)
-- **URL State**: nuqs
-- **Auth**: better-auth
-- **AI**: Vercel AI SDK (@ai-sdk/react)
+- Next.js 16 App Router + React 19，TypeScript strict
+- 数据请求：**SWR**（非 React Query）
+- 表单：react-hook-form + zodResolver
+- 状态：useState / props / Context / zustand 按作用范围选
+- 样式：Tailwind v4，组件优先用 shadcn（`src/shared/ui`）
+- hooks 工具库：react-use（经 `@/shared/hooks` barrel）
 
----
+## 文档索引
 
-## Documentation Files
+| 文件 | 内容 | 优先级 |
+| --- | --- | --- |
+| [directory-structure.md](./directory-structure.md) | FSD 分层、segment、公有 API、导入边界 | **必读** |
+| [components.md](./components.md) | shadcn 用法、Icons 注册、Loading 分工、SSR 安全、排版/文案 | **必读** |
+| [data-fetching.md](./data-fetching.md) | SWR 全局配置、数组 key、不自写 toast | **必读** |
+| [state-management.md](./state-management.md) | useState/props/Context/zustand 选型、Context 编写要求 | **必读** |
+| [forms.md](./forms.md) | react-hook-form + zodResolver + next-safe-action | 参考 |
+| [toast-and-feedback.md](./toast-and-feedback.md) | `@/features/toast` barrel、禁业务直接 sonner | 参考 |
+| [hooks.md](./hooks.md) | react-use barrel、自实现 hook 规范 | 参考 |
+| [css-layout.md](./css-layout.md) | flexbox/items-stretch/min-h-0、Tailwind v4 简写、tap-highlight | 参考 |
+| [type-safety.md](./type-safety.md) | 类型从 Dto/Vo 派生 | 参考 |
+| [quality.md](./quality.md) | 提交前清单 | 参考 |
 
-| File                                                 | Description                                          | Priority      |
-| ---------------------------------------------------- | ---------------------------------------------------- | ------------- |
-| [components.md](./components.md)                     | Server/Client components, semantic HTML, next/image  | **Must Read** |
-| [authentication.md](./authentication.md)             | better-auth client, session, protected routes        | **Must Read** |
-| [orpc-usage.md](./orpc-usage.md)                     | Type-safe API calls, React Query integration         | **Must Read** |
-| [hooks.md](./hooks.md)                               | Query and mutation hook patterns                     | Reference     |
-| [api-integration.md](./api-integration.md)           | oRPC client, real-time, AI streaming                 | Reference     |
-| [state-management.md](./state-management.md)         | URL state with nuqs, React Context patterns          | Reference     |
-| [directory-structure.md](./directory-structure.md)    | Project structure and module conventions             | Reference     |
-| [type-safety.md](./type-safety.md)                   | TypeScript guidelines, type inference, Zod           | Reference     |
-| [css-layout.md](./css-layout.md)                     | CSS patterns, flexbox, responsive, touch             | Reference     |
-| [ai-sdk-integration.md](./ai-sdk-integration.md)     | useChat hook, streaming, tool call handling           | Reference     |
-| [quality.md](./quality.md)                           | Pre-commit checklist and code quality standards      | Reference     |
+## 核心规则速查
 
----
-
-## Quick Navigation by Task
-
-### Before Starting Development
-
-| Task                              | Document                                           |
-| --------------------------------- | -------------------------------------------------- |
-| Understand project structure      | [directory-structure.md](./directory-structure.md)  |
-| Learn Server vs Client components | [components.md](./components.md)                   |
-| Set up authentication             | [authentication.md](./authentication.md)           |
-
-### During Development
-
-| Task                        | Document                                           |
-| --------------------------- | -------------------------------------------------- |
-| Make type-safe API calls    | [orpc-usage.md](./orpc-usage.md)                   |
-| Create custom hooks         | [hooks.md](./hooks.md)                             |
-| Manage application state    | [state-management.md](./state-management.md)       |
-| Build UI components         | [components.md](./components.md)                   |
-| Ensure type safety          | [type-safety.md](./type-safety.md)                 |
-| Integrate AI features       | [ai-sdk-integration.md](./ai-sdk-integration.md)   |
-| Handle CSS & layout         | [css-layout.md](./css-layout.md)                   |
-
-### Before Committing
-
-| Task                    | Document                         |
-| ----------------------- | -------------------------------- |
-| Run quality checklist   | [quality.md](./quality.md)       |
-| Verify CSS in both envs | [css-layout.md](./css-layout.md) |
-| Check type safety       | [type-safety.md](./type-safety.md) |
-
----
-
-## Core Rules Summary
-
-| Rule                                                         | Reference                                          |
-| ------------------------------------------------------------ | -------------------------------------------------- |
-| **Default to Server Components**                             | [components.md](./components.md)                   |
-| **Use `<button>` for clickable actions, not `<div>`**        | [components.md](./components.md)                   |
-| **Always use `next/image` instead of `<img>`**               | [components.md](./components.md)                   |
-| **Import types from backend, never redefine them**           | [type-safety.md](./type-safety.md)                 |
-| **No `any` types or `@ts-expect-error` in new code**         | [type-safety.md](./type-safety.md)                 |
-| **Use oRPC client for API calls (not raw fetch)**            | [orpc-usage.md](./orpc-usage.md)                   |
-| **Use oRPC generated query keys (not manual strings)**       | [orpc-usage.md](./orpc-usage.md)                   |
-| **Store shareable state in URL with nuqs**                   | [state-management.md](./state-management.md)       |
-| **Use `items-stretch` on main flex containers**              | [css-layout.md](./css-layout.md)                   |
-| **Handle both tool call formats (streaming + history)**      | [ai-sdk-integration.md](./ai-sdk-integration.md)   |
-| **Always check session loading state before rendering**      | [authentication.md](./authentication.md)           |
-
----
-
-## Architecture Overview
-
-```
-+--------------------------------------------------------------+
-|                    Next.js Application                        |
-|                                                               |
-|  app/                          modules/                       |
-|  ├── (marketing)/              ├── [feature]/                 |
-|  │   └── [locale]/             │   ├── components/            |
-|  └── (app)/                    │   ├── hooks/                 |
-|      └── [routes]/             │   ├── context/               |
-|                                │   └── lib/                   |
-|                                ├── shared/                    |
-|                                └── ui/                        |
-+-------------------------------+------------------------------+
-                                |
-          oRPC (type-safe RPC)  |  React Query (cache)
-                                |
-+-------------------------------+------------------------------+
-|                    API Layer (Server)                         |
-|  +--------------+  +----------------+  +------------------+  |
-|  |   oRPC       |  |   better-auth  |  |   AI SDK         |  |
-|  |   Router     |  |   Sessions     |  |   Streaming      |  |
-|  +--------------+  +----------------+  +------------------+  |
-+--------------------------------------------------------------+
-```
-
----
-
-## Getting Started
-
-1. **Read the Must-Read documents** - Components, authentication, and oRPC usage
-2. **Set up your project structure** - Follow [directory-structure.md](./directory-structure.md)
-3. **Configure TypeScript paths** - See [type-safety.md](./type-safety.md)
-4. **Set up API client** - Use patterns from [orpc-usage.md](./orpc-usage.md)
-5. **Build components** - Follow [components.md](./components.md) and [hooks.md](./hooks.md)
-6. **Before committing** - Complete the [quality.md](./quality.md) checklist
-
----
-
-**Language**: All documentation is written in **English**.
+| 规则 | 出处 |
+| --- | --- |
+| FSD 分层只能向下依赖，slice 经 `index.ts` 公有 API 导入 | directory-structure.md |
+| shadcn 组件放 `shared/ui`，用前先查是否已有 | components.md |
+| 图标在 `icons.tsx` 统一注册后用 `Icons.xxx`，业务代码禁直接 import `@tabler/icons-react` | components.md |
+| 数据请求只用 `useSWR`，不重复写失败 toast | data-fetching.md |
+| toast 只从 `@/features/toast` 导入 | toast-and-feedback.md |
+| Context 必须含 `ContextType` + Provider + `useXxxContext`（缺失 Provider 抛错） | state-management.md |
+| React 组件用 `function` 声明，Hook/普通函数用 `const` 箭头 | shared/code-quality.md |
