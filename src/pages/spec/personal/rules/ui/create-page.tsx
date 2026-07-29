@@ -43,5 +43,7 @@ export function CreateRulePage({ spaceId }: CreateRulePageProps): JSX.Element {
 		return true;
 	};
 
-	return <RuleEditorForm title="创建规约" spaceId={spaceId} submitLabel="创建" onSave={handleSave} />;
+	return (
+		<RuleEditorForm title="创建规约" spaceId={spaceId} submitLabel="创建" onSave={handleSave} />
+	);
 }

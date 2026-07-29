@@ -16,7 +16,7 @@ const PANEL_TRIGGER_PRESETS = {
 	layout: { icon: <Icons.layout className="size-4" />, label: "布局" },
 } as const;
 
-type PanelTriggerVariant = keyof typeof PANEL_TRIGGER_PRESETS;
+export type PanelTriggerVariant = keyof typeof PANEL_TRIGGER_PRESETS;
 
 type PanelTriggerProps = {
 	// 预设变体，默认 "filter"

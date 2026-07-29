@@ -6,6 +6,7 @@ export { default as useDebounce } from "react-use/lib/useDebounce"; // 回调式
 // @ 自实现 hook
 export { useHotkey } from "./use-hotkey"; // 全局快捷键绑定（修饰键组合/焦点排除/IME 防护；react-use 的 useKey 无这些能力故自实现）
 export { useInertialScroll } from "./use-inertial-scroll"; // 滚动容器惯性缓动（rAF + lerp），wheel/scrollTo 都走动画
+export { useInfiniteLoad } from "./use-infinite-load"; // 无限滚动加载：useInView + 防抖自动触发 useSWRInfinite 的 setSize
 export { useLocalStorage } from "./use-local-storage"; // 读写 localStorage，setter 支持函数式更新（无 stale closure）
 export { useMediaQuery } from "./use-media-query"; // 设备类型（mobile/tablet/desktop）+ 窗口尺寸
 export { useIsMobile } from "./use-mobile"; // 视口是否为移动端（768px 断点）

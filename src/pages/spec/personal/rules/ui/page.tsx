@@ -15,9 +15,16 @@ import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
+import { type RuleView } from "./rule-layout-trigger";
+import { RuleFilterTrigger } from "./rule-filter-trigger";
 import { RuleLayoutTrigger } from "./rule-layout-trigger";
-import { RuleTagFilter } from "./rule-tag-filter";
-import { parseRuleView, RULE_VIEW_PARAM, type RuleView } from "./view-toggle";
+
+// URL 参数名；缺省或非法值一律回落表格
+const RULE_VIEW_PARAM = "view";
+
+// 从 URL 参数解析视图，只认 "grid"，其余都是表格
+const parseRuleView = (value: string | undefined | null): RuleView =>
+	value === "grid" ? "grid" : "table";
 
 type PersonalRulesPageProps = ListRulesDto;
 
@@ -71,12 +78,12 @@ export function PersonalRulesPage({
 				{/* // @ 筛选条带：空间 + 标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 				<div className="mb-6 flex items-center justify-between gap-3">
 					<div className="flex items-center gap-2">
-							<RuleSpaceCombobox />
-							<RuleTagFilter />
-							<RuleLayoutTrigger value={view} onChange={handleViewChange} />
-						</div>
-						<div className="flex items-center gap-2">
-							<SearchInput
+						<RuleSpaceCombobox />
+						<RuleFilterTrigger />
+						<RuleLayoutTrigger value={view} onChange={handleViewChange} />
+					</div>
+					<div className="flex items-center gap-2">
+						<SearchInput
 							className="max-w-80"
 							filters={["title", "content"]}
 							defaultFilter="title"

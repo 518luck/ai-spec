@@ -12,7 +12,7 @@ import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
-import { DeleteRuleDialog } from "./delete-rule-dialog";
+import { DeleteRuleDialog } from "../delete-rule-dialog";
 
 type RuleCardProps = {
 	rule: RuleListItemVo;

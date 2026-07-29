@@ -27,7 +27,8 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 	if (!parsed.success) {
 		throw parsed.error;
 	}
-	const { folderId, spaceId, tagIds: tagIdsParam, q, offset = 0 } = parsed.data;
+	const { folderId, spaceId, tagIds: tagIdsParam, q, offset = 0, limit } = parsed.data;
+	const pageSize = limit ?? PAGE_SIZE;
 	const trimmedQuery = q?.trim() ?? "";
 
 	// folderId 为空（空串/undefined）表示"未分类"，统一映射为 null 查询
@@ -74,7 +75,7 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 				createdAt: true,
 				updatedAt: true,
 			},
-			take: PAGE_SIZE,
+			take: pageSize,
 			skip: offset,
 		}),
 		prisma.rule.count({ where }),
@@ -95,7 +96,7 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 	}));
 
 	// 是否还有下一页
-	const hasMore = rules.length === PAGE_SIZE;
+	const hasMore = rules.length === pageSize;
 	const nextOffset = hasMore ? offset + rules.length : undefined;
 
 	// 经 Vo schema 校验

@@ -1,1 +1,1 @@
-export { PanelTrigger } from "./ui/panel-trigger";
+export { PanelTrigger, type PanelTriggerVariant } from "./ui/panel-trigger";

@@ -7,12 +7,14 @@ import type { JSX } from "react";
 import { PanelTrigger } from "@/features/panel-trigger";
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
-import type { RuleView } from "./view-toggle";
 
 const VIEW_OPTIONS = [
 	{ value: "table" as const, label: "表格", icon: Icons.viewTable },
 	{ value: "grid" as const, label: "卡片", icon: Icons.viewGrid },
 ];
+
+// 列表视图：表格（默认）或卡片网格
+export type RuleView = "table" | "grid";
 
 type RuleLayoutTriggerProps = {
 	// 当前选中的视图
