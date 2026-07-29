@@ -1,0 +1,88 @@
+---
+title: '附录 A：关键文件路径速查'
+---
+
+## 附录 A：关键文件路径速查
+
+<Note>
+  本附录以 **Claude Code**
+  的目录结构为例（`.claude/commands/`、`.claude/agents/`、`.claude/skills/`、`.claude/hooks/`）。其他平台的等价路径见下面「其他平台」小节，或[多平台章节](./multi-platform)的完整布局。
+</Note>
+
+### 核心文件
+
+| 文件                                            | 说明                             | 读取时机                       |
+| ----------------------------------------------- | -------------------------------- | ------------------------------ |
+| `.trellis/workflow.md`                          | 开发工作流契约                   | 每次会话开始                   |
+| `.trellis/config.yaml`                          | packages、update.skip、任务 hook | init 和 update                 |
+| `.trellis/.version`                             | 当前 Trellis 版本                | update                         |
+| `.trellis/.template-hashes.json`                | 模板文件 hash                    | update                         |
+| `.trellis/.developer`                           | 开发者身份                       | 每次会话                       |
+| `.trellis/.runtime/sessions/<session-key>.json` | 单个 AI 会话/窗口的 active task  | continue、hook、sub-agent 启动 |
+
+### 原生命令（Claude Code）
+
+| 文件                                      | 调用方式               |
+| ----------------------------------------- | ---------------------- |
+| `.claude/commands/trellis/finish-work.md` | `/trellis:finish-work` |
+| `.claude/commands/trellis/continue.md`    | `/trellis:continue`    |
+
+在 SessionStart 自动注入的平台上，`start` 不作为用户可见命令安装。agent-less 平台仍然保留手动 start workflow。
+
+### 原生 sub-agent（Claude Code）
+
+| 文件                                  | Sub-agent           | 角色                    |
+| ------------------------------------- | ------------------- | ----------------------- |
+| `.claude/agents/trellis-implement.md` | `trellis-implement` | 写代码，不 `git commit` |
+| `.claude/agents/trellis-check.md`     | `trellis-check`     | 验证 + 自修复           |
+| `.claude/agents/trellis-research.md`  | `trellis-research`  | 只读代码搜索            |
+
+### 原生 skill（Claude Code）
+
+| 文件                                          | Skill                 | 触发时机                  |
+| --------------------------------------------- | --------------------- | ------------------------- |
+| `.claude/skills/trellis-brainstorm/SKILL.md`  | `trellis-brainstorm`  | 用户描述功能 / bug / 请求 |
+| `.claude/skills/trellis-before-dev/SKILL.md`  | `trellis-before-dev`  | 活跃任务中即将写代码      |
+| `.claude/skills/trellis-check/SKILL.md`       | `trellis-check`       | 实现完成                  |
+| `.claude/skills/trellis-update-spec/SKILL.md` | `trellis-update-spec` | 有值得沉淀的知识          |
+| `.claude/skills/trellis-break-loop/SKILL.md`  | `trellis-break-loop`  | 刚修完棘手 bug            |
+
+### Hook 脚本（Claude Code）
+
+| 文件                                       | 触发               | 作用             |
+| ------------------------------------------ | ------------------ | ---------------- |
+| `.claude/hooks/session-start.py`           | SessionStart       | 自动注入上下文   |
+| `.claude/hooks/inject-workflow-state.py`   | UserPromptSubmit   | 工作流状态面包屑 |
+| `.claude/hooks/inject-subagent-context.py` | PreToolUse（Task） | 规范注入引擎     |
+
+### 其他平台
+
+各平台写到自己的目录下（完整布局见[多平台章节](./multi-platform)）：
+
+- `.cursor/commands/`、`.cursor/skills/`、`.cursor/agents/`、`.cursor/hooks/`、`.cursor/hooks.json`、`.cursor/rules/trellis.mdc`
+- `.opencode/commands/trellis/`、`.opencode/agents/`、`.opencode/skills/`、`.opencode/plugins/`
+- `.codex/prompts/`、`.codex/skills/`、`.codex/agents/`（TOML）、`.codex/hooks/`、`AGENTS.md`
+- `.kiro/steering/`、`.kiro/prompts/`、`.kiro/skills/`、`.kiro/agents/`
+- `.gemini/commands/trellis/`（TOML）、`.gemini/skills/`、`.gemini/agents/`、`.gemini/hooks/`
+- `.qoder/commands/`、`.qoder/skills/`、`.qoder/agents/`、`.qoder/hooks/`
+- `.codebuddy/commands/trellis/`、`.codebuddy/skills/`、`.codebuddy/agents/`、`.codebuddy/hooks/`
+- `.factory/commands/trellis/`、`.factory/droids/`、`.factory/skills/`、`.factory/hooks/`
+- `.github/copilot-instructions.md`、`.github/prompts/`、`.github/skills/`、`.github/agents/`、`.github/copilot/hooks/`
+- `.pi/prompts/`、`.pi/skills/`、`.pi/agents/`、`.pi/extensions/trellis/`、`.pi/settings.json`
+- `.kilocode/workflows/`、`.kilocode/skills/`
+- `.agent/workflows/`、`.agent/skills/`（Antigravity）
+- `.devin/workflows/`、`.devin/skills/`
+- `.agents/skills/`（跨平台共享层，由 Codex configurator 写入）
+
+### 脚本
+
+| 脚本                                   | 作用                |
+| -------------------------------------- | ------------------- |
+| `.trellis/scripts/task.py`             | 任务管理            |
+| `.trellis/scripts/get_context.py`      | 会话上下文          |
+| `.trellis/scripts/add_session.py`      | 记录会话            |
+| `.trellis/scripts/create_bootstrap.py` | 首次 spec bootstrap |
+| `.trellis/scripts/get_developer.py`    | 开发者身份工具      |
+| `.trellis/scripts/init_developer.py`   | 开发者初始化        |
+
+---

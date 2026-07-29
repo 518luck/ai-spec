@@ -1,0 +1,280 @@
+---
+title: '架构全景'
+---
+
+Trellis 是 **Team-level Agent Harness with built-in LLM wiki**。
+
+落到实现上，它是两套系统共用同一批项目文件：
+
+- **Agent Harness**：workflow state、hook、skill、sub-agent 和平台适配层，用来约束 AI coding 工作怎么推进。
+- **Built-in LLM wiki**：spec、task、research、journal 存在仓库里，让 AI session 从文件重新加载项目知识。
+- **Team-level layer**：workflow、spec、task 走 git 跟踪，workspace memory 按 developer 隔离，让多人和多 AI 工具使用同一套约定。
+
+本文档把这个定位映射到当前 Trellis 的 feature、实现这些 feature 的模块，以及本地定制时应该检查哪些文件。使用流程见 [How It Works](/zh/start/how-it-works)。
+
+> Trellis 采用 AGPL-3.0 协议。团队内部使用不需要额外授权；基于 Trellis 衍生产品或服务做商业化，需要提前联系：**klein@mindfold.ai**。
+
+## 设计理念
+
+Trellis 把 AI coding 当成工作流和知识管理问题，而不是一次聊天。
+
+| 理念               | 实现规则                                                                                                                                     |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| 显式记录工作流状态 | Task `status` 和 `[workflow-state:STATUS]` block 告诉主会话当前在哪个阶段。                                                                  |
+| 把持久知识放进文件 | 需求、spec、research、journal 存在 `.trellis/` 下，不只存在对话历史里。                                                                      |
+| 按职责拆分工作     | 调研、实现、验收分别走不同 agent 或 skill，取决于平台能力。                                                                                  |
+| 控制上下文范围     | JSONL 只列当前任务需要的 spec/research 文件，不把整个仓库塞进上下文。                                                                        |
+| 保留 review 边界   | Implement/check agent 产出干净 diff；主会话提出 commit 计划；`/trellis:finish-work` 只归档和写 journal。                                     |
+| 支持团队和多工具   | 同一套 `.trellis/` 模型适配 Claude Code、Cursor、Codex、OpenCode、Kiro、Gemini、Qoder、Copilot、Droid、Pi、Kilo、Antigravity、Devin 等工具。 |
+
+## Feature 全景
+
+### Agent Harness
+
+| Feature                           | 作用                                                                                |
+| --------------------------------- | ----------------------------------------------------------------------------------- |
+| 三阶段工作流                      | 在 `.trellis/workflow.md` 里定义 Plan、Execute、Finish。                            |
+| 每轮 workflow-state breadcrumb    | 在支持 hook 的平台上，把当前 next-action 规则注入主会话。                           |
+| Task lifecycle                    | 在 `.trellis/tasks/<task>/` 中保存需求、状态、负责人、分支、PR 元数据和子任务关系。 |
+| Research / implement / check 角色 | 分开调研、写代码、验收。                                                            |
+| Read-before-write                 | 让 implement/check 路径在改文件前读取 PRD 和相关 spec。                             |
+| Finish 边界                       | 分开最终验证、spec 更新、工作 commit、任务归档和 journal 写入。                     |
+
+### Built-in LLM wiki
+
+| Feature                 | 存什么                                                                       |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| Spec library            | `.trellis/spec/` 下的项目约定和 thinking guide。                             |
+| Task knowledge          | `.trellis/tasks/` 下的 PRD、技术设计、实施计划、research 和 JSONL manifest。 |
+| Workspace memory        | `.trellis/workspace/<developer>/` 下的开发者 journal。                       |
+| Workflow documentation  | `.trellis/workflow.md` 里的可执行工作流契约。                                |
+| Local customization map | 内置 `trellis-meta` references，说明每类行为由哪些生成文件负责。             |
+
+### Team-level behavior
+
+| Feature                              | 支持什么                                                                    |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| Git-tracked workflow/spec/task files | 新成员 clone 仓库后拿到同一套工作流和约定。                                 |
+| Per-session active task pointer      | 多个窗口可以在同一仓库里做不同任务。                                        |
+| Subtask tree                         | Parent task 承载共享需求，child task 各自跑完整 Plan -> Execute -> Finish。 |
+| Cross-platform adapters              | 团队可以用不同 AI 工具，同时共享同一套 `.trellis/` 事实源。                 |
+| Spec distillation                    | 一个任务里的稳定经验可以提升到 `.trellis/spec/`，供未来任务复用。           |
+
+## Feature 到模块映射
+
+| Feature                           | 主要模块                | 本地文件                                                                                                                  |
+| --------------------------------- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| 工作流 phase 和路由               | Workflow module         | `.trellis/workflow.md`                                                                                                    |
+| 每轮 next-action 注入             | Workflow-state module   | `[workflow-state:STATUS]` blocks、`inject-workflow-state.py` 或等价 plugin                                                |
+| 任务创建、状态、归档              | Task store module       | `.trellis/tasks/<task>/task.json`、`.trellis/scripts/task.py`、`.trellis/scripts/common/task_store.py`                    |
+| Session-scoped current task       | Active-task runtime     | `.trellis/.runtime/sessions/<session-key>.json`、`.trellis/scripts/common/active_task.py`                                 |
+| Planning artifact / spec 注入     | Context-loading module  | `prd.md`、`design.md`、`implement.md`、`implement.jsonl`、`check.jsonl`、`inject-subagent-context.py`、平台 agent prelude |
+| Research / implement / check 角色 | Agent and skill module  | 平台 `agents/`、`skills/`、prompt、workflow                                                                               |
+| 团队规范记忆                      | Spec module             | `.trellis/spec/**/index.md` 和 guideline 文件                                                                             |
+| 开发者记忆                        | Workspace module        | `.trellis/workspace/<developer>/journal-*.md`                                                                             |
+| 平台支持                          | Platform adapter module | `.claude/`、`.codex/`、`.cursor/`、`.opencode/`、`.kiro/`、`.gemini/`、`.qoder/`、`.github/`、`.pi/` 等                   |
+| 收尾和归档                        | Finish module           | `/trellis:finish-work`、`.trellis/scripts/add_session.py`、task archive scripts                                           |
+
+## Workflow module
+
+`.trellis/workflow.md` 是 Trellis Plan -> Execute -> Finish 契约的事实源。
+
+```text
+Phase 1: Plan    -> 判断当前 turn，取得创建任务确认，写 planning artifacts
+Phase 2: Execute -> 实现、验收，直到检查通过
+Phase 3: Finish  -> 最终验证、更新 spec、提交工作改动、归档
+```
+
+这个文件负责三件事：
+
+- phase 定义和编号步骤
+- 按平台能力区分的 skill / sub-agent 路由
+- 每轮 breadcrumb hook 读取的 `[workflow-state:STATUS]` blocks
+
+改工作流行为先改这里。平台 command、skill、agent 文件如果也描述同一套流程，可能需要同步文字，但工作流契约本身归 `.trellis/workflow.md`。
+
+## Workflow-state module
+
+在支持 hook 的平台上，`inject-workflow-state.py` 或等价 plugin 会在每条用户 prompt 时运行。
+
+运行时契约是：
+
+1. 从 `cwd` 解析 Trellis 根目录。
+2. 解析当前 session 的 active task。
+3. 读取 `task.json.status`；没有 active task 时合成 `no_task`。
+4. 解析 `.trellis/workflow.md`。
+5. 把匹配的 `[workflow-state:STATUS]` 正文注入到 `<workflow-state>...</workflow-state>`。
+
+标记格式：
+
+```text
+[workflow-state:planning]
+...
+[/workflow-state:planning]
+```
+
+Hook 脚本只负责解析，不保存 breadcrumb 文案副本。缺少匹配 block 时，hook 输出 `Refer to workflow.md for current step.`
+
+默认状态：
+
+| Status        | 写入者            | 说明                                                                                                         |
+| ------------- | ----------------- | ------------------------------------------------------------------------------------------------------------ |
+| `no_task`     | Hook 合成         | 当前 session 没有 active task pointer。                                                                      |
+| `planning`    | `task.py create`  | 需求和 planning artifact 阶段；轻量任务可以只有 PRD，复杂任务在 start 前需要 `design.md` 和 `implement.md`。 |
+| `in_progress` | `task.py start`   | 实现、验收、收尾阶段。                                                                                       |
+| `completed`   | `task.py archive` | 归档前瞬间写入；正常流程里不会作为 live breadcrumb 出现。                                                    |
+
+`task.py create` 会尽量设置当前 session 的 active-task pointer，所以 brainstorm 和 JSONL 整理阶段可以看到 `planning`。
+
+## Task store module
+
+每个任务是一个目录：
+
+```text
+.trellis/tasks/<MM-DD-slug>/
+├── task.json
+├── prd.md
+├── design.md
+├── implement.md
+├── implement.jsonl
+├── check.jsonl
+└── research/
+```
+
+关键文件：
+
+| 文件              | 作用                                                                |
+| ----------------- | ------------------------------------------------------------------- |
+| `task.json`       | 状态、优先级、负责人、分支、PR URL、父子任务关系和扩展元数据。      |
+| `prd.md`          | 需求、约束、验收标准和 out-of-scope。                               |
+| `design.md`       | 复杂任务的技术设计：边界、contract、数据流、兼容性、取舍。          |
+| `implement.md`    | 复杂任务的执行计划：有序 checklist、验证命令、review gate、回滚点。 |
+| `implement.jsonl` | 实现上下文使用的 spec / research manifest。                         |
+| `check.jsonl`     | Review 和验证上下文使用的 spec / research manifest。                |
+| `research/`       | `trellis-research` 或规划流程写入的调研产物。                       |
+
+Task lifecycle hook 是命令事件，不是通用 status watcher：
+
+| Lifecycle event | 触发时机                              | 含义                                                        |
+| --------------- | ------------------------------------- | ----------------------------------------------------------- |
+| `after_create`  | `task.py create` 结束                 | 任务目录已经存在。                                          |
+| `after_start`   | `task.py start` 结束                  | 任务进入 `in_progress`。                                    |
+| `after_finish`  | `task.py finish` 清掉 session pointer | 当前 AI session 脱离该任务；任务可能还在其他 session 继续。 |
+| `after_archive` | `task.py archive` 结束                | 任务已归档；外部系统的 done 同步应该用这个事件。            |
+
+## Active-task runtime module
+
+Current task 按 session 隔离：
+
+```text
+.trellis/.runtime/sessions/<session-key>.json
+```
+
+这个文件把一个 AI session 或窗口指向一个任务。同一仓库里的不同窗口可以做不同任务。
+
+`.trellis/.current-task` 是命令行场景的 fallback。平台能提供 session identity 时，session runtime pointer 优先。
+
+## Context-loading module
+
+Trellis 通过三条路径加载上下文：
+
+| 上下文类型                   | 来源                                                                                    | 使用者                                                |
+| ---------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| 启动上下文                   | `.trellis/scripts/get_context.py`                                                       | 主会话启动报告。                                      |
+| 每轮 workflow state          | `.trellis/workflow.md` blocks                                                           | 主会话 next-action 指引。                             |
+| Task artifact / spec context | `prd.md`、`design.md`、`implement.md`、`implement.jsonl`、`check.jsonl`、research files | Research、implement、check 角色和 inline skill 流程。 |
+
+JSONL 行是普通文件引用：
+
+```text
+{"file": ".trellis/spec/docs-site/docs/style-guide.md", "reason": "Docs writing style"}
+```
+
+标准流程里，task artifact 和 JSONL manifest 分开读取。统一顺序是
+`jsonl entries -> prd.md -> design.md if present -> implement.md if present`。
+`implement.jsonl` 和 `check.jsonl` 列 spec 和 research 文件。没有 `file` 字段的
+seed row 会被 reader 跳过。源文件由实现和 review 时按需读取，不预先登记在
+JSONL 里。
+
+## Platform adapter module
+
+Trellis 使用每个平台可用的原语。真实项目以本地生成文件为准，默认能力分组如下：
+
+| 分组                          | 平台                                                | 启动上下文                                                    | 每轮 workflow-state                            | 实现 / 验收上下文                                                                |
+| ----------------------------- | --------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| Hook + hook-push sub-agent    | Claude Code、Cursor、OpenCode、CodeBuddy、Droid、Pi | Hook、plugin 或 extension                                     | Hook 或等价机制                                | Hook 注入 JSONL 条目、`prd.md`、存在时的 `design.md` 和存在时的 `implement.md`。 |
+| Hook + pull-prelude sub-agent | Gemini CLI、Qoder、Copilot                          | Hook                                                          | Hook                                           | Sub-agent 启动后自己读取 JSONL 条目和 task artifacts。                           |
+| Codex                         | Codex                                               | `AGENTS.md`；`UserPromptSubmit` 可注入 no-task bootstrap 提醒 | 开启后有可选 hook（0.129+ 还需 `/hooks` 审批） | Inline 模式通过 skill 读 artifact；sub-agent 模式用 pull-based prelude。         |
+| Kiro                          | Kiro                                                | `.kiro/` 下的 skill 文件                                      | 默认没有 Trellis 每轮 hook                     | Agent / skill 文件读取 Trellis 上下文。                                          |
+| 主会话 workflow / skill       | Kilo、Antigravity、Devin                            | 手动 workflow 或 skill 入口                                   | 默认没有 Trellis 每轮 hook                     | 主会话内联读取 spec 和 task 文件。                                               |
+
+如果本地 settings 文件跟这张表不一致，以本地 settings 为准。Trellis 项目本来就允许定制。
+
+## Agent and skill module
+
+平台支持 sub-agent 时，Trellis 默认提供三个角色：
+
+| Sub-agent           | 角色                                                 | 主要上下文                                                                 |
+| ------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------- |
+| `trellis-research`  | 调研代码、文档、API 和方案；把结论写到 `research/`。 | 调研 prompt，以及按需读取的 task/repo context。                            |
+| `trellis-implement` | 按 planning artifacts 和相关 spec 写改动。           | `implement.jsonl`、`prd.md`、可选 `design.md`、可选 `implement.md`。       |
+| `trellis-check`     | Review、跑检查、能修则自修。                         | `check.jsonl`、`prd.md`、可选 `design.md`、可选 `implement.md`、改动文件。 |
+
+Skill 覆盖主会话需要指导的阶段：brainstorm、before-dev、check、update-spec、finish-work 和 meta customization。没有 sub-agent 的平台上，skill 会承担更多主会话内执行逻辑。
+
+已经移除的 0.4 机制：
+
+- `dispatch`、`plan`、`debug` sub-agent 由 skill routing 替代。
+- 基于 SubagentStop 的 Ralph Loop 由 `trellis-check` 自己的重试循环替代。
+- Trellis 不再自带 `/parallel` worktree 编排；多 worktree 并行用平台原生能力。
+
+## LLM wiki modules
+
+Wiki 侧是一组 AI session 可以反复读取的仓库文件。
+
+| Module                 | 路径                              | 内容                                                         |
+| ---------------------- | --------------------------------- | ------------------------------------------------------------ |
+| Spec library           | `.trellis/spec/`                  | 团队约定、package/layer 规则、thinking guide。               |
+| Task knowledge         | `.trellis/tasks/`                 | PRD、技术设计、实施计划、research、JSONL manifest、archive。 |
+| Workspace memory       | `.trellis/workspace/<developer>/` | 开发者 journal 和索引。                                      |
+| Workflow reference     | `.trellis/workflow.md`            | 工作流契约和 next-action prompt blocks。                     |
+| Trellis meta reference | 内置 `trellis-meta` skill         | 生成文件的本地架构和定制地图。                               |
+
+稳定团队规则放 `.trellis/spec/`。任务事实放任务目录。Session notes 放 `.trellis/workspace/<developer>/`。
+
+## Finish module
+
+Trellis 把实现、工作 commit、收尾记账分开：
+
+1. Implement/check agent 产出通过检查的 diff。
+2. 主会话做最终验证，并运行 `trellis-update-spec`。
+3. Phase 3.4 生成分批 commit 计划，等待一次用户确认后 stage 指定文件并运行 `git commit`。不 amend，不 push。
+4. `/trellis:finish-work` 分类脏文件；如果当前任务改动仍未提交就停止，然后归档任务并写 workspace journal。
+
+`/trellis:finish-work` 不是提交功能代码的命令。工作 commit 先发生；archive 和 journal 是之后的收尾记录。
+
+## 生成文件和受保护文件
+
+`trellis init` 和 `trellis update` 会生成本地文件，但本地改动本身很重要：
+
+| 路径                             | 判断规则                                          |
+| -------------------------------- | ------------------------------------------------- |
+| `.trellis/workflow.md`           | 项目工作流事实源；需要有意识地改。                |
+| `.trellis/spec/`                 | 团队拥有；模板更新不会覆盖 package / layer spec。 |
+| `.trellis/tasks/`                | 工作历史；避免手动删除 active task。              |
+| 平台目录                         | 工具适配层；改行为前先看本地 settings。           |
+| `.trellis/.template-hashes.json` | 管理用 hash 索引；只在修复 update 状态时改。      |
+| `.trellis/.runtime/`             | Runtime 状态；通常不手改。                        |
+
+做本地定制时，用内置 `trellis-meta` skill 当地图。它会要求 AI 先读本地架构 references，检查项目实际文件，再修改项目副本，而不是去改 `node_modules` 或全局安装目录。
+
+## 定制入口
+
+| 目标                                           | 先看哪个文件                                                                                 |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| 改 phase 顺序、required step、next-action 文案 | `.trellis/workflow.md`                                                                       |
+| 改任务创建、状态、归档、lifecycle sync         | `.trellis/scripts/common/task_store.py`、`.trellis/scripts/task.py`、`.trellis/config.yaml`  |
+| 改 spec 加载或 JSONL 规则                      | `.trellis/workflow.md`、`.trellis/scripts/common/task_context.py`、平台 agent / prelude 文件 |
+| 改 hook 行为                                   | 平台 hook settings 加 `.trellis/scripts/` 下的 hook 实现                                     |
+| 改 implement / check agent 行为                | 平台 agent 文件和任务 JSONL 上下文规则                                                       |
+| 增加团队自己的编码规则                         | `.trellis/spec/` 或项目本地 skill                                                            |

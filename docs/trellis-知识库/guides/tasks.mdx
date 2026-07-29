@@ -1,0 +1,141 @@
+---
+title: '管理任务'
+description: '用任务系统追踪工作'
+---
+
+## 任务是干什么的
+
+任务是带上下文的工作项。每个任务知道：
+
+- 你要做什么（PRD）
+- 哪些文件相关
+- 在哪个分支工作
+- 当前状态
+
+切换任务时，AI 的上下文也切换。不会搞混你在做哪个功能。
+
+## 任务结构
+
+任务在 `.trellis/tasks/`。每个任务是一个目录：
+
+```
+.trellis/tasks/01-31-user-auth-taosu/
+├── task.json           # 元数据
+├── prd.md              # 需求
+├── implement.jsonl     # implement agent 的上下文
+├── check.jsonl         # check agent 的上下文
+└── debug.jsonl         # debug agent 的上下文
+```
+
+目录名格式：`MM-DD-简短描述-负责人`。
+
+## 创建任务
+
+用任务脚本：
+
+```bash
+python3 .trellis/scripts/task.py create "user-auth" --assignee taosu
+```
+
+这会创建任务目录和默认文件。然后编辑 `prd.md` 写需求。
+
+### prd.md
+
+写你要做什么。需求和验收标准要具体。
+
+```markdown
+# 用户认证
+
+## 目标
+
+用户可以用邮箱和密码注册、登录。
+
+## 需求
+
+- 用邮箱、密码、显示名注册
+- 登录前需要验证邮箱
+- 登录返回 JWT token
+- Token 7 天过期
+- 通过邮件重置密码
+
+## API 接口
+
+- POST /auth/signup
+- POST /auth/login
+- POST /auth/verify-email
+- POST /auth/forgot-password
+- POST /auth/reset-password
+
+## 不在范围内
+
+- 社交登录（Google、GitHub）
+- 两步验证
+```
+
+### 上下文文件（JSONL）
+
+告诉 agent 该读哪些文件：
+
+```jsonl
+{"file": ".trellis/spec/backend/index.md", "reason": "后端编码规范"}
+{"file": ".trellis/spec/backend/api.md", "reason": "API 设计模式"}
+{"file": "src/routes/auth.ts", "reason": "认证路由实现"}
+{"file": "src/services/user.ts", "reason": "用户服务逻辑"}
+```
+
+不同 agent 可以有不同的上下文文件。按需编辑 `implement.jsonl`、`check.jsonl` 等。
+
+## 开始做任务
+
+设置当前任务：
+
+```bash
+python3 .trellis/scripts/task.py start 01-31-user-auth-taosu
+```
+
+Hooks 用这个来注入正确的上下文。现在开 Claude Code 会话时，它知道：
+
+- 读这个任务的 PRD
+- 加载 JSONL 文件里列的规范
+- 在任务的分支工作
+
+## 管理任务
+
+列出所有任务：
+
+```bash
+python3 .trellis/scripts/task.py list
+```
+
+完成后清除当前任务：
+
+```bash
+python3 .trellis/scripts/task.py finish
+```
+
+归档已完成的任务：
+
+```bash
+python3 .trellis/scripts/task.py archive 01-31-user-auth-taosu
+```
+
+## 多个任务
+
+可以同时有多个进行中的任务。但同一时间只有一个是「当前」的。切换：
+
+```bash
+python3 .trellis/scripts/task.py start other-task-id
+```
+
+## 任务工作流
+
+典型流程：
+
+1. 创建任务：`task.py create`
+2. 编辑 `prd.md` 写需求
+3. 设置上下文文件（JSONL）
+4. 设为当前：`task.py start`
+5. 在 Claude Code 会话里工作
+6. 归档：`task.py archive <id>`
+
+任务系统把上下文组织好，让 AI 知道该关注什么。

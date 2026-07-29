@@ -1,0 +1,121 @@
+---
+title: 'Slash Commands'
+description: '把常用工作流做成命令'
+---
+
+## Slash Commands是干什么的
+
+Slash Commands是快捷方式。不用解释你想做什么，打 `/command`，AI 就知道该怎么做。
+
+Trellis 只保留少量会话边界命令。大部分工作流动作现在由 auto-trigger skill 或 sub-agent 完成。项目自己的显式入口仍然可以做成自定义命令。
+
+## 内置命令
+
+### 会话边界
+
+| 命令                      | 做什么                                   |
+| ------------------------- | ---------------------------------------- |
+| `/trellis:start`          | 给没有自动会话注入的平台手动加载上下文；有 hook / extension 的平台会自动加载。 |
+| `/trellis:continue`       | 把当前会话任务推进到 workflow 的下一步。 |
+| `/trellis:finish-work`    | 结束会话。做最终检查，更新 journal，归档完成任务。 |
+
+### 开发工作流
+
+| Skill / sub-agent       | 做什么                    |
+| ----------------------- | ------------------------- |
+| `trellis-brainstorm`    | 交互式发现和澄清需求。    |
+| `trellis-before-dev`    | 编码前加载相关规范。      |
+| `trellis-implement`     | 在支持的平台上用隔离 sub-agent 实现任务。 |
+| `trellis-check`         | 按规范审查代码并自修复问题。 |
+
+### 维护
+
+| Skill                  | 做什么                 |
+| ---------------------- | ---------------------- |
+| `trellis-update-spec`  | 把学到的东西写进规范。 |
+| `trellis-break-loop`   | 卡在循环里时调试。     |
+
+`/trellis:before-backend-dev`、`/trellis:check-backend`、`/trellis:record-session`、`/trellis:parallel` 这类阶段命令已经在 Trellis 0.5 移除。现在的流程是 task-based：创建/规划任务，用 `continue` 推进下一步，最后用 `finish-work` 收尾。
+
+## 使用命令
+
+在 Claude Code 里打命令：
+
+```
+/trellis:continue
+```
+
+命令会展开成完整的 prompt 告诉 AI 该做什么。你看不到这个 prompt，但 AI 会照做。
+
+## 创建自定义命令
+
+命令是 `.claude/commands/` 里的 markdown 文件。创建新命令：
+
+```bash
+mkdir -p .claude/commands/my-project
+```
+
+创建 `.claude/commands/my-project/deploy-check.md`：
+
+```markdown
+部署前检查：
+
+1. 所有测试通过：`npm test`
+2. 没有 TypeScript 错误：`npm run typecheck`
+3. Lint 通过：`npm run lint`
+4. 构建成功：`npm run build`
+
+跑每个检查，报告结果。如果有失败的，说明哪里错了。
+```
+
+现在 `/my-project:deploy-check` 就能用了。
+
+## 命令结构
+
+命令文件就是一个 prompt。调用命令时，文件内容变成给 AI 的指令。
+
+好命令：
+
+- 有清晰的步骤
+- 包含实际要跑的命令
+- 说明期望什么输出
+- 告诉 AI 失败了怎么办
+
+差命令：
+
+- 模糊（"检查代码"）
+- 不说怎么检查
+- 让 AI 猜
+
+## 命名空间
+
+命令用文件夹名作为命名空间：
+
+```
+.claude/commands/
+├── trellis/           # /trellis:* 命令
+│   ├── finish-work.md
+│   └── continue.md
+└── my-project/        # /my-project:* 命令
+    └── deploy-check.md
+```
+
+把你项目的命令放在跟 Trellis 命令不同的文件夹。这样 Trellis 更新时不会冲突。
+
+## 参数
+
+命令可以接受参数。在命令文件里用 `$ARGUMENTS` 引用：
+
+```markdown
+审查 $ARGUMENTS 这个文件。
+
+检查：
+
+- 类型安全
+- 错误处理
+- 测试覆盖
+```
+
+用法：`/my-project:review src/api/users.ts`
+
+AI 拿到的 prompt 里 `$ARGUMENTS` 会被替换成 `src/api/users.ts`。

@@ -1,0 +1,184 @@
+---
+title: '定制 Spec Template Marketplace'
+---
+
+## 定制 Spec Template Marketplace
+
+Spec template marketplace 是一个 Git source，`trellis init --registry` 可以从
+里面拉取一套 `.trellis/spec/` 起点。团队有很多仓库、但希望它们从同一套工程约定开始时，就该用这个。
+
+它适合放可复用的工程规范：框架目录、API 模式、测试规则、发布规则、review checklist，以及 agent
+写代码前应该看到的真实示例。它不是远程任务库，也不应该放项目运行态。
+
+### 运行模型
+
+`trellis init --registry <source>` 会把 `<source>` 解析成 GitHub、GitLab 或 Bitbucket
+source，然后在这个 source path 下面探测 `index.json`。
+
+| 模式             | 条件                                 | 行为                                                        |
+| ---------------- | ------------------------------------ | ----------------------------------------------------------- |
+| Marketplace 模式 | `<source>/index.json` 存在且格式正确 | Trellis 列出 `type: "spec"` 的模板，并安装用户选择的 `id`   |
+| Direct 模式      | `<source>/index.json` 返回 not found | Trellis 把 source 目录本身下载到 `.trellis/spec/`           |
+| Error            | `index.json` 存在但无效，或无法读取  | Trellis 直接停止，不会把坏掉的 marketplace 猜成 direct mode |
+
+Source 格式：
+
+```text
+provider:user/repo[/subdir][#ref]
+```
+
+示例：
+
+```bash
+# Marketplace 模式：source 指向包含 index.json 的目录
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace
+
+# 按 id 安装一个模板
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace --template web-app
+
+# Direct 模式：source 直接指向一个模板目录
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace/specs/web-app
+
+# 固定到某个 branch 或 tag
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace#v1
+```
+
+### 仓库结构
+
+常见结构是：
+
+```text
+my-spec-marketplace/
+└── marketplace/
+    ├── index.json
+    └── specs/
+        ├── web-app/
+        │   ├── README.md
+        │   ├── frontend/
+        │   ├── backend/
+        │   ├── shared/
+        │   └── guides/
+        └── worker-service/
+            ├── README.md
+            ├── backend/
+            ├── shared/
+            └── guides/
+```
+
+模板目录里应该直接放最终会出现在 `.trellis/spec/` 里的文件。不要再包一层 `spec/`，除非你真的想安装后得到
+`.trellis/spec/spec/...`。
+
+里面的文件夹名是团队约定，不是 Trellis 强制要求。`frontend/`、`backend/`、`shared/`、`guides/`
+只是常见拆法，因为把大规则按领域拆开后，agent 更容易加载到相关内容。
+
+### index.json 合约
+
+`index.json` 放在 registry source path 下面。以上面的结构为例，用户把 `--registry` 指到
+`gh:myorg/my-spec-marketplace/marketplace`，Trellis 读取的就是：
+
+```text
+marketplace/index.json
+```
+
+最小 marketplace index：
+
+```json
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "web-app",
+      "type": "spec",
+      "name": "Web App",
+      "description": "Next.js + oRPC + PostgreSQL conventions",
+      "path": "marketplace/specs/web-app",
+      "tags": ["nextjs", "orpc", "postgres"]
+    }
+  ]
+}
+```
+
+字段规则：
+
+| 字段          | 必填 | 含义                                                   |
+| ------------- | ---- | ------------------------------------------------------ |
+| `version`     | 是   | Marketplace index 版本。现在写 `1`。                   |
+| `templates`   | 是   | 模板条目数组。                                         |
+| `id`          | 是   | 稳定 CLI id，供 `--template <id>` 使用。               |
+| `type`        | 是   | Spec 模板必须是 `"spec"`。其他类型现在会被忽略。       |
+| `name`        | 是   | 交互选择器里展示的人类可读名称。                       |
+| `description` | 否   | 展示在模板旁边的简短说明。                             |
+| `path`        | 是   | 要复制到 `.trellis/spec/` 的目录，路径相对仓库根目录。 |
+| `tags`        | 否   | 给人检索和浏览用的提示。                               |
+
+关键点是 `path`：它相对的是仓库根目录，不是 `index.json` 所在目录。
+
+### 维护流程
+
+1. 从已有模板复制，或在 `marketplace/specs/<id>/` 下新建一个目录。
+2. 把可复用规则拆进不同主题文件。例子可以来自真实项目，但要去掉只属于某个项目的假设。
+3. 如果目录用 `index.md` 给 agent 做导航，同步更新这些 `index.md`。
+4. 在 `marketplace/index.json` 增加或更新模板条目。
+5. 发布前先在临时仓库里跑一遍安装。
+
+测试命令：
+
+```bash
+# 交互选择器
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace
+
+# 非交互安装
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace --template web-app
+
+# 已有项目：只补不存在的 spec 文件
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace --template web-app --append
+```
+
+安装后，目标项目拥有自己的 `.trellis/spec/`。模板只是起点，不是一个会被远程同步的 wiki。团队应该继续编辑项目里的
+spec，让它反映当前仓库真实情况。
+
+### 适合放什么
+
+适合放：
+
+- 这个技术栈的目录、模块、边界约定。
+- API、数据库、状态管理、测试、错误处理规则。
+- 从真实项目整理出来、但已经去掉私有信息的示例。
+- Agent 完成任务前应该执行的 review checklist。
+- 解释跨层取舍的短 guide。
+
+不要放：
+
+- Secret、内部 URL、客户数据、私有事故记录。
+- `.trellis/tasks/`、`.trellis/workspace/` 或当前任务状态。
+- `.claude/`、`.codex/`、`.cursor/`、`.opencode/` 这类平台 prompt 文件。它们属于
+  Trellis 平台定制，不属于 spec template。
+- 只对某一个仓库有意义的产品 PRD。
+
+### 版本与发布
+
+把 template id 当成团队内部的公开 API。需要破坏性重写时，发一个新 id，比如 `web-app-v2`；或者让旧行为固定到
+某个 Git ref：
+
+```bash
+trellis init --registry gh:myorg/my-spec-marketplace/marketplace#v1 --template web-app
+```
+
+小改动可以继续用同一个 id，但要在模板 `README.md` 里记清楚。源模板变了，不代表已有项目自动变正确；项目里的
+spec 更新应该单独 review、单独合并。
+
+### 常见问题
+
+| 现象                                     | 检查点                                                                        |
+| ---------------------------------------- | ----------------------------------------------------------------------------- |
+| 选择器里看不到模板                       | `index.json` 必须在 registry source path 下，条目必须写 `type: "spec"`。      |
+| `--template web-app` 提示 not found      | `--template` 匹配的是 `id`，不是 `name`，也不是目录名。                       |
+| 进入了 Direct 模式，没有出现 marketplace | Trellis 没找到 `<source>/index.json`。把 `--registry` 指到 marketplace 目录。 |
+| 文件落到了 `.trellis/spec/spec/`         | 模板目录里多包了一层外部 `spec/`。                                            |
+| 私有 registry 拉取失败                   | 使用本地 Git 凭据可读的 source，或给 token-based 拉取设置 `GIGET_AUTH`。      |
+| Agent 没按安装后的规则做事               | 让 spec 更具体，维护好每层 `index.md`，并引用真实仓库路径。                   |
+
+### 和 Resource Marketplace 的关系
+
+Resource Marketplace 页面是公开目录。这页是自定义 registry 的维护说明。模板仓库本身跑通后，如果它适合公开复用，再去
+template catalog 下面补一页文档。

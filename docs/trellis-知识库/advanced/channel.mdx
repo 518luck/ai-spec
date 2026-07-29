@@ -1,0 +1,226 @@
+---
+title: '使用 Channel 进行多 Agent 协作'
+sidebarTitle: 'Channel'
+description: '通过持久的 chat 或 forum channel 协调 Claude 与 Codex worker，显式管理上下文、消息路由、等待、中断和清理。'
+---
+
+`trellis channel` 是 Trellis 的本地多 Agent 协作运行时。主 Agent 可以启动 Claude 或 Codex worker，给每个 worker 注入明确的上下文，通过持久事件日志交换消息，并在运行过程中查看进度或改变方向。
+
+当工作需要多轮对话或审计记录，而不是一次孤立的 sub-agent 调用时，使用 Channel。
+
+```text
+主 Agent
+    |
+    | create / send / wait / interrupt
+    v
+持久 Channel 事件日志
+    |                     |
+    v                     v
+Claude worker         Codex worker
+```
+
+Channel 状态保存在 `~/.trellis/channels/`。默认 scope 是当前项目；使用 `--scope global` 可以创建跨项目 channel。
+
+## 什么时候使用 Channel
+
+| 需求                     | Channel 模式                                             |
+| ------------------------ | -------------------------------------------------------- |
+| 获取第二意见             | 使用 `channel run` 运行 one-shot worker。                |
+| 多轮设计讨论             | Create、spawn、send、wait，再继续发送压力测试问题。      |
+| 独立实现或检查           | Spawn worker，并注入 task 文件或 JSONL 上下文 manifest。 |
+| 并行审查                 | Spawn 多个具名 worker，并等待所有 worker。               |
+| 修正正在执行的工作       | 使用 `channel interrupt`，不丢弃原 provider session。    |
+| 持久 topic 或 issue 反馈 | 创建带 thread 的 `--type forum` channel。                |
+
+不要把 Channel 当作长期对话记忆。历史检索使用 `trellis mem`。如果只需要一次静态结果，不需要持久消息、进度检查或中途改向，平台原生的普通 sub-agent 调用通常更简单。
+
+## 让 AI 操作 Channel
+
+`trellis init` 和 `trellis update` 会在支持的平台安装内置 `trellis-channel` skill。你可以直接描述协作目标，不必自己拼出每条命令：
+
+```text
+Use trellis-channel to ask a Codex reviewer to challenge this design.
+Give it the PRD and design only, run at least two pressure-test rounds,
+then summarize the blockers without changing code.
+```
+
+Skill 会选择匹配的 Channel 工作流和 CLI 命令。需要脚本化、检查事件或排查 worker 时，再直接使用 CLI。
+
+## One-shot 问题
+
+`channel run` 会创建 ephemeral channel，启动一个 worker，发送 prompt，打印最终答案，并在成功后删除 channel：
+
+```bash
+trellis channel run \
+  --provider codex \
+  --message "Review this design boundary and name the top three risks." \
+  --timeout 10m
+```
+
+如果运行失败或超时，Trellis 会保留 channel，便于检查事件和 worker log。
+
+## 多轮审查
+
+Channel 最有价值的用法是迭代审查：只给 worker 必要文件，等待 Trellis 自动发出的事件，然后继续挑战第一轮答案，而不是直接把它当作最终结论。
+
+```bash
+TASK=.trellis/tasks/06-01-example-feature
+
+trellis channel create architecture-review \
+  --task "$TASK" \
+  --by main
+
+trellis channel spawn architecture-review \
+  --provider codex \
+  --as reviewer \
+  --cwd "$PWD" \
+  --file "$TASK/prd.md" \
+  --file "$TASK/design.md" \
+  --timeout 30m
+
+cat <<'EOF' | trellis channel send architecture-review \
+  --as main \
+  --to reviewer \
+  --stdin \
+  --delivery-mode requireRunningWorker
+Review the proposed design. Verify its assumptions against the repository,
+identify blocking risks, and cite the relevant files. Do not implement it.
+EOF
+
+trellis channel wait architecture-review \
+  --as main \
+  --from reviewer \
+  --kind turn_finished \
+  --timeout 15m
+
+trellis channel messages architecture-review \
+  --from reviewer \
+  --kind message \
+  --last 1 \
+  --raw
+```
+
+然后继续发送聚焦的第二轮问题：
+
+```bash
+cat <<'EOF' | trellis channel send architecture-review \
+  --as main \
+  --to reviewer \
+  --stdin
+Pressure-test the MVP boundary. Which deferred capability would force a
+redesign if omitted now, and which concerns can safely wait?
+EOF
+
+trellis channel wait architecture-review \
+  --as main \
+  --from reviewer \
+  --kind turn_finished \
+  --timeout 15m
+```
+
+有效的审查通常要覆盖方向选择、MVP 边界、数据 contract、CLI 或 UX contract、失败处理和反对意见轮。一个答案加一次确认属于 review，不属于 brainstorm。
+
+## 上下文和路由
+
+Worker 不会自动收到项目里的所有文件。
+
+- 少量明确文件使用可重复的 `spawn --file <path>`。
+- Trellis 上下文 manifest 使用可重复的 `spawn --jsonl <path>`。
+- 使用 `--as <name>` 给每个 worker 一个稳定地址。
+- 使用 `send --to <name>` 唤醒 worker。Spawn 出来的 worker 默认只接收显式定向消息。
+- 如果向已停止 worker 静默追加消息属于错误，使用 `--delivery-mode requireRunningWorker`。
+- 长 prompt 使用 `--stdin` 或 `--text-file`，避免 shell 重新解释标点。
+
+`send` 固定写入 `message` 事件，不支持自定义 `--tag` 或 `--kind`。等待 `turn_finished`、`done`、`error`、`killed` 等系统事件，不要要求模型输出某个魔法字符串作为完成信号。
+
+## 并行 Reviewer
+
+给 worker 使用不同名字，分别发送目标明确的 brief，再用 `wait --all`：
+
+```bash
+trellis channel create design-review --by main --ephemeral
+
+trellis channel spawn design-review --provider claude --as reviewer-claude --timeout 15m
+trellis channel spawn design-review --provider codex --as reviewer-codex --timeout 15m
+
+echo "Review correctness and identify release blockers." \
+  | trellis channel send design-review --as main --to reviewer-claude --stdin
+
+echo "Challenge the design assumptions and propose a smaller solution." \
+  | trellis channel send design-review --as main --to reviewer-codex --stdin
+
+trellis channel wait design-review \
+  --as main \
+  --from reviewer-claude,reviewer-codex \
+  --kind turn_finished \
+  --all \
+  --timeout 15m
+```
+
+`--all` 要求 `--from` 中列出的每个 worker 都产生匹配事件。超时退出码是 `124`，并会报告仍未完成的 worker。
+
+## 改变 Worker 方向
+
+如果 worker 应该放弃当前 turn、改用新的指令，同时保留 provider session，使用 soft interrupt：
+
+```bash
+echo "Stop the refactor. Reproduce the failing test first." \
+  | trellis channel interrupt implementation \
+      --as main \
+      --to implementer \
+      --stdin
+```
+
+只有 worker 必须立即停止或不响应 interrupt 时，才使用 `channel kill <channel> --as <worker>`。Session identifier 和日志会保留，便于诊断以及通过 `spawn --resume` 恢复。
+
+## Forum Channel
+
+Forum channel 是由独立 thread 组成的持久看板，不是扁平聊天时间线：
+
+```bash
+trellis channel create release-feedback \
+  --type forum \
+  --description "Release feedback and follow-up decisions." \
+  --by main
+
+trellis channel post release-feedback opened \
+  --as main \
+  --thread documentation-gap \
+  --title "Document the collaboration runtime" \
+  --description "Track the missing user guide and its resolution." \
+  --text "The feature currently appears only in release notes."
+
+trellis channel forum release-feedback
+trellis channel thread release-feedback documentation-gap
+```
+
+需要在每次读取 channel 或 thread 时都带上的背景，使用 `channel context add`。解决结果使用 `post ... status` 和 `post ... summary` 记录。Forum 历史是 event-sourced 的，应通过 `forum`、`thread` 和 `messages --thread` 检查，不要直接解析 `events.jsonl`。
+
+## 检查和清理
+
+```bash
+trellis channel list --all
+trellis channel messages architecture-review --raw --last 50
+trellis channel messages architecture-review --raw --kind progress --last 80
+trellis channel rm architecture-review
+```
+
+Pretty message 输出是 operator view，可能缩短 progress payload。审计 streamed output 或排查卡住的工具调用时，使用 `--raw`。
+
+Spawned worker 的默认 idle cleanup TTL 是 `5m`，默认 live-worker budget 是 `6`。可以在 spawn 时用 `--idle-timeout` 和 `--max-live-workers` 覆盖，也可以在 `.trellis/config.yaml` 中配置 `channel.worker_guard`。
+
+## 命令速查
+
+| 命令                         | 作用                                        |
+| ---------------------------- | ------------------------------------------- |
+| `channel create`             | 创建持久 chat 或 forum channel。            |
+| `channel run`                | 运行一个 ephemeral worker 并打印答案。      |
+| `channel spawn`              | 启动带明确上下文的 Claude 或 Codex worker。 |
+| `channel send` / `wait`      | 路由工作并等待匹配事件。                    |
+| `channel messages`           | 检查、过滤或持续跟踪事件流。                |
+| `channel interrupt` / `kill` | 改变当前 turn 的方向或停止 worker。         |
+| `channel forum` / `thread`   | 读取 forum 汇总状态和单个 thread 时间线。   |
+| `channel context` / `title`  | 管理持久上下文和展示元数据。                |
+| `channel rm` / `prune`       | 删除单个 channel，或预览并执行批量清理。    |
+
+运行 `trellis channel <command> --help`，查看当前已安装 CLI 版本支持的完整参数。

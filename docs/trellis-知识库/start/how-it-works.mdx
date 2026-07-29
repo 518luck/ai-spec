@@ -1,0 +1,273 @@
+---
+title: 'How It Works'
+---
+
+本文档从一个新 AI 会话开始，一直走到任务归档，说明 Trellis 的标准流程。
+重点是运行时行为：读哪些文件、写哪些文件、哪些 hook 会触发，以及不同平台
+的差异。
+
+> 这是日常使用流程。模块边界、定制入口、实现细节看
+> [架构全景](/zh/advanced/architecture)。
+
+## 流程总览
+
+![Trellis 长期使用开发流](/images/trellis-mature-usage-flow-zh.png)
+
+## 1. 会话启动
+
+一个 Trellis 项目是带 `.trellis/` 的仓库，再加上 `.claude/`、`.codex/`、
+`.cursor/`、`.opencode/`、`.kiro/`、`.pi/` 等平台目录。
+
+在有 SessionStart 路径的平台上，Trellis 会注入紧凑的启动 payload。它是
+索引和状态报告，不会全量塞入每个 workflow、spec 或 task artifact。
+
+常见启动上下文包括：
+
+| 上下文              | 来源                                                                                                     |
+| ------------------- | -------------------------------------------------------------------------------------------------------- |
+| 开发者身份          | `.trellis/.developer`                                                                                    |
+| Git 状态            | 当前分支、脏文件、最近提交                                                                               |
+| Active task pointer | `.trellis/.runtime/sessions/<session-key>.json`；只有一个 runtime session 时可做 single-session fallback |
+| Active task 列表    | `.trellis/tasks/*/task.json`                                                                             |
+| Workflow index      | `.trellis/workflow.md` 里的紧凑 Phase Index                                                              |
+| Spec index paths    | `.trellis/spec/**/index.md` 路径                                                                         |
+| Workspace memory    | `.trellis/workspace/<developer>/index.md` 和近期 journal                                                 |
+
+不同平台的交付方式不同：
+
+| 平台组                                                                 | 启动行为                                                                                                                         |
+| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Claude Code、Cursor、OpenCode、Gemini CLI、Qoder、CodeBuddy、Droid、Pi | SessionStart hook、plugin 或 extension 自动注入紧凑启动上下文。                                                                  |
+| Codex                                                                  | `AGENTS.md` 自动加载。Trellis 安装 `UserPromptSubmit` hook；no-task turn 可注入 `<trellis-bootstrap>` 提醒读取 `trellis-start`。 |
+| Copilot                                                                | 当前 Copilot host 里 SessionStart 输出主要用于诊断；模型可见上下文依赖 prompt hook 和 skill 文件。                               |
+| Kiro                                                                   | Trellis 内容通过 `.kiro/` 下的 skill 和 agent 文件交付；默认没有 Trellis SessionStart hook。                                     |
+| Kilo、Antigravity、Devin                                               | 主会话显式读取 workflow 或 skill 入口。                                                                                          |
+
+这一步结束后，AI 应该知道 Trellis 上下文在哪里。具体 phase 细节通过
+workflow-state breadcrumb、skill 或 `get_context.py` 按需加载。
+
+## 2. 每条消息带当前工作流状态
+
+在支持 hook 的平台上，每条用户消息都会触发一次轻量的 workflow-state 注入。
+这是让主会话跟当前任务状态对齐的 per-turn guardrail。
+
+Hook 会解析当前 session 的 active task：
+
+```text
+cwd
+  -> find .trellis/
+  -> resolve session key
+  -> read .trellis/.runtime/sessions/<session-key>.json
+  -> read .trellis/tasks/<task>/task.json
+  -> read task.json.status
+```
+
+然后它到 `.trellis/workflow.md` 里找匹配的 block：
+
+```text
+[workflow-state:STATUS]
+...
+[/workflow-state:STATUS]
+```
+
+正文会被包进 `<workflow-state>...</workflow-state>` 注入当前 turn。
+SessionStart 的 workflow 摘要使用 `<trellis-workflow>` 标签。
+
+关键细节：
+
+- Hook 只负责解析。Breadcrumb 文案写在 `.trellis/workflow.md`。
+- Python 和 JavaScript hook 不保存重复的 fallback 字典。
+- 没有 active task 时，pseudo-status 是 `no_task`。
+- 缺少匹配 block 时，hook 输出 `Refer to workflow.md for current step.`
+- Codex 的 `codex.dispatch_mode` 影响实现路径时，还会注入 `<codex-mode>` banner。
+
+所以要改 workflow-state 行为，入口是 `.trellis/workflow.md`，不是 hook 脚本。
+
+## 3. Trellis 先判断当前 turn
+
+没有 active task 时，AI 会先判断当前 turn 的大小，并在创建
+`.trellis/tasks/` 下的任何内容前取得 task-creation consent。
+
+| 路线              | 适用情况                                                              | AI 询问什么                                                                                           |
+| ----------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| 简单对话          | 不写仓库；简单问答、解释、查询、讨论                                  | 默认不建任务。如果任务可能有帮助，只问“本回合是否需要创建 Trellis task”。                             |
+| Inline 小任务     | 当前 turn 可以理解和验证的小范围改动                                  | 只问“本回合是否需要创建 Trellis task”。如果用户说不需要，本轮跳过 Trellis 并继续 inline。             |
+| 完整 Trellis 任务 | 多文件改动、workflow/spec/platform 变化、模板生成、需要持久规划的工作 | 说明为什么适合建任务，并询问是否可以创建 Trellis task 进入 planning。用户拒绝时，澄清范围或建议拆小。 |
+
+用户同意创建任务，不等于同意开始实现。进入实现前还有单独的 planning review gate。
+
+## 4. 创建任务写入 planning 状态
+
+用户同意后，主会话创建任务：
+
+```bash
+python3 ./.trellis/scripts/task.py create "<title>" --slug <name>
+```
+
+这个命令写入任务目录：
+
+```text
+.trellis/tasks/<MM-DD-name>/
+├── task.json
+├── prd.md
+├── implement.jsonl
+└── check.jsonl
+```
+
+`prd.md` 总是从默认模板创建。支持 sub-agent 的平台可能会 seed
+`implement.jsonl` 和 `check.jsonl`。`design.md` 和 `implement.md` 不由脚本
+创建；任务足够复杂时，AI 在 planning 阶段写这两个文件。
+
+初始 `task.json` status 是 `planning`。`task.py create` 还会尽量设置当前
+session 的 active-task pointer，所以不用等 `task.py start`，下一轮就可以
+收到 `[workflow-state:planning]`。
+
+## 5. Planning 写正确的 artifact
+
+Planning 把用户请求转换成 implementation 和 review 可以信任的文件。
+
+| Artifact          | 什么时候需要           | 作用                                                       |
+| ----------------- | ---------------------- | ---------------------------------------------------------- |
+| `prd.md`          | 每个任务               | 需求、约束、验收标准、out-of-scope。                       |
+| `design.md`       | 复杂任务               | 技术设计：边界、contract、数据流、兼容性、取舍、回滚方式。 |
+| `implement.md`    | 复杂任务               | 执行计划：有序 checklist、验证命令、review gate、回滚点。  |
+| `research/*.md`   | 需要调研时             | Planning 阶段发现的持久事实。                              |
+| `implement.jsonl` | 需要上下文 manifest 时 | 实现阶段的 spec/research 文件。                            |
+| `check.jsonl`     | 需要上下文 manifest 时 | Review 和验证阶段的 spec/research 文件。                   |
+
+`implement.md` 不替代 `implement.jsonl`。Markdown 文件是人可读的计划；JSONL
+文件是稳定上下文文件的 manifest。
+
+轻量任务可以只有 PRD。复杂任务在开始前需要 `prd.md`、`design.md`、
+`implement.md`。
+
+## 6. Context manifest 保持窄范围
+
+`implement.jsonl` 和 `check.jsonl` 列出 implementation 或 review 前要读取
+的稳定上下文文件。
+
+```jsonl
+{"file": ".trellis/spec/docs-site/docs/style-guide.md", "reason": "Docs writing style"}
+{"file": ".trellis/tasks/04-30-example/research/platforms.md", "reason": "Platform behavior research"}
+```
+
+规则：
+
+- 放 spec 文件和 task research 文件。
+- 不放马上要修改的源文件。
+- Sub-agent 需要上下文时，不只留下 seed `_example` 行。
+- `implement.jsonl` 放写实现需要的上下文。
+- `check.jsonl` 放验证和质量检查需要的上下文。
+
+Inline 模式中，主会话可以直接读取需要的 artifact 和 spec，因此可以跳过
+JSONL 整理。
+
+## 7. 激活任务进入实现阶段
+
+Artifact review 之后，Trellis 激活任务：
+
+```bash
+python3 ./.trellis/scripts/task.py start <task-dir>
+```
+
+这个命令把 `task.json.status` 从 `planning` 改成 `in_progress`。
+
+下一轮 prompt 里，workflow-state hook 会注入匹配的
+`[workflow-state:in_progress]` block。这个 block 覆盖实现、check、spec
+update、commit planning 和 finish-work routing。
+
+## 8. 实现阶段读取 task artifact 和 spec
+
+执行一定从 active task 目录开始。不同平台只是在“上下文怎么交给执行者”
+这件事上不同。
+
+| 执行路径               | 平台                                                | 上下文加载方式                                                                                                   |
+| ---------------------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Hook-push sub-agent    | Claude Code、Cursor、OpenCode、CodeBuddy、Droid、Pi | Sub-agent 启动前，hook 注入 JSONL 条目，然后注入 `prd.md`、存在时的 `design.md`、存在时的 `implement.md`。       |
+| Pull-prelude sub-agent | Codex、Copilot、Gemini CLI、Qoder、Kiro             | Sub-agent 定义要求 agent 读取 active task、JSONL 条目、`prd.md`、存在时的 `design.md`、存在时的 `implement.md`。 |
+| 主会话 skill 流程      | Codex inline、Kilo、Antigravity、Devin              | 主会话加载 Trellis skill，并 inline 读取 `prd.md`、可选 artifact 和相关 spec。                                   |
+
+统一上下文顺序是：
+
+```text
+jsonl entries -> prd.md -> design.md if present -> implement.md if present
+```
+
+Codex 有两种模式：
+
+| 模式        | 含义                                                                                                |
+| ----------- | --------------------------------------------------------------------------------------------------- |
+| `inline`    | 主会话直接实现和检查；不 dispatch implement/check sub-agent。                                       |
+| `sub-agent` | Implement/check 默认交给 Trellis sub-agent；主会话仍然负责协调、澄清、更新 spec、commit 和 finish。 |
+
+## 9. Check 复核并自修
+
+实现之后，Trellis 运行 `trellis-check`。
+
+Check 路径读取：
+
+- `prd.md`
+- 存在时的 `design.md`
+- 存在时的 `implement.md`
+- 存在时的 `check.jsonl` 条目
+- 相关 spec 和 research
+- 改动文件
+- 本地 test、lint、type-check 或 format 命令
+
+它的目标不是只报告问题。`trellis-check` 可以直接修 finding，然后重跑检查。
+
+## 10. 收尾阶段更新持久知识
+
+检查通过后，主会话做最终验证，并加载 `trellis-update-spec`。
+
+这一步判断任务有没有产生可复用规则。如果有，就写进 `.trellis/spec/`，让
+未来任务可以通过 JSONL 或 skill 直接上下文读取。
+
+Task-local facts 留在 `.trellis/tasks/<task>/`；稳定团队规则提升到
+`.trellis/spec/`。
+
+## 11. 主会话驱动工作 commit
+
+Commit 边界独立于实现阶段，也独立于 `/trellis:finish-work`。
+
+Phase 3.4 里，主会话会：
+
+1. 读取 `git status --porcelain`。
+2. 区分本任务改动和无关脏文件。
+3. 把任务文件分成逻辑 commit。
+4. 打印 commit plan。
+5. 等一次用户确认。
+6. 对确认的批次运行 `git add` 和 `git commit`。
+
+对于 docs-site 这类 submodule 改动，通常有两层边界：
+
+1. 先在 `docs-site/` 里提交。
+2. 回到父仓库。
+3. 提交更新后的 `docs-site` submodule pointer。
+
+## 12. `/trellis:finish-work` 归档和写 journal
+
+只有工作 commit 已经存在后，才应该运行 `/trellis:finish-work`。
+
+`/trellis:finish-work` 做收尾记账：
+
+- 分类脏文件；如果当前任务改动还没提交就停止
+- 把任务归档到 `.trellis/tasks/archive/YYYY-MM/`
+- 把 session 总结追加到 `.trellis/workspace/<developer>/journal-N.md`
+- 更新 workspace 索引
+
+它不是提交功能代码的命令。
+
+## 会话结束后留下什么
+
+整套流程完成后，持久状态都在文件里：
+
+| 存放位置                          | 留下的内容                                                                  |
+| --------------------------------- | --------------------------------------------------------------------------- |
+| `.trellis/tasks/<task>/`          | PRD、design、实施计划、research、context manifest、metadata、归档任务历史。 |
+| `.trellis/spec/`                  | 团队约定和可复用经验。                                                      |
+| `.trellis/workspace/<developer>/` | 开发者 journal 和跨会话 notes。                                             |
+| Git commits                       | 可 review 的代码、文档、spec、archive、journal 改动单元。                   |
+
+下一次 AI 会话会重新读取仓库状态。它不需要上一段聊天记录，也能知道任务是什么、
+哪些 spec 适用、下一步该执行哪个 workflow step。

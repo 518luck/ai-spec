@@ -1,0 +1,81 @@
+---
+title: 'trellis-meta'
+description: '定制 Trellis 的必备技能'
+---
+
+官方元技能，用于理解和定制 Trellis。当前 Trellis 项目会由 `trellis init` 自动安装这个 skill，之后 AI 可以帮你：
+
+- 为你的工作流加专门的 agent
+- 改上下文注入的方式
+- 加项目特定的命令
+- 按项目需求调整本地 `.trellis/` 和平台文件
+
+## 安装
+
+支持所有 Trellis 平台 skill 根目录：Claude Code、Cursor、OpenCode、Codex、Kilo、Kiro、Gemini CLI、Antigravity、Devin、Qoder、CodeBuddy、GitHub Copilot、Factory Droid 和 Pi Agent。
+
+对于 Trellis 管理的项目，初始化或更新你使用的平台：
+
+```bash
+trellis init --claude
+trellis init --codex
+trellis update
+```
+
+`trellis init` 会把 `trellis-meta` 写入所选平台的 skill 目录，`trellis update` 会像管理其他内置模板一样用 hash 追踪它。
+
+对于非 Trellis 项目或旧版本 Trellis 安装，仍然可以走 marketplace 兼容路径：
+
+```bash
+npx skills add mindfold-ai/marketplace --skill trellis-meta
+```
+
+或安装所有可用 skills：
+
+```bash
+npx skills add mindfold-ai/marketplace
+```
+
+选项：
+
+| 参数             | 说明                            |
+| ---------------- | ------------------------------- |
+| `-g`             | 全局安装（`~/.claude/skills/`） |
+| `-a claude-code` | 指定目标 agent                  |
+| `-y`             | 非交互模式                      |
+
+## 验证安装
+
+检查 skill 是否可用：
+
+```
+你有哪些 skills？
+```
+
+你的 AI 工具应该在回复中列出 `trellis-meta`。
+
+## 使用
+
+安装后，直接告诉 AI 你想做什么：
+
+```
+我想加一个 deploy agent 处理部署流程
+```
+
+```
+帮我修改 check hook 加一个自定义验证命令
+```
+
+```
+我要加一个新的工作流阶段叫 review
+```
+
+AI 会自动使用技能里的文档，给你正确的修改步骤。
+
+## 包含内容
+
+| 目录                  | 内容                                                                                          |
+| --------------------- | --------------------------------------------------------------------------------------------- |
+| `local-architecture/` | 本地 `.trellis/` 的 workflow、tasks、spec、workspace、scripts、上下文注入如何协作             |
+| `platform-files/`     | 平台 settings、hooks、agents、skills、commands、prompts、workflows 如何接入 Trellis           |
+| `customize-local/`    | 如何按需求修改本地 workflow、任务生命周期、上下文加载、hooks、agents、skills、commands、specs |

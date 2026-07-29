@@ -1,0 +1,91 @@
+---
+title: 'frontend-fullchain-optimization'
+description: '用 Web Vitals 驱动的诊断流程优化前端性能'
+---
+
+这是一个以证据为先的前端性能技能，用 Web Vitals 帮助 AI 判断真正的瓶颈、选择针对性的优化策略，并验证改动是否真的提升了用户体验。
+
+适用于以下场景：
+
+- 页面加载慢
+- LCP、FCP、INP、CLS、TTFB 或 TBT 表现差
+- 布局抖动、渲染不稳定
+- 主线程阻塞导致交互卡顿
+- 图片、字体或代码拆分引发性能回退
+
+## 为什么需要这个技能？
+
+很多前端性能优化失败，不是因为缺少技巧，而是因为证据不足，或者先修了症状、没修上游瓶颈。这个技能给 AI 一套可重复执行的流程：
+
+1. 收集最小必要证据
+2. 找出主要瓶颈
+3. 选择对应的优化分支
+4. 条件允许时再复测确认是否成功
+
+它同时支持两种环境：
+
+- **MCP-assisted mode**：有 Lighthouse 或浏览器性能工具时使用
+- **Manual-evidence mode**：只有报告、trace、截图或指标快照时使用
+
+默认情况下，这个工作流把 Lighthouse 和 Performance 证据视为**手动采集**的数据。如果还没有手动测量结果，skill 只能给出推断性的修改建议，并建议改动后再做复测验证。
+
+## 安装
+
+```bash
+npx skills add mindfold-ai/marketplace --skill frontend-fullchain-optimization
+```
+
+或安装所有可用 skills：
+
+```bash
+npx skills add mindfold-ai/marketplace
+```
+
+选项：
+
+| 参数 | 说明 |
+| --- | --- |
+| `-g` | 全局安装（`~/.claude/skills/`） |
+| `-a claude-code` | 指定目标 agent |
+| `-y` | 非交互模式 |
+
+## 验证安装
+
+检查 skill 是否可用：
+
+```
+你有哪些 skills？
+```
+
+Claude 应该在回复中列出 `frontend-fullchain-optimization`。
+
+## 使用
+
+安装后，可以直接让 AI 结合现有证据进行诊断：
+
+```
+用 frontend-fullchain-optimization 分析这个路由为什么 LCP 很差，并告诉我应该先修什么。
+```
+
+```
+用 frontend-fullchain-optimization 审查这份 Lighthouse 报告，并提出最小但高收益的优化方案。
+```
+
+```
+我只有 DevTools 截图和指标快照。请用 frontend-fullchain-optimization 的 manual-evidence 模式分析。
+```
+
+## 覆盖内容
+
+| 领域 | 包含内容 |
+| --- | --- |
+| 指标 | LCP、FCP、INP、CLS、TTFB、TBT 的阈值与优先级 |
+| 诊断 | 主瓶颈决策树与必要证据清单 |
+| 优化 | 渲染、图片、字体、代码拆分、布局稳定性、交互响应 |
+| 验证 | 记录优化前后结果与剩余瓶颈的模板 |
+
+## 包含内容
+
+| 文件 | 内容 |
+| --- | --- |
+| `SKILL.md` | 完整性能工作流、各指标优化分支、证据清单与验证模板 |

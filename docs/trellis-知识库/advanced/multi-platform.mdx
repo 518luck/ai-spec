@@ -1,0 +1,317 @@
+---
+title: '多平台与团队配置'
+---
+
+## 多平台与团队配置
+
+Trellis 支持 17 个平台（Claude Code、Cursor、OpenCode、Codex、Kiro、Kilo、Gemini CLI、Antigravity、Devin（原 Windsurf）、Qoder、CodeBuddy、GitHub Copilot、Droid、Pi Agent、Oh My Pi、Reasonix、ZCode），以及任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Kimi Code CLI、Warp 等）。`.trellis/` 核心跨平台一致；差异在于**各平台如何交付 hook、extension、skill、sub-agent、command**。
+
+### 加入已初始化的 Trellis 项目
+
+项目已经被别人 `trellis init` 过了，你作为新成员加入——直接跑 `trellis init`，CLI 会识别出已初始化，给你三个选项：
+
+```
+? Trellis is already initialized. What would you like to do?
+❯ Add AI platform(s)
+  Set up developer identity on this device
+  Full re-initialize
+```
+
+| 选项                                         | 何时选                                                             |
+| -------------------------------------------- | ------------------------------------------------------------------ |
+| **Add AI platform(s)**                       | 想给当前项目加一个别人没装的平台（如你用 Cursor、但别人只装了 CC） |
+| **Set up developer identity on this device** | 你是新成员，只要把**自己的身份**写到本机                           |
+| **Full re-initialize**                       | 项目配置坏了，重来一遍                                             |
+
+新成员选第 2 个。CLI 会问你想用的开发者名（默认取自 Git user），然后：
+
+- 写 `.trellis/.developer` 记录你的开发者名（gitignored，每台机器独立）
+- 在 `.trellis/workspace/<your-name>/` 下建你自己的 journal 目录
+
+完成后，在支持 SessionStart hook 或 extension 的平台上开新会话就自动注入 Trellis 上下文；没有自动会话注入的平台跑 `/trellis:start` 或对应平台的 start workflow。
+
+<Note>
+  不要选 **Full re-initialize**——那会覆盖 `.trellis/`、`.claude/` 等已有配置，影响全团队。
+</Note>
+
+### 能力矩阵
+
+| 能力                           | Claude Code | Cursor | OpenCode | Codex | Kiro | Gemini | Qoder | CodeBuddy | Copilot | Droid | Pi Agent | Oh My Pi |
+| ------------------------------ | :---------: | :----: | :------: | :---: | :--: | :----: | :---: | :-------: | :-----: | :---: | :------: | :------: |
+| SessionStart / startup context |     ✅      |   ✅   |    ✅    |  ⚡   |  ⚡  |   ✅   |  ✅   |    ✅     |   ✅    |  ✅   |    ✅    |    ✅    |
+| Sub-agent 上下文注入           |     ✅      |   ✅   |    ✅    |  ❌   |  ❌  |   ❌   |  ❌   |    ✅     |   ❌    |  ✅   |    ✅    |    ✅    |
+| Sub-agent（`trellis-*`）       |     ✅      |   ✅   |    ✅    |  ✅   |  ✅  |   ✅   |  ✅   |    ✅     |   ✅    |  ✅   |    ✅    |    ✅    |
+| Auto-trigger skill             |     ✅      |   ✅   |    ✅    |  ✅   |  ✅  |   ✅   |  ✅   |    ✅     |   ✅    |  ✅   |    ✅    |    ✅    |
+| 显式 `/trellis:*` 命令         |     ✅      |   ✅   |    ✅    |   —   |  —   |   ✅   |  ✅   |    ✅     |   ✅    |  ✅   |    ✅    |    ✅    |
+
+图例：✅ Trellis 写入配置并由平台执行 · ⚡ 部分支持（Codex 使用 `AGENTS.md` 加
+`UserPromptSubmit`；workflow breadcrumb 需要 `features.hooks = true`，0.129+
+还要走一次 `/hooks` 审批；Kiro 在 `trellis` agent 上带了每回合 `userPromptSubmit` hook，但用户需激活该 agent —— `chat.defaultAgent trellis` 或 `/agent swap`） · ❌ 平台不暴露这个事件 ·
+— 该平台没有命令原语，start / finish-work / continue 作为 skill 交付。Qoder 用的是
+`/trellis-{name}`（连字符，不是冒号），通过原生 Custom Commands 交付 `finish-work` /
+`continue`；`start` 由 SessionStart hook 自动注入。Pi Agent 走 extension，不走 Python hook 文件，
+但行为一致：会话上下文、Bash 环境变量传递、sub-agent context 注入都在 agent 动作前完成。
+
+`.kilocode/`、`.agent/`（Antigravity）、`.devin/` 只有 workflow 和 skill，没有 sub-agent 也没有 hook。`.agents/skills/` 在所有平台都会写一份，作为跨平台共享层。
+
+### Claude Code
+
+自动化最完整。Hook 布局：
+
+| Hook                         | 触发               | 效果                                        |
+| ---------------------------- | ------------------ | ------------------------------------------- |
+| `session-start.py`           | SessionStart       | 注入身份、git 状态、活跃任务                |
+| `inject-workflow-state.py`   | UserPromptSubmit   | 提示 AI 遵守当前任务的状态契约              |
+| `inject-subagent-context.py` | PreToolUse（Task） | 加载 `implement.jsonl` / `check.jsonl` / 等 |
+
+Sub-agent：`trellis-implement`、`trellis-check`、`trellis-research`，在 `.claude/agents/`。
+Skill：`trellis-brainstorm`、`trellis-before-dev`、`trellis-check`、`trellis-update-spec`、`trellis-break-loop`，在 `.claude/skills/`。
+Command：`start`、`finish-work`、`continue`，在 `.claude/commands/trellis/`。
+
+### Cursor
+
+```bash
+trellis init -u your-name --cursor
+```
+
+Cursor 是完整 class-1 平台：真 hook、真 sub-agent、真 skill。
+
+布局：
+
+- `.cursor/commands/trellis-{name}.md`：`start`、`finish-work`、`continue`（扁平命名加 `trellis-` 前缀，调用形式 `/trellis-start` 等）
+- `.cursor/skills/trellis-{name}/SKILL.md`：5 个 trellis skill
+- `.cursor/agents/`：`trellis-implement.md`、`trellis-check.md`、`trellis-research.md`
+- `.cursor/hooks/`：共享 Python hook 脚本（与 Claude Code 兼容）
+- `.cursor/hooks.json`：hook 配置（Cursor 用独立文件，不是 `settings.json`）
+
+### OpenCode
+
+```bash
+trellis init -u your-name --opencode
+```
+
+OpenCode 1.2.x 是 class-1 平台（真 hook + 真 sub-agent）：
+
+- `.opencode/commands/trellis/`：start / finish-work / continue
+- `.opencode/agents/`：`trellis-implement.md`、`trellis-check.md`、`trellis-research.md`
+- `.opencode/skills/`：5 个 trellis skill
+- `.opencode/plugins/`：JS 插件：`session-start.js`、`inject-subagent-context.js`、`inject-workflow-state.js`
+
+插件是 factory function（OpenCode 1.2+）。Trellis 生成的版本对齐 Claude Code 行为。
+
+### Codex
+
+```bash
+trellis init -u your-name --codex
+```
+
+布局：
+
+- `AGENTS.md`（仓库根）：入口文件，Codex 每个 session 自动读取（作为 prelude）
+- `.codex/prompts/`：`trellis-start.md`、`trellis-finish-work.md`、`trellis-continue.md`
+- `.codex/skills/`：5 个 trellis skill
+- `.codex/agents/`：TOML sub-agent：`trellis-implement.toml`、`trellis-check.toml`、`trellis-research.toml`
+- `.codex/hooks/inject-workflow-state.py` + `.codex/hooks.json`：`UserPromptSubmit` workflow-state hook
+- `.codex/hooks/session-start.py`：保留的紧凑 SessionStart 兼容脚本，默认不 wiring
+
+<Note>
+**Codex hook 必须开启，否则聊天界面输入 `/` 检索不到 Trellis 的三大命令（`/start`、`/finish-work`、`/continue`），也无法用 `/start` 启动会话。** 在 `~/.codex/config.toml` 加：
+
+```toml
+[features]
+hooks = true   # Codex 0.129+。旧版用 `codex_hooks = true`。
+```
+
+Codex 0.129+ 还要在 TUI 里跑一次 `/hooks` 命令，审批 Trellis 安装的 `UserPromptSubmit` hook，否则 hook 不会激活、Trellis 的 command / skill 不会出现在 `/` 菜单、workflow 指引也不会自动注入。不开启这两项时，Codex 只走纯 prelude（每次读 `AGENTS.md`）——上下文还在，但你无法从 `/` 里点用 Trellis 命令。
+
+</Note>
+
+### Kiro
+
+```bash
+trellis init -u your-name --kiro
+```
+
+布局：
+
+- `.kiro/agents/trellis.json`：主 Trellis agent —— 每回合 `userPromptSubmit` hook + 开场 `agentSpawn` hook + 把 `.trellis/workflow.md` 作为常驻 resource
+- `.kiro/agents/trellis-{implement,check,research}.json`：子代理（`agentSpawn` 注入任务上下文）
+- `.kiro/hooks/*.py` + `.kiro/hooks/trellis-workflow-state.kiro.hook`：每回合 workflow-state 注入器（CLI agent hook + IDE `.kiro.hook`）
+- `.kiro/skills/*/SKILL.md`：auto-trigger skill
+
+**启用（必做，否则工作流不会激活）：**
+
+- **Kiro CLI**：把 `trellis` 设为当前 agent，它的 hook 才会触发 —— `kiro-cli settings chat.defaultAgent trellis`（持久）或 `/agent swap trellis`（按 session）。否则 Kiro 跑内置 `kiro_default`。
+- **Kiro IDE**：`.kiro/hooks/trellis-workflow-state.kiro.hook`（一个 `promptSubmit` hook）默认 enabled；在 Kiro 的 Agent Hooks 界面确认它已开启/信任。
+
+<Note>
+  每回合注入打印纯文本，Kiro 会把它加入对话上下文（依 Kiro 官方 hooks
+  文档）。stdout→上下文的确切行为（以及 IDE `runCommand` 是否注入 stdout）待 Kiro
+  真机验证；若不生效，退化为静态 steering 提示。
+</Note>
+
+### Gemini CLI
+
+```bash
+trellis init -u your-name --gemini
+```
+
+布局：
+
+- `.gemini/commands/trellis/{name}.toml`：TOML 命令文件——`start.toml`、`finish-work.toml`、`continue.toml`
+- `.gemini/skills/trellis-{name}/SKILL.md`：5 个 trellis skill
+- `.gemini/agents/{name}.md`：带 pull-based prelude 的 sub-agent 定义（sub-agent 自己 `Read` 自己的 JSONL，因为 Gemini 没有 sub-agent `PreToolUse` hook）
+- `.gemini/hooks/session-start.py`：SessionStart hook
+- `.gemini/settings.json`：hook 配置（只有 SessionStart）
+
+### Qoder
+
+```bash
+trellis init -u your-name --qoder
+```
+
+Qoder 原生支持 Custom Commands（在 Agent 输入框输入 `/` 调用，项目级存放在 `<项目>/.qoder/commands/{name}.md`，要求 YAML frontmatter 包含 `name` 和 `description` 字段）。Trellis 把 session-boundary 命令放到这里，让你可以显式地调用；阶段级工作流则保留为 auto-trigger skill。
+
+布局：
+
+- `.qoder/commands/trellis-{name}.md`：session-boundary 命令 —— `finish-work`、`continue`，用 `/trellis-finish-work`、`/trellis-continue` 调用（`start` 由 Qoder 的 SessionStart hook 自动注入，无需命令）
+- `.qoder/skills/trellis-{name}/SKILL.md`：auto-trigger 工作流 skill —— `brainstorm`、`before-dev`、`check`、`update-spec`、`break-loop`
+- `.qoder/agents/{name}.md`：带 pull-based prelude 的 sub-agent 定义
+- `.qoder/hooks/session-start.py`：SessionStart hook
+- `.qoder/settings.json`：hook 配置（只有 SessionStart——Qoder 没有 sub-agent `PreToolUse` hook）
+
+### CodeBuddy
+
+```bash
+trellis init -u your-name --codebuddy
+```
+
+CodeBuddy 是完整 class-1 平台（真 hook + 真 sub-agent）。
+
+布局：
+
+- `.codebuddy/commands/trellis/{name}.md`：`start`、`finish-work`、`continue`
+- `.codebuddy/skills/trellis-{name}/SKILL.md`：5 个 trellis skill
+- `.codebuddy/agents/{name}.md`：sub-agent 定义
+- `.codebuddy/hooks/*.py`：共享 Python hook 脚本
+- `.codebuddy/settings.json`：hook 配置（SessionStart + sub-agent `PreToolUse` 注入）
+
+### GitHub Copilot
+
+```bash
+trellis init -u your-name --copilot
+```
+
+布局：
+
+- `.github/copilot-instructions.md`：Trellis prelude，每个 session 自动加载
+- `.github/prompts/trellis-{name}.prompt.md`：`start` / `finish-work` / `continue` 的 prompt 文件
+- `.github/skills/trellis-{name}/SKILL.md`：5 个 trellis skill
+- `.github/agents/{name}.agent.md`：带 pull-based prelude 的 sub-agent 定义（Copilot 的 sub-agent hook 触发不稳定，所以让 sub-agent 自己 `Read` 自己的 JSONL）
+- `.github/copilot/hooks/*.py`：Copilot 专属 + 共享 Python hook 脚本
+- `.github/copilot/hooks.json`：hook 配置（只有 SessionStart——sub-agent `PreToolUse` 不可用）
+
+### Droid
+
+```bash
+trellis init -u your-name --droid
+```
+
+Droid（factory.ai）是 class-1 平台，有 hook + sub-agent：
+
+- `.factory/commands/trellis/`：start / finish-work / continue
+- `.factory/agents/`：三个 `trellis-*` sub-agent
+- `.factory/skills/`：5 个 trellis skill
+- `.factory/hooks/`：SessionStart + sub-agent injection
+
+### Pi Agent
+
+```bash
+trellis init -u your-name --pi
+```
+
+Pi Agent 走 extension，不走 Python hook。Trellis 写入同样的 workflow 原语，然后 extension 解析当前 session id，在 Bash 命令和 sub-agent 运行前注入任务上下文。
+
+布局：
+
+- `.pi/prompts/trellis-{name}.md`：会话边界 prompt（`finish-work`、`continue`；`start` 只在需要手动入口的平台存在）
+- `.pi/skills/trellis-{name}/SKILL.md`：5 个 Trellis 工作流 skill
+- `.pi/agents/{name}.md`：`trellis-implement`、`trellis-check`、`trellis-research`
+- `.pi/extensions/trellis/index.ts`：会话上下文、Bash `TRELLIS_CONTEXT_ID` 传递、sub-agent JSONL 注入
+- `.pi/settings.json`：extension 注册
+
+extension 把当前任务状态存在 `.trellis/.runtime/sessions/<session-key>.json`，所以每个 Pi 窗口/会话都可以有自己的任务，不会抢别的窗口。
+
+### Oh My Pi
+
+```bash
+trellis init -u your-name --omp
+```
+
+Oh My Pi 与 Pi Agent 一样走 extension。Trellis 写入同样的 workflow 原语，然后 extension 解析当前 session id，在 Bash 命令和 sub-agent 运行前注入任务上下文。与 Pi Agent 不同，Oh My Pi 没有 `settings.json` —— 原生 provider 会自动发现 `.omp/` 下的所有子目录。
+
+布局：
+
+- `.omp/commands/trellis-{name}.md`：会话边界 prompt（`finish-work`、`continue`；`start` 只在需要手动入口的平台存在）
+- `.omp/skills/trellis-{name}/SKILL.md`：5 个 Trellis 工作流 skill
+- `.omp/agents/{name}.md`：`trellis-implement`、`trellis-check`、`trellis-research`
+- `.omp/extensions/trellis/index.ts`：会话上下文、Bash `TRELLIS_CONTEXT_ID` 传递、sub-agent JSONL 注入
+
+extension 把当前任务状态存在 `.trellis/.runtime/sessions/<session-key>.json`，所以每个 Oh My Pi 窗口/会话都可以有自己的任务，不会抢别的窗口。
+
+### 其他支持平台
+
+Trellis 还原生带有上面能力矩阵之外几个平台的配置器：
+
+- **Kilo**（`--kilo`）：写 `.kilocode/workflows/`（命令：`start`、`finish-work`）和 `.kilocode/skills/trellis-{name}/SKILL.md`（5 个 trellis skill）。没有 hook 集成。
+- **Antigravity**（`--antigravity`）：写 Antigravity 原生的 workflow 文件（3 个命令）。
+- **Devin**（`--devin`，原 Windsurf）：写 Devin 原生的 workflow 和 skill 文件。旧的 `--windsurf` flag 仍作为已废弃的别名可用。
+
+除了 17 个已配置平台，Trellis 还能被任何遵循 `.agents/skills/` 约定（[agentskills.io](https://agentskills.io) 规范）的 AI 编码 agent 直接使用。Codex 的 skill 就写在这个目录下，这些文件也能被该生态的其他 agent（Amp、Cline、Deep Agents、Firebender、Kimi Code CLI、Warp 等）直接读取。这些平台上你通过 `.trellis/` 核心加上各自 agent 读取的 prelude 文件来管理 Trellis。
+
+### 操作系统
+
+| OS          | 状态    | 备注                                                                                              |
+| ----------- | ------- | ------------------------------------------------------------------------------------------------- |
+| **macOS**   | ✅ 完整 | 主平台                                                                                            |
+| **Linux**   | ✅ 完整 | 已验证                                                                                            |
+| **Windows** | ✅ 完整 | 脚本全部 Python；Claude Code 通过 `CLAUDE_BASH_MAINTAIN_PROJECT_WORKING_DIR=1` 确保 hook cwd 正确 |
+
+`.trellis/scripts/` 和 Python hook 需要 Python 3.9+。OpenCode 插件需要 Node.js 18+。
+
+### 多开发者协作
+
+按开发者隔离（不冲突）：
+
+- `.trellis/workspace/{name}/`：各自的 journal 和索引
+- `.trellis/.developer`：gitignored
+- `.trellis/.runtime/`：gitignored 的会话运行时状态；每个 AI 会话/窗口有自己的 active task 文件
+
+共享状态（通过 PR 协调）：
+
+- `.trellis/spec/`：团队约定，和代码一样走 PR review
+- `.trellis/tasks/`：task JSON；显式 `--assignee` 避免冲突
+
+Spec 的重要改动应在 review 中讨论；把 spec 库当成团队代码来对待。
+
+### `trellis update` 与版本管理
+
+```bash
+cat .trellis/.version          # 当前版本
+trellis update                  # 升级到最新
+trellis update --dry-run        # 预演
+trellis update --migrate        # 应用破坏性变更的 migration（大版本必需）
+trellis update -f               # 强制覆盖本地改过的文件
+trellis update -s               # 跳过本地改过的文件
+```
+
+模板 hash 机制（`.trellis/.template-hashes.json`）：
+
+1. 计算本地文件 hash。
+2. 和记录的模板 hash 对比。
+3. 一致 ⇒ 用户未改 ⇒ 安全更新。
+4. 不一致 ⇒ 询问（覆盖 / 跳过），或根据 `-f` / `-s` 策略静默处理。
+
+破坏性变更（比如 0.5.0 移除 Multi-Agent Pipeline）以 migration manifest 形式发布。对破坏性 manifest 跑 `trellis update` 而不加 `--migrate` 会退出并打印说明，不会静默重命名。`trellis update --migrate` 应用 rename / delete 条目，每个冲突询问一次。
+
+---

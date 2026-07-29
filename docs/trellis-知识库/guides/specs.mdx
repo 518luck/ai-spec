@@ -1,0 +1,177 @@
+---
+title: '写规范'
+description: '怎么写 AI 会真正遵循的规范'
+---
+
+## 什么是好规范
+
+规范只有被 AI 遵循才有用。模糊的指南会被忽略，具体的规则会被遵循。
+
+差规范：
+
+```markdown
+## 错误处理
+
+在代码库中使用正确的错误处理。
+```
+
+好规范：
+
+````markdown
+## 错误处理
+
+所有 API 接口返回错误时用这个格式：
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "邮箱不能为空"
+  }
+}
+```
+
+使用 `src/lib/errors.ts` 里的 `AppError` 类。不要直接 throw Error 对象。
+
+例子：
+
+```typescript
+// 错误
+throw new Error('用户不存在');
+
+// 正确
+throw new AppError('USER_NOT_FOUND', '用户不存在', 404);
+```
+````
+
+区别在哪：好规范包含了准确的文件路径、准确的格式、以及展示对错的具体例子。
+
+## 规范结构
+
+把规范放在 `.trellis/spec/`。按领域组织：
+
+```
+.trellis/spec/
+├── frontend/
+│   ├── index.md        # 前端主要规范
+│   ├── components.md   # 组件模式
+│   └── state.md        # 状态管理
+├── backend/
+│   ├── index.md        # 后端主要规范
+│   ├── api.md          # API 设计
+│   └── database.md     # 数据库规范
+└── guides/
+    └── index.md        # 通用思维指南
+```
+
+每个文件夹里的 `index.md` 是入口。保持专注——细节放其他文件里链接过去。
+
+## 写能落地的规则
+
+### 带上文件路径
+
+不要说"错误工具类"。说 `src/lib/errors.ts`。AI 就能去读那个文件，理解模式。
+
+```markdown
+## 数据库查询
+
+用 `src/db/query.ts` 的查询构建器，别写原生 SQL。
+ORM 模型在 `src/db/models/`。
+```
+
+### 放真实代码
+
+从你项目里复制实际代码。AI 从真实例子学模式比从描述学更有效。
+
+````markdown
+## 组件结构
+
+按这个模式（来自 `src/components/UserCard.tsx`）：
+
+```tsx
+interface UserCardProps {
+  user: User;
+  onEdit?: () => void;
+}
+
+export function UserCard({ user, onEdit }: UserCardProps) {
+  // 组件逻辑
+}
+```
+
+Props 接口写在前面，然后是命名导出。组件不用默认导出。
+````
+
+### 别给选项，给方向
+
+说该做什么，不是有什么可能。AI 需要方向，不是选项。
+
+```markdown
+// 弱
+你可以用 Redux 或 Zustand 做状态管理。
+
+// 强
+用 Zustand 做状态管理。Store 定义放 `src/stores/`。
+这个项目不用 Redux。
+```
+
+### 加上反面例子
+
+展示不该怎么做。这能防止常见错误。
+
+````markdown
+## API 路由
+
+必须用 Zod schema 验证输入。
+
+```typescript
+// 错误 - 没验证
+app.post('/users', (req, res) => {
+  const user = req.body; // 没验证！
+  db.users.create(user);
+});
+
+// 正确 - 先验证
+app.post('/users', (req, res) => {
+  const result = CreateUserSchema.safeParse(req.body);
+  if (!result.success) {
+    throw new ValidationError(result.error);
+  }
+  db.users.create(result.data);
+});
+```
+````
+
+## 测试你的规范
+
+写完规范后，测一下：
+
+1. 开一个新的 Claude Code 会话
+2. 让它写规范覆盖的代码
+3. 看它是不是遵循了规范
+
+如果没遵循，说明规范还不够具体。加更多例子、更多文件路径、更多具体规则。
+
+## 常见错误
+
+**太抽象**："遵循整洁代码原则"——对 AI 没意义。
+
+**太长**：2000 行的规范不会被仔细读。保持规范专注。
+
+**没例子**：没例子的规则很难遵循。
+
+**引用过时**：如果你引用的 `src/utils/old.ts` 已经删了，AI 会被误导。
+
+## 更新规范
+
+开发过程中发现新模式或踩了坑？让 AI 运行 `trellis-update-spec` skill，把经验写进规范。
+
+或者在 `/trellis:finish-work` 收尾时，AI 会问你是否有新的知识要沉淀到规范里。
+
+不要试图在会话中途"告诉" AI 有变化。更新规范文件。那才是真相的来源。
+
+## 下一步
+
+<Card title="规范模板" icon="file-code" href="/zh/templates/specs-index">
+  下载常见技术栈的现成规范模板。
+</Card>

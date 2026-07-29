@@ -1,0 +1,119 @@
+---
+title: '定制 Slash 命令'
+---
+
+## 定制 Slash 命令
+
+Trellis 原生带的 slash 命令留得很少。Agent-capable 平台（Claude Code、OpenCode、Cursor、Codex、Pi Agent 等）只发 `finish-work` 和 `continue`；`start` 通常不作为用户可见命令，因为会话启动上下文会通过 SessionStart hook、extension、`AGENTS.md` 或 prompt-hook bootstrap 在开会话时加载。agent-less 平台（Kilo、Antigravity、Devin）没有 hook，`start` 才会作为 slash 命令发出来。过去的其他命令全部迁成 auto-trigger skill（见[定制 Skill](./custom-skills)）。自己加 slash 命令的时机：有一个明确想让用户显式调用的入口。
+
+### 命令文件格式和位置
+
+14 个平台按交付形态分三组：
+
+**显式 slash 命令**——用户输入 `/trellis:<name>`，平台把命令文件内容注入为 prompt。
+
+| 平台        | 位置                                                                              | 调用方式          |
+| ----------- | --------------------------------------------------------------------------------- | ----------------- |
+| Claude Code | `.claude/commands/trellis/{name}.md`                                              | `/trellis:{name}` |
+| Cursor      | `.cursor/commands/trellis-{name}.md`                                              | `/trellis-{name}` |
+| OpenCode    | `.opencode/commands/trellis/{name}.md`                                            | `/trellis:{name}` |
+| Codex       | `.codex/prompts/trellis-{name}.md`                                                | `/trellis-{name}` |
+| Gemini CLI  | `.gemini/commands/trellis/{name}.toml`                                            | `/trellis:{name}` |
+| Qoder       | `.qoder/commands/trellis-{name}.md`（YAML frontmatter 含 `name` + `description`） | `/trellis-{name}` |
+| CodeBuddy   | `.codebuddy/commands/trellis/{name}.md`                                           | `/trellis:{name}` |
+| Droid       | `.factory/commands/trellis/{name}.md`                                             | `/trellis:{name}` |
+| Pi Agent    | `.pi/prompts/trellis-{name}.md`                                                   | `/trellis-{name}` |
+| Copilot     | `.github/prompts/trellis-{name}.prompt.md`                                        | prompt 文件选择器 |
+
+命令文件是 Markdown；Gemini 用 TOML（`prompt = """..."""` 字段）。
+
+**Workflow 文件**——没有独立 slash 命令原语的平台，用户按名字跑 workflow。
+
+| 平台        | 位置                                 | 调用方式                              |
+| ----------- | ------------------------------------ | ------------------------------------- |
+| Kilo        | `.kilocode/workflows/{name}.md`      | `/{name}.md`（Kilo 的 workflow 入口） |
+| Antigravity | `.agent/workflows/{name}.md`         | 从 `.agent/workflows/` 打开           |
+| Devin       | `.devin/workflows/trellis-{name}.md` | `/trellis-{name}`                     |
+
+**Skill-only**——完全没有 slash 命令原语的平台，`start` / `finish-work` / `continue` 全都做成 auto-trigger skill。
+
+| 平台 | 命令在哪里                             | 调用方式                           |
+| ---- | -------------------------------------- | ---------------------------------- |
+| Kiro | `.kiro/skills/trellis-{name}/SKILL.md` | skill 匹配（或 `@trellis:{name}`） |
+
+### 什么时候用命令，什么时候用 skill
+
+| 用 slash 命令                    | 用 skill                                           |
+| -------------------------------- | -------------------------------------------------- |
+| 由用户决定何时运行               | 由 AI 根据意图自动触发                             |
+| 标记会话边界（开始、结束、恢复） | 属于任务内部阶段（before-dev、check、update-spec） |
+| 没有可靠的自然触发短语           | 有可预测的用户意图可匹配                           |
+| 即使没有活跃任务也需要可用       | 只在有活跃任务时才有意义                           |
+
+如果两个都需要，做成 skill，然后再配一个手动触发该 skill 的命令。
+
+### 编写命令
+
+好的命令文件：
+
+1. 开头用一句话说明会发生什么。
+2. 按顺序列出 AI 要执行的步骤。
+3. 指定 AI 在动作前应读的文件。
+4. 定义期望的输出格式（报告、checklist、diff 等）。
+
+模板：
+
+````markdown
+# 命令名
+
+一句话说明此命令做什么。
+
+## 读取上下文
+
+```bash
+cat .trellis/spec/relevant-spec.md
+```
+
+## 分析
+
+说明要分析什么、对照哪些规则。
+
+## 报告
+
+输出格式和字段。
+````
+
+### 示例：`/trellis:deploy-check` 命令
+
+`.claude/commands/trellis/deploy-check.md`：
+
+````markdown
+# Deploy Check
+
+部署前的验证 checklist。
+
+## 读部署配置
+
+```bash
+cat deploy.config.js
+cat .env.production
+```
+
+## 验证
+
+检查以下项：
+
+- [ ] 全部测试通过
+- [ ] 生产代码无 TODO
+- [ ] 环境变量已设置
+- [ ] 数据库 migration 已最新
+- [ ] API 端点已文档化
+
+## 报告
+
+输出部署就绪报告。
+````
+
+要在其他平台发布同一命令，就在上面对应的位置放一份平行文件。如果想让 Trellis 把这个命令作为 update 流程的一部分分发，就把规范版本放在 `packages/cli/src/templates/common/commands/` 下，并在 `packages/cli/src/configurators/` 添加各平台适配。
+
+---

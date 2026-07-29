@@ -1,0 +1,110 @@
+---
+title: 'mem-recall'
+description: '通过 trellis mem 跨平台回看 AI 历史对话'
+---
+
+mem-recall 让 AI 在用户提到过往对话时自动调用 `trellis mem`，从本地 Claude Code、Codex、OpenCode、Pi 的会话记录里检索内容，并用 session-id + 原话引用作答。
+
+触发短语包括：`上次`、`之前`、`我跟 Claude 聊过`、`what did I tell ... last week`、`我之前在哪个项目讨论过` 等指向过往对话的表述。
+
+未装 skill 时 AI 默认回复"我不记得"或基于推测作答。skill 通过 frontmatter 的 description 字段告诉 AI 这些场景下该跑 `trellis mem`，并给出 search → context 两步检索的指令。
+
+## 前置条件
+
+| 工具                                                                    | 用途                    | 必需     |
+| ----------------------------------------------------------------------- | ----------------------- | -------- |
+| [Trellis CLI](https://github.com/mindfold-ai/Trellis) **0.6.0-beta.0+** | 提供 `trellis mem` 命令 | 必需     |
+| Claude Code、Codex CLI、OpenCode、Pi                                    | 历史会话来源            | 至少一个 |
+
+```bash
+npm install -g @mindfoldhq/trellis@beta
+trellis --version   # ≥ 0.6.0-beta.0
+```
+
+## 安装
+
+```bash
+npx skills add mindfold-ai/marketplace --skill mem-recall
+```
+
+或安装所有 marketplace skill：
+
+```bash
+npx skills add mindfold-ai/marketplace
+```
+
+| 参数             | 说明                           |
+| ---------------- | ------------------------------ |
+| `-g`             | 全局安装到 `~/.claude/skills/` |
+| `-a claude-code` | 指定目标 agent                 |
+| `-y`             | 非交互模式                     |
+
+向 AI 询问"有哪些 skill 可用"，列表中出现 `mem-recall` 即安装成功。
+
+## 触发示例
+
+无需手动调用命令，下列用户消息均会触发 skill：
+
+- 上次我们怎么解决 #240 的 wait_agent 卡死？
+- 我之前在哪个项目讨论过 plugin 设计？
+- 翻一下历史，我跟 Codex 之前怎么处理 hook 注入的
+- find what I told Claude about memory architecture last week
+
+## 检索流程
+
+skill 指引 AI 按两步执行。
+
+**Step 1 — 候选检索**
+
+```bash
+trellis mem search "<关键词>" [--cwd <project>] [--since <date>]
+```
+
+多 token AND 检索清洗后的对话内容，返回带打分的 session 列表。打分公式 `(3 × 用户轮命中数 + AI 轮命中数) / 总轮数`，用户轮加权 ×3 以反映话题主导性。
+
+**Step 2 — 内容提取**
+
+```bash
+trellis mem context <session-id> --grep <关键词> --turns 3 --around 1
+```
+
+返回 top-N 命中轮次及上下文，默认字符预算 ≤6000，可经 `--max-chars` 调整。
+
+## 检索前清洗
+
+`trellis mem` 在搜索前剥除以下内容，确保命中反映真实对话：
+
+- prompt 注入：`<system-reminder>` / `<workflow-state>` / `<INSTRUCTIONS>` / `<environment_context>` 等
+- Codex AGENTS.md 引导文（首条用户消息整条丢弃）
+- 工具调用与返回结果（仅保留 text block）
+- 被 compact 替换的旧轮次（Claude `isCompactSummary`、Codex `compacted` 事件之前的内容由 summary 替代）
+
+## 数据来源
+
+直接读取本地文件，无 daemon、无索引、不上传。
+
+| 平台        | 存储                                                         |
+| ----------- | ------------------------------------------------------------ |
+| Claude Code | `~/.claude/projects/<sanitized-cwd>/*.jsonl`                 |
+| Codex       | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`               |
+| OpenCode    | `~/.local/share/opencode/storage/{session,message,part}/...` |
+| Pi          | `~/.pi/agent/sessions/<encoded-cwd>/<timestamp>_<id>.jsonl`  |
+
+## 不适用场景
+
+| 需求                  | 工具             |
+| --------------------- | ---------------- |
+| 搜代码                | `Grep` / `Read`  |
+| 搜 commit 历史        | `git log` / `gh` |
+| 搜当前项目文件 / 文档 | `Read` / `Glob`  |
+
+mem-recall 仅用于检索 AI 历史对话内容，不处理代码或文件检索。
+
+## 性能
+
+| 范围               | 时间   |
+| ------------------ | ------ |
+| 项目内 3 周检索    | ~0.85s |
+| 全局无时间过滤检索 | ~3s    |
+
+无状态，每次冷读磁盘。冷热运行性能相当（依赖操作系统页缓存）。

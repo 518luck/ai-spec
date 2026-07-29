@@ -1,0 +1,141 @@
+---
+title: '定制 Skill'
+---
+
+## 定制 Skill
+
+Skill 是 Trellis 的主要扩展点。原生带有的大部分工作流（brainstorm、before-dev、check、update-spec、break-loop）都以 auto-trigger skill 的形式交付。本章说明如何添加自己的 skill。
+
+### Command vs. Sub-agent vs. Skill
+
+|            | Command        | Sub-agent              | Skill                        |
+| ---------- | -------------- | ---------------------- | ---------------------------- |
+| **用途**   | 用户显式入口   | 有自己角色的隔离子进程 | 可复用的工作流模块           |
+| **触发**   | `/trellis:xxx` | 通过 Task 工具 spawn   | 平台根据用户意图自动匹配     |
+| **粒度**   | 会话边界       | 角色级                 | 能力或阶段级                 |
+| **跨平台** | 每平台一份文件 | 每平台一份文件         | 每平台一个文件夹（结构一致） |
+
+AI 应该基于上下文自动触发时用 skill；由用户决定时用 command；需要隔离 prompt 和约束时用 sub-agent。
+
+### Skill 文件格式
+
+Skill 是包含 `SKILL.md` 的文件夹：
+
+```
+.claude/skills/my-skill/
+├── SKILL.md
+└── references/         # 可选的支持文件
+```
+
+`SKILL.md` 用 YAML frontmatter，平台会对这段文本做匹配：
+
+```markdown
+---
+name: my-skill
+description: |
+  这个 skill 应该什么时候被触发的一句话说明。平台根据这段文本决定是否 auto-trigger。
+---
+
+# My Skill
+
+skill 被触发时 AI 要遵循的指令。
+
+## 步骤
+
+1. 读相关文件。
+2. 执行逻辑。
+3. 按以下格式汇报结果：...
+```
+
+Skill 在全部 14 个配置平台上都可用，位置按平台不同：
+
+| 平台        | 位置                                                                             |
+| ----------- | -------------------------------------------------------------------------------- |
+| Claude Code | `.claude/skills/{name}/SKILL.md`                                                 |
+| Cursor      | `.cursor/skills/{name}/SKILL.md`                                                 |
+| OpenCode    | `.opencode/skills/{name}/SKILL.md`                                               |
+| Codex       | `.codex/skills/{name}/SKILL.md`（同时拷一份到 `.agents/skills/` 给跨平台生态用） |
+| Kiro        | `.kiro/skills/{name}/SKILL.md`                                                   |
+| Gemini CLI  | `.gemini/skills/{name}/SKILL.md`                                                 |
+| Qoder       | `.qoder/skills/{name}/SKILL.md`                                                  |
+| CodeBuddy   | `.codebuddy/skills/{name}/SKILL.md`                                              |
+| Copilot     | `.github/skills/{name}/SKILL.md`                                                 |
+| Droid       | `.factory/skills/{name}/SKILL.md`                                                |
+| Pi Agent    | `.pi/skills/{name}/SKILL.md`                                                     |
+| Kilo        | `.kilocode/skills/{name}/SKILL.md`                                               |
+| Antigravity | `.agent/skills/{name}/SKILL.md`                                                  |
+| Devin       | `.devin/skills/{name}/SKILL.md`                                                  |
+
+`.agents/skills/{name}/SKILL.md`（[agentskills.io](https://agentskills.io) 跨平台共享层）由 Codex 的 configurator 写入，可被 Amp、Cline、Deep Agents、Firebender、Kimi Code CLI、Warp 等读该标准的 agent 直接消费。
+
+### 写出能稳定触发的 skill
+
+`description` 字段是平台用来匹配的。把它写成「什么情况下应该触发这个 skill」的条件描述，而不是 skill 自己的身份介绍。
+
+对比：
+
+```yaml
+# 好：描述触发条件
+description: |
+  用于用户刚修完 bug、想理解根因并防止再次发生的场景。运行 5 维分析。
+
+# 差：描述 skill 身份
+description: |
+  break-loop skill 是分析 bug 的。
+```
+
+Skill body 应该：
+
+1. 在 skill 自己的话里再次声明触发条件，让 AI 自检是否匹配正确。
+2. 告诉 AI 动手前要读哪些文件。
+3. 给一个固定的输出格式，让每次调用的结果一致。
+
+### 示例：一个 `api-doc` skill
+
+`.claude/skills/api-doc/SKILL.md`：
+
+````markdown
+---
+name: api-doc
+description: |
+  用于用户刚加 / 改了后端 API 端点并希望更新 OpenAPI 文档的场景。解析 diff，提取端点签名，写文档。
+---
+
+# api-doc
+
+从当前 diff 自动生成 API 文档。
+
+## 触发检查
+
+运行前先确认 diff 包含 `src/api/` 或 `src/routes/` 下的改动；不包含就先和用户确认再继续。
+
+## 步骤
+
+1. `git diff --name-only HEAD` 列出改动文件。
+2. 对每个改动的端点文件，提取 route、HTTP 方法、请求 schema、响应 schema。
+3. 更新 `docs/openapi.yaml`。
+4. 汇报新增、修改、删除的端点。
+
+## 输出格式
+
+```
+新增端点：
+  POST /api/foo
+修改端点：
+  PUT /api/bar（请求体变更）
+删除端点：
+  （无）
+```
+````
+
+### 分享 skill
+
+跨项目分发一个 skill：
+
+1. 把规范版 `SKILL.md` 放在 `packages/cli/src/templates/common/skills/{name}/SKILL.md`（想上游贡献的话），或以单独 npm 包发布。
+2. 在每个平台的 configurator 里加一步，把 skill 拷贝或适配进该平台的布局。
+3. Skill 随 Trellis 发布版本一起进化，保证 migration 一致。
+
+外部 skill：想引入社区 skill，把文件夹拉进对应平台目录并 commit。Trellis 目前没有原生的外部 skill 安装器。
+
+---

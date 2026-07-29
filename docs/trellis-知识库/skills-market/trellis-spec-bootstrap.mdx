@@ -1,0 +1,53 @@
+---
+title: 'trellis-spec-bootstrap'
+description: '从真实代码库引导生成项目专属 Trellis coding specs'
+---
+
+`trellis-spec-bootstrap` 帮助 AI 从真实仓库创建或刷新 `.trellis/spec/` 规则。它是 platform-neutral 的：一个能力足够的 agent 可以分析代码库、选择 spec 边界、写文档，并确认没有留下占位内容。
+
+## 什么时候用
+
+在 `trellis init` 之后使用这个 skill：默认 spec 模板已经存在，但还需要填入项目专属内容。
+
+适合场景：
+
+- 新项目需要第一版 Trellis coding specs
+- 现有项目的 `.trellis/spec/` 仍然很泛
+- Spec 边界应该跟真实 package 或 layer 边界一致
+- 团队想要 source-backed rules，而不是通用模板建议
+
+## 可用性
+
+`trellis-spec-bootstrap` 随 Trellis 内置安装。安装或更新 Trellis 后可以直接使用这个 skill，不需要再从 marketplace 单独下载。
+
+Beta bundle 已经包含这个 skill。文档站也会在 release 线提到它，等 release bundle 也包含对应 skill 后，同一套流程就能直接使用。
+
+## 使用
+
+安装后，让 AI 引导或刷新 specs：
+
+```text
+Use trellis-spec-bootstrap to fill the Trellis specs for this project from the real codebase.
+```
+
+```text
+Refresh .trellis/spec so it reflects the current repository structure and coding patterns.
+```
+
+## 工作原理
+
+1. 检查现有 `.trellis/spec/` 目录。
+2. 用 GitNexus、ABCoder、语言工具或直接读源码来分析仓库架构。
+3. 按真实代码库选择 spec 边界。
+4. 用具体文件路径、示例和反模式填充或重塑 spec 文件。
+5. 验证 index 文件匹配最终 spec 集合，并确认没有模板占位内容。
+
+## 包含的参考文件
+
+| 文件                                | 内容                         |
+| ----------------------------------- | ---------------------------- |
+| `SKILL.md`                          | 主流程和操作规则             |
+| `references/repository-analysis.md` | 如何检查仓库架构             |
+| `references/spec-task-planning.md`  | 如何拆分 spec 工作           |
+| `references/spec-writing.md`        | 如何写高信号 Trellis specs   |
+| `references/mcp-setup.md`           | GitNexus 和 ABCoder 设置说明 |

@@ -1,0 +1,53 @@
+---
+title: '附录 D：JSONL 配置格式参考'
+---
+
+## 附录 D：JSONL 配置格式参考
+
+<Note>
+  JSONL 注入的内容应该是 **spec 文件**（`.trellis/spec/**`）或**任务的 research 产出**（`{TASK_DIR}/research/*.md`）——也就是「AI 动手前要先读的规则与背景资料」。不要往里塞纯代码文件 / 目录（`src/services/foo.ts`、`packages/<pkg>/` 等）——sub-agent 自己有 Read / Grep，需要看代码时会自己去找，把代码塞进 context 只是徒增 token。
+</Note>
+
+### 文件条目
+
+```jsonl
+{
+  "file": ".trellis/spec/backend/index.md",
+  "reason": "后端开发指南"
+}
+```
+
+### 目录条目
+
+```jsonl
+{
+  "file": ".trellis/tasks/02-27-user-login/research/",
+  "type": "directory",
+  "reason": "本任务的 research 产出"
+}
+```
+
+目录条目下 hook 会读目录里所有 `.md`，最多 20 个。常见用途：挂任务自己的 `research/` 目录，让 sub-agent 拿到前置调研结论。
+
+### 完整示例（fullstack `implement.jsonl`）
+
+```jsonl
+{"file": ".trellis/workflow.md", "reason": "项目工作流和约定"}
+{"file": ".trellis/spec/backend/index.md", "reason": "后端开发指南"}
+{"file": ".trellis/spec/backend/api-module.md", "reason": "API 模块约定"}
+{"file": ".trellis/spec/backend/quality.md", "reason": "代码质量要求"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "前端开发指南"}
+{"file": ".trellis/spec/frontend/components.md", "reason": "组件约定"}
+{"file": ".trellis/tasks/02-27-user-login/research/", "type": "directory", "reason": "本任务的 research 产出"}
+```
+
+### 各 sub-agent 使用的 JSONL
+
+| 文件              | Sub-agent           | 典型内容                                          |
+| ----------------- | ------------------- | ------------------------------------------------- |
+| `implement.jsonl` | `trellis-implement` | workflow + 相关 spec 索引 + 任务 `research/` 目录 |
+| `check.jsonl`     | `trellis-check`     | 质量相关 spec + finish-work / check 命令规范      |
+
+`trellis-research` 把可持久化的发现写进任务的 `research/` 目录。Trellis 不要求单独的默认 research manifest；调研上下文来自当前请求、已有 spec、任务历史，以及显式给出的调研指令。
+
+---

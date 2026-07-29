@@ -1,0 +1,420 @@
+---
+title: '安装 && 快速上手使用'
+---
+
+## 快速开始
+
+### 安装
+
+```bash
+# 全局安装（beta 通道）
+npm install -g @mindfoldhq/trellis@latest
+
+# 进入你的项目目录
+cd your-project
+```
+
+<Note>**系统要求**：Mac、Linux、Windows 全部支持。需要 Node.js 18+ 和 Python 3.9+。</Note>
+
+`trellis init` 会自动检测已安装的平台，也可以用 flag 显式指定。每一个平台都需要最少 init 一次。随意组合：
+
+```bash
+# 交互式：检测已安装的平台并询问要配置哪些
+trellis init -u your-name
+
+# 显式：配置一个或多个平台
+trellis init -u your-name --claude
+trellis init -u your-name --claude --cursor --opencode
+trellis init -u your-name --codex --gemini
+trellis init -u your-name --pi
+```
+
+`your-name` 会成为你的开发者身份，在 `.trellis/workspace/your-name/` 创建个人工作区。
+
+支持的 flag：`--claude`、`--cursor`、`--opencode`、`--codex`、`--kiro`、`--gemini`、`--qoder`、`--codebuddy`、`--copilot`、`--droid`、`--pi`、`--antigravity`、`--devin`（别名：`--windsurf`，已废弃）、`--kilo`、`--reasonix`、`--zcode`、`--omp`。
+
+除了这 17 个已配置平台，任何读取 `.agents/skills/` 规范的 AI 编码 agent（Amp、Cline、Deep Agents、Firebender、Kimi Code CLI、Warp 等）也能直接消费 Trellis：Codex 的 skill 就写在这个目录下，这些文件能被该生态的其他 agent 直接读取。
+
+### 升级
+
+升级是**两步**——CLI 和项目里的 `.trellis/` 模板是分开版本化的：
+
+```bash
+trellis upgrade   # 1. 升级全局 CLI package
+trellis update    # 2. 在每个项目里：把 .trellis/ 和平台文件同步到新 CLI
+```
+
+<Warning>
+  如果 `trellis update` 提示 **`MIGRATION REQUIRED`**（项目版本和 CLI 之间存在 breaking
+  变更），必须运行 `trellis update --migrate`——否则 breaking
+  版本里改名或挪位置的文件会留在旧路径上不动。
+</Warning>
+
+完整的 `upgrade` / `update` / `--migrate` 说明见[命令 §1.2](/zh/start/everyday-use#1-2-命令)。
+
+### 平台配置
+
+`trellis init` 为每个平台写入各自的配置目录。`.trellis/` 下的核心概念跨平台一致，差异在于 command、skill、sub-agent、hook 的交付方式。
+
+| 平台            | 配置目录                                                                     |
+| --------------- | ---------------------------------------------------------------------------- |
+| **Claude Code** | `.claude/commands/trellis/`、`agents/`、`skills/`、`hooks/`                  |
+| **Cursor**      | `.cursor/commands/`、`agents/`、`skills/`、`hooks/`                          |
+| **OpenCode**    | `.opencode/commands/trellis/`、`agents/`、`skills/`、`plugins/`              |
+| **Codex**       | `.codex/agents/`、`skills/`、`hooks/` + 仓库根 `AGENTS.md`                   |
+| **Kiro**        | `.kiro/agents/`、`skills/`、`hooks/`                                         |
+| **Gemini CLI**  | `.gemini/commands/trellis/`、`agents/`、`skills/`、`hooks/`                  |
+| **Qoder**       | `.qoder/commands/`、`agents/`、`skills/`、`hooks/`                           |
+| **CodeBuddy**   | `.codebuddy/commands/trellis/`、`agents/`、`skills/`、`hooks/`               |
+| **Copilot**     | `.github/copilot/`、`prompts/`、`agents/`、`skills/`、`hooks/`               |
+| **Droid**       | `.factory/commands/trellis/`、`droids/`、`skills/`、`hooks/`                 |
+| **Pi Agent**    | `.pi/prompts/`、`skills/`、`agents/`、`extensions/trellis/`、`settings.json` |
+| **Oh My Pi**    | `.omp/commands/`、`skills/`、`agents/`、`extensions/trellis/`                |
+| **Kilo**        | `.kilocode/workflows/`、`skills/`                                            |
+| **Antigravity** | `.agent/workflows/`、`skills/`                                               |
+| **Devin**       | `.devin/workflows/`、`skills/`                                               |
+
+`.agents/skills/` 是一份跨平台共享层（[agentskills.io](https://agentskills.io) 规范），`trellis init` 会把所有 skill 都写一份到这里，供 Amp、Cline、Deep Agents、Firebender、Kimi Code CLI、Warp 等遵循 `.agents/skills/` 规范的 agent 直接读取。
+
+### init 场景对照
+
+`trellis init` 根据 `.trellis/` 与 `.trellis/.developer` 的存在状态自动分派。按你的情境挑对应的命令：
+
+| 场景                     | 命令                                                            | 产物                                                                                                |
+| ------------------------ | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **首次 init 项目**       | `trellis init -u your-name --claude`                            | 创建 `.trellis/` 骨架 + bootstrap task `00-bootstrap-guidelines`，引导填项目 spec                   |
+| **往已有项目加新平台**   | `trellis init --cursor`（或不带参数走交互式，会列出未配置平台） | 在现有 `.trellis/` 上铺新平台配置目录；不产生 task                                                  |
+| **新开发者加入已有项目** | `trellis init -u their-name`                                    | 生成 joiner 引导 task `00-join-<slug>`，引导读 workflow + spec；准备开始时在当前 AI 会话里 start 它 |
+| **同一开发者换机器**     | 同上                                                            | 同样生成一份 joiner task（因为 `.developer` 不进 git），嫌多可直接 `task.py archive`                |
+| **同一人同机器 re-init** | `trellis init -u your-name`                                     | no-op —— `.trellis/` 与 `.developer` 都在，啥都不做                                                 |
+
+`--force` / `--skip-existing` 只影响 **有冲突的文件**怎么处理（强制覆盖 / 跳过），不改变 init 的分派逻辑本身。
+
+<Note>
+  **判据信号**：`.trellis/.developer` 是 gitignored 的 per-checkout 身份文件（天然不进 git），所以新克隆的 checkout 永远没有它 —— 这是判断"新开发者"的干净信号。`.trellis/workspace/<name>/` 进 git，不能作为判据。
+</Note>
+
+### 基本流程
+
+描述你要做什么即可。AI 会先判断当前 turn。简单对话和小型 inline 任务不会
+自动创建 Trellis task；AI 只会询问本回合是否需要创建任务。复杂工作会先
+单独确认是否可以创建 Trellis task 并进入 planning。
+
+```text
+# 1. 描述你要做什么
+"新增用户登录功能"
+
+# 2. AI 判断当前 turn，必要时询问是否创建任务
+
+# 3. 如果这是 Trellis task，AI 按 workflow.md 走 Plan → Execute → Finish
+
+# 4. 工作 commit 已存在后
+/trellis:finish-work
+```
+
+<Note>
+  Agent-capable 平台通过 SessionStart hook、prompt hook、extension、agent 文件和 skill 的组合加载
+  Trellis 上下文。Codex 和 Claude-style 平台不同：它依赖 `AGENTS.md` 加 `UserPromptSubmit` hook，
+  no-task breadcrumb 会提示 AI 读取 `trellis-start`。只有 Kilo / Antigravity / Devin 这类 agent-less
+  平台会发 `/trellis:start`（或 `/start.md`）作为显式入口。
+</Note>
+
+### 目录结构
+
+下面是用 Claude Code 跑完 `trellis init` 后的目录。其他平台会写到各自的子目录，但 `.trellis/` 核心一致。
+
+```
+your-project/
+├── .trellis/                          # Trellis 核心（跨平台一致）
+│   ├── .developer                     # 开发者身份（gitignored）
+│   ├── .version                       # Trellis 版本号
+│   ├── .template-hashes.json          # 模板文件 hash（update 用）
+│   ├── workflow.md                    # 开发工作流指南
+│   ├── config.yaml                    # 项目配置（packages、update.skip、hooks）
+│   │
+│   ├── .runtime/                      # 每个会话自己的运行时状态（gitignored）
+│   │   └── sessions/                  #   每个 AI 会话/窗口对应一个 active task
+│   │       └── <session-key>.json
+│   │
+│   ├── spec/                          # 项目 spec 库
+│   │   ├── frontend/                  #   前端 spec（monorepo 可按 package 分层）
+│   │   ├── backend/                   #   后端 spec
+│   │   └── guides/                    #   思考指南
+│   │
+│   ├── workspace/                     # 开发者工作区
+│   │   ├── index.md
+│   │   └── {developer-name}/
+│   │       ├── index.md
+│   │       └── journal-N.md
+│   │
+│   ├── tasks/                         # 任务目录
+│   │   ├── {MM-DD-task-name}/         #   活跃任务
+│   │   │   ├── task.json              #     任务元信息
+│   │   │   ├── prd.md                 #     需求文档
+│   │   │   ├── design.md              #     复杂任务的技术设计
+│   │   │   ├── implement.md           #     复杂任务的实施计划
+│   │   │   ├── implement.jsonl        #     实现阶段 spec/research manifest
+│   │   │   ├── check.jsonl            #     review 阶段 spec/research manifest
+│   │   │   └── research/              #     持久调研记录
+│   │   └── archive/                   #   归档任务
+│   │       └── {YYYY-MM}/
+│   │
+│   └── scripts/                       # 自动化脚本（Python）
+│       ├── task.py                    #   任务管理
+│       ├── get_context.py             #   会话上下文
+│       ├── add_session.py             #   记录会话
+│       ├── create_bootstrap.py        #   首次 spec bootstrap
+│       └── common/                    #   共享库
+│
+├── .claude/                           # Claude Code 配置
+│   ├── settings.json                  #   hook 和权限配置
+│   ├── commands/trellis/              #   显式命令
+│   │   ├── start.md
+│   │   ├── finish-work.md
+│   │   └── continue.md
+│   ├── agents/                        #   Sub-agent 定义
+│   │   ├── trellis-implement.md
+│   │   ├── trellis-check.md
+│   │   └── trellis-research.md
+│   ├── skills/                        #   Auto-trigger skills
+│   │   ├── trellis-brainstorm/
+│   │   ├── trellis-before-dev/
+│   │   ├── trellis-check/
+│   │   ├── trellis-update-spec/
+│   │   └── trellis-break-loop/
+│   └── hooks/                         #   Hook 脚本
+│       ├── session-start.py
+│       ├── inject-subagent-context.py
+│       └── inject-workflow-state.py
+│
+├── .cursor/           # Cursor：commands/ + rules/
+├── .opencode/         # OpenCode：commands/trellis/、agents/、skills/、plugins/
+├── .codex/            # Codex：prompts/、skills/ + 仓库根 AGENTS.md
+├── .kiro/             # Kiro：steering/、prompts/、skills/
+├── .gemini/           # Gemini CLI：commands/trellis/
+├── .qoder/            # Qoder：commands/、skills/、agents/、hooks/
+├── .codebuddy/        # CodeBuddy：commands/trellis/
+├── .factory/          # Droid：commands/trellis/、skills/、hooks/
+├── .pi/               # Pi Agent：prompts/、skills/、agents/、extensions/trellis/
+└── .github/           # Copilot：copilot-instructions.md、prompts/
+```
+
+---
+
+## 你的第一个任务
+
+### 启动会话
+
+<Tabs>
+  <Tab title="General">
+  打开终端。有 hook 支持的平台会通过紧凑 SessionStart payload 给 AI 足够的 Trellis 上下文来判断下一步：
+
+- `workflow.md` 的紧凑 Phase Index
+- 身份、git 状态、活跃任务列表
+- spec index 路径
+- task artifact context order
+
+**直接描述任务即可**。
+
+怀疑自动注入没跑、想重新加载上下文，就新开一个会话，或者让 AI 读取一次
+`trellis-start` skill。这类平台通常没有 `/trellis:start` slash 命令，因为启动
+路径已经负责 orient。
+
+  </Tab>
+  <Tab title="Codex">
+  **必须在 `~/.codex/config.toml` 开启 hook，否则聊天界面输入 `/` 检索不到 Trellis 的三大命令（`/start`、`/finish-work`、`/continue`），也无法用 `/start` 启动会话。**
+
+```toml
+[features]
+hooks = true   # Codex 0.129+。旧版用 `codex_hooks = true`。
+```
+
+Codex 0.129+ 还要在 TUI 里跑一次 `/hooks` 命令，审批 Trellis 安装的 `UserPromptSubmit` hook，否则 hook 不会激活、Trellis 的 command / skill 不会出现在 `/` 菜单、workflow 指引也不会自动注入。即便没开，Trellis 内置 fallback 会让 AI 手动读 `trellis-start` skill（靠 `AGENTS.md` prelude），上下文仍在——但你没法从 `/` 里点用 Trellis 命令，体验明显下降。
+
+之后直接描述任务即可。Codex 会自动读取 `AGENTS.md`，`UserPromptSubmit`
+hook 会注入当前 workflow-state breadcrumb。没有 active task 时，这段 breadcrumb
+可能包含 `<trellis-bootstrap>`，提示 AI 读取一次 `trellis-start`。
+
+  </Tab>
+  <Tab title="Kiro">
+  Kiro 默认通过 `.kiro/` 下的 agent / skill 文件交付 Trellis 内容。Kiro 的 Agent Hook 是用户自己配置的（文件保存触发、构建成功触发等），Trellis 不原生带任何 Agent Hook wiring。直接描述任务，Kiro 按 skill 匹配进入 brainstorm 流程；需要完整上下文报告时跑 `@trellis:start`。
+  </Tab>
+  <Tab title="Kilo / Antigravity / Devin">
+  这三个平台只有 workflow + skill，没有 hook 和 sub-agent。入口：
+  - Kilo：`/start.md`
+  - Antigravity：打开 `.agent/workflows/start.md`
+  - Devin：`/trellis-start`
+
+AI 执行 workflow 里写的步骤：读 workflow.md、跑 `get_context.py`、读 spec 索引、询问你想做什么。后续的 implement / check 阶段会在主会话里内联跑，而不是 spawn sub-agent。
+
+  </Tab>
+</Tabs>
+
+### 示例：从零开始新项目
+
+这是新建产品、服务、SDK、包或内部工具时的第一轮 Trellis 流程。
+
+真实情况：要做一个 B2B Dashboard，覆盖登录、团队管理、计费、分析页面。AI 可以快速启动，但每次会话不应该重新发明目录结构、API 风格、组件模式和测试规则。
+
+起始 prompt：
+
+```text
+I am starting a new B2B dashboard from scratch. Help me set up Trellis for the first week of work.
+
+First, ask for the missing product and tech-stack decisions. Then create a small first task and the minimum specs needed for frontend structure, API shape, error handling, and test strategy.
+```
+
+工作流：
+
+1. 项目初始化后运行 `trellis init`。它会在 `.trellis/spec/` 写入默认 spec 模板（约 17 份占位文件，分 `backend/`、`frontend/`、`guides` 三层，覆盖 directory structure、error handling、logging、component guidelines、cross-layer thinking 等规则），并创建 `00-bootstrap-guidelines` 任务。
+2. 在 bootstrap 任务里跟 AI 讨论产品需求和项目技术栈，让 AI 先拿到足够上下文再动手。
+3. 可选：使用 Trellis 内置安装的 `trellis-spec-bootstrap`，让 AI 从真实代码生成第一版 specs。不需要再从 marketplace 单独下载。
+4. 优先填写 `trellis init` 生成的默认 specs，按当前已经知道的内容来写，不要预先设计整个项目。
+5. 人工 review 生成的 spec 质量。
+6. 建一个能跑通端到端的最小任务。
+7. 继续运行 `/trellis:continue`；Trellis 会把任务推进到 check、update-spec、commit 和 finish。
+
+### AI 建任务并开发
+
+你说："新增用户登录功能"。AI 先判断这件事复杂到需要 Trellis task，并询问
+是否可以创建任务进入 planning。你同意后，它按 `workflow.md` 的三阶段走：
+
+```text
+Phase 1 — Plan（和你互动）
+ 1.0 task.py create 创建任务目录和默认 prd.md
+ 1.1 激活 trellis-brainstorm skill，和你一问一答澄清需求，迭代 prd.md
+ 1.2 复杂任务在实现前写 design.md 和 implement.md
+ 1.3 需要调研时，结论写到 research/
+ 1.4 Sub-agent mode curate implement.jsonl / check.jsonl，只放 spec + research
+     路径，不放源码路径
+ 1.5 Review 后 task.py start 把 status 改成 in_progress
+
+Phase 2 — Execute
+ 2.1 按 prd.md、存在时的 design.md、存在时的 implement.md 和相关 spec 实现。
+     具体是 sub-agent 还是主会话 inline，取决于平台和模式
+ 2.2 运行 trellis-check → 对照 artifacts + spec 审 diff，跑 lint / typecheck / test，
+     能修则自修
+
+Phase 3 — Finish
+ 3.1 激活 trellis-check skill，做最终验证
+ 3.2（按需）激活 trellis-break-loop skill 做 debug 复盘
+ 3.3 激活 trellis-update-spec skill，把新知识写回 .trellis/spec/
+ 3.4 提出工作 commit 计划，提交确认的批次，然后运行 /trellis:finish-work
+     做 archive 和 journal 记账
+```
+
+**AI 停下或跳步骤时**：跑 `/trellis:continue`，AI 根据当前 task 的 status、
+artifact presence 和每轮注入的 workflow-state breadcrumb 判断下一步，并加载
+对应 workflow 细节后继续推进。
+
+### 结束会话
+
+```
+/trellis:finish-work
+```
+
+`finish-work` 调 `add_session.py` 追加一条 journal，更新个人索引。任务真正完成（代码已合入、验收条件满足）时，通过 `task.py archive` 归档。
+
+### 跨会话记忆
+
+下次打开会话，SessionStart hook（或平台 prelude）会读你的 workspace journal 和活跃任务列表，AI 能回忆起上次做了什么：
+
+```
+AI："Alice 好，你上次完成了用户登录功能（commit abc1234），
+     包含 LoginForm 组件、JWT 中间件、users 表。
+     接下来想干什么？"
+```
+
+Journal 存在 `.trellis/workspace/{name}/journal-N.md`；每次 `/trellis:finish-work` 都会追加一条。Trellis 内部会按 AI 会话/窗口记录各自的当前 task，下次进同一个会话能直接接上；`task.py finish` 会清掉这个指针。
+
+---
+
+## 远程 Spec 模板
+
+不用从零写 spec，在 init 时拉取预置的 spec 模板：
+
+### 官方 Marketplace
+
+```bash
+# 交互式：浏览可用模板并挑一个
+trellis init -u your-name
+
+# 非交互式：按 ID 指定模板
+trellis init -u your-name --template electron-fullstack
+```
+
+交互选择器会列出 [官方 marketplace](https://github.com/mindfold-ai/Trellis/tree/main/marketplace) 的所有模板，选一个或者直接从空 spec 开始。
+
+### 自定义 Registry（`--registry`）
+
+从你自己的 GitHub / GitLab / Bitbucket 仓库拉取 spec：
+
+```bash
+# 直接下载：仓库目录变成 .trellis/spec/
+trellis init --registry gh:myorg/myrepo/my-team-spec
+
+# Marketplace 模式：仓库里有 index.json 定义多模板
+trellis init --registry gh:myorg/myrepo/marketplace
+
+# 从自定义 marketplace 选特定模板
+trellis init --registry gh:myorg/myrepo/marketplace --template my-template
+
+# 指定分支
+trellis init --registry gh:myorg/myrepo/specs#develop
+
+# GitLab 或 Bitbucket
+trellis init --registry gitlab:myorg/myrepo/specs
+trellis init --registry bitbucket:myorg/myrepo/specs
+```
+
+**Source 格式**：`provider:user/repo[/subdir][#ref]`
+
+| Provider  | 前缀               |
+| --------- | ------------------ |
+| GitHub    | `gh:` 或 `github:` |
+| GitLab    | `gitlab:`          |
+| Bitbucket | `bitbucket:`       |
+
+不写 ref（branch/tag）时默认 `main`。
+
+### 已有 spec 的处理
+
+`.trellis/spec/` 已存在时，用 strategy flag：
+
+| Flag          | 行为                     |
+| ------------- | ------------------------ |
+| `--overwrite` | 删除现有 spec 目录再下载 |
+| `--append`    | 只拷贝不存在的文件       |
+| _（都不传）_  | 交互式询问怎么处理       |
+
+### 构建自定义 Marketplace
+
+在仓库根目录创建 `index.json`：
+
+```json
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "my-backend-spec",
+      "type": "spec",
+      "name": "My Backend Spec",
+      "description": "团队后端约定",
+      "path": "marketplace/specs/my-backend-spec",
+      "tags": ["backend", "node"]
+    }
+  ]
+}
+```
+
+`path` 相对仓库根目录。目前只支持 `type: "spec"`。
+
+### 私有仓库
+
+私有仓库要设置 `GIGET_AUTH` 环境变量，值是 personal access token：
+
+```bash
+GIGET_AUTH=ghp_xxxxx trellis init --registry gh:myorg/private-repo/specs
+```
+
+GitHub fine-grained token 需要 **Contents** 和 **Metadata** 的读权限。

@@ -1,0 +1,750 @@
+---
+title: '命令、升级、任务与规范'
+---
+
+## 1. 命令与 Skill 参考
+
+0.5.0 开始 Trellis 走 **skill-first**：大部分能力都做成 auto-trigger skill，平台自己根据上下文触发，不用你记命令。只保留会话边界入口：agent-capable 平台暴露 `finish-work` 和 `continue`；没有自动会话注入的平台额外暴露 `start`。
+
+### 1.1 总览
+
+| 类型        | 名称                   | 触发                                    | 用途                                                               |
+| ----------- | ---------------------- | --------------------------------------- | ------------------------------------------------------------------ |
+| **Command** | `/trellis:start`       | 手动（支持 hook 的平台会自动注入）      | 开启会话、加载上下文、任务分类                                     |
+| **Command** | `/trellis:finish-work` | 手动，在 Phase 3.4 commit 落地之后      | 归档 task + 写入 session journal                                   |
+| **Command** | `/trellis:continue`    | 手动                                    | 当前任务内推进下一步工作流，用户不用记 workflow（详见 1.2.6 小节） |
+| **CLI**     | `trellis upgrade`      | 手动，全局 CLI package 过旧时           | 升级已安装的 Trellis CLI package                                   |
+| **Skill**   | `trellis-brainstorm`   | 同意创建任务并进入 planning 后触发      | 澄清需求、查证据、起草 planning artifacts                          |
+| **Skill**   | `trellis-before-dev`   | task 中动手改代码前自动触发             | 先读相关 spec 再写代码                                             |
+| **Skill**   | `trellis-check`        | 实现完成后自动触发；也被 sub-agent 调用 | 验证 + 自修复循环                                                  |
+| **Skill**   | `trellis-update-spec`  | 有值得沉淀的知识时自动触发              | 把经验固化进 `.trellis/spec/`                                      |
+| **Skill**   | `trellis-break-loop`   | 修完棘手 bug 后自动触发                 | 根因分析 + 预防机制                                                |
+
+只有 3 个 slash 命令：`start`、`continue`、`finish-work`。以前的 `/before-backend-dev`、`/check-backend`、`/record-session`、`/onboard` 等等都已经被折叠进 skill/sub-agent 或直接移除。
+
+### 1.2 命令
+
+#### 1.2.1 三个版本：`upgrade` vs `update`
+
+Trellis 同时追踪三个独立的版本。搞清楚谁是谁，就理解了为什么升级是两步：
+
+1. **已发布版** — npm 上的最新版本
+2. **本地 CLI** — 你全局安装的 `trellis` 命令
+3. **项目版** — 你 repo 里 `.trellis/` 的模板版本
+
+- `trellis upgrade` 把 **② → ①**（升级全局 CLI 本体）
+- `trellis update` 把 **③ → ②**（把当前项目同步到本地 CLI 的版本）
+
+所以完整升级 = 先 `trellis upgrade`（CLI）再 `trellis update`（项目）。`trellis update` 最多只能把项目抬到本地 CLI 的版本——CLI 自己旧了，得先升 CLI。
+
+#### 1.2.2 `trellis upgrade`：升级 CLI package
+
+全局安装的 Trellis CLI 落后于已发布版本时使用：
+
+```bash
+trellis upgrade              # 跟随当前 channel：latest / beta / rc
+trellis upgrade --tag latest # 显式安装最新稳定版
+trellis upgrade --dry-run    # 只打印 npm 命令，不实际执行
+```
+
+<Note>
+  `trellis upgrade` 是 CLI 0.6.0 才加的命令。如果你装的 CLI 是 0.5.x
+  或更早，这个命令还不存在——直接用 `npm install -g @mindfoldhq/trellis@latest` 升级本地
+  CLI，之后每次升级就能用 `trellis upgrade` 了。
+</Note>
+
+`trellis upgrade` 升级的是全局 CLI package，不会改当前项目里的文件。CLI 升级后，如果某个 Trellis 项目需要同步新的 workflow、hook、skill 或平台文件，再在该项目里运行 `trellis update`。
+
+#### 1.2.3 `trellis update`：把项目同步到 CLI 版本
+
+升级完 CLI 后，在 Trellis 项目里运行。它把 `.trellis/` 模板和平台文件（hook、skill、command）同步到本地 CLI 的版本：
+
+```bash
+trellis update               # 把项目同步到本地 CLI 的模板版本
+trellis update --dry-run     # 只预览改动，不实际执行
+trellis update --migrate     # 同时执行文件迁移（改名 / 挪位置 / 删除）
+```
+
+`trellis update` 只碰你没改过的文件——自定义内容不会丢，改动前还会自动创建带时间戳的备份。
+
+<Warning>
+  如果 update 输出最后出现 **`MIGRATION REQUIRED`**（项目版本和 CLI 之间存在 breaking 变更，比如
+  `0.4.0 → 0.6.5`），必须运行 `trellis update --migrate`。不加 `--migrate` 的话，breaking
+  版本里改名或挪位置的文件**不会**被移动——项目里会留着一堆旧路径的过期文件，和新模板混在一起。可以先用
+  `--dry-run` 预览 `--migrate` 会做什么。
+</Warning>
+
+#### 1.2.4 `/trellis:start`：开启会话
+
+如果平台不自动注入上下文就手动跑一下。Hook 或 extension 可用的平台（Claude Code、Cursor、OpenCode、Gemini、Qoder、CodeBuddy、Copilot、Droid、Pi Agent，以及开了 `features.hooks = true` 的 Codex —— 旧版用 `codex_hooks = true`）有 SessionStart hook 或 extension，打开终端就自动执行，所以通常不会安装用户可见的 `start` 命令。
+
+行为：
+
+1. 读 `.trellis/workflow.md`，让 AI 清楚工作流契约。
+2. 跑 `get_context.py` 拿到开发者身份、git 状态、活跃任务。
+3. 读 spec 索引（monorepo 场景下按 package 读）。
+4. 汇报上下文并询问你想做什么。
+
+AI 做的任务分类：
+
+| 类型          | 判断依据                           | 流程                                                                 |
+| ------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| 简单对话      | 问答、解释、查询、讨论，不改仓库   | 默认不建任务。如果任务可能有帮助，只问本回合是否需要创建任务。       |
+| Inline 小任务 | 当前 turn 可以理解和验证的局部改动 | 只问本回合是否需要创建任务。用户说不需要时，跳过 Trellis 并 inline。 |
+| 完整任务      | 多文件改动或需要持久规划的工作     | 询问是否可以创建 Trellis task 并进入 planning。                      |
+
+用户拒绝复杂任务建 task 时，AI 应该澄清范围或建议拆小，而不是做大范围 inline 实现。
+
+#### 1.2.5 `/trellis:finish-work`：收尾 + 归档
+
+前提：代码已经 commit。AI 在 workflow Phase 3.4（见 `.trellis/workflow.md`）里主导批量 commit —— 起草本次 session 改动的 commit 计划、参考 `git log --oneline -5` 学习 repo 的 commit message 风格、一次性展示计划让用户 confirm、确认后逐批 `git commit`。`/finish-work` 自身只做 archive + journal，**工作区还有未提交代码改动时拒绝执行**，保证 bookkeeping commit 永远在 work commit 之后。
+
+步骤：
+
+1. 跑 `get_context.py --mode record`，列出 active tasks、git status 和 recent commits。用这一步发现除了当前 task 之外是否还有其它已完成但未归档的 task，并拿到 Step 4 要用的 work-commit hash。
+2. 跑 `git status --porcelain`，排除 `.trellis/workspace/` 和 `.trellis/tasks/`（这两个路径由脚本 auto-commit 管理）。其它路径有 dirty 文件就拒绝执行，引导用户回到 Phase 3.4。
+3. 用 `task.py archive <name>` 归档当前 active task（产生 `chore(task): archive ...` commit）。如果 Step 1 暴露出其它已完成 task 且用户确认了清理，本轮一并归档。
+4. 用 `add_session.py --title … --commit …` 追加一条 journal（产生 `chore: record journal` commit）。
+
+最终 git log 顺序：`<3.4 阶段的 work commits>` → `chore(task): archive ...`（可能多条）→ `chore: record journal`。把本次经验沉淀进 `trellis-update-spec` 属于 workflow Phase 3.3 在 commit 之前的事，不在这个 skill 的职责里。
+
+#### 1.2.6 `/trellis:continue`：当前任务内推进下一步
+
+`continue` 是**单个任务内**的 continue，不是跨任务的 continue。AI 根据当前 task 的 `task.json.status` 和每轮 hook 注入的 workflow-state breadcrumb，对照 `workflow.md` 判断当前在哪个 phase/step，然后推进到下一步。
+
+典型一次 task 的对话：
+
+1. 你用自然语言描述需求 → AI 先分类请求；当 Trellis 有价值时，先询问是否创建 task。你同意后，`trellis-brainstorm` 创建 task 并起草 `prd.md`。
+2. `prd.md` 跟你确认完，你输入 `continue` → 它判断任务是轻量任务，还是需要补 `design.md` 和 `implement.md`。
+3. Planning artifacts review 通过后再输入 `continue` → 它 start task 并进入 implement/check。Sub-agent mode 会整理 `implement.jsonl` / `check.jsonl`；inline mode 直接读取 artifacts/specs。
+4. sub-agent 跑完你再 `continue` → 它知道该走 `trellis-update-spec`，最后 `finish-work`。
+
+以前你得自己学 workflow、记住每个阶段该调哪个 slash command 让 AI 干对应的事；现在一路自然对话 + `continue`，几乎零学习成本就能跑完整个 trellis 工作流。
+
+### 1.3 Auto-trigger Skills
+
+Skill 不需要显式命令，平台根据用户意图自动匹配。匹配不中时手动触发就行（`/skill trellis-brainstorm` 之类）。
+
+#### 1.3.1 `trellis-brainstorm`
+
+把已同意进入 planning 的请求转成具体 artifacts：
+
+- 先检查代码、测试、配置、文档、现有 spec 和任务历史，再问用户问题。
+- 产出任务名和 slug；需要时通过 `task.py create` 创建 task。
+- 起草并迭代 `prd.md`，记录需求和验收标准。
+- 一次只问一个问题，并给出推荐答案。
+- 复杂任务在实现前补齐 `design.md` 和 `implement.md`。
+
+#### 1.3.2 `trellis-before-dev`
+
+编码前触发。读受影响 package 的 spec 索引，再读 Pre-Development Checklist 里引用的具体 guideline 文件。确保 AI 在**动手前**就知道约定，而不是之后。
+
+#### 1.3.3 `trellis-check`
+
+实现完之后触发：
+
+1. `git diff --name-only HEAD` 找变更。
+2. 确认哪些 spec 层适用。
+3. 对照每层 index 的 quality checklist 比对代码。
+4. 为受影响 package 跑 `pnpm lint` / `pnpm typecheck` / `pnpm test`（或等价命令）。
+5. 在有限循环内自修复违规，然后汇报修了什么、还剩什么。
+
+`trellis-check` **sub-agent** 把这个 skill 包了一层，主会话把验证这事丢给它就行。sub-agent 自己有重试循环，不再需要外面套 `Ralph Loop`。
+
+#### 1.3.4 `trellis-update-spec`
+
+把经验沉淀为 `.trellis/spec/` 里的可执行契约。调试完、踩坑后、做了非显而易见的设计决策时用。会挑对应的 spec 文件，做一次聚焦更新（decision / convention / pattern / anti-pattern / gotcha），必要时更新索引。
+
+#### 1.3.5 `trellis-break-loop`
+
+修完难 bug 后触发。产出 5 维分析：
+
+1. 根因分类（缺 spec / 契约违反 / 变更传播失败 / 测试缺口 / 隐式假设）。
+2. 之前修复尝试失败的原因。
+3. 预防机制（更新 spec、类型约束、lint 规则、测试、CR 清单、文档）。
+4. 系统化扩散：其他具备同样模式的地方。
+5. 知识固化：结果走 `trellis-update-spec`。
+
+> 调试的价值不是修掉 **这个** bug，而是确保**这一类** bug 不再发生。
+
+### 1.4 Sub-agents
+
+Sub-agent 是独立的 AI 子进程，各自有 prompt 和（视平台而定）各自的 tool / hook 挂接。implement 和 check agent 通过 task 目录下的 JSONL 文件拿稳定的 spec/research 上下文；research agent 把发现写进任务的 `research/` 目录。
+
+| Sub-agent           | 约束              | 主会话何时 spawn               |
+| ------------------- | ----------------- | ------------------------------ |
+| `trellis-research`  | 只读              | 代码搜索 / 模式发现 / 文档查阅 |
+| `trellis-implement` | 写代码，不 commit | 需求 + 计划就绪后的编码阶段    |
+| `trellis-check`     | 可写（修复）      | 验证阶段；内部自带自修复循环   |
+
+在 Claude Code、Cursor、OpenCode、CodeBuddy、Droid、Pi Agent 上，implement 和 check sub-agent 启动前会自动拿到对应 JSONL（`implement.jsonl`、`check.jsonl`）。Pi 走 extension，不是 Python hook。其他平台由主会话自行读 JSONL 并把相关内容传给 sub-agent。research agent 把可持久化发现写到任务的 `research/` 目录。
+
+---
+
+## 2. 任务管理全流程
+
+### 2.1 任务生命周期
+
+```
+create → plan artifacts → optional jsonl context → start → implement/check → finish → archive
+
+create：                任务目录 + task.json + 默认 prd.md
+plan artifacts：        每个任务都有 prd.md；复杂任务 start 前补 design.md + implement.md
+optional jsonl context： 需要稳定注入 spec 或 research 文件时，AI 填 implement/check 上下文
+start：                 把当前 AI 会话/窗口的任务标记为 in_progress
+implement/check：       开发与验证循环
+finish：                清除当前 AI 会话/窗口的任务
+archive：               把完成任务移动到 archive/
+```
+
+`task.py create` 会让任务从 `planning` 开始，创建默认 `prd.md`，并尽力把当前 AI session 指向新任务。它也会在检测到 sub-agent 平台（Claude / Cursor / Codex / Kiro / Pi 等）时 seed 出 `implement.jsonl` + `check.jsonl`；agent-less 平台（Kilo / Antigravity / Devin）跳过 seed，改由 Phase 2 的 `trellis-before-dev` skill 加载 spec。
+
+### 2.2 `task.py` 子命令
+
+#### 2.2.1 创建任务
+
+```bash
+# 创建任务
+TASK_DIR=$(./.trellis/scripts/task.py create "新增用户登录" \
+  --slug user-login \          # 目录名后缀（可选，不写自动生成）
+  --assignee alice \           # 负责人（可选）
+  --priority P1 \              # 优先级：P0/P1/P2/P3（可选，默认 P2）
+  --description "实现 JWT 登录")  # 描述（可选）
+
+# 创建的目录：.trellis/tasks/02-27-user-login/
+# 创建的文件：task.json、prd.md
+# sub-agent 平台上还可能创建 implement.jsonl + check.jsonl
+```
+
+#### 2.2.2 上下文配置
+
+```bash
+# sub-agent 平台上 implement.jsonl + check.jsonl 会在 task.py create 时
+# seed 好——每个文件起手一行自描述 {"_example": "..."}，可保留也可删除。
+
+# curate 条目：在编辑器里改 jsonl，或用 add-context：
+./.trellis/scripts/task.py add-context "$TASK_DIR" implement \
+  ".trellis/spec/backend/index.md" "后端开发指南"
+./.trellis/scripts/task.py add-context "$TASK_DIR" check \
+  ".trellis/spec/cli/unit-test/conventions.md" "单测约定"
+# target：implement | check（自动补 .jsonl）
+# path：文件或目录路径——add-context 自动识别，目录会 type="directory"
+#
+# jsonl 里放什么：任务相关的 spec 文件（.trellis/spec/**/*.md）和 research
+# 文件（$TASK_DIR/research/*.md）。不要放代码路径——代码在 Phase 2 实现时
+# 读，不在这里预注册。
+
+# 看有哪些 spec 可选
+./.trellis/scripts/get_context.py --mode packages
+# 可选：--package PACKAGE   （monorepo 必填，选 spec/<pkg>/ 根）
+
+# 校验 implement.jsonl + check.jsonl 里引用的文件都存在
+./.trellis/scripts/task.py validate "$TASK_DIR"
+
+# 查看所有 JSONL 条目
+./.trellis/scripts/task.py list-context "$TASK_DIR"
+```
+
+<Note>
+  `task.py add-context` 只写 `implement.jsonl` / `check.jsonl`。调研发现放在 `{TASK_DIR}
+  /research/*.md`；只有后续 sub-agent 工作前必须读取时，才把这些文件加入 implement/check manifest。
+</Note>
+
+#### 2.2.3 任务控制
+
+```bash
+# 设为当前 AI 会话/窗口的任务
+# 写入 .trellis/.runtime/sessions/<session-key>.json
+./.trellis/scripts/task.py start "$TASK_DIR"
+
+# 清除当前 AI 会话/窗口的任务
+./.trellis/scripts/task.py finish
+
+# 设置 Git 分支名
+./.trellis/scripts/task.py set-branch "$TASK_DIR" "feature/user-login"
+
+# 设置 PR 目标分支
+./.trellis/scripts/task.py set-base-branch "$TASK_DIR" "main"
+
+# 设置 scope（用在 commit message：feat(scope): ...）
+./.trellis/scripts/task.py set-scope "$TASK_DIR" "auth"
+```
+
+#### 2.2.4 父子任务（subtasks）
+
+一个任务可以有子任务。子任务是磁盘上独立的任务目录——有自己的 `prd.md`、JSONL 文件、status；父任务只是引用它们做分组。
+
+```bash
+# 方式 A：在父任务下直接建子任务
+./.trellis/scripts/task.py create "JWT middleware" \
+  --slug jwt-middleware \
+  --parent 02-27-user-login
+
+# 方式 B：把两个已有任务链起来
+./.trellis/scripts/task.py add-subtask \
+  02-27-user-login \                # 父任务目录
+  02-28-jwt-middleware              # 子任务目录
+
+# 解除关联（不会删除任何任务）
+./.trellis/scripts/task.py remove-subtask \
+  02-27-user-login 02-28-jwt-middleware
+```
+
+对 `task.json` 的影响：
+
+- 父任务的 `children: [<子任务目录名>, ...]` 追加子任务名。
+- 子任务的 `parent: "<父任务目录名>"` 被设置。
+- `task.py list` 把子任务缩进显示在父任务下面，同时打 `[已完成/总数]`，方便一眼看进度。
+
+<Note>
+  父子关系走 `parent` 和 `children` 字段。`task.json` 里还有一个 `subtasks`
+  字段，和它们完全无关——`subtasks` 是**单个任务内部的 todo checklist**（name + status 对），主要由
+  bootstrap 任务使用。别混。
+</Note>
+
+#### 2.2.5 任务管理
+
+```bash
+# 列出活跃任务
+./.trellis/scripts/task.py list
+./.trellis/scripts/task.py list --mine            # 只看自己的
+./.trellis/scripts/task.py list --status review   # 按状态过滤
+
+# 归档完成的任务
+./.trellis/scripts/task.py archive user-login
+# 移动到 archive/2026-02/
+
+# 列出归档任务
+./.trellis/scripts/task.py list-archive
+./.trellis/scripts/task.py list-archive 2026-02  # 按月过滤
+```
+
+### 2.3 `task.json` Schema
+
+`task.py create` 当前实际写出的结构（详见 `.trellis/scripts/common/task_store.py`）：
+
+```json
+{
+  "id": "02-27-user-login",
+  "name": "user-login",
+  "title": "新增用户登录",
+  "description": "实现 JWT 登录流程",
+  "status": "planning",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "alice",
+  "assignee": "alice",
+  "createdAt": "2026-02-27",
+  "completedAt": null,
+  "branch": null,
+  "base_branch": "main",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {}
+}
+```
+
+字段会随任务进展被填上：
+
+- `dev_type` / `scope` / `package` → 通过 `task.py set-scope` 或直接编辑 `task.json` 写入；没有自动 setter
+- `branch` → `task.py set-branch` 设置
+- `status` → `planning → in_progress → completed`
+- `completedAt` → `task.py archive` 填上（archive 不回写 commit hash）
+- `parent` / `children` → `task.py create --parent` 或 `add-subtask` 设置
+
+<Note>
+  `worktree_path` / `commit` / `pr_url` 是 schema 占位字段，0.5 没有脚本主动写入。想记 commit 或 PR
+  URL，建议用 `meta: {}` 自定义键或写 `after_archive` hook 自己回写。
+</Note>
+
+早期版本创建的任务可能少某些字段（如 `package` 支持前的任务没有 `"package"`），`task.py` 把缺失字段按 null 处理，不会出错。
+
+**状态流转**：
+
+```
+task.py create     →  status: "planning"
+task.py start      →  planning 自动改写成 in_progress（其他状态保留）
+task.py archive    →  status: "completed" + 移到 archive/
+```
+
+`planning` / `in_progress` / `completed` 对应 `workflow.md` 的三个 Phase。`task.py start` 会自动把 `planning` 改写成 `in_progress`，其他状态不动（`review` 这类自定义状态重启不会被清零）。`task.py list --status` 还接受 `review` 作为过滤条件，如果你想要更多自定义状态，在 `workflow.md` 里加 `[workflow-state:<name>]` block 就行。
+
+### 2.4 JSONL 上下文配置实战
+
+#### 2.4.1 create 时 seed，AI 在 Phase 1.3 curate
+
+在 sub-agent 平台上，`task.py create` 会在两个 jsonl 里各写**一行 seed**：
+
+```jsonl
+# task.py create 刚跑完的 implement.jsonl
+{"_example": "Fill with {\"file\": \"<path>\", \"reason\": \"<why>\"}. Put spec/research files only — no code paths. Run `python3 .trellis/scripts/get_context.py --mode packages` to list available specs. Delete this line when done."}
+```
+
+这一行是给 AI 看的填写说明。它没有 `file` 字段，所有下游消费方（hook / prelude / validate / list-context）都会跳过，AI 读完就知道怎么填，在 Phase 1.3 把它替换成真实条目即可。
+
+**AI curate 之后的 implement.jsonl 样例**（monorepo `dev_type=backend`）：
+
+```jsonl
+{"file": ".trellis/spec/guides/index.md", "reason": "跨包思维指引"}
+{"file": ".trellis/spec/cli/backend/index.md", "reason": "后端开发指南——本次改动涉及 Python 脚本"}
+{"file": ".trellis/spec/cli/backend/script-conventions.md", "reason": "脚本规范"}
+{"file": ".trellis/tasks/.../research/auth-library-comparison.md", "reason": "三方库选型依据"}
+```
+
+**jsonl 该放什么**：
+
+- **Spec 文件**（`.trellis/spec/<pkg>/<layer>/index.md` + 具体 guideline 文件）：和任务相关的规范
+- **Research 文件**（`{TASK_DIR}/research/*.md`）：sub-agent 要参考的调研产出
+
+**不该放什么**：
+
+- 代码文件（`src/**`、`packages/**/*.ts` 等）——代码在 Phase 2 实现时读，不在这里预注册
+- 即将要改的文件——同上
+
+agent-less 平台（Kilo / Antigravity / Devin）上 `task.py create` 不 seed，改由 Phase 2.1 的 `trellis-before-dev` skill 加载 spec。
+
+#### 2.4.2 添加自定义上下文
+
+```bash
+# 添加实现阶段 spec 上下文
+./.trellis/scripts/task.py add-context "$TASK_DIR" implement \
+  ".trellis/spec/cli/backend/script-conventions.md" "本任务涉及脚本规范"
+
+# 添加 planning 阶段产出的 research
+./.trellis/scripts/task.py add-context "$TASK_DIR" implement \
+  "$TASK_DIR/research/auth-library-comparison.md" "三方库选型依据"
+
+# 添加 check 上下文
+./.trellis/scripts/task.py add-context "$TASK_DIR" check \
+  ".trellis/spec/guides/cross-layer-thinking-guide.md" "跨层验证"
+```
+
+### 2.5 任务生命周期 Hook
+
+你可以配置 shell 命令，在任务生命周期事件上自动跑。用于对接 Linear、发 Slack、触发 CI 等。
+
+#### 2.5.1 配置
+
+在 `.trellis/config.yaml` 加 `hooks` 块：
+
+```yaml
+hooks:
+  after_create:
+    - 'python3 .trellis/scripts/hooks/linear_sync.py create'
+  after_start:
+    - 'python3 .trellis/scripts/hooks/linear_sync.py start'
+  after_finish:
+    - "echo 'Task finished'"
+  after_archive:
+    - 'python3 .trellis/scripts/hooks/linear_sync.py archive'
+```
+
+<Note>默认 `config.yaml` 里 hooks 段是**注释掉**的。取消注释并编辑即可激活。</Note>
+
+#### 2.5.2 支持的事件
+
+| 事件            | 触发时机                          | 用途                            |
+| --------------- | --------------------------------- | ------------------------------- |
+| `after_create`  | `task.py create` 完成             | 在项目追踪工具里建 issue        |
+| `after_start`   | `task.py start` 设置当前会话任务  | 更新 issue 状态到 "In Progress" |
+| `after_finish`  | `task.py finish` 清除当前会话任务 | 通知团队、触发 review           |
+| `after_archive` | `task.py archive` 移动任务        | 标记 issue 为 "Done"            |
+
+#### 2.5.3 环境变量
+
+每个 hook 收到：
+
+| 变量             | 值                          |
+| ---------------- | --------------------------- |
+| `TASK_JSON_PATH` | 任务 `task.json` 的绝对路径 |
+
+其他环境变量从父进程继承。
+
+#### 2.5.4 执行行为
+
+- **工作目录**：仓库根
+- **Shell**：命令通过系统 shell 运行（`shell=True`）
+- **失败不阻断**：失败的 hook 在 stderr 打印 `[WARN]`，但不阻止任务操作完成
+- **顺序**：同一事件有多个 hook 按列表顺序执行；一个失败不跳过其他
+- **stdout 不显示**：诊断输出用 stderr
+
+<Warning>
+  `after_archive` hook 收到的 `TASK_JSON_PATH` 指向**归档后**位置（如
+  `.trellis/tasks/archive/2026-03/task-name/task.json`），不是原路径。
+</Warning>
+
+#### 2.5.5 示例：Linear Sync Hook
+
+Trellis 原生带有 `.trellis/scripts/hooks/linear_sync.py` 示例 hook，把任务生命周期事件同步到 [Linear](https://linear.app)。
+
+**行为**：
+
+| 操作      | 触发            | 效果                                                              |
+| --------- | --------------- | ----------------------------------------------------------------- |
+| `create`  | `after_create`  | 从 task.json 建 Linear issue（title、priority、assignee、parent） |
+| `start`   | `after_start`   | 把关联 issue 更新到 "In Progress"                                 |
+| `archive` | `after_archive` | 把关联 issue 更新到 "Done"                                        |
+| `sync`    | 手动            | 把 `prd.md` 内容推到 Linear issue 描述                            |
+
+**前置**：
+
+1. 装 [`linearis`](https://www.npmjs.com/package/linearis) CLI 并设置 `LINEAR_API_KEY`
+2. 创建 `.trellis/hooks.local.json`（gitignored）放团队配置：
+
+```json
+{
+  "linear": {
+    "team": "ENG",
+    "project": "我的项目",
+    "assignees": {
+      "alice": "linear-user-id-for-alice"
+    }
+  }
+}
+```
+
+Hook 把 Linear issue id 写回 `task.json` 的 `meta.linear_issue`（如 `"ENG-123"`），保证后续事件幂等。
+
+---
+
+## 3. 规范编写指南
+
+### 3.1 Spec 目录结构和分层
+
+#### 3.1.1 `trellis init` 默认结构
+
+`trellis init` 会写一个骨架：`frontend/` + `backend/` + `guides/`，里面全是**空占位模板**（标注 "(To be filled by the team)"）。这些模板原样注入 sub-agent 是没用的。
+
+```
+.trellis/spec/
+├── frontend/                    # 前端规范（占位）
+│   ├── index.md                 #   索引：列出所有规范及状态
+│   ├── component-guidelines.md  #   组件规范
+│   ├── hook-guidelines.md       #   Hook 规范
+│   ├── state-management.md      #   状态管理
+│   ├── type-safety.md           #   类型安全
+│   ├── quality-guidelines.md    #   质量指南
+│   └── directory-structure.md   #   目录结构
+│
+├── backend/                     # 后端规范（占位）
+│   ├── index.md
+│   ├── database-guidelines.md
+│   ├── error-handling.md
+│   ├── logging-guidelines.md
+│   ├── quality-guidelines.md
+│   └── directory-structure.md
+│
+└── guides/                      # 思维指南
+    ├── index.md
+    ├── cross-layer-thinking-guide.md
+    └── code-reuse-thinking-guide.md
+```
+
+`trellis init` 同时创建一个 **bootstrap 任务**（`00-bootstrap-guidelines`）。第一次 Trellis 会话里，AI 会认出它、调 `trellis-research` 读你的实际代码，然后把占位模板按真实项目（技术栈、约定、目录结构）填起来。跳过这个任务就是把空壳喂给每个 sub-agent——别跳。
+
+#### 3.1.2 这套结构只是约定
+
+`frontend/` 和 `backend/` 没有任何魔法。Trellis 扫描 `.trellis/spec/` 下的一级目录，只要目录里有 `index.md` 就把它当作一个 spec 层注册。你按项目实际怎么切就怎么命名——按运行时、按 package、按职责都行，每层有自己的 `index.md` 就够。
+
+Trellis 本身用的是另一种结构（monorepo、按 package）：
+
+```
+.trellis/spec/                                # Trellis 自己的 spec 树
+├── cli/                                      # Package: CLI
+│   ├── backend/
+│   │   └── index.md                          #   ← 通过 index.md 注册为一层
+│   └── unit-test/
+│       └── index.md                          #   ← 又一层
+│
+├── docs-site/                                # Package: 文档站
+│   └── docs/
+│       └── index.md                          #   ← 单层 package
+│
+└── guides/                                   # 跨 package 的思维指南
+    ├── index.md
+    ├── cross-layer-thinking-guide.md
+    ├── cross-platform-thinking-guide.md
+    └── code-reuse-thinking-guide.md
+```
+
+顶层没有 `frontend/` 或 `backend/`，因为仓库是按 package 切的。Trellis 唯一硬性约定就是"一层 = 带 `index.md` 的目录"，其他随你。
+
+### 3.2 从空模板到完整规范
+
+`trellis init` 会生成空模板，标记 "(To be filled by the team)"。填充步骤：
+
+**Step 1**：从实际代码中提取模式
+
+```bash
+# 看看现有代码是怎么组织的
+ls src/components/     # 组件结构
+ls src/services/       # 服务结构
+```
+
+**Step 2**：写下你的约定
+
+```markdown
+# Component Guidelines
+
+## File Structure
+
+- One component per file
+- Use PascalCase for filenames: `UserProfile.tsx`
+- Co-locate styles: `UserProfile.module.css`
+- Co-locate tests: `UserProfile.test.tsx`
+
+## Patterns
+
+#### Required
+
+- Functional components + hooks (no class components)
+- TypeScript with explicit Props interface
+- `export default` for page components, named export for shared
+
+#### Forbidden
+
+- No `any` type in Props
+- No inline styles (use CSS Modules)
+- No direct DOM manipulation
+```
+
+**Step 3**：添加代码示例
+
+````markdown
+#### Good Example
+
+```tsx
+interface UserProfileProps {
+  userId: string;
+  onUpdate: (user: User) => void;
+}
+
+export function UserProfile({ userId, onUpdate }: UserProfileProps) {
+  // ...
+}
+```
+
+#### Bad Example
+
+```tsx
+// Don't: no Props interface, using any
+export default function UserProfile(props: any) {
+  // ...
+}
+```
+````
+
+**Step 4**：更新 index.md 状态
+
+```markdown
+| Guideline            | File                    | Status     |
+| -------------------- | ----------------------- | ---------- |
+| Component Guidelines | component-guidelines.md | **Filled** |
+| Hook Guidelines      | hook-guidelines.md      | To fill    |
+```
+
+### 3.3 Spec 应该长什么样
+
+`trellis-update-spec` skill 把 spec 当作**可执行契约**写，不是原则性文字。sub-agent 在 `trellis-implement` / `trellis-check` 时读到的每条都要能告诉它 _怎样安全地实现_——具体签名、契约、用例、测试。如果你写的只是"动手前该想到什么"，那东西属于 `guides/`。
+
+#### 3.3.1 Code-Spec vs Guide
+
+| 类型          | 位置                                            | 用途               | 内容形态                                               |
+| ------------- | ----------------------------------------------- | ------------------ | ------------------------------------------------------ |
+| **Code-Spec** | `<layer>/*.md`（如 `backend/`、`cli/backend/`） | "如何安全地实现"   | 签名、契约、验证矩阵、Good / Base / Bad 用例、必需测试 |
+| **Guide**     | `guides/*.md`                                   | "动手前该想到什么" | 思考清单、问题、指向具体 spec 的链接                   |
+
+如果你写的是"别忘了检查 X"——放 guide。如果你写的是"X 接受 `{field: type, …}`，返回 `{…}`，错误矩阵如下，必须覆盖这些测试"——放 code-spec。
+
+#### 3.3.2 选对更新形态
+
+`trellis-update-spec` 原生带有几套模板，按你学到的是什么挑一个：
+
+| 你学到了……              | 模板                             | 关键字段                                                      |
+| ----------------------- | -------------------------------- | ------------------------------------------------------------- |
+| 为什么选方案 X 而不是 Y | **Design Decision**              | Context、Options Considered、Decision、Example、Extensibility |
+| 本项目约定 X 这么做     | **Convention**                   | What、Why、Example、Related                                   |
+| 一种能复用的解法        | **Pattern**                      | Problem、Solution、Example（Good + Bad）、Why                 |
+| 一种会出问题的做法      | **Forbidden Pattern**（`Don't`） | 错误片段、为什么糟、改成什么                                  |
+| 容易犯的错              | **Common Mistake**               | Symptom、Cause、Fix、Prevention                               |
+| 非直觉的行为            | **Gotcha**                       | `> Warning:` 引用块，说明何时触发、怎么处理                   |
+
+#### 3.3.3 基础设施 / 跨层改动的强制 7 段式
+
+改动涉及 **命令 / API 签名**、**跨层 request-response 契约**、**DB schema**、或 **基础设施接线**（存储、队列、缓存、密钥、env）时，skill 强制 7 段：
+
+1. **Scope / Trigger** — 为什么要上 code-spec 深度
+2. **Signatures** — command / API / DB 签名
+3. **Contracts** — request 字段、response 字段、env key（名字、类型、约束）
+4. **Validation & Error Matrix** — `<条件> → <错误>` 表
+5. **Good / Base / Bad Cases** — 例输入 + 预期结果
+6. **Tests Required** — unit / integration / e2e，带断言点
+7. **Wrong vs Correct** — 至少一组反正例
+
+少一段 skill 会提示补；这就是"可执行契约"的底线。
+
+#### 3.3.4 对比示例
+
+一条合格的 **Convention**（放在 `backend/database-guidelines.md`）：
+
+````markdown
+#### Convention：用 ORM batch 方法，别在循环里一条一条写 DB
+
+**What**：对 N 条数据，调一次 ORM 的 batch 方法（`createMany` / `updateMany` / `deleteMany`）。不要把单行 `create` / `update` / `delete` 套进 `for` 或 `Promise.all`。
+
+**Why**：每次 DB 调用都是一次 round-trip。线上接口里一个 200 条的循环就能把 p99 从 50ms 悄悄拖到 8s——这种坑已经在 code review 里抓到过两次（PR #312、#417）。Batch 方法把 N 次 round-trip 压成一次 SQL，DB 可以自己规划写入。
+
+**Example**：
+
+```ts
+// ✅ 正确——一次 round-trip
+await prisma.user.createMany({ data: users });
+
+// ❌ 错误——N 次 round-trip
+for (const user of users) {
+  await prisma.user.create({ data: user });
+}
+
+// ❌ 还是错——并发的 N 次 round-trip
+await Promise.all(users.map((user) => prisma.user.create({ data: user })));
+```
+
+**Batch 不可用时**：把循环包进单事务（`prisma.$transaction`），至少是一个逻辑单元；加注释说明为什么 batch 用不了。
+
+**Related**：`quality-guidelines.md#performance`、`error-handling.md#transactions`。
+````
+
+一条**差的 spec**——没签名、没示例、没 why、没测试点：
+
+```markdown
+#### Database
+
+- Use good query patterns
+- Be careful with SQL
+- Follow best practices
+```
+
+一条**过度规范**——机械规则、没有原因、扼杀判断：
+
+```markdown
+#### Variable Naming
+
+- All boolean variables must start with `is` or `has`
+- All arrays must end with `List`
+- All functions must be less than 20 lines
+- All files must be less than 200 lines
+```
+
+底线：具体、可操作、带代码示例、说清 _why_；对 code-spec 而言，还要有足够的签名 / 契约细节让 sub-agent 不用追问就能照做。
+
+### 3.4 Bootstrap 引导首次填充
+
+`trellis init` 会同时建一个 bootstrap 任务（`00-bootstrap-guidelines`）。第一次 Trellis 会话里，AI 会认出它，调 `trellis-research` 扫一遍你的代码，然后把 `frontend/` / `backend/` / `guides/` 下那堆空模板按你的真实项目填起来——技术栈、约定、目录结构都从代码里读出来。

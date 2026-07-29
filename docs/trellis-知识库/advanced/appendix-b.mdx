@@ -1,0 +1,89 @@
+---
+title: '附录 B：命令与 Skill 速查'
+---
+
+## 附录 B：命令与 Skill 速查
+
+Trellis 只保留很少的会话边界命令，其他都是 auto-trigger skill 或 sub-agent。这是有意的设计：命令负责用户显式边界，其他工作流自己跑。
+
+### Slash 命令（按平台）
+
+常规用户命令是 `finish-work` 和 `continue`。`start` 只在不会自动注入会话上下文的平台上作为用户入口出现。调用语法按平台不同：
+
+| 平台                                                    | Start                                                                     | Finish                 | Continue            | 交付形式                                |
+| ------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------- | ------------------- | --------------------------------------- |
+| Claude Code / OpenCode / Gemini CLI / CodeBuddy / Droid | SessionStart hook 自动注入                                                | `/trellis:finish-work` | `/trellis:continue` | Slash 命令                              |
+| Cursor / Pi Agent / Qoder                               | SessionStart hook 或 extension 自动注入                                   | `/trellis-finish-work` | `/trellis-continue` | 原生命令 / prompt                       |
+| Kiro                                                    | `@trellis:start`                                                          | `@trellis:finish-work` | `@trellis:continue` | Skill，通过 `@` 选择器                  |
+| Kilo                                                    | `/start.md`                                                               | `/finish-work.md`      | `/continue.md`      | Workflow 文件（`.kilocode/workflows/`） |
+| Antigravity / Devin                                     | workflow 选择器 → `start` / `finish-work` / `continue`                    |                        |                     | Workflow 文件                           |
+| GitHub Copilot                                          | Run Prompt → `trellis-start` / `trellis-finish-work` / `trellis-continue` |                        |                     | Prompt 文件（`.github/prompts/`）       |
+| Codex                                                   | 自动读取 `AGENTS.md` prelude；可选 UserPromptSubmit hook                  | skill / prompt 入口    | skill / prompt 入口 | Skills + hooks                          |
+
+### Auto-trigger Skill
+
+由平台根据用户意图自动匹配，不需要显式调用。需要时用各平台的 skill 调用语法手动触发。
+
+| Skill                 | 触发时机                                 | 干什么                                           |
+| --------------------- | ---------------------------------------- | ------------------------------------------------ |
+| `trellis-brainstorm`  | 用户描述功能 / bug / 模糊需求            | 产出 task + `prd.md`，必要时 spawn research      |
+| `trellis-before-dev`  | task 进入 in_progress、AI 即将动手改代码 | 读该 package 相关的 spec                         |
+| `trellis-check`       | 实现阶段结束                             | diff 审查 + lint / typecheck / test + 自修复循环 |
+| `trellis-update-spec` | 学到 / 决策 / 踩到值得沉淀的东西         | 在对应 spec 文件添加条目                         |
+| `trellis-break-loop`  | 刚修完棘手 bug                           | 5 维根因 + 预防机制分析                          |
+
+### Sub-agent
+
+主会话通过平台的 sub-agent / Task 原语 spawn。
+
+| Sub-agent           | 角色          | 约束            |
+| ------------------- | ------------- | --------------- |
+| `trellis-research`  | 代码/文档搜索 | 只读            |
+| `trellis-implement` | 编码          | 不 `git commit` |
+| `trellis-check`     | 验证 + 自修复 | 自带重试循环    |
+
+真 sub-agent：Claude Code、Cursor、OpenCode、Codex、Kiro、Gemini CLI、Qoder、CodeBuddy、Copilot、Droid、Pi Agent 可用。Kilo、Antigravity、Devin 在主会话内联运行同样流程。Claude Code、Cursor、OpenCode、CodeBuddy、Droid、Pi Agent 走 hook/extension 注入上下文；其他 sub-agent 平台走 pull-based prelude。
+
+### 全局 CLI 命令
+
+| 命令              | 用途                                  | 用法                                           |
+| ----------------- | ------------------------------------- | ---------------------------------------------- |
+| `trellis upgrade` | 升级全局安装的 Trellis CLI package    | `trellis upgrade [--tag <tag>]`                |
+| `trellis update`  | 把当前项目的 Trellis 文件同步到此 CLI | `trellis update [--dry-run] [--migrate] [...]` |
+
+### `task.py` 子命令
+
+| 子命令            | 用途                                                                       | 用法                                                               |
+| ----------------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| `create`          | 创建任务（检测到 sub-agent 平台时 seed `implement.jsonl` / `check.jsonl`） | `task.py create "title" [--slug name] [-a assignee] [-p priority]` |
+| `add-context`     | 追加上下文条目（create 之后填 jsonl 的主要入口）                           | `task.py add-context "$DIR" <target> "<path>" "<reason>"`          |
+| `validate`        | 校验 JSONL                                                                 | `task.py validate "$DIR"`                                          |
+| `list-context`    | 查看所有条目                                                               | `task.py list-context "$DIR"`                                      |
+| `start`           | 置为当前 AI 会话/窗口的任务                                                | `task.py start "$DIR"`                                             |
+| `finish`          | 清除当前 AI 会话/窗口的任务                                                | `task.py finish`                                                   |
+| `set-branch`      | 设置分支名                                                                 | `task.py set-branch "$DIR" "feature/xxx"`                          |
+| `set-base-branch` | 设置 PR 目标分支                                                           | `task.py set-base-branch "$DIR" "main"`                            |
+| `set-scope`       | 设置范围                                                                   | `task.py set-scope "$DIR" "auth"`                                  |
+| `add-subtask`     | 链接子任务到父任务                                                         | `task.py add-subtask <父任务目录> <子任务目录>`                    |
+| `remove-subtask`  | 解除子任务关联                                                             | `task.py remove-subtask <父任务目录> <子任务目录>`                 |
+| `archive`         | 归档任务                                                                   | `task.py archive <name>`                                           |
+| `list`            | 列出活跃任务                                                               | `task.py list [--mine] [--status <s>]`                             |
+| `list-archive`    | 列出归档任务                                                               | `task.py list-archive [YYYY-MM]`                                   |
+
+### Python 脚本
+
+```bash
+# 上下文
+./.trellis/scripts/get_context.py                 # 完整上下文
+./.trellis/scripts/get_context.py --json          # JSON
+./.trellis/scripts/get_context.py --mode packages # 按 package 的 spec 层（monorepo）
+./.trellis/scripts/get_context.py --mode record   # 给 /trellis:finish-work 用
+
+# 会话
+./.trellis/scripts/add_session.py --title "..." --commit "..." --summary "..."
+
+# Spec bootstrap（首次）
+./.trellis/scripts/create_bootstrap.py
+```
+
+---

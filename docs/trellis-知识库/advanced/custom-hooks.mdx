@@ -1,0 +1,235 @@
+---
+title: '定制 Hook'
+---
+
+## 定制 Hook
+
+<Note>Hook 支持按平台和按事件分档——具体见下面的事件矩阵。</Note>
+
+- **`SessionStart` hook / extension** 在 Claude Code、Cursor、OpenCode、Gemini CLI、Qoder、CodeBuddy、Copilot、Droid、Pi Agent 上原生启用。Codex 依赖 `AGENTS.md` 加 `UserPromptSubmit` hook；Kiro 的 Agent Hook 是用户自己配的，Trellis 不原生带任何。
+- **`PreToolUse` / extension sub-agent 上下文注入** 在 Claude Code、Cursor、OpenCode、CodeBuddy、Droid、Pi Agent 原生启用。其他 hook 可用平台通过 sub-agent 内部的 pull-based prelude 替代。
+- **`UserPromptSubmit` / 工作流状态提示** 平台范围与 `SessionStart` 相同，另加启用 hooks 后的 Codex。
+- **Kilo、Antigravity、Devin** 完全没有 hook 原语，行为通过 workflow 文件 + skill 交付。
+
+### Hook 类型
+
+| Hook               | 触发           | 用途                       |
+| ------------------ | -------------- | -------------------------- |
+| `SessionStart`     | 会话开始       | 加载上下文、初始化环境     |
+| `UserPromptSubmit` | 用户提交提示词 | 提示 AI 注意当前任务的状态 |
+| `PreToolUse`       | 工具调用前     | 拦截、修改参数、注入上下文 |
+| `PostToolUse`      | 工具调用后     | 记录活动、触发后续动作     |
+
+Claude Code、Cursor、CodeBuddy、Droid 共享一套 Python hook 布局，事件模型和 CC 兼容（`settings.json` 或 `hooks.json` 引用 Python 脚本）。OpenCode 用 JS 插件（`.opencode/plugins/` 下的 factory 函数），事件语义相同。Pi Agent 用 `.pi/extensions/trellis/index.ts`，不加载 Python hook 文件。Gemini、Qoder、Copilot 使用 hook / prompt 文件但没有 `PreToolUse`。Codex 安装共享的 `UserPromptSubmit` workflow-state hook；保留的 `session-start.py` 是兼容代码，不是默认模型可见启动路径。
+
+### `settings.json` 配置（Claude Code）
+
+在 `.claude/settings.json` 配置 hook：
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.py\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/inject-workflow-state.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Task",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/inject-subagent-context.py\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+说明：
+
+- 每个事件类型是 `{ matcher, hooks }` 块的数组。
+- `matcher`：匹配规则（`"startup"` 匹配会话开始、`"Task"` 匹配 Task 工具调用、`"*"` 匹配任意）。
+- `hooks`：匹配时按顺序执行的命令数组。
+- `$CLAUDE_PROJECT_DIR`：Claude Code 自动展开为项目根。
+- `timeout`：秒，超时则跳过该 hook。
+
+Trellis 默认不安装 Claude Code 的 `statusLine`。新项目不会创建 `.claude/hooks/statusline.py`，也不会在 `.claude/settings.json` 里写入 `statusLine`，`trellis update` 也不会给未开启的项目加上。已经安装过 `statusLine` 的项目在 update 时会保留它。
+
+如需开启，跑 `trellis init --with-statusline`（非 `-y` 的交互式 init 也会问一次，默认否）。它会安装 `.claude/hooks/statusline.py` 并在 `.claude/settings.json` 里加上 `statusLine` 命令。状态栏显示当前任务，以及限额重置倒计时和宽度自适应布局。仅限 Claude Code，不传 flag 就完全不开启，因此不会静默覆盖你的全局 `statusLine` 配置。
+
+### 原生 hook
+
+#### `session-start.py`：上下文加载
+
+**触发**：`SessionStart`。
+
+**行为**：
+
+- 读 `.trellis/.developer` 拿开发者身份。
+- 读 `.trellis/workflow.md` 拿工作流契约。
+- 读 `.trellis/workspace/{name}/index.md` 拿会话历史。
+- 读 `git log` 拿最近提交。
+- 读活跃任务。
+
+**输出**：在会话开头以 system message 的形式把全部上下文注入进去。
+
+#### `inject-workflow-state.py`：工作流状态提示
+
+**触发**：`UserPromptSubmit`。
+
+**行为**：从 `.trellis/workflow.md` 解析所有 `[workflow-state:STATUS]` 块，按当前活跃任务的 `status` 取对应正文，作为本轮的 `<workflow-state>` 前置上下文注入。脚本只做解析，自身不带任何 fallback 文案。当前 status 找不到匹配块时，输出固定一行 `Refer to workflow.md for current step.`，让 AI 自己回去读 workflow 契约。
+
+要改每轮提醒文案，直接编辑 `.trellis/workflow.md` 里对应的 `[workflow-state:STATUS]` 块即可，不用动脚本。
+
+#### `inject-subagent-context.py`：规范注入引擎
+
+**触发**：`PreToolUse`，匹配 `Task` 工具调用。
+
+**行为**：
+
+- 拦截 Task 调用。
+- 按 `subagent_type` 读对应 JSONL（`implement.jsonl` 或 `check.jsonl`）。
+- 读 JSONL 中引用的所有文件。
+- 读取 `prd.md`、存在时的 `design.md`、存在时的 `implement.md`。
+- 组装 sub-agent 的 prompt（spec + task artifacts + 原始指令）。
+
+设计决策：
+
+- 每个 sub-agent 在启动时一次性拿到完整上下文，没有 resume。
+- 只 hook `trellis-*` sub-agent；自定义 sub-agent 要想享受注入，必须自己改这个文件或自建注入逻辑。
+
+#### Pi extension：等价 hook 行为
+
+Pi Agent 不加载 `.py` hook 脚本。Trellis 写入 `.pi/extensions/trellis/index.ts`，用 extension 形式实现同样三件事：
+
+- 会话启动上下文注入
+- workflow-state 面包屑注入
+- sub-agent JSONL 和 task artifact 上下文注入
+
+它还会把 `TRELLIS_CONTEXT_ID` 传给 Bash 命令，让 `task.py start/current/finish` 能解析当前 Pi 会话对应的 `.trellis/.runtime/sessions/<session-key>.json`。
+
+### 编写自定义 hook
+
+Hook 从 stdin 读 JSON 输入，向 stdout 输出 JSON 结果。
+
+**输入格式**（PreToolUse 示例）：
+
+```json
+{
+  "hook_event_name": "PreToolUse",
+  "tool_name": "Task",
+  "tool_input": {
+    "subagent_type": "trellis-implement",
+    "prompt": "..."
+  },
+  "cwd": "/path/to/project"
+}
+```
+
+**输出格式**：
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "PreToolUse",
+    "permissionDecision": "allow",
+    "updatedInput": {
+      "subagent_type": "trellis-implement",
+      "prompt": "modified prompt..."
+    }
+  }
+}
+```
+
+### 示例：自动测试 hook
+
+`.claude/hooks/auto-test.py`：
+
+```python
+#!/usr/bin/env python3
+"""Edit 工具调用后自动跑测试。"""
+
+import json
+import subprocess
+import sys
+
+def main():
+    input_data = json.load(sys.stdin)
+
+    hook_event = input_data.get("hook_event_name", "")
+    tool_name = input_data.get("tool_name", "")
+
+    if hook_event != "PostToolUse" or tool_name != "Edit":
+        sys.exit(0)
+
+    file_path = input_data.get("tool_input", {}).get("file_path", "")
+
+    if not file_path.endswith((".ts", ".tsx")):
+        sys.exit(0)
+
+    result = subprocess.run(
+        ["pnpm", "typecheck"],
+        capture_output=True,
+        timeout=30,
+    )
+
+    if result.returncode != 0:
+        output = {
+            "hookSpecificOutput": {
+                "message": f"TypeCheck failed after editing {file_path}:\n{result.stderr.decode()}"
+            }
+        }
+        print(json.dumps(output))
+
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+在 `settings.json` 注册：
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 .claude/hooks/auto-test.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+---

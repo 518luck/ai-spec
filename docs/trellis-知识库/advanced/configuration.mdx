@@ -1,0 +1,144 @@
+---
+title: '配置 .trellis/config.yaml'
+sidebarTitle: 'config.yaml 配置'
+description: '了解 Trellis 如何读取 .trellis/config.yaml、哪些键最重要，以及更新时如何安全追加新的配置段。'
+---
+
+## 配置 `.trellis/config.yaml`
+
+`.trellis/config.yaml` 是 Trellis 运行时行为的项目级配置文件。它控制 session journal commit、任务生命周期 hook、package 映射，以及 Codex 派发模式。
+
+这个文件应该跟随仓库提交。把它当成团队共享配置，不要放每台机器自己的身份或密钥。每台机器自己的身份放在 `.trellis/.developer`；凭证应该留在环境变量或常规密钥管理工具里。
+
+## 安全编辑
+
+大多数 section 都是可选的。示例保持注释，直到你真的要启用；只编辑项目实际使用的 key。
+
+使用普通 YAML 值：
+
+```yaml
+session_commit_message: 'chore: record journal'
+max_journal_lines: 2000
+session_auto_commit: false
+```
+
+key 缺失时，Trellis 使用内置默认值。`hooks`、`packages`、`codex` 这类嵌套块要保持缩进一致。
+
+<Warning>
+  Hook 命令位于会提交到仓库的项目配置里。不要把 token、API key 或机器相关的绝对路径放进
+  `.trellis/config.yaml`。
+</Warning>
+
+## 当前 key
+
+| Key                      | 默认值                    | 控制内容                                                                                          |
+| ------------------------ | ------------------------- | ------------------------------------------------------------------------------------------------- |
+| `session_commit_message` | `"chore: record journal"` | `add_session.py` 自动提交 journal 和 index 变更时使用的 commit message。                          |
+| `max_journal_lines`      | `2000`                    | 单个 journal 文件的最大行数，超过后 Trellis 轮转到下一个 journal 文件。                           |
+| `session_auto_commit`    | `true`                    | `add_session.py` 和 `task.py archive` 是否自动 stage 并提交 Trellis journal / task archive 变更。 |
+| `hooks`                  | 未设置                    | 任务生命周期事件之后运行的 shell 命令。                                                           |
+| `packages`               | 未设置                    | monorepo、submodule、polyrepo 风格目录的 package 声明。                                           |
+| `default_package`        | 未设置                    | 命令或任务没有指定 package 时使用的 fallback package。                                            |
+| `update.skip`            | 未设置                    | `trellis update` 在常规更新中仍然尊重的旧版更新排除列表。                                         |
+| `codex.dispatch_mode`    | `inline`                  | 仅 Codex 使用：选择主 agent 直接实现，或使用旧的 `trellis-*` sub-agent 派发模式。                 |
+
+### Session recording
+
+`session_commit_message` 和 `max_journal_lines` 用于 session journal 记录：
+
+```yaml
+session_commit_message: 'chore: record journal'
+max_journal_lines: 2000
+```
+
+如果仓库对 Trellis journal commit 有固定 conventional commit 风格，用 `session_commit_message` 调整。用 `max_journal_lines` 控制 `.trellis/workspace/<developer>/journal-N.md` 的大小，避免单个文件过长。
+
+### Session auto-commit
+
+`session_auto_commit` 控制 Trellis 脚本是否为 journal 和 task archive 记账操作触碰 git：
+
+```yaml
+session_auto_commit: false
+```
+
+默认 `true` 保留常规行为：`add_session.py` 和 `task.py archive` 写文件、stage Trellis 变更，并创建记账 commit。当 `.trellis/` 被有意放进 `.gitignore`，或团队希望手动 review 和 commit Trellis 记账变更时，设为 `false`。
+
+可接受的值是 `true`、`false`、`yes`、`no`、`1`、`0`、`on`、`off`（大小写不敏感）。无效值会 fallback 到 `true` 并打印警告。
+
+### 任务生命周期 hooks
+
+`hooks` 在任务生命周期事件之后运行 shell 命令。每条命令都会收到 `TASK_JSON_PATH`，指向当前任务的 `task.json`。
+
+```yaml
+hooks:
+  after_create:
+    - "echo 'Task created'"
+  after_start:
+    - "echo 'Task started'"
+  after_finish:
+    - "echo 'Task finished'"
+  after_archive:
+    - "echo 'Task archived'"
+```
+
+支持的事件是 `after_create`、`after_start`、`after_finish`、`after_archive`。Hook 失败会打印警告，但不会阻塞主任务操作。
+
+### Packages 和 default package
+
+`packages` 为 monorepo 和包含多个工作目录的仓库声明项目结构：
+
+```yaml
+packages:
+  frontend:
+    path: packages/frontend
+  backend:
+    path: packages/backend
+  docs:
+    path: docs-site
+    type: submodule
+  webapp:
+    path: ./webapp
+    git: true
+
+default_package: frontend
+```
+
+git submodule 使用 `type: submodule`。如果某个子目录是独立 git 仓库，常见于 polyrepo 或 meta-repo 布局，使用 `git: true`。
+
+`default_package` 必须匹配 `packages` 下的某个 key。任务或命令没有指定 package 时，Trellis 使用它作为默认值。
+
+### Update skip 兼容性
+
+`update.skip` 仍然支持已有项目继续使用，即使当前模板已经不再包含注释示例：
+
+```yaml
+update:
+  skip:
+    - .claude/commands/
+    - docs-site/
+```
+
+常规 `trellis update` 会把跳过路径排除在模板写入和 safe-file-delete 清理之外。对于你带 `--migrate` 运行的 breaking migration，Trellis 可能会为了完成必要迁移而绕过 `update.skip`，避免项目停在半更新状态；update 命令会在这样做之前打印警告。
+
+### Codex dispatch mode
+
+`codex.dispatch_mode` 只被 Codex workflow 读取。其他平台会忽略它。
+
+```yaml
+codex:
+  dispatch_mode: inline # or "sub-agent" to dispatch trellis-* sub-agents
+```
+
+`inline` 让实现和检查都留在主 Codex agent 中。`sub-agent` 则选择旧派发模式，由主 agent 启动 `trellis-implement`、`trellis-check` 或 `trellis-research` sub-agent。
+
+默认值是 `inline`，因为 Codex sub-agent 运行在隔离 turn 里，不能继承父会话的完整任务上下文。只有明确需要旧的拆分模型时才使用 `sub-agent`。
+
+## 更新行为
+
+`trellis init` 会为新项目写入当前模板。对已有项目，`trellis update` 会保留 `.trellis/config.yaml` 的本地编辑，而不是整文件覆盖。
+
+当某个版本新增 config section 时，migration manifest 可以通过 `configSectionsAdded` 声明它。`trellis update` 期间，Trellis 会检查目标文件里是否已经出现配置的 sentinel 文本。如果 sentinel 不存在，Trellis 会从打包模板中抽取匹配 section，并追加到 `.trellis/config.yaml` 末尾。
+
+这条追加路径是幂等的，并保留已有配置值。`session_auto_commit` section 就是这样交付给已有项目的：如果缺少 `session_auto_commit:`，`trellis update` 追加注释掉的 section；如果已经存在，则跳过。
+
+更新后，检查所有被追加的注释 section，只取消注释你要启用的 key。
