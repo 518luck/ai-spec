@@ -154,14 +154,15 @@ export function RuleTableContainer({
 		}
 	}, [selectedIds, mutate]);
 
-	// 每行约 52px，表头 40px，固定高度内由 ScrollArea 处理溢出
-	const TABLE_HEIGHT = 540;
+	// 每行约 52px，表头 40px；用 clamp 让高度随行数变化，但不超出屏幕
+	const contentHeight = Math.min(rules.length, pageSize) * 52 + 40;
+	const tableMinHeight = Math.max(540, contentHeight);
 
 	return (
 		<>
 			<div
-				className="flex flex-col overflow-hidden rounded-lg border"
-				style={{ height: TABLE_HEIGHT }}
+				className="flex flex-col overflow-hidden rounded-lg border transition-[height] duration-300 ease-out"
+				style={{ height: `clamp(540px, ${tableMinHeight}px, calc(100dvh - 13rem))` }}
 			>
 				<RuleTable
 					rules={rules}
