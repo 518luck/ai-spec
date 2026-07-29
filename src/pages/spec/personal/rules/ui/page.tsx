@@ -89,7 +89,14 @@ export function PersonalRulesPage({
 						/>
 					</div>
 				</div>
-				<RuleList folderId={folderId} spaceId={spaceId} tagIds={tagIds} q={q} view={view} />
+				<RuleList
+					folderId={folderId}
+					spaceId={spaceId}
+					tagIds={tagIds}
+					q={q}
+					view={view}
+					onCreate={handleCreateRule}
+				/>
 			</PageWidthWrapper>
 		</ToolbarPageShell>
 	);

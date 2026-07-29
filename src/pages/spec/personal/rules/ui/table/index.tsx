@@ -30,6 +30,7 @@ type RuleTableContainerProps = {
 	spaceId?: string;
 	tagIds?: string;
 	q?: string;
+	onCreate?: () => void;
 };
 
 // 表格容器：负责数据请求和分页逻辑
@@ -38,6 +39,7 @@ export function RuleTableContainer({
 	spaceId,
 	tagIds,
 	q,
+	onCreate,
 }: RuleTableContainerProps): JSX.Element {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -75,7 +77,7 @@ export function RuleTableContainer({
 			className="flex flex-col overflow-hidden rounded-lg border"
 			style={{ height: TABLE_HEIGHT }}
 		>
-			<RuleTable rules={rules} isLoading={isLoading} q={q} />
+			<RuleTable rules={rules} isLoading={isLoading} q={q} onCreate={onCreate} />
 			<PaginationBar
 				page={page}
 				total={total}

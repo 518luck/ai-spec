@@ -29,7 +29,11 @@ const DEMOS: DemoEntry[] = [
 		description: "图标卡片飘进挂着页面标识的文件夹",
 		Content: EmptyFolderWithPageIcon,
 	},
-	{ title: "扫描搜寻", description: "放大镜来回扫过虚影文档，最后冒出问号", Content: AnimatedEmptySearch },
+	{
+		title: "扫描搜寻",
+		description: "放大镜来回扫过虚影文档，最后冒出问号",
+		Content: AnimatedEmptySearch,
+	},
 	{ title: "逐行书写", description: "笔尖沿着文档一行行写出内容再重来", Content: EmptyWriting },
 	{ title: "纸飞机入箱", description: "纸飞机滑一道弧线落进收件托盘", Content: EmptyInbox },
 	{ title: "呼吸柱图", description: "幽灵柱起伏呼吸，虚线均线轻轻漂浮", Content: EmptyChart },

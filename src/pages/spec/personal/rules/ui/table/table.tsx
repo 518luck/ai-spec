@@ -11,7 +11,7 @@ import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
-import { AnimatedEmptyFolder, AnimatedEmptySearch } from "@/widgets/empty-state";
+import { AnimatedEmptySearch, EmptyFolderAction } from "@/widgets/empty-state";
 import { itemTransition, ROW_ITEM_MOTION } from "../../lib/list-motion";
 import { TableActions } from "../table-actions";
 
@@ -19,9 +19,10 @@ type RuleTableProps = {
 	rules: RuleListItemVo[];
 	isLoading: boolean;
 	q?: string;
+	onCreate?: () => void;
 };
 
-export function RuleTable({ rules, isLoading, q }: RuleTableProps): JSX.Element {
+export function RuleTable({ rules, isLoading, q, onCreate }: RuleTableProps): JSX.Element {
 	// 加载状态
 	if (isLoading) {
 		return (
@@ -44,10 +45,10 @@ export function RuleTable({ rules, isLoading, q }: RuleTableProps): JSX.Element 
 
 		return (
 			<div className="flex h-full items-center justify-center">
-				<AnimatedEmptyFolder
+				<EmptyFolderAction
 					icon={<Icons.rulesLibrary />}
-					title="还没有规约"
-					description="点右上角「新增规约」写一条吧"
+					actionLabel="新增规约"
+					onAction={onCreate}
 				/>
 			</div>
 		);

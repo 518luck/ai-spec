@@ -12,7 +12,7 @@ import type { RuleListVo } from "@/shared/lib/zod/schemas/rule";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
-import { AnimatedEmptyFolder, AnimatedEmptySearch } from "@/widgets/empty-state";
+import { AnimatedEmptySearch, EmptyFolderAction } from "@/widgets/empty-state";
 import { RuleGrid } from "./grid";
 
 // 卡片无限滚动每页条数
@@ -23,6 +23,7 @@ type RuleGridContainerProps = {
 	spaceId?: string;
 	tagIds?: string;
 	q?: string;
+	onCreate?: () => void;
 };
 
 // > 卡片容器：负责无限滚动数据请求和加载状态
@@ -31,6 +32,7 @@ export function RuleGridContainer({
 	spaceId,
 	tagIds,
 	q,
+	onCreate,
 }: RuleGridContainerProps): JSX.Element {
 	const getKey = (_pageIndex: number, previousPageData: RuleListVo | null) => {
 		if (previousPageData && !previousPageData.hasMore) return null;
@@ -74,10 +76,10 @@ export function RuleGridContainer({
 
 		return (
 			<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
-				<AnimatedEmptyFolder
+				<EmptyFolderAction
 					icon={<Icons.rulesLibrary />}
-					title={folderId || tagIds ? "当前筛选条件下暂无规约" : "还没有规约"}
-					description={folderId || tagIds ? "试试其他筛选条件" : "点右上角「新增规约」写一条吧"}
+					actionLabel="新增规约"
+					onAction={onCreate}
 				/>
 			</div>
 		);

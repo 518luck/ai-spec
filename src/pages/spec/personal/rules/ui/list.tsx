@@ -17,18 +17,38 @@ type RuleListProps = {
 	tagIds?: string;
 	q?: string;
 	view: RuleView;
+	onCreate?: () => void;
 };
 
-export function RuleList({ folderId, spaceId, tagIds, q, view }: RuleListProps): JSX.Element {
+export function RuleList({
+	folderId,
+	spaceId,
+	tagIds,
+	q,
+	view,
+	onCreate,
+}: RuleListProps): JSX.Element {
 	return (
 		<AnimatePresence mode="wait">
 			{view === "table" ? (
 				<motion.div key="table" {...LIST_SWITCH_MOTION}>
-					<RuleTableContainer folderId={folderId} spaceId={spaceId} tagIds={tagIds} q={q} />
+					<RuleTableContainer
+						folderId={folderId}
+						spaceId={spaceId}
+						tagIds={tagIds}
+						q={q}
+						onCreate={onCreate}
+					/>
 				</motion.div>
 			) : (
 				<motion.div key="grid" className="flex flex-1 flex-col" {...LIST_SWITCH_MOTION}>
-					<RuleGridContainer folderId={folderId} spaceId={spaceId} tagIds={tagIds} q={q} />
+					<RuleGridContainer
+						folderId={folderId}
+						spaceId={spaceId}
+						tagIds={tagIds}
+						q={q}
+						onCreate={onCreate}
+					/>
 				</motion.div>
 			)}
 		</AnimatePresence>

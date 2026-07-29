@@ -59,14 +59,14 @@ type AnimatedEmptyFolderProps = {
 	description?: string;
 };
 
-// > 动画空状态文件夹：带有飘落动画效果的空状态组件
+// > 动画空状态文件夹：飘落归档 SVG 动画 + 标题文案
 export function AnimatedEmptyFolder({
 	icon,
-	title = "文件夹是空的",
-	description = "把规约拖进来，或新建一条",
+	title,
+	description,
 }: AnimatedEmptyFolderProps): JSX.Element {
 	return (
-		<div className="flex flex-col items-center gap-4 text-center">
+		<div className="flex flex-col items-center text-center">
 			<motion.svg
 				className="size-24 text-muted-foreground"
 				viewBox="0 0 64 64"
@@ -124,13 +124,13 @@ export function AnimatedEmptyFolder({
 			</motion.svg>
 
 			<motion.div
-				className="flex flex-col gap-1"
+				className="flex flex-col items-center gap-1"
 				initial={{ opacity: 0, y: 8 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ ...ENTER_TRANSITION, delay: TEXT_DELAY }}
 			>
-				<p className="font-medium text-sm">{title}</p>
-				<p className="text-muted-foreground text-xs">{description}</p>
+				{title ? <p className="font-medium text-sm">{title}</p> : null}
+				{description ? <p className="text-muted-foreground text-xs">{description}</p> : null}
 			</motion.div>
 		</div>
 	);
