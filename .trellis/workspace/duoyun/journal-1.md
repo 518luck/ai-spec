@@ -108,3 +108,26 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 5: 表格列宽锁定 + 高度自适应 + 分页栏增强收尾
+
+**Date**: 2026-07-30
+**Task**: 表格列宽锁定 + 高度自适应 + 分页栏增强收尾
+**Branch**: `main`
+
+### Summary
+
+1) colgroup 锁定列宽解决全选时列间距变化 2) 表格高度从固定 540px 改为 clamp(540, content, 100dvh-13rem) + transition 动画 3) h-full 改为 flex-1 修复高度链断裂 4) 首页按钮换为 chevronLeftPipe 图标 5) page.tsx 剥离 pageSize 参数修复 ZodError
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3d13f9a` | (see git log) |
+| `1c46c20` | (see git log) |
+| `31d919f` | (see git log) |
+
+### Status
+
+[OK] **Completed**
