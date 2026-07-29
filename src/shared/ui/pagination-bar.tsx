@@ -2,6 +2,7 @@
 
 // # 分页栏：每页条数选择器 + 范围摘要 + 首页/上一页/下一页按钮
 
+import { AnimatePresence, motion } from "motion/react";
 import type { JSX } from "react";
 
 import { Button } from "@/shared/ui/button";
@@ -72,12 +73,21 @@ export function PaginationBar({
 				第 {start}-{end} 条，共 {total} 条
 			</span>
 			<div className="flex items-center gap-2">
-				{/* // @ 首页按钮：翻到后面时一键回到首页 */}
-				{onFirstPage && page > 0 && (
-					<Button variant="outline" size="sm" onClick={onFirstPage} aria-label="首页">
-						<Icons.chevronLeftPipe data-icon="inline-start" />
-					</Button>
-				)}
+				{/* // @ 首页按钮：翻到后面时带动画出现/消失 */}
+				<AnimatePresence>
+					{onFirstPage && page > 0 && (
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.2 }}
+						>
+							<Button variant="outline" size="sm" onClick={onFirstPage} aria-label="首页">
+								<Icons.chevronLeftPipe data-icon="inline-start" />
+							</Button>
+						</motion.div>
+					)}
+				</AnimatePresence>
 				{/* // @ 每页条数选择器 */}
 				{showPageSizeSelector && (
 					<Select
