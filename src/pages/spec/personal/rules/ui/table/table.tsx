@@ -76,22 +76,23 @@ export function RuleTable({
 
 	// 数据列表
 	return (
-			<div className="flex flex-1 min-h-0 flex-col">
+		<div className="flex min-h-0 flex-1 flex-col">
 			<ScrollArea orientation="horizontal" className="min-h-0 flex-1" scrollbarClassName="mx-4">
 				<Table className="table-fixed" containerClassName="overflow-x-visible">
-						{/* // ! 用 colgroup 锁定列宽：表头在普通/批量模式间切换时，列宽不受影响 */}
-						<colgroup>
-							<col className="w-10" />
-							<col className="w-48" />
-							<col className="w-48" />
-							<col />
-							<col className="w-16" />
-						</colgroup>
-						{/* // @ 表头切换：选中时批量操作栏替换列名，进出均带动画 */}
+					{/* // ! 用 colgroup 锁定列宽：表头在普通/批量模式间切换时，列宽不受影响 */}
+					<colgroup>
+						<col className="w-10" />
+						<col className="w-48" />
+						<col className="w-48" />
+						<col />
+						<col className="w-16" />
+					</colgroup>
+					{/* // @ 表头切换：选中时批量操作栏替换列名，进出均带动画 */}
 					<AnimatePresence mode="wait">
 						{hasSelection ? (
 							<motion.thead
 								key="batch"
+								className="sticky top-0 z-10"
 								initial={{ opacity: 0 }}
 								animate={{ opacity: 1 }}
 								exit={{ opacity: 0 }}
@@ -123,7 +124,7 @@ export function RuleTable({
 						) : (
 							<motion.thead
 								key="header"
-								className="bg-muted"
+								className="sticky top-0 z-10 bg-muted"
 								initial={{ opacity: 0 }}
 								animate={{ opacity: 1 }}
 								exit={{ opacity: 0 }}
