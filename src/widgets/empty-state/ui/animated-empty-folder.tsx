@@ -81,28 +81,51 @@ export function AnimatedEmptyFolder({
 				animate={{ opacity: 1, y: 0 }}
 				transition={ENTER_TRANSITION}
 			>
+				{/* 雾化弥散遮罩：卡片从上方雾气中浮现，高斯模糊边缘消除硬切感 */}
+				<defs>
+					<linearGradient id="folderFadeTop" x1="0" y1="0" x2="0" y2="1">
+						<stop offset="0%" stopColor="white" stopOpacity="0" />
+						<stop offset="60%" stopColor="white" stopOpacity="1" />
+					</linearGradient>
+					<filter id="diffuseBlur" x="-30%" y="-30%" width="160%" height="160%">
+						<feGaussianBlur in="SourceGraphic" stdDeviation="3" />
+					</filter>
+					<mask id="folderFadeMask">
+						<rect
+							x="0"
+							y="0"
+							width="64"
+							height="32"
+							fill="url(#folderFadeTop)"
+							filter="url(#diffuseBlur)"
+						/>
+					</mask>
+				</defs>
+
 				{/* 文件夹后片：背板与标签耳朵 */}
 				<path d="M10 45V20a3 3 0 0 1 3-3h9l4 4h25a3 3 0 0 1 3 3v21a3 3 0 0 1-3 3H13a3 3 0 0 1-3-3Z" />
 
 				{/* // > 图标卡片画在后片之后、前片之前：落到夹口以下即被前盖自然遮住，看起来像"进去了" */}
-				{CARDS.map(({ x, sway, Glyph }, index) => (
-					<motion.g
-						key={x}
-						initial={{ opacity: 0 }}
-						animate={{
-							y: [-18, -6, 6, 18, 30],
-							x: [0, -4 * sway, 4 * sway, -2 * sway, 0],
-							rotate: [0, -10 * sway, 10 * sway, -6 * sway, 0],
-							opacity: [0, 1, 1, 1, 0],
-						}}
-						transition={cardFallTransition(index)}
-						style={{ transformBox: "fill-box", transformOrigin: "center" }}
-					>
-						{/* 卡片底板带不透明底色，飘过背板边线时不会透出底下的描边 */}
-						<rect className="fill-background" x={x} y={2} width={12} height={14} rx={2} />
-						<Glyph x={x} />
-					</motion.g>
-				))}
+				<g mask="url(#folderFadeMask)">
+					{CARDS.map(({ x, sway, Glyph }, index) => (
+						<motion.g
+							key={x}
+							initial={{ opacity: 0 }}
+							animate={{
+								y: [-18, -6, 6, 18, 30],
+								x: [0, -4 * sway, 4 * sway, -2 * sway, 0],
+								rotate: [0, -10 * sway, 10 * sway, -6 * sway, 0],
+								opacity: [0, 1, 1, 1, 0],
+							}}
+							transition={cardFallTransition(index)}
+							style={{ transformBox: "fill-box", transformOrigin: "center" }}
+						>
+							{/* 卡片底板带不透明底色，飘过背板边线时不会透出底下的描边 */}
+							<rect className="fill-background" x={x} y={2} width={12} height={14} rx={2} />
+							<Glyph x={x} />
+						</motion.g>
+					))}
+				</g>
 
 				{/* 文件夹前片：不透明盖板遮住落入的卡片，与页面标识图标作为整体以底边为支点轻微开合呼吸 */}
 				<motion.g
