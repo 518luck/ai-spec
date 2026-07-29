@@ -131,3 +131,24 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 6: 表头粘性定位
+
+**Date**: 2026-07-30
+**Task**: 表头粘性定位
+**Branch**: `main`
+
+### Summary
+
+两个 thead 添加 sticky top-0 z-10，ScrollArea 内滚动时表头固定在顶部不跟随内容滚动
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0a47b55` | (see git log) |
+
+### Status
+
+[OK] **Completed**
