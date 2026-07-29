@@ -57,7 +57,7 @@ const lineHighlight = (index: number): { opacity: number[]; times: number[] } =>
 	};
 };
 
-export function EmptySearch(): JSX.Element {
+export function AnimatedEmptySearch(): JSX.Element {
 	return (
 		<div className="flex flex-col items-center gap-4 text-center">
 			<svg

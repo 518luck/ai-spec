@@ -7,12 +7,11 @@ import { motion } from "motion/react";
 import type { JSX } from "react";
 
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
-import { AnimatedEmptyFolder } from "@/shared/ui/animated-empty-folder";
-import { EmptySearch } from "@/shared/ui/animated-empty-search";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui/table";
+import { AnimatedEmptyFolder, AnimatedEmptySearch } from "@/widgets/empty-state";
 import { itemTransition, ROW_ITEM_MOTION } from "../../lib/list-motion";
 import { TableActions } from "../table-actions";
 
@@ -38,7 +37,7 @@ export function RuleTable({ rules, isLoading, q }: RuleTableProps): JSX.Element 
 		if (q) {
 			return (
 				<div className="flex h-full items-center justify-center">
-					<EmptySearch />
+					<AnimatedEmptySearch />
 				</div>
 			);
 		}

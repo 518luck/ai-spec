@@ -9,11 +9,10 @@ import useSWRInfinite from "swr/infinite";
 import { getRules } from "@/entities/rule";
 import { useInfiniteLoad } from "@/shared/hooks";
 import type { RuleListVo } from "@/shared/lib/zod/schemas/rule";
-import { AnimatedEmptyFolder } from "@/shared/ui/animated-empty-folder";
-import { EmptySearch } from "@/shared/ui/animated-empty-search";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
+import { AnimatedEmptyFolder, AnimatedEmptySearch } from "@/widgets/empty-state";
 import { RuleGrid } from "./grid";
 
 // 卡片无限滚动每页条数
@@ -68,7 +67,7 @@ export function RuleGridContainer({
 		if (q) {
 			return (
 				<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
-					<EmptySearch />
+					<AnimatedEmptySearch />
 				</div>
 			);
 		}
