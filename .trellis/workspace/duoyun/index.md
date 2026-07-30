@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 10
+- **Total Sessions**: 11
 - **Last Active**: 2026-07-30
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~244 | Active |
+| `journal-1.md` | ~267 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 11 | 2026-07-30 | 编辑器状态栏布局调整与标签选择器重构 | `9f1b657`, `de8eced`, `8c6cd31` | `main` |
 | 10 | 2026-07-30 | 规约表格新增标签列与更新时间列 | `57c897a`, `89c0823` | `main` |
 | 9 | 2026-07-30 | 规约表格 Data Table 重构与滚动布局 | `0c01a31`, `883623b`, `e0a8aa6`, `cdbd113` | `main` |
 | 8 | 2026-07-30 | 规则表格滚动布局与细滚动条拆分 | `3afdd73`, `7eabe39` | `main` |

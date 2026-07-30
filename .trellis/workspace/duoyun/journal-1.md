@@ -242,3 +242,26 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 11: 编辑器状态栏布局调整与标签选择器重构
+
+**Date**: 2026-07-30
+**Task**: 编辑器状态栏布局调整与标签选择器重构
+**Branch**: `main`
+
+### Summary
+
+规约编辑器状态栏三处布局调整：(1) FolderCombobox 去掉 iconOnly 改为展开式显示图标+名称，加 min-w-32 max-w-48 shrink 宽度约束避免长名撑爆；(2) TagSelectTrigger 新增 triggerPosition prop（start/end），用 flex-row-reverse 翻转 +按钮与 chips 的左右顺序，编辑器页传 end 让 chips 在左、按钮贴右，默认 start 保持其他 4 个调用方不变；(3) 将三元表达式重构为 CVA 声明式变体 tagSelectTriggerVariants，为未来多维变体铺路。另：滚动条 thumbSmooth 优化尝试 @property + transition-[height] 失败（导致滚动条消失已回退），改为发现项目已有 useThumbSmooth hook（3 个页面在用），但规约页双视图数据下沉导致照抄困难，用户最终决定不优化。新增规约跳转卡顿定位为 dev 按需编译 CodeMirror 的开销，生产构建不受影响。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9f1b657` | (see git log) |
+| `de8eced` | (see git log) |
+| `8c6cd31` | (see git log) |
+
+### Status
+
+[OK] **Completed**
