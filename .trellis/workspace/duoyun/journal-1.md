@@ -196,3 +196,27 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 9: 规约表格 Data Table 重构与滚动布局
+
+**Date**: 2026-07-30
+**Task**: 规约表格 Data Table 重构与滚动布局
+**Branch**: `main`
+
+### Summary
+
+将规约列表改为 TanStack + shadcn Data Table（columns/flexRender）；表头与 body 分表，仅 body 纵向滚动且最少 10 行；名称/文件夹截断 hover 全文；空态/加载与有数据共用外壳并同高居中。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `0c01a31` | (see git log) |
+| `883623b` | (see git log) |
+| `e0a8aa6` | (see git log) |
+| `cdbd113` | (see git log) |
+
+### Status
+
+[OK] **Completed**
