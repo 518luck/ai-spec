@@ -5,6 +5,7 @@
 // > 受控模式：传 value/onChange，由父组件管理选中状态
 // > URL 模式：不传 value/onChange，自动读写 ?tagIds=（导航栏筛选用）
 
+import { cva } from "class-variance-authority";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR from "swr";
@@ -21,6 +22,19 @@ import { TagCombobox } from "./tag-combobox";
 
 // URL 参数名：与 TagCombobox 内部一致，URL 模式下读写已选 tag id 列表
 const TAG_IDS_PARAM = "tagIds";
+
+// 外层容器变体：triggerPosition 控制 + 按钮与 chips 的左右顺序（DOM 不变，仅翻转主轴方向）
+const tagSelectTriggerVariants = cva("flex items-center gap-1.5", {
+	variants: {
+		triggerPosition: {
+			start: "",
+			end: "flex-row-reverse",
+		},
+	},
+	defaultVariants: {
+		triggerPosition: "start",
+	},
+});
 
 type TagSelectTriggerProps = {
 	// 标签归属的资源类型（如 "promptRecord"），透传给内嵌面板
@@ -45,6 +59,8 @@ type TagSelectTriggerProps = {
 	showAddButton?: boolean;
 	// chips 横滚遮罩颜色：默认 var(--background)；放在带主题色背景的容器（如编辑器标题栏）时传入对应颜色保持一致
 	maskColor?: string;
+	// 触发按钮位置：默认 start（按钮在左、chips 在右）；end 时翻转为 chips 在左、按钮在右
+	triggerPosition?: "start" | "end";
 	// 外层 className（控制最大宽度等）
 	className?: string;
 };
@@ -62,6 +78,7 @@ export function TagSelectTrigger({
 	iconOnly = false,
 	showAddButton = true,
 	maskColor,
+	triggerPosition = "start",
 	className,
 }: TagSelectTriggerProps): JSX.Element | null {
 	const router = useRouter();
@@ -158,7 +175,7 @@ export function TagSelectTrigger({
 	if (hideWhenEmpty && chips.length === 0) return null;
 
 	return (
-		<div className={cn("flex items-center gap-1.5", className)}>
+		<div className={cn(tagSelectTriggerVariants({ triggerPosition }), className)}>
 			{/* // 添加标签按钮：打开标签面板，搜索/勾选/新建；固定在最左侧，避免选中 chips 后整体布局推动 */}
 			{showAddButton && (
 				<Popover open={open} onOpenChange={setOpen}>

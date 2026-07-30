@@ -128,13 +128,14 @@ export function RuleEditorForm({
 					<EditableName value={name} fallback={headerTitle} onCommit={handleNameCommit} />
 					{/* // @ 编辑器快捷栏：格式化/显示设置/预览切换，作用于 editorRef 指向的 CodeMirror */}
 					{mounted && <QuickToolbar editorRef={editorRef} isExpanded />}
-					{/* // @ 标签：紧凑 chips 模式，未选时只显示 + 按钮 */}
+					{/* // @ 标签：chips 在左、+ 按钮贴右；紧凑 chips 模式，未选时只显示 + 按钮 */}
 					<TagSelectTrigger
 						resourceType="rules"
 						value={tags}
 						onChange={setTags}
 						triggerVariant="ghost"
 						iconOnly
+						triggerPosition="end"
 						className="min-w-40 max-w-64"
 					/>
 					{/* // @ 文件夹：展开式显示图标 + 名称，限制宽度避免长名撑爆状态栏 */}
