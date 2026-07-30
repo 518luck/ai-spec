@@ -46,14 +46,22 @@ export function RuleCard({ rule }: RuleCardProps): JSX.Element {
 			onClick={handleCopy}
 			clickAriaLabel="复制"
 			isPending={isCopying}
-			// > 底部 hover 遮罩的操作：编辑（跳编辑页）+ 删除（二次确认）
+			// > 底部 hover 遮罩的操作：查看详情（跳详情页）+ 编辑（跳编辑页）+ 删除（二次确认）
 			actions={
 				<>
 					<Button
 						variant="ghost"
 						size="icon-sm"
+						aria-label="查看详情"
+						onClick={() => router.push(`/spec/personal/rules/${rule.id}`)}
+					>
+						<Icons.eye className="size-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon-sm"
 						aria-label="编辑"
-						onClick={() => router.push(`/spec/personal/rules/${rule.id}/edit`)}
+						onClick={() => router.push(`/spec/personal/rules/${rule.id}?edit=1`)}
 					>
 						<Icons.pencil className="size-4" />
 					</Button>

@@ -6,8 +6,7 @@
 
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
-import type { JSX } from "react";
-import { useEffect, useRef, useState } from "react";
+import { type JSX, type ReactNode, useEffect, useRef, useState } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import {
 	extractTitle,
@@ -48,6 +47,10 @@ type RuleEditorFormProps = {
 	onSave: (payload: RuleEditorPayload) => Promise<boolean>;
 	// 保存按钮文案：创建/保存
 	submitLabel: string;
+	// 是否默认进预览态（详情页用）；默认 false（编辑/创建进编辑态）
+	initialPreview?: boolean;
+	// 顶部状态栏右侧的额外操作槽（详情页放「编辑」跳转按钮）
+	headerAction?: ReactNode;
 };
 
 // > 规约编辑表单：顶部状态栏内聚 name/folder/tags 状态，父组件只管数据获取和落库
@@ -57,6 +60,8 @@ export function RuleEditorForm({
 	initialValues,
 	onSave,
 	submitLabel,
+	initialPreview = false,
+	headerAction,
 }: RuleEditorFormProps): JSX.Element {
 	const router = useRouter();
 	const [name, setName] = useState(initialValues?.name ?? "");
@@ -71,13 +76,15 @@ export function RuleEditorForm({
 	const editorRef = useRef<ReactCodeMirrorRef>(null);
 
 	const resetView = useEditorStore((s) => s.resetView);
+	const setPreview = useEditorStore((s) => s.setPreview);
 	// ! 快捷栏顺序存在 localStorage，服务端取不到；挂载后再渲染，避免 hydration 不一致
 	const mounted = useMounted();
 
-	// 进页面重置编辑器运行态（isPreview/activeFormats），避免带着上次残留的预览模式打开
+	// 进页面初始化编辑器运行态：详情页默认预览，其余（编辑/创建）重置为编辑态
 	useEffect(() => {
-		resetView();
-	}, [resetView]);
+		if (initialPreview) setPreview(true);
+		else resetView();
+	}, [initialPreview, setPreview, resetView]);
 
 	// 返回上一页
 	const handleBack = (): void => {
@@ -146,6 +153,7 @@ export function RuleEditorForm({
 					/>
 					{/* // @ 编辑器快捷栏：格式化/显示设置/预览切换，作用于 editorRef 指向的 CodeMirror */}
 					{mounted && <QuickToolbar editorRef={editorRef} isExpanded />}
+					{headerAction}
 					<Button size="sm" disabled={isSaving} onClick={handleSubmit}>
 						{isSaving ? `${submitLabel}中...` : submitLabel}
 					</Button>

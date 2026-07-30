@@ -17,11 +17,15 @@ import {
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { RuleEditorForm, type RuleEditorPayload } from "./rule-editor-form";
 
+// 模式：view=详情（默认预览态），edit=编辑（默认编辑态）
+type RulePageMode = "view" | "edit";
+
 type EditRulePageProps = {
 	id: string;
+	mode?: RulePageMode;
 };
 
-export function EditRulePage({ id }: EditRulePageProps): JSX.Element {
+export function EditRulePage({ id, mode = "edit" }: EditRulePageProps): JSX.Element {
 	const router = useRouter();
 	// 拉取规约详情用于回填
 	const { data: rule, isLoading } = useSWR(["rule", id], () => getRule(id));
@@ -53,10 +57,13 @@ export function EditRulePage({ id }: EditRulePageProps): JSX.Element {
 		);
 	}
 
+	const isView = mode === "view";
+
 	return (
 		<RuleEditorForm
-			title="编辑规约"
+			title={isView ? "查看规约" : "编辑规约"}
 			submitLabel="保存"
+			initialPreview={isView}
 			initialValues={{
 				name: rule.name,
 				content: rule.content,

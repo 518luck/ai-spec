@@ -26,7 +26,7 @@ export function TableActions({ rule }: TableActionsProps): JSX.Element {
 
 	// 跳转到编辑页面
 	const handleEdit = (): void => {
-		router.push(`/spec/personal/rules/${rule.id}/edit`);
+		router.push(`/spec/personal/rules/${rule.id}?edit=1`);
 	};
 
 	return (

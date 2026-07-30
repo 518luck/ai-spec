@@ -4,6 +4,7 @@
 // > 选择 / 名称 / 文件夹 / 标签 / 预览 / 更新时间 / 操作；名称与文件夹截断时 hover 出全文
 
 import type { ColumnDef } from "@tanstack/react-table";
+import Link from "next/link";
 import { TagChip } from "@/features/tag-combobox";
 import { formatRelativeTime } from "@/shared/lib/format-relative-time";
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
@@ -39,10 +40,15 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 	{
 		accessorKey: "name",
 		header: "名称",
-		// 收窄名称列，超长靠 TruncatedTooltip 看全文
+		// 收窄名称列，超长靠 TruncatedTooltip 看全文；点名称进详情（预览态）
 		size: 160,
 		cell: ({ row }) => (
-			<TruncatedTooltip text={String(row.getValue("name") ?? "")} className="font-medium" />
+			<Link
+				href={`/spec/personal/rules/${row.original.id}`}
+				className="block min-w-0 font-medium text-foreground hover:text-primary hover:underline"
+			>
+				<TruncatedTooltip text={String(row.getValue("name") ?? "")} />
+			</Link>
 		),
 	},
 	{

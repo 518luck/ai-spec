@@ -39,6 +39,8 @@ type EditorState = {
 	toggleDisplay: (id: string) => void;
 	// 切预览模式（编辑↔预览）；QT 点点点菜单 preview 项调用
 	togglePreview: () => void;
+	// 直接设预览态（不依赖当前态）；详情页默认进预览时调用，比 toggle 可靠
+	setPreview: (preview: boolean) => void;
 	// 切某工具是否在快捷栏；QT 点点点菜单 Checkbox（增删快捷项）调用
 	toggleTool: (id: string) => void;
 	// 拖拽排序后的新顺序（不可见项追加末尾）；QT 胶囊栏 onReorder 调用
@@ -68,6 +70,7 @@ export const useEditorStore = create<EditorState>()(
 					},
 				})),
 			togglePreview: () => set((state) => ({ isPreview: !state.isPreview })),
+			setPreview: (preview) => set({ isPreview: preview }),
 			toggleTool: (id) =>
 				set((state) => {
 					const tools = state.activeTools;
