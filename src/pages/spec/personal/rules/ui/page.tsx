@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
 import { startTransition, useOptimistic } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
-import { RuleSpaceCombobox } from "@/features/rule-space-combobox";
 import { SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
 import { useHotkey } from "@/shared/hooks";
@@ -17,6 +16,7 @@ import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
 import { RuleFilterTrigger } from "./rule-filter-trigger";
 import { RuleLayoutTrigger, type RuleView } from "./rule-layout-trigger";
+import { RuleSpaceCombobox } from "./rule-space-combobox";
 
 // URL 参数名；缺省或非法值一律回落表格
 const RULE_VIEW_PARAM = "view";

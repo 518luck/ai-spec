@@ -14,7 +14,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { Icons } from "@/shared/ui/icons";
-import { DeleteRuleDialog } from "./delete-rule-dialog";
+import { DeleteRuleDialog } from "../delete-rule-dialog";
 
 type TableActionsProps = {
 	rule: RuleListItemVo;

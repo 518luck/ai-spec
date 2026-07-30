@@ -25,7 +25,7 @@ import { EmptyAction } from "@/widgets/empty-state";
 import { itemTransition, ROW_ITEM_MOTION } from "../../lib/list-motion";
 
 // 单行高度（TableCell p-2 + 行内内容 + border-b）
-const TABLE_ROW_HEIGHT = 41;
+const TABLE_ROW_HEIGHT = 45;
 // body 最少撑满默认 10 条；空态/加载/有数据共用，避免高度跳变
 const BODY_MIN_HEIGHT = TABLE_ROW_HEIGHT * 10;
 // 表头约 40px、分页约 49px，给 body 留出视口上限

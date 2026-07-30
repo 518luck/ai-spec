@@ -11,7 +11,7 @@ import { Checkbox } from "@/shared/ui/checkbox";
 import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { TruncatedTooltip } from "@/shared/ui/truncated-tooltip";
-import { TableActions } from "../table-actions";
+import { TableActions } from "./table-actions";
 
 // 规约列表列：选择列 + 业务列 + 行操作
 export const columns: ColumnDef<RuleListItemVo>[] = [
