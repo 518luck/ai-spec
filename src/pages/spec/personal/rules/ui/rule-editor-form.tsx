@@ -137,14 +137,13 @@ export function RuleEditorForm({
 						iconOnly
 						className="min-w-40 max-w-64"
 					/>
-					{/* // @ 文件夹：图标模式，hover 显示文件夹名 */}
+					{/* // @ 文件夹：展开式显示图标 + 名称，限制宽度避免长名撑爆状态栏 */}
 					<FolderCombobox
 						resourceType="rules"
 						spaceId={spaceId}
 						value={folderId}
 						onChange={setFolderId}
-						iconOnly
-						className="shrink-0"
+						className="min-w-32 max-w-48 shrink"
 					/>
 					<Button size="sm" disabled={isSaving} onClick={handleSubmit}>
 						{isSaving ? `${submitLabel}中...` : submitLabel}
