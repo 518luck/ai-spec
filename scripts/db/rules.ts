@@ -2,13 +2,20 @@ import "dotenv/config";
 
 import prisma from "@/shared/db";
 
+// # 规约填充脚本：生成 200 条覆盖正常 + 边缘场景的测试规约
+//
+// 数据分两类：
+//   1. 业务模板（ruleTemplates）：贴近真实规约，覆盖常见编码规范主题
+//   2. 边缘模板（edgeTemplates）：压测渲染与截断——超长名称/超长正文/纯代码/特殊字符/空行等
+// 生成时按比例混合，确保列表分页、预览截断、代码高亮、特殊字符转义都有数据可验。
+
 // 模拟当前用户在数据库中的 ID
 const OWNER_ID = "cmrjdu92f0001099de7h2zu5p";
 
 // 规约生成数量
-const RULE_COUNT = 50;
+const RULE_COUNT = 200;
 
-// @ 规约模板，按业务主题分组
+// @ 业务模板：按真实规约主题分组，每条含 markdown 正文 + 代码块
 const ruleTemplates = [
 	{
 		name: "使用函数组件",
@@ -387,6 +394,7 @@ const ruleTemplates = [
 			"});",
 			"",
 			"// ❌ 错误：拼接 SQL",
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: 字面演示 SQL 注入反面教材，${userInput} 是示例文本而非真实插值
 			"await prisma.$queryRaw(`SELECT * FROM users WHERE email = '${userInput}'`);",
 			"```",
 			"",
@@ -405,11 +413,73 @@ const ruleTemplates = [
 	},
 ];
 
+// @ 边缘模板：压测列表预览截断、代码高亮、特殊字符转义、超长渲染
+// 每条针对一个具体的渲染/存储压力点，正文形态刻意极端
+const edgeTemplates = [
+	{
+		// 超长名称：逼近 64 字符上限，测列表名称列的 truncate 与换行
+		name: "这是一个非常非常非常长的规约名称用来测试表格列截断与 tooltip 完整展示一二三四五六七八九十一二三四五六",
+		content:
+			"# 超长名称测试\n\n本条规约的名称接近 64 字符上限，用于验证列表名称列的 `truncate` 是否生效，以及鼠标悬停时 tooltip 能否完整展示。",
+	},
+	{
+		// 超长正文：单段无换行长文本，测预览截断（120 字符）和大正文存储
+		name: "超长单段正文",
+		content: `# 超长正文压测\n\n${"这是一段用于压测预览截断与正文渲染的超长文本，重复填充以观察 UI 表现。".repeat(30)}`,
+	},
+	{
+		// 纯代码无说明：正文只有代码块，测代码高亮在零上下文时的渲染
+		name: "纯代码无文字说明",
+		content:
+			"```typescript\n// 无任何文字说明，只有代码块\nexport const debounce = <T extends (...args: any[]) => void>(fn: T, delay = 300) => {\n  let timer: ReturnType<typeof setTimeout>;\n  return (...args: Parameters<T>) => {\n    clearTimeout(timer);\n    timer = setTimeout(() => fn(...args), delay);\n  };\n};\n```",
+	},
+	{
+		// 嵌套代码块：用更多反引号围栏，测 markdown 解析器的围栏匹配
+		name: "嵌套代码块围栏",
+		content:
+			"# 嵌套代码块\n\n外层用四个反引号，内层用三个，测解析：\n\n````markdown\n```typescript\nconst x = 1;\n```\n````",
+	},
+	{
+		// 特殊字符：含 emoji、HTML 实体、引号、反斜杠，测转义与存储
+		name: "特殊字符与 Emoji",
+		content:
+			"# 特殊字符测试\n\n含 Emoji：🎉🚀✅❌💡\n\n含 HTML 实体：&lt;script&gt;alert(1)&lt;/script&gt;\n\n含引号与反斜杠：\"双引号\" '单引号' C:\\\\Users\\\\path\n\n含 markdown 符号：*星号* _下划线_ [链接](https://example.com)",
+	},
+	{
+		// 中英日混排：测等宽与比例字体混排时的对齐
+		name: "中英日韩混排文本",
+		content:
+			"# 多语言混排\n\n中文 English 日本語 한국어 Mixed Text 12345\n\n代码中混排：`变量名 name 変数 名前 변수 이름`",
+	},
+	{
+		// 超多换行：连续空行，测渲染时的空白折叠与高度
+		name: "连续空行测试",
+		content: `# 连续空行\n\n第一段。\n${"\n".repeat(15)}中间隔了大量空行。\n${"\n".repeat(10)}最后一段。`,
+	},
+	{
+		// 极短正文：只有一个标题，测最小内容的渲染与高度
+		name: "只有一个标题",
+		content: "# 极简",
+	},
+	{
+		// 超长单行代码：代码块内一行极长，测横向滚动
+		name: "超长单行代码",
+		content:
+			"# 超长单行代码\n\n```typescript\nconst veryLongVariableName = someFunction(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17, arg18, arg19, arg20);\n```",
+	},
+	{
+		// 表格语法：测 GFM 表格渲染
+		name: "Markdown 表格语法",
+		content:
+			"# 规则对照表\n\n| 规则 | 正确 | 错误 |\n|------|------|------|\n| 组件 | 函数式 | class |\n| 类型 | 显式 | any |\n| 样式 | Tailwind | inline style |",
+	},
+];
+
 // 返回 [min, max] 闭区间内的随机整数
 const randomInt = (min: number, max: number): number =>
 	Math.floor(Math.random() * (max - min + 1)) + min;
 
-// > 生成单条规约数据
+// > 生成单条规约数据：前 N 条走业务模板，其后混入边缘模板压测
 const generateRule = (
 	index: number,
 	spaceId: string,
@@ -422,14 +492,21 @@ const generateRule = (
 	createdAt: Date;
 	updatedAt: Date;
 } => {
-	const template = ruleTemplates[index % ruleTemplates.length];
-	const serial = Math.floor(index / ruleTemplates.length) + 1;
+	// 业务模板与边缘模板的分界：前 150 条用业务模板，后 50 条用边缘模板
+	const useEdge = index >= 150;
+	const template = useEdge
+		? edgeTemplates[(index - 150) % edgeTemplates.length]
+		: ruleTemplates[index % ruleTemplates.length];
+	// 同模板重复时加序号区分
+	const serial = useEdge
+		? Math.floor((index - 150) / edgeTemplates.length) + 1
+		: Math.floor(index / ruleTemplates.length) + 1;
 	const baseDate = new Date(2026, 6, 10, 9, 0, 0, 0);
 	const createdAt = new Date(baseDate.getTime() + index * 7 * 60 * 1000);
 	const updatedAt = new Date(createdAt.getTime() + randomInt(0, 60) * 1000);
 
 	return {
-		name: `${template.name}${serial > 1 ? ` v${serial}` : ""}`,
+		name: serial > 1 ? `${template.name} v${serial}` : template.name,
 		content: template.content,
 		ownerId: OWNER_ID,
 		spaceId,
@@ -471,6 +548,8 @@ const main = async (): Promise<void> => {
 
 	console.log(`已清理 ${deleted.count} 条旧规约`);
 	console.log(`✓ 写入 ${RULE_COUNT} 条规约`);
+	console.log(`  - 业务模板规约：150 条（覆盖常见编码规范主题）`);
+	console.log(`  - 边缘测试规约：50 条（超长名称/超长正文/纯代码/特殊字符等）`);
 };
 
 main()

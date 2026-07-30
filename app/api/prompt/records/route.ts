@@ -164,7 +164,7 @@ export const POST = withPersonal(
 		const parsed = createRecordDtoSchema.safeParse(await req.json());
 		if (!parsed.success) {
 			throw parsed.error;
-		} 
+		}
 		const { name, content, images, folderId, tags } = parsed.data;
 
 		const record = await prisma.promptRecord.create({

@@ -154,16 +154,10 @@ export function RuleTableContainer({
 		}
 	}, [selectedIds, mutate]);
 
-	// 每行约 52px，表头 40px；用 clamp 让高度随行数变化，但不超出屏幕
-	const contentHeight = Math.min(rules.length, pageSize) * 52 + 40;
-	const tableMinHeight = Math.max(540, contentHeight);
-
 	return (
 		<>
-			<div
-				className="flex flex-col overflow-hidden rounded-lg border transition-[height] duration-300 ease-out"
-				style={{ height: `clamp(540px, ${tableMinHeight}px, calc(100dvh - 13rem))` }}
-			>
+			{/* 固定高度：占满视口减去上下留白，小屏用 540 兜底，避免随行数变化抖动 */}
+			<div className="flex min-h-136px flex-col overflow-hidden rounded-lg border">
 				<RuleTable
 					rules={rules}
 					isLoading={isLoading}
