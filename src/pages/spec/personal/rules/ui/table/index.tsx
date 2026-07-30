@@ -1,16 +1,17 @@
 "use client";
 
-// # 规约表格容器：数据请求 + 传统分页 + 行选择 + 批量删除 + 渲染表格
-// > 数据由 useSWR 获取，通过 URL ?page=N&pageSize=N 控制翻页
+// # 规约表格容器：数据请求 + 传统分页 + 行选择 + 批量删除
+// > 数据由 useSWR 获取；表格渲染走 shadcn Data Table（columns + useReactTable）
 
+import type { RowSelectionState } from "@tanstack/react-table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useCallback, useState } from "react";
+import { type JSX, useCallback, useMemo, useState } from "react";
 import useSWR from "swr";
 
 import { deleteRules, getRules } from "@/entities/rule";
-import { cn } from "@/shared/lib/utils";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { PaginationBar } from "@/shared/ui/pagination-bar";
+import { columns } from "./columns";
 import { RuleTable } from "./table";
 
 // 表格分页默认每页条数
@@ -114,38 +115,23 @@ export function RuleTableContainer({
 		[updateUrlParams],
 	);
 
-	// @ 行选择状态
-	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	// @ 行选择：TanStack RowSelectionState，key 为 rule.id
+	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 	const [confirmOpen, setConfirmOpen] = useState(false);
 	const [isDeleting, setIsDeleting] = useState(false);
 
-	// 切换单行选中
-	const toggleSelect = useCallback((id: string) => {
-		setSelectedIds((prev) => {
-			const next = new Set(prev);
-			if (next.has(id)) next.delete(id);
-			else next.add(id);
-			return next;
-		});
-	}, []);
-
-	// 全选 / 取消全选当前页
-	const toggleSelectAll = useCallback(() => {
-		setSelectedIds((prev) => {
-			if (prev.size === rules.length && rules.length > 0) return new Set();
-			return new Set(rules.map((r) => r.id));
-		});
-	}, [rules]);
-
-	// 清空选择
-	const clearSelection = useCallback(() => setSelectedIds(new Set()), []);
+	// 当前选中的规则 id 列表
+	const selectedIds = useMemo(
+		() => Object.keys(rowSelection).filter((id) => rowSelection[id]),
+		[rowSelection],
+	);
 
 	// 批量删除确认回调
 	const handleBatchDeleteConfirm = useCallback(async () => {
 		setIsDeleting(true);
 		try {
-			await deleteRules([...selectedIds]);
-			setSelectedIds(new Set());
+			await deleteRules(selectedIds);
+			setRowSelection({});
 			setConfirmOpen(false);
 			await mutate();
 		} catch {
@@ -157,26 +143,18 @@ export function RuleTableContainer({
 
 	return (
 		<>
-			{/* // > max-h 封顶；表格区 overflow-auto 负责滚动，分页 shrink-0 贴底不被裁切 */}
-			<div
-				className={cn(
-					"flex max-h-[calc(100dvh-13rem)] flex-col overflow-hidden rounded-lg border",
-					(isLoading || rules.length === 0) && "min-h-136",
-				)}
-			>
-				<div className="scrollbar-thin min-h-0 flex-auto overflow-auto">
-					<RuleTable
-						rules={rules}
-						isLoading={isLoading}
-						q={q}
-						onCreate={onCreate}
-						selectedIds={selectedIds}
-						onToggleSelect={toggleSelect}
-						onToggleSelectAll={toggleSelectAll}
-						onBatchDelete={() => setConfirmOpen(true)}
-						onClearSelection={clearSelection}
-					/>
-				</div>
+			{/* // > 外层边框壳；表格走 Data Table，分页贴底 */}
+			<div className="overflow-hidden rounded-lg border">
+				<RuleTable
+					columns={columns}
+					data={rules}
+					isLoading={isLoading}
+					q={q}
+					onCreate={onCreate}
+					rowSelection={rowSelection}
+					onRowSelectionChange={setRowSelection}
+					onBatchDelete={() => setConfirmOpen(true)}
+				/>
 				<PaginationBar
 					page={page}
 					total={total}
@@ -194,7 +172,7 @@ export function RuleTableContainer({
 				open={confirmOpen}
 				onOpenChange={setConfirmOpen}
 				title="批量删除规则"
-				description={`此操作将永久删除选中的 ${selectedIds.size} 条规则。若已被 AGENTS.md 引用，引用处也会失效。`}
+				description={`此操作将永久删除选中的 ${selectedIds.length} 条规则。若已被 AGENTS.md 引用，引用处也会失效。`}
 				confirmText={isDeleting ? "删除中..." : "删除"}
 				variant="destructive"
 				onConfirm={handleBatchDeleteConfirm}
@@ -202,7 +180,7 @@ export function RuleTableContainer({
 			>
 				<div className="flex flex-wrap gap-1.5">
 					{rules
-						.filter((r) => selectedIds.has(r.id))
+						.filter((r) => rowSelection[r.id])
 						.map((r) => (
 							<span
 								key={r.id}

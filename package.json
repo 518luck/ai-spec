@@ -45,6 +45,7 @@
 		"@prisma/client": "^7.8.0",
 		"@tabler/icons-react": "^3.44.0",
 		"@tailwindcss/typography": "^0.5.20",
+		"@tanstack/react-table": "^8.21.3",
 		"@uiw/codemirror-theme-basic": "^4.25.11",
 		"@uiw/codemirror-theme-duotone": "^4.25.11",
 		"@uiw/codemirror-theme-github": "^4.25.11",
