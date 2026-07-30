@@ -68,7 +68,7 @@ export function PaginationBar({
 		: [];
 
 	return (
-		<div className="flex items-center justify-between border-t px-4 py-2 text-muted-foreground text-xs">
+		<div className="flex shrink-0 items-center justify-between border-t px-4 py-2 text-muted-foreground text-xs">
 			<span>
 				第 {start}-{end} 条，共 {total} 条
 			</span>

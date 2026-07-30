@@ -8,6 +8,7 @@ import { type JSX, useCallback, useState } from "react";
 import useSWR from "swr";
 
 import { deleteRules, getRules } from "@/entities/rule";
+import { cn } from "@/shared/lib/utils";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { PaginationBar } from "@/shared/ui/pagination-bar";
 import { RuleTable } from "./table";
@@ -156,8 +157,14 @@ export function RuleTableContainer({
 
 	return (
 		<>
-			<div className="flex max-h-[calc(100dvh-13rem)] flex-col overflow-hidden rounded-lg border">
-				<div className="flex min-h-136 flex-col">
+			{/* // > max-h 封顶；表格区 overflow-auto 负责滚动，分页 shrink-0 贴底不被裁切 */}
+			<div
+				className={cn(
+					"flex max-h-[calc(100dvh-13rem)] flex-col overflow-hidden rounded-lg border",
+					(isLoading || rules.length === 0) && "min-h-136",
+				)}
+			>
+				<div className="scrollbar-thin min-h-0 flex-auto overflow-auto">
 					<RuleTable
 						rules={rules}
 						isLoading={isLoading}
@@ -169,17 +176,17 @@ export function RuleTableContainer({
 						onBatchDelete={() => setConfirmOpen(true)}
 						onClearSelection={clearSelection}
 					/>
-					<PaginationBar
-						page={page}
-						total={total}
-						hasMore={hasMore}
-						pageSize={pageSize}
-						onPageChange={handlePageChange}
-						pageSizeOptions={PAGE_SIZE_OPTIONS}
-						onPageSizeChange={handlePageSizeChange}
-						onFirstPage={handleFirstPage}
-					/>
 				</div>
+				<PaginationBar
+					page={page}
+					total={total}
+					hasMore={hasMore}
+					pageSize={pageSize}
+					onPageChange={handlePageChange}
+					pageSizeOptions={PAGE_SIZE_OPTIONS}
+					onPageSizeChange={handlePageSizeChange}
+					onFirstPage={handleFirstPage}
+				/>
 			</div>
 
 			{/* // @ 批量删除确认弹窗 */}

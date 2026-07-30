@@ -11,7 +11,6 @@ import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Separator } from "@/shared/ui/separator";
 import { Table, TableBody, TableCell, TableHead, TableRow } from "@/shared/ui/table";
 import { EmptyAction } from "@/widgets/empty-state";
@@ -54,7 +53,7 @@ export function RuleTable({
 	// 加载状态
 	if (isLoading) {
 		return (
-			<div className="flex flex-1 items-center justify-center text-muted-foreground">
+			<div className="flex min-h-48 items-center justify-center text-muted-foreground">
 				<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
 			</div>
 		);
@@ -63,7 +62,7 @@ export function RuleTable({
 	// 空状态：在表格外部显示，避免表格元素的布局限制
 	if (rules.length === 0) {
 		return (
-			<div className="flex flex-1 items-center justify-center">
+			<div className="flex min-h-48 items-center justify-center">
 				<EmptyAction
 					q={q}
 					icon={<Icons.rulesLibrary />}
@@ -74,114 +73,110 @@ export function RuleTable({
 		);
 	}
 
-	// 数据列表
+	// 数据列表：纵向/横向滚动由容器 overflow-auto 负责，这里只渲染表格
 	return (
-		<div className="flex min-h-0 flex-1 flex-col">
-			<ScrollArea orientation="horizontal" className="min-h-0 flex-1" scrollbarClassName="mx-4">
-				<Table className="table-fixed" containerClassName="overflow-x-visible">
-					{/* // ! 用 colgroup 锁定列宽：表头在普通/批量模式间切换时，列宽不受影响 */}
-					<colgroup>
-						<col className="w-10" />
-						<col className="w-48" />
-						<col className="w-48" />
-						<col />
-						<col className="w-16" />
-					</colgroup>
-					{/* // @ 表头切换：选中时批量操作栏替换列名，进出均带动画 */}
-					<AnimatePresence mode="wait">
-						{hasSelection ? (
-							<motion.thead
-								key="batch"
-								className="sticky top-0 z-10"
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								exit={{ opacity: 0 }}
-								transition={{ duration: 0.15 }}
-							>
-								<TableRow className="border-b bg-accent/30 hover:bg-accent/30">
-									<TableCell colSpan={5} className="p-0">
-										<motion.div
-											className="flex items-center gap-2 px-4 py-2"
-											initial={{ opacity: 0, y: -4 }}
-											animate={{ opacity: 1, y: 0 }}
-											transition={{ duration: 0.18, ease: "easeOut", delay: 0.05 }}
-										>
-											<Button size="xs" variant="ghost" onClick={onClearSelection}>
-												取消选择
-											</Button>
-											<Separator orientation="vertical" className="h-4" />
-											<Button size="xs" variant="destructive" onClick={onBatchDelete}>
-												<Icons.trash className="mr-1 size-3" />
-												批量删除
-											</Button>
-											<span className="ml-auto text-muted-foreground text-sm">
-												已选 {selectionCount} 项
-											</span>
-										</motion.div>
-									</TableCell>
-								</TableRow>
-							</motion.thead>
-						) : (
-							<motion.thead
-								key="header"
-								className="sticky top-0 z-10 bg-muted"
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								exit={{ opacity: 0 }}
-								transition={{ duration: 0.15 }}
-							>
-								<TableRow>
-									<TableHead className="w-10 pl-4">
-										<Checkbox
-											checked={allSelected}
-											data-state={someSelected ? "indeterminate" : undefined}
-											onCheckedChange={onToggleSelectAll}
-											aria-label="全选当前页"
-										/>
-									</TableHead>
-									<TableHead className="w-48">名称</TableHead>
-									<TableHead className="w-48">文件夹</TableHead>
-									<TableHead>预览</TableHead>
-									<TableHead className="w-16 pr-4">操作</TableHead>
-								</TableRow>
-							</motion.thead>
-						)}
-					</AnimatePresence>
-					<TableBody>
-						{rules.map((rule, index) => {
-							const isSelected = selectedIds.has(rule.id);
-							return (
-								<MotionTableRow
-									key={rule.id}
-									data-state={isSelected ? "selected" : undefined}
-									{...ROW_ITEM_MOTION}
-									transition={itemTransition(index)}
+		<Table className="table-fixed" containerClassName="overflow-x-visible">
+			{/* // ! 用 colgroup 锁定列宽：表头在普通/批量模式间切换时，列宽不受影响 */}
+			<colgroup>
+				<col className="w-10" />
+				<col className="w-48" />
+				<col className="w-48" />
+				<col />
+				<col className="w-16" />
+			</colgroup>
+			{/* // @ 表头切换：选中时批量操作栏替换列名，进出均带动画 */}
+			<AnimatePresence mode="wait">
+				{hasSelection ? (
+					<motion.thead
+						key="batch"
+						className="sticky top-0 z-10"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.15 }}
+					>
+						<TableRow className="border-b bg-accent/30 hover:bg-accent/30">
+							<TableCell colSpan={5} className="p-0">
+								<motion.div
+									className="flex items-center gap-2 px-4 py-2"
+									initial={{ opacity: 0, y: -4 }}
+									animate={{ opacity: 1, y: 0 }}
+									transition={{ duration: 0.18, ease: "easeOut", delay: 0.05 }}
 								>
-									<TableCell className="pl-4">
-										<Checkbox
-											checked={isSelected}
-											onCheckedChange={() => onToggleSelect(rule.id)}
-											aria-label={`选择 ${rule.name}`}
-										/>
-									</TableCell>
-									<TableCell className="truncate font-medium">{rule.name}</TableCell>
-									<TableCell className="text-muted-foreground">
-										<span className="flex items-center gap-1.5">
-											<Icons.folderClosed className="size-4 shrink-0" />
-											<span className="truncate">{rule.folderName || "未分类"}</span>
-										</span>
-									</TableCell>
-									<TableCell className="truncate text-muted-foreground">{rule.preview}</TableCell>
-									<TableCell className="pr-4">
-										<TableActions rule={rule} />
-									</TableCell>
-								</MotionTableRow>
-							);
-						})}
-					</TableBody>
-				</Table>
-			</ScrollArea>
-		</div>
+									<Button size="xs" variant="ghost" onClick={onClearSelection}>
+										取消选择
+									</Button>
+									<Separator orientation="vertical" className="h-4" />
+									<Button size="xs" variant="destructive" onClick={onBatchDelete}>
+										<Icons.trash className="mr-1 size-3" />
+										批量删除
+									</Button>
+									<span className="ml-auto text-muted-foreground text-sm">
+										已选 {selectionCount} 项
+									</span>
+								</motion.div>
+							</TableCell>
+						</TableRow>
+					</motion.thead>
+				) : (
+					<motion.thead
+						key="header"
+						className="sticky top-0 z-10 bg-muted"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.15 }}
+					>
+						<TableRow>
+							<TableHead className="w-10 pl-4">
+								<Checkbox
+									checked={allSelected}
+									data-state={someSelected ? "indeterminate" : undefined}
+									onCheckedChange={onToggleSelectAll}
+									aria-label="全选当前页"
+								/>
+							</TableHead>
+							<TableHead className="w-48">名称</TableHead>
+							<TableHead className="w-48">文件夹</TableHead>
+							<TableHead>预览</TableHead>
+							<TableHead className="w-16 pr-4">操作</TableHead>
+						</TableRow>
+					</motion.thead>
+				)}
+			</AnimatePresence>
+			<TableBody>
+				{rules.map((rule, index) => {
+					const isSelected = selectedIds.has(rule.id);
+					return (
+						<MotionTableRow
+							key={rule.id}
+							data-state={isSelected ? "selected" : undefined}
+							{...ROW_ITEM_MOTION}
+							transition={itemTransition(index)}
+						>
+							<TableCell className="pl-4">
+								<Checkbox
+									checked={isSelected}
+									onCheckedChange={() => onToggleSelect(rule.id)}
+									aria-label={`选择 ${rule.name}`}
+								/>
+							</TableCell>
+							<TableCell className="truncate font-medium">{rule.name}</TableCell>
+							<TableCell className="text-muted-foreground">
+								<span className="flex items-center gap-1.5">
+									<Icons.folderClosed className="size-4 shrink-0" />
+									<span className="truncate">{rule.folderName || "未分类"}</span>
+								</span>
+							</TableCell>
+							<TableCell className="truncate text-muted-foreground">{rule.preview}</TableCell>
+							<TableCell className="pr-4">
+								<TableActions rule={rule} />
+							</TableCell>
+						</MotionTableRow>
+					);
+				})}
+			</TableBody>
+		</Table>
 	);
 }
 
