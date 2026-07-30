@@ -16,7 +16,7 @@
 | 文件 | 内容 | 优先级 |
 | --- | --- | --- |
 | [directory-structure.md](./directory-structure.md) | FSD 分层、segment、公有 API、导入边界 | **必读** |
-| [components.md](./components.md) | shadcn 用法、Icons 注册、Loading 分工、SSR 安全、排版/文案 | **必读** |
+| [components.md](./components.md) | shadcn 用法、Icons 注册、Loading/滚动条分工、SSR 安全、排版/文案 | **必读** |
 | [data-fetching.md](./data-fetching.md) | SWR 全局配置、数组 key、不自写 toast | **必读** |
 | [state-management.md](./state-management.md) | useState/props/Context/zustand 选型、Context 编写要求 | **必读** |
 | [forms.md](./forms.md) | react-hook-form + zodResolver + next-safe-action | 参考 |
@@ -32,6 +32,7 @@
 | --- | --- |
 | FSD 分层只能向下依赖，slice 经 `index.ts` 公有 API 导入 | directory-structure.md |
 | shadcn 组件放 `shared/ui`，用前先查是否已有 | components.md |
+| 滚动默认 `scrollbar-thin`；仅自绘滚动条控件时用 `ScrollArea`，禁止叠用 | components.md |
 | 图标在 `icons.tsx` 统一注册后用 `Icons.xxx`，业务代码禁直接 import `@tabler/icons-react` | components.md |
 | 数据请求只用 `useSWR`，不重复写失败 toast | data-fetching.md |
 | toast 只从 `@/features/toast` 导入 | toast-and-feedback.md |

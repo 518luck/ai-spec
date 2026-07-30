@@ -43,9 +43,20 @@ import { Icons } from "@/shared/ui/icons";
 - `ScaleLoaderWrap` 颜色靠 `currentColor`，**调用处外层加 `text-muted-foreground`** 控色；默认值 `height=35,width=4,barCount=5`，紧凑场景按比例缩小（`height={24} width={3}`）。
 - 列表整块用假数据模拟布局的骨架占位用 `Skeleton`，不在此列。
 
-## ScrollArea 高度约束
+## 滚动条（按场景分工，不可混用）
 
-`ScrollArea` 的 Viewport 用 `max-h-[inherit]`，只读父级 `max-height`，不读 `height`。要让其内部滚动，必须传 `max-h-*`（如 `h-full max-h-full`）；仅 `h-full` 会撑成内容高度导致无法滚动。
+| 方案 | 用法 | 适用 |
+| --- | --- | --- |
+| `scrollbar-thin` | `overflow-auto scrollbar-thin` | **默认**：布局溢出、表格、textarea、长文、普通面板 |
+| `ScrollArea` | `@/shared/ui/scroll-area` | **例外**：固定高度产品面板，且滚动条需自绘（跨浏览器一致 / scroll 态显隐 / `viewportRef` / `thumbSmooth`） |
+
+- **默认 CSS**；仅当滚动条是该模块设计控件时用 `ScrollArea`。
+- 显隐、变细 **不是** 用 `ScrollArea` 的充分条件（`scrollbar-thin` 已覆盖 hover 细条）。
+- 同一滚动容器禁止叠用两套。
+- 操作滚动：原生挂 `ref`；`ScrollArea` 必须 `viewportRef`（Root 不滚动）。
+- `ScrollArea` 要滚动须带 `max-h-*`（Viewport 只读 `max-height`）；仅 `h-full` 会撑成内容高度。
+- `thumbSmooth` 仅内容高度突变时短暂开启，禁止常开。
+- `ScrollMask` 与选型正交：先定滚动方案，再叠 mask。
 
 ## SSR / Hydration 安全
 

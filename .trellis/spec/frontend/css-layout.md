@@ -21,11 +21,13 @@ flex 子元素需内部滚动时加 `min-h-0`（flex 子默认 `min-height: auto
 <div className="flex h-screen flex-col">
   <header className="h-16 shrink-0 border-b">{/* 固定高度 */}</header>
   <div className="flex min-h-0 flex-1">
-    <aside className="w-64 shrink-0 overflow-y-auto border-r">{/* 侧栏 */}</aside>
-    <main className="min-w-0 flex-1 overflow-y-auto">{/* 滚动内容 */}</main>
+    <aside className="w-64 shrink-0 overflow-y-auto scrollbar-thin border-r">{/* 侧栏 */}</aside>
+    <main className="min-w-0 flex-1 overflow-y-auto scrollbar-thin">{/* 滚动内容 */}</main>
   </div>
 </div>
 ```
+
+布局溢出默认 `overflow-*` + `scrollbar-thin`；`ScrollArea` 选型见 `components.md`「滚动条」。
 
 ## 父子职责分离
 
