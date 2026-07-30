@@ -1,7 +1,7 @@
 "use client";
 
 // # 规约 Data Table：TanStack Table + shadcn Table，列由 columns 定义，行由 flexRender 输出
-// > 表头不进滚动区，只让 body 滚动；选中时表头切成批量操作栏；body 最少 10 行
+// > 表头始终在；body 独立滚动且最少 10 行（空态/加载同高）；选中时表头切批量操作栏
 
 import {
 	type Column,
@@ -26,7 +26,7 @@ import { itemTransition, ROW_ITEM_MOTION } from "../../lib/list-motion";
 
 // 单行高度（TableCell p-2 + 行内内容 + border-b）
 const TABLE_ROW_HEIGHT = 41;
-// body 最少撑满默认 10 条，避免行数变化时外层跟着跳
+// body 最少撑满默认 10 条；空态/加载/有数据共用，避免高度跳变
 const BODY_MIN_HEIGHT = TABLE_ROW_HEIGHT * 10;
 // 表头约 40px、分页约 49px，给 body 留出视口上限
 const BODY_MAX_HEIGHT = "calc(100dvh - 13rem - 5.5rem)";
@@ -95,37 +95,62 @@ export function RuleTable({
 	const leafColumns = table.getAllLeafColumns();
 	const selectionCount = table.getFilteredSelectedRowModel().rows.length;
 	const hasSelection = selectionCount > 0;
+	const rows = table.getRowModel().rows;
 
-	// 加载状态：高度对齐 10 行 body，避免和列表态互相跳
-	if (isLoading) {
+	// body 内容：加载 / 空态 / 行列表，三者都落在同一最小高度的滚动壳里
+	// ! 空/载不要用 h-full：父级只有 minHeight 时百分比高度算不出来，flex 居中会贴顶
+	const bodyContent = (() => {
+		if (isLoading) {
+			return (
+				<div
+					className="flex items-center justify-center text-muted-foreground"
+					style={{ minHeight: BODY_MIN_HEIGHT }}
+				>
+					<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
+				</div>
+			);
+		}
+
+		if (rows.length === 0) {
+			return (
+				<div className="flex items-center justify-center" style={{ minHeight: BODY_MIN_HEIGHT }}>
+					<EmptyAction
+						q={q}
+						icon={<Icons.rulesLibrary />}
+						actionLabel="新增规约"
+						onAction={onCreate}
+					/>
+				</div>
+			);
+		}
+
 		return (
-			<div
-				className="flex items-center justify-center text-muted-foreground"
-				style={{ minHeight: BODY_MIN_HEIGHT }}
-			>
-				<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-			</div>
+			<Table className="w-full table-fixed" containerClassName="overflow-x-hidden">
+				<ColumnGroup columns={leafColumns} />
+				<TableBody>
+					{rows.map((row, index) => (
+						<MotionTableRow
+							key={row.id}
+							data-state={row.getIsSelected() ? "selected" : undefined}
+							{...ROW_ITEM_MOTION}
+							transition={itemTransition(index)}
+						>
+							{row.getVisibleCells().map((cell) => (
+								<TableCell key={cell.id} className={cellClassName(cell.column.id)}>
+									{flexRender(cell.column.columnDef.cell, cell.getContext())}
+								</TableCell>
+							))}
+						</MotionTableRow>
+					))}
+				</TableBody>
+			</Table>
 		);
-	}
+	})();
 
-	// 空状态：在表格外部显示，高度同样对齐 10 行 body
-	if (data.length === 0) {
-		return (
-			<div className="flex items-center justify-center" style={{ minHeight: BODY_MIN_HEIGHT }}>
-				<EmptyAction
-					q={q}
-					icon={<Icons.rulesLibrary />}
-					actionLabel="新增规约"
-					onAction={onCreate}
-				/>
-			</div>
-		);
-	}
-
-	// 数据列表：表头在滚动区外；只有 body 滚动，滚动条不压表头
+	// 表头始终渲染 + body 固定最小高度，空/载/有数据总高度一致
 	return (
 		<div>
-			{/* // @ 表头：不滚动；选中时切成批量操作栏 */}
+			{/* // @ 表头：不滚动；选中时切成批量操作栏；空态也保留，避免总高低一截 */}
 			<Table className="table-fixed" containerClassName="overflow-x-hidden">
 				<ColumnGroup columns={leafColumns} />
 				<AnimatePresence mode="wait">
@@ -182,30 +207,12 @@ export function RuleTable({
 				</AnimatePresence>
 			</Table>
 
-			{/* // > body 只纵向滚动：overflow-x-hidden 禁止横向条；最少 10 行 */}
+			{/* // > body 只纵向滚动；minHeight 固定 10 行，空/载/有数据同高 */}
 			<div
 				className="scrollbar-thin overflow-y-auto overflow-x-hidden"
 				style={{ minHeight: BODY_MIN_HEIGHT, maxHeight: BODY_MAX_HEIGHT }}
 			>
-				<Table className="w-full table-fixed" containerClassName="overflow-x-hidden">
-					<ColumnGroup columns={leafColumns} />
-					<TableBody>
-						{table.getRowModel().rows.map((row, index) => (
-							<MotionTableRow
-								key={row.id}
-								data-state={row.getIsSelected() ? "selected" : undefined}
-								{...ROW_ITEM_MOTION}
-								transition={itemTransition(index)}
-							>
-								{row.getVisibleCells().map((cell) => (
-									<TableCell key={cell.id} className={cellClassName(cell.column.id)}>
-										{flexRender(cell.column.columnDef.cell, cell.getContext())}
-									</TableCell>
-								))}
-							</MotionTableRow>
-						))}
-					</TableBody>
-				</Table>
+				{bodyContent}
 			</div>
 		</div>
 	);
