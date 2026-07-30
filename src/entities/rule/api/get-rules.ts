@@ -10,8 +10,8 @@ export const getRules = async (params?: ListRulesDto): Promise<RuleListVo> => {
 	if (params?.spaceId) searchParams.set("spaceId", params.spaceId);
 	if (params?.tagIds) searchParams.set("tagIds", params.tagIds);
 	if (params?.q) searchParams.set("q", params.q);
-	if (params?.offset !== undefined) searchParams.set("offset", String(params.offset));
-	if (params?.limit !== undefined) searchParams.set("limit", String(params.limit));
+	if (params?.page !== undefined) searchParams.set("page", String(params.page));
+	if (params?.pageSize !== undefined) searchParams.set("pageSize", String(params.pageSize));
 
 	const url = `/api/rules${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 	const response = await fetch(url);

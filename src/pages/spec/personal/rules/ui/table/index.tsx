@@ -58,15 +58,15 @@ export function RuleTableContainer({
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
 
-	// 从 URL 读取页码和每页条数，换算为 API 所需的偏移量
+	// 从 URL 读取页码（0-based，给 PaginationBar 用）和每页条数
 	const page = parsePage(searchParams?.get(PAGE_PARAM) ?? null);
 	const pageSize = parsePageSize(searchParams?.get(PAGE_SIZE_PARAM) ?? null, DEFAULT_PAGE_SIZE);
-	const offset = page * pageSize;
 
 	// 获取规约列表，支持空间/文件夹/标签筛选和搜索 + 分页
+	// page + 1：PaginationBar 用 0-based，API 用 1-based
 	const { data, isLoading, mutate } = useSWR(
-		["rules", folderId, spaceId, tagIds, q, offset, pageSize],
-		() => getRules({ folderId, spaceId, tagIds, q, offset, limit: pageSize }),
+		["rules", folderId, spaceId, tagIds, q, page, pageSize],
+		() => getRules({ folderId, spaceId, tagIds, q, page: page + 1, pageSize }),
 	);
 
 	const rules = data?.data ?? [];

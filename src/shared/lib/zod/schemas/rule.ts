@@ -104,7 +104,6 @@ export const ruleListVoSchema = z.object({
 	data: z.array(ruleListItemVoSchema),
 	total: z.number(),
 	hasMore: z.boolean(),
-	nextOffset: z.number().int().min(0).optional(),
 });
 
 // 规约列表响应类型
@@ -112,13 +111,14 @@ export type RuleListVo = z.infer<typeof ruleListVoSchema>;
 
 // 规约列表查询入参：文件夹筛选 + 标签筛选 + 搜索 + 分页
 // tagIds 为逗号分隔的 tag id 列表，多选时取交集（命中其中任意一个即返回）
+// page 为 1-based 页码，pageSize 为每页条数；后端内部换算为 offset 喂给 Prisma
 export const listRulesDtoSchema = z.object({
 	folderId: z.string().optional(),
 	spaceId: ruleSpaceIdSchema,
 	tagIds: z.string().optional(),
 	q: z.string().optional(),
-	offset: z.coerce.number().int().min(0).optional(),
-	limit: z.coerce.number().int().min(1).max(100).optional(),
+	page: z.coerce.number().int().min(1).optional(),
+	pageSize: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 // 规约列表查询入参类型

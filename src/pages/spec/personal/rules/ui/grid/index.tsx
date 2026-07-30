@@ -34,10 +34,10 @@ export function RuleGridContainer({
 	q,
 	onCreate,
 }: RuleGridContainerProps): JSX.Element {
-	const getKey = (_pageIndex: number, previousPageData: RuleListVo | null) => {
+	const getKey = (pageIndex: number, previousPageData: RuleListVo | null) => {
 		if (previousPageData && !previousPageData.hasMore) return null;
-		const currentOffset = previousPageData?.nextOffset ?? 0;
-		return ["rules-infinite", folderId, spaceId, tagIds, q, currentOffset] as const;
+		// useSWRInfinite 的 pageIndex 天然 0-based 递增，直接当页码用，不再依赖后端返回 nextOffset
+		return ["rules-infinite", folderId, spaceId, tagIds, q, pageIndex] as const;
 	};
 
 	const {
@@ -45,8 +45,9 @@ export function RuleGridContainer({
 		isLoading,
 		isValidating,
 		setSize,
-	} = useSWRInfinite(getKey, ([, folderId, spaceId, tagIds, q, offset]) =>
-		getRules({ folderId, spaceId, tagIds, q, offset, limit: PAGE_SIZE }),
+	} = useSWRInfinite(getKey, ([, folderId, spaceId, tagIds, q, pageIndex]) =>
+		// pageIndex 0-based，API 用 1-based
+		getRules({ folderId, spaceId, tagIds, q, page: pageIndex + 1, pageSize: PAGE_SIZE }),
 	);
 
 	const rules = useMemo(() => infiniteData?.flatMap((page) => page.data) ?? [], [infiniteData]);

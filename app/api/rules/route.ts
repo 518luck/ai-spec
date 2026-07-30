@@ -27,8 +27,10 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 	if (!parsed.success) {
 		throw parsed.error;
 	}
-	const { folderId, spaceId, tagIds: tagIdsParam, q, offset = 0, limit } = parsed.data;
-	const pageSize = limit ?? PAGE_SIZE;
+	const { folderId, spaceId, tagIds: tagIdsParam, q, page = 1, pageSize } = parsed.data;
+	const size = pageSize ?? PAGE_SIZE;
+	// page 为 1-based，换算成 Prisma 的 skip 偏移量
+	const offset = (page - 1) * size;
 	const trimmedQuery = q?.trim() ?? "";
 
 	// folderId 为空（空串/undefined）表示"未分类"，统一映射为 null 查询
@@ -75,7 +77,7 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 				createdAt: true,
 				updatedAt: true,
 			},
-			take: pageSize,
+			take: size,
 			skip: offset,
 		}),
 		prisma.rule.count({ where }),
@@ -95,16 +97,14 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 		updatedAt: rule.updatedAt.toISOString(),
 	}));
 
-	// 是否还有下一页
-	const hasMore = rules.length === pageSize;
-	const nextOffset = hasMore ? offset + rules.length : undefined;
+	// 是否还有下一页：本次返回满一页说明可能还有更多
+	const hasMore = rules.length === size;
 
 	// 经 Vo schema 校验
 	const voResult = ruleListVoSchema.safeParse({
 		data,
 		total,
 		hasMore,
-		nextOffset,
 	});
 	if (!voResult.success) {
 		throw voResult.error;
