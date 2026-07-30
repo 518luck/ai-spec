@@ -14,9 +14,8 @@ import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
-import { RuleFilterTrigger } from "./rule-filter-trigger";
-import { RuleLayoutTrigger, type RuleView } from "./rule-layout-trigger";
 import { RuleSpaceCombobox } from "./rule-space-combobox";
+import { RuleToolbar, type RuleView } from "./rule-toolbar";
 
 // URL 参数名；缺省或非法值一律回落表格
 const RULE_VIEW_PARAM = "view";
@@ -74,12 +73,11 @@ export function PersonalRulesPage({
 			}
 		>
 			<PageWidthWrapper fill>
-				{/* // @ 筛选条带：空间 + 标签过滤贴左、视图切换 + 搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
+				{/* // @ 筛选条带：空间 + 工具栏（过滤/布局/标签条）贴左、搜索框贴右；始终展示，避免切换筛选时组件卸载丢状态 */}
 				<div className="mb-6 flex items-center justify-between gap-3">
-					<div className="flex items-center gap-2">
+					<div className="flex min-w-0 flex-1 items-center gap-2">
 						<RuleSpaceCombobox />
-						<RuleFilterTrigger />
-						<RuleLayoutTrigger value={view} onChange={handleViewChange} />
+						<RuleToolbar value={view} onViewChange={handleViewChange} />
 					</div>
 					<div className="flex items-center gap-2">
 						<SearchInput

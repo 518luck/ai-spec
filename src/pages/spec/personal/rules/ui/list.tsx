@@ -8,7 +8,7 @@ import type { JSX } from "react";
 
 import { LIST_SWITCH_MOTION } from "../lib/list-motion";
 import { RuleGridContainer } from "./grid";
-import type { RuleView } from "./rule-layout-trigger";
+import type { RuleView } from "./rule-toolbar";
 import { RuleTableContainer } from "./table";
 
 type RuleListProps = {
