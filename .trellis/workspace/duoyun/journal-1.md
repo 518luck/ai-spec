@@ -220,3 +220,25 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 10: 规约表格新增标签列与更新时间列
+
+**Date**: 2026-07-30
+**Task**: 规约表格新增标签列与更新时间列
+**Branch**: `main`
+
+### Summary
+
+规约列表 GET 返回每条规约的标签（ruleListItemVoSchema 加 tags + select include + mapTags）。表格新增只读「标签」列：前 3 个 TagChip，超出收成 +N 药丸 hover 看全部；新增「更新时间」列用相对时间（刚刚/X分钟前/昨天/X天前，超 7 天退化为 MM-DD），新建 src/shared/lib/format-relative-time.ts（dayjs 原生 diff，不引插件）。另探讨了「按更新时间正序/倒序」排序，复刻 prompt records 的下拉菜单 asc/desc 方案已就绪，用户最终决定不做。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `57c897a` | (see git log) |
+| `89c0823` | (see git log) |
+
+### Status
+
+[OK] **Completed**
