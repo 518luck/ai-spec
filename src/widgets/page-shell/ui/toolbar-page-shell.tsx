@@ -16,7 +16,7 @@ type ToolbarPageShellProps = {
 	actions?: ReactNode; // 右上角操作区，如"新建"按钮
 	children: ReactNode; // 内容区
 	className?: string; // 透传给最外层容器的 className
-	/** 透传给内部 ScrollArea 的 props（如 thumbSmooth 控制内容突变时滚动条平滑） */
+	/** 透传给页壳 ScrollArea（例外自绘滚动条：回顶 viewportRef / 内容突变 thumbSmooth） */
 	scrollAreaProps?: {
 		thumbSmooth?: boolean;
 		viewportRef?: Ref<HTMLDivElement>;

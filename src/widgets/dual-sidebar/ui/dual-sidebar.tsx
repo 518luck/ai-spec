@@ -235,7 +235,7 @@ function NavAreasPanel({
 							>
 								<div
 									data-slot="dual-sidebar-operation-nav-content"
-									className="flex min-h-0 flex-col gap-4 overflow-auto px-2 py-6"
+									className="scrollbar-thin flex min-h-0 flex-col gap-4 overflow-auto px-2 py-6"
 								>
 									<div
 										className={cn(

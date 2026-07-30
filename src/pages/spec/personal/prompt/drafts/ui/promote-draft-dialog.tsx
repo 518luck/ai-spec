@@ -16,7 +16,6 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { Label } from "@/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 // 资源类型选项
@@ -103,7 +102,7 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 							选择资源
 							<HelpTooltip content="选择要归档到的资源类型" />
 						</div>
-						<ScrollArea className="h-70">
+						<div className="scrollbar-thin h-70 overflow-auto">
 							{resourceOptions.map((option) => {
 								const Icon = option.icon;
 								return (
@@ -117,7 +116,7 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 									</div>
 								);
 							})}
-						</ScrollArea>
+						</div>
 					</div>
 
 					{/* 右侧：文件夹 + 标签选择 */}
@@ -126,7 +125,7 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 							{selectedResource.label} - 选择位置
 						</div>
 						<div className="flex h-70 flex-col">
-							<div className="flex-1 space-y-4 overflow-auto p-3">
+							<div className="scrollbar-thin flex-1 space-y-4 overflow-auto p-3">
 								{/* 文件夹选择 */}
 								<div className="space-y-2">
 									<div className="font-medium text-muted-foreground text-xs">文件夹</div>

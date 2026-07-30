@@ -4,11 +4,10 @@
 // > 数据由 useSWR 获取，通过 URL ?page=N&pageSize=N 控制翻页
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useCallback, useState } from "react";
+import { type JSX, useCallback, useLayoutEffect, useRef, useState } from "react";
 import useSWR from "swr";
 
 import { deleteRules, getRules } from "@/entities/rule";
-import { cn } from "@/shared/lib/utils";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { PaginationBar } from "@/shared/ui/pagination-bar";
 import { RuleTable } from "./table";
@@ -22,6 +21,12 @@ const PAGE_SIZE_PARAM = "pageSize";
 
 // 每页条数可选值
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+
+// 空态 / 首屏加载时的最小高度（对齐原 min-h-136 = 34rem）
+const EMPTY_MIN_HEIGHT = 544;
+
+// 高度过渡时长（毫秒），与 transition duration-300 对齐
+const HEIGHT_TRANSITION_MS = 300;
 
 // 将 URL 里的 1-based 正整数页码转为内部 0-based 页码
 const parsePage = (value: string | null): number => {

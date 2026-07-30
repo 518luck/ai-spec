@@ -11,7 +11,7 @@ import { Icons } from "@/shared/ui/icons";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 
 type BackToTopButtonProps = {
-	/** 真实滚动容器（通常是 ScrollArea 的 viewport） */
+	/** 真实滚动容器（页壳 ScrollArea 的 viewport，或原生 overflow 节点） */
 	scrollRef: RefObject<HTMLElement | null>;
 	/** 滚过多少 px 后显示按钮，默认约一屏 */
 	threshold?: number;

@@ -112,7 +112,7 @@ export function MarkdownEditor({
 
 	// 预览模式：Markdown 渲染；否则：CodeMirror 编辑
 	if (isPreview) {
-		// > 预览用 ScrollArea 接管滚动（与 CodeMirror 自带 cm-scroller 滚动样式对齐）；编辑模式不能用 ScrollArea，CodeMirror height:100% 与 ScrollArea viewport 收缩特性冲突会让虚拟滚动失效
+		// > 预览用 ScrollArea：与 CodeMirror cm-scroller 视觉对齐的例外；编辑模式不能用 ScrollArea（height:100% 与 viewport 收缩冲突会让虚拟滚动失效）
 		return (
 			<ScrollArea className="h-full max-h-full">
 				<MarkdownPreview content={value} className={previewClassName} />

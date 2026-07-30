@@ -19,7 +19,6 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/shared/ui/radio-group";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Textarea } from "@/shared/ui/textarea";
 
@@ -214,8 +213,8 @@ export function KeyForm({
 					>
 						{permission === "restricted" && (
 							<div className="flex flex-col gap-2">
-								{/* 滚动区域：用 ScrollArea 替代原生 overflow-y-auto，呈现自定义滚动条 */}
-								<ScrollArea className="max-h-70 rounded-md">
+								{/* 权限矩阵列表：限高后原生溢出 + 细滚动条 */}
+								<div className="scrollbar-thin max-h-70 overflow-auto rounded-md">
 									<div className="flex w-full flex-col divide-y">
 										{RESOURCES.map((resource) => (
 											<div
@@ -248,7 +247,7 @@ export function KeyForm({
 											</div>
 										))}
 									</div>
-								</ScrollArea>
+								</div>
 							</div>
 						)}
 					</AnimatedSizeContainer>

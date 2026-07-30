@@ -48,15 +48,10 @@ import { Icons } from "@/shared/ui/icons";
 | 方案 | 用法 | 适用 |
 | --- | --- | --- |
 | `scrollbar-thin` | `overflow-auto scrollbar-thin` | **默认**：布局溢出、表格、textarea、长文、普通面板 |
-| `ScrollArea` | `@/shared/ui/scroll-area` | **例外**：固定高度产品面板，且滚动条需自绘（跨浏览器一致 / scroll 态显隐 / `viewportRef` / `thumbSmooth`） |
+| `ScrollArea` | `@/shared/ui/scroll-area` | **例外**：固定高度产品面板，且滚动条需自绘（`viewportRef` / `thumbSmooth` 等） |
 
-- **默认 CSS**；仅当滚动条是该模块设计控件时用 `ScrollArea`。
-- 显隐、变细 **不是** 用 `ScrollArea` 的充分条件（`scrollbar-thin` 已覆盖 hover 细条）。
-- 同一滚动容器禁止叠用两套。
-- 操作滚动：原生挂 `ref`；`ScrollArea` 必须 `viewportRef`（Root 不滚动）。
-- `ScrollArea` 要滚动须带 `max-h-*`（Viewport 只读 `max-height`）；仅 `h-full` 会撑成内容高度。
-- `thumbSmooth` 仅内容高度突变时短暂开启，禁止常开。
-- `ScrollMask` 与选型正交：先定滚动方案，再叠 mask。
+- 同一容器禁止叠用；仅「想细一点 / hover 显隐」不够格用 `ScrollArea`。
+- `ScrollArea` 须带 `max-h-*`（Viewport 只读 max-height）；操作滚动用 `viewportRef`，`thumbSmooth` 仅内容突变时短暂开。
 
 ## SSR / Hydration 安全
 

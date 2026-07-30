@@ -7,7 +7,7 @@ import { ScrollArea } from "@/shared/ui/scroll-area";
 
 type TitlePageShellProps = Omit<ComponentProps<"div">, "title"> & {
 	title?: ReactNode; // 页面标题，可传字符串或带图标的 ReactNode
-	/** 是否用 ScrollArea 包裹内容（默认开启）；内部自带滚动的组件（如撑满视口的表格）应关闭，避免双重滚动 */
+	/** 是否用页壳 ScrollArea 包裹内容（默认开启；页壳需吸顶标题 + 自绘轨道偏移）；内部自带滚动的表格/编辑器应关闭 */
 	scrollable?: boolean;
 	/** 标题栏是否浮在内容之上（仅 scrollable=false 生效）：内容从页面顶端起算、滚动时穿过标题栏，供自带滚动的编辑器使用 */
 	floatingHeader?: boolean;

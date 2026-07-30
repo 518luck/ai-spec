@@ -1,6 +1,6 @@
 "use client";
 
-// # ScrollArea 滚动区域（基于 base-ui）：自定义滚动条样式，hover/滚动时淡入、移出自动隐藏
+// # ScrollArea 滚动区域（基于 base-ui）：仅用于需自绘滚动条的固定高度产品面板（页壳 / 预览对齐）
 
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
 import type { Ref } from "react";

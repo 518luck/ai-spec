@@ -149,7 +149,7 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 			<PopoverContent className="w-45 p-0" align="start">
 				<Command>
 					<CommandInput placeholder="搜索空间..." />
-					<CommandList className="scrollbar-thin max-h-72">
+					<CommandList>
 						<CommandEmpty>
 							<CreateSpaceButton
 								onSelect={(name) => {

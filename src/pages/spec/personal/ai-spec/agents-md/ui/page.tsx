@@ -6,7 +6,6 @@ import type { JSX } from "react";
 import { useState } from "react";
 
 import { Icons } from "@/shared/ui/icons";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { EmptyState } from "@/widgets/empty-state";
 import { PageWidthWrapper, TitlePageShell } from "@/widgets/page-shell";
 import {
@@ -74,22 +73,22 @@ export function PersonalAgentsMdPage(): JSX.Element {
 	const renderRightPane = (): JSX.Element => {
 		if (isReading && openedFile?.content) {
 			return (
-				<ScrollArea className="min-h-0 flex-1">
+				<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
 					<pre className="whitespace-pre-wrap px-6 py-4 font-mono text-sm leading-6">
 						{openedFile.content}
 					</pre>
-				</ScrollArea>
+				</div>
 			);
 		}
 		if (docs.length === 0) {
 			return <EmptyState icon={Icons.agentsMd} description="该文件夹下还没有 AGENTS.md 文档" />;
 		}
 		return (
-			<ScrollArea className="h-full">
+			<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
 				<div className="px-6 py-4">
 					<DocCardGrid docs={docs} onOpen={setOpenedFileId} />
 				</div>
-			</ScrollArea>
+			</div>
 		);
 	};
 
@@ -104,8 +103,8 @@ export function PersonalAgentsMdPage(): JSX.Element {
 				/>
 				<div className="flex min-h-0 flex-1">
 					{/* // @ 左侧：文件夹树侧栏 */}
-					<aside className="w-64 shrink-0 border-r">
-						<ScrollArea className="h-full">
+					<aside className="flex min-h-0 w-64 shrink-0 flex-col border-r">
+						<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
 							<FileTree
 								key={openedProjectId}
 								projectId={openedProjectId}
@@ -114,7 +113,7 @@ export function PersonalAgentsMdPage(): JSX.Element {
 								onExpandedChange={setExpandedFolderIds}
 								onFolderSelect={handleFolderSelect}
 							/>
-						</ScrollArea>
+						</div>
 					</aside>
 					{/* // @ 右侧：文档卡片列表 / 文档阅读 */}
 					<section className="flex min-w-0 flex-1 flex-col">{renderRightPane()}</section>

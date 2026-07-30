@@ -3,7 +3,6 @@
 import dayjs from "dayjs";
 import type { JSX, Ref } from "react";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import { Skeleton } from "@/shared/ui/skeleton";
 import type { VersionListItem } from "./version-page";
 
@@ -63,9 +62,8 @@ export function VersionListPanel({
 			<div className="flex shrink-0 items-center px-3 py-2 text-muted-foreground text-xs">
 				全部版本
 			</div>
-			{/* ScrollArea 的 Viewport 靠 max-h-[inherit] 撑高度：直接给定 max-height，
-			   使其继承到明确高度上限，父级 fixed 容器距顶 6rem，故列表区最高 calc(100vh - 6rem - 标题高) */}
-			<ScrollArea className="max-h-[calc(100vh-7.5rem)]">
+			{/* 列表区限高：父级 fixed 容器距顶约 6rem，故最高 calc(100vh - 6rem - 标题高) */}
+			<div className="scrollbar-thin max-h-[calc(100vh-7.5rem)] overflow-auto">
 				<div className="space-y-1 p-2">
 					{renderContent()}
 					{/* 无限滚动底部：哨兵 + 翻页 loader + 到底提示 */}
@@ -77,7 +75,7 @@ export function VersionListPanel({
 						endText="到底了"
 					/>
 				</div>
-			</ScrollArea>
+			</div>
 		</div>
 	);
 }

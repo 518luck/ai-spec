@@ -91,12 +91,7 @@ export function OrganizationCombobox({
 				<CommandInput placeholder="搜索组织…" />
 			</div>
 			<div className="relative">
-				{/* // scrollbar-thin：macOS 风格透明滚动条（hover 淡入），覆盖 CommandList 默认无效的 no-scrollbar */}
-				<CommandList
-					ref={listRef}
-					onScroll={updateScrollProgress}
-					className="scrollbar-thin max-h-64"
-				>
+				<CommandList ref={listRef} onScroll={updateScrollProgress} className="max-h-64">
 					<CommandEmpty>
 						<span className="text-muted-foreground">没有匹配的组织</span>
 					</CommandEmpty>

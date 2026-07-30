@@ -1,13 +1,12 @@
 "use client";
 
-// # Dialog 弹窗组合（基于 base-ui）：Portal + 遮罩 + 居中面板，内置 ScrollArea 内容滚动与可选关闭按钮
+// # Dialog 弹窗组合（基于 base-ui）：Portal + 遮罩 + 居中面板，默认 CSS 细滚动条与可选关闭按钮
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { XIcon } from "lucide-react";
 import type * as React from "react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 
 function Dialog({ ...props }: DialogPrimitive.Root.Props) {
 	return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -57,7 +56,7 @@ function DialogContent({
 	...props
 }: DialogPrimitive.Popup.Props & {
 	showCloseButton?: boolean;
-	/** 是否用 ScrollArea 包裹内容（默认开启）；内部自带滚动的组件（如 CodeMirror）应关闭，避免双重滚动冲突 */
+	/** 是否用细滚动条包裹内容（默认开启）；内部自带滚动的组件（如 CodeMirror）应关闭，避免双重滚动冲突 */
 	scrollable?: boolean;
 	/** 是否使用内置的 CSS 进出场（默认开启）；由 motion 接管面板动画时关闭，避免两套动画叠加打架 */
 	animated?: boolean;
@@ -70,8 +69,12 @@ function DialogContent({
 				className={cn(DIALOG_CONTENT_CLASS, animated && DIALOG_CONTENT_ANIMATION_CLASS, className)}
 				{...props}
 			>
-				{/* // ! ScrollArea 包裹内容让超长弹窗自动滚动；scrollable=false 时直接渲染 children（供 CodeMirror 等自带滚动的组件使用，避免双重滚动冲突） */}
-				{scrollable ? <ScrollArea className="max-h-[inherit]">{children}</ScrollArea> : children}
+				{/* // ! 超长弹窗用原生 overflow + scrollbar-thin；scrollable=false 时直接渲染 children（供 CodeMirror 等自带滚动的组件使用） */}
+				{scrollable ? (
+					<div className="scrollbar-thin max-h-[inherit] overflow-auto">{children}</div>
+				) : (
+					children
+				)}
 				{showCloseButton && (
 					<DialogPrimitive.Close
 						data-slot="dialog-close"

@@ -175,9 +175,15 @@ pnpm dlx shadcn@latest add [组件名]
 
 使用 shadcn 组件时，如果不确定组件 API、组合方式或最佳实践，应调用 /shadcn 技能查看正确用法。
 
-## ScrollArea 高度约束
+## 滚动条（按场景分工，不可混用）
 
-`ScrollArea` 的 Viewport 用 `max-h-[inherit]`，只读父级 `max-height`，不读 `height`。要让其内部滚动，必须传 `max-h-*`（如 `h-full max-h-full`），仅 `h-full` 会撑成内容高度导致无法滚动。
+| 方案 | 用法 | 适用 |
+| --- | --- | --- |
+| `scrollbar-thin` | `overflow-auto scrollbar-thin` | **默认**：布局溢出、表格、textarea、长文、普通面板 |
+| `ScrollArea` | `@/shared/ui/scroll-area` | **例外**：固定高度产品面板，且滚动条需自绘（`viewportRef` / `thumbSmooth` 等） |
+
+- 同一容器禁止叠用；仅「想细一点 / hover 显隐」不够格用 `ScrollArea`。
+- `ScrollArea` 须带 `max-h-*`（Viewport 只读 max-height）；操作滚动用 `viewportRef`，`thumbSmooth` 仅内容突变时短暂开。
 
 ## 加载状态（Loading）
 

@@ -20,7 +20,6 @@ import {
 import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import {
 	DEFAULT_SPACE_ICON_KEY,
 	ICON_CATEGORIES,
@@ -112,8 +111,8 @@ export function CreateSpaceDialog({
 					{/* // 右侧：标识 + 颜色选择 */}
 					<div className="flex w-52 shrink-0 flex-col gap-2">
 						<Label>标识</Label>
-						{/* // 图标较多，限高后内部滚动；内容层 p-1.5 内边距避免选中 ring 贴边被 Viewport 裁切 */}
-						<ScrollArea className="max-h-60">
+						{/* // 图标较多，限高后内部滚动；内容层 p-1.5 避免选中 ring 贴边被裁切 */}
+						<div className="scrollbar-thin max-h-60 overflow-auto">
 							<div className="p-1.5">
 								{ICON_CATEGORIES.map((category, index) => {
 									const options = RULE_SPACE_ICON_OPTIONS.filter(
@@ -145,7 +144,7 @@ export function CreateSpaceDialog({
 									);
 								})}
 							</div>
-						</ScrollArea>
+						</div>
 						{/* // 颜色选择：5 色预设网格 */}
 						<div className="grid grid-cols-5 gap-2">
 							{SPACE_PRESET_COLORS.map((preset) => (

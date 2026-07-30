@@ -228,11 +228,7 @@ export function FolderCombobox({
 					{/* CommandInput：cmdk 自动管过滤（按 CommandItem 的 value 匹配输入） */}
 					<CommandInput placeholder="搜索文件夹..." />
 					<div className="relative">
-						<CommandList
-							ref={listRef}
-							onScroll={updateScrollProgress}
-							className="scrollbar-thin max-h-72"
-						>
+						<CommandList ref={listRef} onScroll={updateScrollProgress} className="max-h-72">
 							<CommandEmpty>
 								<CreateButton
 									onSelect={(name) => {
