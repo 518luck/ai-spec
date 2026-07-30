@@ -6,12 +6,14 @@
 
 import type { ReactCodeMirrorRef } from "@uiw/react-codemirror";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { type JSX, type ReactNode, useEffect, useRef, useState } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import {
 	extractTitle,
 	MarkdownEditor,
 	QuickToolbar,
+	resolveEditorColors,
 	useEditorStore,
 } from "@/features/markdown-editor";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
@@ -77,8 +79,17 @@ export function RuleEditorForm({
 
 	const resetView = useEditorStore((s) => s.resetView);
 	const setPreview = useEditorStore((s) => s.setPreview);
+	const editorThemeId = useEditorStore((s) => s.editorThemeId);
+	const isPreview = useEditorStore((s) => s.isPreview);
 	// ! 快捷栏顺序存在 localStorage，服务端取不到；挂载后再渲染，避免 hydration 不一致
 	const mounted = useMounted();
+
+	// 状态栏背景：编辑态从主题派生底色与 CodeMirror 融为一体；预览态不传，走页面默认背景
+	const { resolvedTheme } = useTheme();
+	const { editorBgColor } = resolveEditorColors(editorThemeId, resolvedTheme === "dark");
+	const headerStyle = isPreview
+		? undefined
+		: { background: `linear-gradient(to bottom, ${editorBgColor}, ${editorBgColor}1A)` };
 
 	// 进页面初始化编辑器运行态：详情页默认预览，其余（编辑/创建）重置为编辑态
 	useEffect(() => {
@@ -126,6 +137,8 @@ export function RuleEditorForm({
 			scrollable={false}
 			// 状态栏浮在编辑区之上：半透明毛玻璃，正文滚动时从其下方穿过
 			floatingHeader
+			// 状态栏背景：编辑态跟随主题（渐变），预览态不传走页面默认
+			headerStyle={headerStyle}
 			title={
 				<div className="flex w-full items-center gap-2">
 					<Button variant="ghost" size="icon-sm" aria-label="返回" onClick={handleBack}>
@@ -167,9 +180,9 @@ export function RuleEditorForm({
 					value={content}
 					onChange={handleContentChange}
 					placeholder="写下你的规约内容吧，支持 Markdown"
-					// > 编辑器底色改透明跟随页面背景（主题只保留语法配色），否则状态栏的半透明渐变会压在另一种底色上显脏
+					// > 编辑器背景跟随主题（vscode/xcode 等主题自带底色），与 prompt-workspace 一致
 					// > 顶部留白 = 状态栏 h-16 再多 0.5rem，首行不被压住、上滚时文字从状态栏下穿过；左右对齐状态栏 px-6；覆盖内置样式需加 `!`
-					editorClassName="[&_.cm-editor]:bg-transparent! [&_.cm-gutters]:bg-transparent! [&_.cm-scroller]:px-6! [&_.cm-scroller]:pt-18!"
+					editorClassName="[&_.cm-scroller]:px-6! [&_.cm-scroller]:pt-18!"
 					previewClassName="px-6 pt-18 pb-6"
 				/>
 			</div>

@@ -1,6 +1,6 @@
 // # 带标题栏的页面外壳：可选标题 + 可滚动内容区
 
-import type { ComponentProps, JSX, ReactNode } from "react";
+import type { ComponentProps, CSSProperties, JSX, ReactNode } from "react";
 
 import { cn } from "@/shared/lib/utils";
 import { ScrollArea } from "@/shared/ui/scroll-area";
@@ -11,6 +11,8 @@ type TitlePageShellProps = Omit<ComponentProps<"div">, "title"> & {
 	scrollable?: boolean;
 	/** 标题栏是否浮在内容之上（仅 scrollable=false 生效）：内容从页面顶端起算、滚动时穿过标题栏，供自带滚动的编辑器使用 */
 	floatingHeader?: boolean;
+	/** 标题栏背景（style 透传）：编辑器场景传主题色渐变，使其与 CodeMirror 底色融为一体；不传走默认页面渐变 */
+	headerStyle?: CSSProperties;
 };
 
 // 提供可选标题栏和可滚动内容区的页面外壳。
@@ -21,6 +23,7 @@ export function TitlePageShell({
 	title,
 	scrollable = true,
 	floatingHeader = false,
+	headerStyle,
 	className,
 	children,
 	...props
@@ -49,6 +52,7 @@ export function TitlePageShell({
 						<div
 							data-slot="title-page-shell-header"
 							className="sticky top-0 z-10 flex h-16 shrink-0 items-center border-b bg-linear-to-b from-background/80 to-background/5 px-6 backdrop-blur-sm"
+							style={headerStyle}
 						>
 							{headerContent}
 						</div>
@@ -62,10 +66,11 @@ export function TitlePageShell({
 							data-slot="title-page-shell-header"
 							className={cn(
 								"flex h-16 shrink-0 items-center border-b px-6",
-								// 浮层模式：脱离布局盖在内容上方，半透明渐变 + 毛玻璃，滚动的内容从下方透出
+								// 浮层模式：脱离布局盖在内容上方，半透明渐变 + 毛玻璃，滚动的内容从下方透出；headerStyle 传了渐变则覆盖默认 background 渐变
 								floatingHeader &&
 									"absolute inset-x-0 top-0 z-10 bg-linear-to-b from-background/80 to-background/5 backdrop-blur-sm",
 							)}
+							style={headerStyle}
 						>
 							{headerContent}
 						</div>
