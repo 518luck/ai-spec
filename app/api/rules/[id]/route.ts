@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { AiSpecError } from "@/server/errors/http-error";
 import { withPersonal } from "@/server/middleware/with-personal";
+import { calculateDiff, serializeDiff } from "@/server/utils/diff";
 import { mapTags } from "@/server/utils/map-tags";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
@@ -61,11 +62,14 @@ export const PUT = withPersonal(async ({ req, ctx, session }) => {
 	}
 	const { name, content, folderId, tags } = parsed.data;
 
-	// 验证规约是否存在且属于当前用户
+	// 验证规约是否存在且属于当前用户；取 content 用于计算版本 diff
 	const existingRule = await prisma.rule.findFirst({
 		where: {
 			id,
 			ownerId: session.user.id,
+		},
+		select: {
+			content: true,
 		},
 	});
 
@@ -105,11 +109,45 @@ export const PUT = withPersonal(async ({ req, ctx, session }) => {
 		data.tags = { create: tags.map((tagId) => ({ tagId })) };
 	}
 
-	// > 事务保证原子性：deleteMany + update（含 tags.create）要么全成要么全败
+	// > 版本记录：name 或 content 变更时建版本（folder/tags/space 变更不建版本）
+	const newContent = content ?? existingRule.content;
+	const hasContentChange = name !== undefined || content !== undefined;
+
+	// > 事务保证原子性：deleteMany + update（含 tags.create）+ 版本记录创建要么全成要么全败
 	// ownerId 进 where 做归属隔离；记录不存在或不属于当前用户时抛 P2025 → 404
 	const rule = await prisma.$transaction(async (tx) => {
 		if (tags !== undefined) {
 			await tx.ruleTag.deleteMany({ where: { ruleId: id } });
+		}
+
+		// > 如果有内容变更，创建版本记录（混合 diff：每 10 版存一次全量快照，其余存增量 diff）
+		if (hasContentChange) {
+			const latestVersion = await tx.ruleVersion.findFirst({
+				where: { ruleId: id },
+				orderBy: { versionNumber: "desc" },
+				select: { versionNumber: true },
+			});
+
+			const nextVersionNumber = (latestVersion?.versionNumber ?? 0) + 1;
+			// v1 强制快照，其后每 10 版存一次快照锚点，保证任意版本都能向前找到基准
+			const isSnapshot = nextVersionNumber === 1 || nextVersionNumber % 10 === 0;
+
+			// 计算 diff（新内容相对当前内容）
+			const diff = calculateDiff({
+				oldText: existingRule.content,
+				newText: newContent,
+			});
+
+			await tx.ruleVersion.create({
+				data: {
+					ruleId: id,
+					editorId: session.user.id,
+					versionNumber: nextVersionNumber,
+					isSnapshot,
+					snapshot: isSnapshot ? newContent : null,
+					diff: isSnapshot ? null : serializeDiff(diff),
+				},
+			});
 		}
 
 		return tx.rule.update({

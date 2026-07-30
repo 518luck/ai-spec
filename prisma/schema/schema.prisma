@@ -52,8 +52,9 @@ model User {
   folderMemberships FolderMember[] // 用户被授予例外权限的文件夹列表
 
   // 规约库反向关系：该用户创建的领域空间与规则
-  ruleSpaces RuleSpace[] @relation("RuleSpaceOwner")
-  rules      Rule[]      @relation("RuleOwner")
+  ruleSpaces   RuleSpace[]    @relation("RuleSpaceOwner")
+  rules        Rule[]         @relation("RuleOwner")
+  ruleVersions RuleVersion[]  @relation("RuleVersionEditor") // 该用户创建的规则版本记录
 
   // AGENTS.md 反向关系：该用户创建的项目与文档
   agentsProjects AgentsProject[] @relation("AgentsProjectOwner")

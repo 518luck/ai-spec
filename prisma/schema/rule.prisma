@@ -57,10 +57,11 @@ model Rule {
   folderId String? @map("folder_id") // 所属文件夹，null=未分类（直接挂空间下）
 
   // ⑤ 关联关系
-  owner  User      @relation("RuleOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其规则）
-  space  RuleSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade) // 所属空间（空间删除→级联删其下规则）
-  folder Folder?   @relation("FolderItems_Rule", fields: [folderId], references: [id], onDelete: SetNull) // 所属文件夹（文件夹删除→规则保留，folderId 置空，但仍在原空间）
-  tags   RuleTag[] // 标签关联（复用 shared 域 Tag 表）
+  owner   User      @relation("RuleOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其规则）
+  space   RuleSpace @relation(fields: [spaceId], references: [id], onDelete: Cascade) // 所属空间（空间删除→级联删其下规则）
+  folder  Folder?   @relation("FolderItems_Rule", fields: [folderId], references: [id], onDelete: SetNull) // 所属文件夹（文件夹删除→规则保留，folderId 置空，但仍在原空间）
+  tags    RuleTag[] // 标签关联（复用 shared 域 Tag 表）
+  versions RuleVersion[] // 版本历史（混合 diff：周期快照 + 增量 diff）
 
   // ⑥ 索引
   @@index([ownerId]) // 加速"我的规则"查询
@@ -85,5 +86,35 @@ model RuleTag {
   // ⑥ 索引
   @@id([ruleId, tagId])
   @@index([tagId]) // 加速"标签下规则"反查（贯穿检索）
+  @@schema("rule")
+}
+
+// 规则版本记录，支持增量 diff + 周期性快照锚点（对称于 PromptRecordVersion）
+model RuleVersion {
+  // ① 主键
+  id String @id @default(cuid()) // 版本记录主键
+
+  // ② 业务字段
+  versionNumber Int     @map("version_number") // 版本序号，递增
+  message       String? // 版本说明，类似 commit message
+  isSnapshot    Boolean @default(false) @map("is_snapshot") // 是否为快照锚点（每 10 版本存一次完整快照）
+
+  // ③ 内容存储（二选一：快照存完整内容，增量存 diff）
+  snapshot String? @db.Text // 完整快照（isSnapshot=true 时有值）
+  diff     String? @db.Text // 行级 diff JSON（isSnapshot=false 时有值）
+
+  // ④ 时间戳
+  createdAt DateTime @default(now()) @map("created_at") // 创建时间
+
+  // ⑤ 外键列
+  ruleId   String @map("rule_id") // 所属规则 ID
+  editorId String @map("editor_id") // 编辑人 ID
+
+  // ⑥ 关联关系
+  rule   Rule @relation(fields: [ruleId], references: [id], onDelete: Cascade) // 归属的规则（规则删除→级联删除所有版本）
+  editor User @relation("RuleVersionEditor", fields: [editorId], references: [id], onDelete: Cascade) // 编辑人（用户删除→级联删除其创建的版本）
+
+  // ⑦ 索引
+  @@index([ruleId, versionNumber]) // 加速"查询某规则的版本历史"
   @@schema("rule")
 }
