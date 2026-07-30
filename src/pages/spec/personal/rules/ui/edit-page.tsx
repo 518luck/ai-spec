@@ -4,7 +4,7 @@
 
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import useSWRMutation from "swr/mutation";
 
 import { getRule, updateRule } from "@/entities/rule";
@@ -27,6 +27,7 @@ type EditRulePageProps = {
 
 export function EditRulePage({ id, mode = "edit" }: EditRulePageProps): JSX.Element {
 	const router = useRouter();
+	const { mutate } = useSWRConfig();
 	// 拉取规约详情用于回填
 	const { data: rule, isLoading } = useSWR(["rule", id], () => getRule(id));
 	// 更新规约 mutation
@@ -35,7 +36,7 @@ export function EditRulePage({ id, mode = "edit" }: EditRulePageProps): JSX.Elem
 		async (_key, { arg }) => updateRule(id, arg),
 	);
 
-	// 保存逻辑：schema 校验 + 更新 + toast + 跳回列表；返回是否成功供表单控制按钮状态
+	// 保存逻辑：schema 校验 + 更新 + 失效缓存（单条详情 + 列表）+ toast + 跳回列表
 	const handleSave = async (payload: RuleEditorPayload): Promise<boolean> => {
 		const parsed = updateRuleDtoSchema.safeParse(payload);
 		if (!parsed.success) {
@@ -44,6 +45,8 @@ export function EditRulePage({ id, mode = "edit" }: EditRulePageProps): JSX.Elem
 		}
 
 		await triggerUpdateRule(parsed.data);
+		// 失效单条详情与列表缓存，确保再进详情/列表是新数据
+		await mutate((key) => Array.isArray(key) && (key[0] === "rule" || key[0] === "rules"));
 		toast.success("规约已保存");
 		router.push("/spec/personal/rules");
 		return true;
