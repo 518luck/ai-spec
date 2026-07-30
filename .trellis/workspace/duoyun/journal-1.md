@@ -174,3 +174,25 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 8: 规则表格滚动布局与细滚动条拆分
+
+**Date**: 2026-07-30
+**Task**: 规则表格滚动布局与细滚动条拆分
+**Branch**: `main`
+
+### Summary
+
+修复规则表格大页数时分页被裁切/无法滚动的问题：卡片 max-h 封顶，表格区用 min-h-0 flex-auto overflow-auto 内滚、PaginationBar shrink-0 贴底；去掉不可靠的行高估算与 ScrollArea 高度链。将 scrollbar-thin 从 global.css 拆到 styles/scrollbar-thin.css，并接到表格滚动容器。同步厘清 ScrollArea 与 CSS 滚动的选用边界。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `3afdd73` | (see git log) |
+| `7eabe39` | (see git log) |
+
+### Status
+
+[OK] **Completed**
