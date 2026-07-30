@@ -1,9 +1,10 @@
 "use client";
 
 // # 规约 Data Table：TanStack Table + shadcn Table，列由 columns 定义，行由 flexRender 输出
-// > 外层滚动 + sticky 表头；选中时表头切成批量操作栏；最少 10 行高度
+// > 表头不进滚动区，只让 body 滚动；选中时表头切成批量操作栏；body 最少 10 行
 
 import {
+	type Column,
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
@@ -25,15 +26,32 @@ import { itemTransition, ROW_ITEM_MOTION } from "../../lib/list-motion";
 
 // 单行高度（TableCell p-2 + 行内内容 + border-b）
 const TABLE_ROW_HEIGHT = 41;
-// 表头高度（TableHead h-10）
-const TABLE_HEADER_HEIGHT = 40;
-// 滚动区最少撑满表头 + 默认 10 行，避免行数变化时外层跟着跳
-const SCROLL_MIN_HEIGHT = TABLE_HEADER_HEIGHT + TABLE_ROW_HEIGHT * 10;
-// 分页约 49px，给滚动区留出视口上限
-const SCROLL_MAX_HEIGHT = "calc(100dvh - 13rem - 3rem)";
+// body 最少撑满默认 10 条，避免行数变化时外层跟着跳
+const BODY_MIN_HEIGHT = TABLE_ROW_HEIGHT * 10;
+// 表头约 40px、分页约 49px，给 body 留出视口上限
+const BODY_MAX_HEIGHT = "calc(100dvh - 13rem - 5.5rem)";
 
 // 可做动画的表格行：给 TableRow 套一层 motion，让行能按索引错峰淡入
 const MotionTableRow = motion.create(TableRow);
+
+// 选择列 / 操作列的左右内边距
+const edgePadClassName = (columnId: string): string | undefined => {
+	if (columnId === "select") return "pl-4";
+	if (columnId === "actions") return "pr-4";
+	return undefined;
+};
+
+// 表头与 body 共用 colgroup，按 ColumnDef.size 锁列宽
+const ColumnGroup = ({ columns }: { columns: Column<RuleListItemVo, unknown>[] }): JSX.Element => (
+	<colgroup>
+		{columns.map((column) => (
+			<col
+				key={column.id}
+				style={column.columnDef.size ? { width: column.columnDef.size } : undefined}
+			/>
+		))}
+	</colgroup>
+);
 
 type RuleDataTableProps = {
 	columns: ColumnDef<RuleListItemVo, unknown>[];
@@ -48,7 +66,7 @@ type RuleDataTableProps = {
 	onBatchDelete: () => void;
 };
 
-// 规约列表 Data Table：官方 useReactTable + flexRender 渲染
+// 规约列表 Data Table：官方 useReactTable + flexRender；表头固定，body 独立滚动
 export function RuleTable({
 	columns,
 	data,
@@ -73,25 +91,26 @@ export function RuleTable({
 		},
 	});
 
+	const leafColumns = table.getAllLeafColumns();
 	const selectionCount = table.getFilteredSelectedRowModel().rows.length;
 	const hasSelection = selectionCount > 0;
 
-	// 加载状态：高度对齐 10 行列表区，避免和列表态互相跳
+	// 加载状态：高度对齐 10 行 body，避免和列表态互相跳
 	if (isLoading) {
 		return (
 			<div
 				className="flex items-center justify-center text-muted-foreground"
-				style={{ minHeight: SCROLL_MIN_HEIGHT }}
+				style={{ minHeight: BODY_MIN_HEIGHT }}
 			>
 				<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
 			</div>
 		);
 	}
 
-	// 空状态：在表格外部显示，高度同样对齐 10 行列表区
+	// 空状态：在表格外部显示，高度同样对齐 10 行 body
 	if (data.length === 0) {
 		return (
-			<div className="flex items-center justify-center" style={{ minHeight: SCROLL_MIN_HEIGHT }}>
+			<div className="flex items-center justify-center" style={{ minHeight: BODY_MIN_HEIGHT }}>
 				<EmptyAction
 					q={q}
 					icon={<Icons.rulesLibrary />}
@@ -102,29 +121,16 @@ export function RuleTable({
 		);
 	}
 
-	// 数据列表：单表 + sticky 表头；选中时表头切批量操作栏
+	// 数据列表：表头在滚动区外；只有 body 滚动，滚动条不压表头
 	return (
-		<div
-			className="scrollbar-thin overflow-auto"
-			style={{ minHeight: SCROLL_MIN_HEIGHT, maxHeight: SCROLL_MAX_HEIGHT }}
-		>
+		<div>
+			{/* // @ 表头：不滚动；选中时切成批量操作栏 */}
 			<Table className="table-fixed" containerClassName="overflow-x-visible">
-				{/* // ! colgroup 按 ColumnDef.size 锁列宽；未声明 size 的列吃剩余宽度 */}
-				<colgroup>
-					{table.getAllLeafColumns().map((column) => (
-						<col
-							key={column.id}
-							style={column.columnDef.size ? { width: column.columnDef.size } : undefined}
-						/>
-					))}
-				</colgroup>
-
-				{/* // @ 表头：默认 flexRender 列头；有选中时换成批量操作栏 */}
+				<ColumnGroup columns={leafColumns} />
 				<AnimatePresence mode="wait">
 					{hasSelection ? (
 						<motion.thead
 							key="batch"
-							className="sticky top-0 z-10"
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							exit={{ opacity: 0 }}
@@ -158,20 +164,11 @@ export function RuleTable({
 							</TableRow>
 						</motion.thead>
 					) : (
-						<TableHeader key="header" className="sticky top-0 z-10 bg-muted">
+						<TableHeader key="header" className="bg-muted">
 							{table.getHeaderGroups().map((headerGroup) => (
 								<TableRow key={headerGroup.id}>
 									{headerGroup.headers.map((header) => (
-										<TableHead
-											key={header.id}
-											className={
-												header.id === "select"
-													? "pl-4"
-													: header.id === "actions"
-														? "pr-4"
-														: undefined
-											}
-										>
+										<TableHead key={header.id} className={edgePadClassName(header.id)}>
 											{header.isPlaceholder
 												? null
 												: flexRender(header.column.columnDef.header, header.getContext())}
@@ -182,33 +179,33 @@ export function RuleTable({
 						</TableHeader>
 					)}
 				</AnimatePresence>
-
-				<TableBody>
-					{table.getRowModel().rows.map((row, index) => (
-						<MotionTableRow
-							key={row.id}
-							data-state={row.getIsSelected() ? "selected" : undefined}
-							{...ROW_ITEM_MOTION}
-							transition={itemTransition(index)}
-						>
-							{row.getVisibleCells().map((cell) => (
-								<TableCell
-									key={cell.id}
-									className={
-										cell.column.id === "select"
-											? "pl-4"
-											: cell.column.id === "actions"
-												? "pr-4"
-												: undefined
-									}
-								>
-									{flexRender(cell.column.columnDef.cell, cell.getContext())}
-								</TableCell>
-							))}
-						</MotionTableRow>
-					))}
-				</TableBody>
 			</Table>
+
+			{/* // > body 独立滚动：最少 10 行；滚动条只出现在这里 */}
+			<div
+				className="scrollbar-thin overflow-y-auto"
+				style={{ minHeight: BODY_MIN_HEIGHT, maxHeight: BODY_MAX_HEIGHT }}
+			>
+				<Table className="table-fixed" containerClassName="overflow-x-visible">
+					<ColumnGroup columns={leafColumns} />
+					<TableBody>
+						{table.getRowModel().rows.map((row, index) => (
+							<MotionTableRow
+								key={row.id}
+								data-state={row.getIsSelected() ? "selected" : undefined}
+								{...ROW_ITEM_MOTION}
+								transition={itemTransition(index)}
+							>
+								{row.getVisibleCells().map((cell) => (
+									<TableCell key={cell.id} className={edgePadClassName(cell.column.id)}>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</TableCell>
+								))}
+							</MotionTableRow>
+						))}
+					</TableBody>
+				</Table>
+			</div>
 		</div>
 	);
 }
