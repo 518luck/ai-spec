@@ -1,10 +1,11 @@
 "use client";
 
 // # 规约表格列定义：对齐 shadcn Data Table 的 ColumnDef 写法
-// > 选择 / 名称 / 文件夹 / 预览 / 操作；名称与文件夹截断时 hover 出全文
+// > 选择 / 名称 / 文件夹 / 标签 / 预览 / 更新时间 / 操作；名称与文件夹截断时 hover 出全文
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { TagChip } from "@/features/tag-combobox";
+import { formatRelativeTime } from "@/shared/lib/format-relative-time";
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Icons } from "@/shared/ui/icons";
@@ -74,6 +75,18 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 		// 预览只截断，不挂 tooltip（后续由后端限长）
 		cell: ({ row }) => (
 			<span className="block truncate text-muted-foreground">{row.getValue("preview")}</span>
+		),
+	},
+	{
+		id: "updatedAt",
+		header: "更新时间",
+		// 相对时间：近期「刚刚/X分钟前/昨天/X天前」，超 7 天退化 MM-DD；纯展示不挂 tooltip
+		size: 104,
+		enableSorting: false,
+		cell: ({ row }) => (
+			<span className="whitespace-nowrap text-muted-foreground">
+				{formatRelativeTime(row.original.updatedAt)}
+			</span>
 		),
 	},
 	{
