@@ -152,3 +152,25 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 7: 统一列表分页为 page/pageSize 语义
+
+**Date**: 2026-07-30
+**Task**: 统一列表分页为 page/pageSize 语义
+**Branch**: `main`
+
+### Summary
+
+将项目全部 5 个列表 API（rules、discover skills、prompt records、record versions、prompt drafts）的分页风格从 offset/limit 统一为 page(1-based)/pageSize，消除后端把 DB 偏移语义直接暴露给前端的反模式。改动覆盖 schema（DTO 入参改 page/pageSize、VO 去掉冗余的 nextOffset）、API route（内部用 offset=(page-1)*size 换算喂 Prisma/raw SQL）、entity client（URL 参数名同步）、前端调用方（4 个 useSWRInfinite 的 getKey 从依赖后端 nextOffset 改为用内置 pageIndex+1，更简单且少一个依赖）。versions 链路顺带改了通用组件 version-page.tsx 的契约（VersionListPage 去掉 nextOffset，fetchVersions 签名从 offset 改成 pageIndex）。typecheck 与 lint 全部通过。关键结论：offset/nextOffset 在旧设计里是给无限滚动当游标用的，换 page 模式后 useSWRInfinite 的 pageIndex 天然递增、直接接管该职责，nextOffset 无存在必要。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `43ab86b` | (see git log) |
+| `329aa63` | (see git log) |
+
+### Status
+
+[OK] **Completed**
