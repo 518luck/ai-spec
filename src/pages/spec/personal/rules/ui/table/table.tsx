@@ -54,7 +54,7 @@ export function RuleTable({
 	// 加载状态
 	if (isLoading) {
 		return (
-			<div className="flex h-full items-center justify-center text-muted-foreground">
+			<div className="flex flex-1 items-center justify-center text-muted-foreground">
 				<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
 			</div>
 		);
@@ -63,7 +63,7 @@ export function RuleTable({
 	// 空状态：在表格外部显示，避免表格元素的布局限制
 	if (rules.length === 0) {
 		return (
-			<div className="flex h-full items-center justify-center">
+			<div className="flex flex-1 items-center justify-center">
 				<EmptyAction
 					q={q}
 					icon={<Icons.rulesLibrary />}

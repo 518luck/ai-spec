@@ -156,29 +156,30 @@ export function RuleTableContainer({
 
 	return (
 		<>
-			{/* 固定高度：占满视口减去上下留白，小屏用 540 兜底，避免随行数变化抖动 */}
-			<div className="flex min-h-136px flex-col overflow-hidden rounded-lg border">
-				<RuleTable
-					rules={rules}
-					isLoading={isLoading}
-					q={q}
-					onCreate={onCreate}
-					selectedIds={selectedIds}
-					onToggleSelect={toggleSelect}
-					onToggleSelectAll={toggleSelectAll}
-					onBatchDelete={() => setConfirmOpen(true)}
-					onClearSelection={clearSelection}
-				/>
-				<PaginationBar
-					page={page}
-					total={total}
-					hasMore={hasMore}
-					pageSize={pageSize}
-					onPageChange={handlePageChange}
-					pageSizeOptions={PAGE_SIZE_OPTIONS}
-					onPageSizeChange={handlePageSizeChange}
-					onFirstPage={handleFirstPage}
-				/>
+			<div className="flex max-h-[calc(100dvh-13rem)] flex-col overflow-hidden rounded-lg border">
+				<div className="flex min-h-136 flex-col">
+					<RuleTable
+						rules={rules}
+						isLoading={isLoading}
+						q={q}
+						onCreate={onCreate}
+						selectedIds={selectedIds}
+						onToggleSelect={toggleSelect}
+						onToggleSelectAll={toggleSelectAll}
+						onBatchDelete={() => setConfirmOpen(true)}
+						onClearSelection={clearSelection}
+					/>
+					<PaginationBar
+						page={page}
+						total={total}
+						hasMore={hasMore}
+						pageSize={pageSize}
+						onPageChange={handlePageChange}
+						pageSizeOptions={PAGE_SIZE_OPTIONS}
+						onPageSizeChange={handlePageSizeChange}
+						onFirstPage={handleFirstPage}
+					/>
+				</div>
 			</div>
 
 			{/* // @ 批量删除确认弹窗 */}
