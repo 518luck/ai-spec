@@ -15,6 +15,7 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 } from "@/shared/ui/dropdown-menu";
+import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 
 // 视图选项：表格（默认）与卡片网格
@@ -48,6 +49,10 @@ export function RuleToolbar({ value, onViewChange }: RuleToolbarProps): JSX.Elem
 						<DropdownMenuSubTrigger className="gap-2">
 							<Icons.tag className="size-4 text-foreground" />
 							标签
+							{/* // 阻止点帮助时误触开合子菜单（仅 pointerdown，避免静态节点绑 click 的 a11y 告警） */}
+							<span className="ml-auto inline-flex" onPointerDown={(e) => e.stopPropagation()}>
+								<HelpTooltip alignWithText content="标签筛选可穿透文件夹，但不会跨领域空间生效" />
+							</span>
 						</DropdownMenuSubTrigger>
 						{/* // overflow-hidden：盖掉 SubContent 默认 overflow-y-auto，滚动只发生在 CommandList，底部弥散遮罩才能生效 */}
 						<DropdownMenuSubContent className="overflow-hidden p-0">
