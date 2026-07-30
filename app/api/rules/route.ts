@@ -74,6 +74,8 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 						name: true,
 					},
 				},
+				// 标签关联随列表一次查回，扁平化后供表格只读展示
+				tags: { include: { tag: true } },
 				createdAt: true,
 				updatedAt: true,
 			},
@@ -93,6 +95,7 @@ export const GET = withPersonal(async ({ session, searchParams }) => {
 				: rule.content,
 		folderId: rule.folderId,
 		folderName: rule.folder?.name ?? null,
+		tags: mapTags(rule.tags),
 		createdAt: rule.createdAt.toISOString(),
 		updatedAt: rule.updatedAt.toISOString(),
 	}));

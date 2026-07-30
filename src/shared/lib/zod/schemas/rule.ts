@@ -92,6 +92,8 @@ export const ruleListItemVoSchema = z.object({
 	preview: z.string(),
 	folderId: z.string().nullable(),
 	folderName: z.string().nullable(),
+	// 列表只读展示标签（颜色点 + 名称），与单条详情同构
+	tags: z.array(tagOptionVoSchema),
 	createdAt: z.iso.datetime(),
 	updatedAt: z.iso.datetime(),
 });

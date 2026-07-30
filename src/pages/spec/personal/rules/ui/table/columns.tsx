@@ -4,10 +4,11 @@
 // > 选择 / 名称 / 文件夹 / 预览 / 操作；名称与文件夹截断时 hover 出全文
 
 import type { ColumnDef } from "@tanstack/react-table";
-
+import { TagChip } from "@/features/tag-combobox";
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { Checkbox } from "@/shared/ui/checkbox";
 import { Icons } from "@/shared/ui/icons";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { TruncatedTooltip } from "@/shared/ui/truncated-tooltip";
 import { TableActions } from "../table-actions";
 
@@ -60,6 +61,14 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 		},
 	},
 	{
+		id: "tags",
+		header: "标签",
+		// 标签列只读展示：前 3 个 chip，超出收成「+N」hover 看全部
+		size: 160,
+		enableSorting: false,
+		cell: ({ row }) => <RuleTagsCell tags={row.original.tags} />,
+	},
+	{
 		accessorKey: "preview",
 		header: "预览",
 		// 预览只截断，不挂 tooltip（后续由后端限长）
@@ -74,3 +83,37 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 		cell: ({ row }) => <TableActions rule={row.original} />,
 	},
 ];
+
+// > 标签列单元：空态显破折号；非空展示前 3 个只读 chip，超出收成「+N」药丸 hover 看全部
+const TAG_PREVIEW_LIMIT = 3;
+
+function RuleTagsCell({ tags }: { tags: RuleListItemVo["tags"] }) {
+	if (tags.length === 0) {
+		return <span className="text-muted-foreground/50">—</span>;
+	}
+	const visible = tags.slice(0, TAG_PREVIEW_LIMIT);
+	const hiddenCount = tags.length - visible.length;
+	return (
+		<div className="flex flex-wrap items-center gap-1">
+			{visible.map((tag) => (
+				<TagChip key={tag.id} name={tag.name} color={tag.color} />
+			))}
+			{hiddenCount > 0 && (
+				<Tooltip>
+					<TooltipTrigger
+						render={
+							<span className="inline-flex h-6 shrink-0 cursor-default select-none items-center rounded-full bg-muted px-2 font-medium text-muted-foreground text-xs">
+								+{hiddenCount}
+							</span>
+						}
+					/>
+					<TooltipContent className="flex max-w-xs flex-wrap gap-1">
+						{tags.map((tag) => (
+							<TagChip key={tag.id} name={tag.name} color={tag.color} />
+						))}
+					</TooltipContent>
+				</Tooltip>
+			)}
+		</div>
+	);
+}
