@@ -126,8 +126,6 @@ export function RuleEditorForm({
 					</Button>
 					{/* // @ 名称即页面标题：有名称就顶掉「创建规约/编辑规约」；平时是纯文本，双击才变输入框 */}
 					<EditableName value={name} fallback={headerTitle} onCommit={handleNameCommit} />
-					{/* // @ 编辑器快捷栏：格式化/显示设置/预览切换，作用于 editorRef 指向的 CodeMirror */}
-					{mounted && <QuickToolbar editorRef={editorRef} isExpanded />}
 					{/* // @ 标签：chips 在左、+ 按钮贴右；紧凑 chips 模式，未选时只显示 + 按钮 */}
 					<TagSelectTrigger
 						resourceType="rules"
@@ -146,6 +144,8 @@ export function RuleEditorForm({
 						onChange={setFolderId}
 						className="min-w-32 max-w-48 shrink"
 					/>
+					{/* // @ 编辑器快捷栏：格式化/显示设置/预览切换，作用于 editorRef 指向的 CodeMirror */}
+					{mounted && <QuickToolbar editorRef={editorRef} isExpanded />}
 					<Button size="sm" disabled={isSaving} onClick={handleSubmit}>
 						{isSaving ? `${submitLabel}中...` : submitLabel}
 					</Button>
