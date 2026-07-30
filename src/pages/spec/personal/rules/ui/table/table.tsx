@@ -34,11 +34,12 @@ const BODY_MAX_HEIGHT = "calc(100dvh - 13rem - 5.5rem)";
 // 可做动画的表格行：给 TableRow 套一层 motion，让行能按索引错峰淡入
 const MotionTableRow = motion.create(TableRow);
 
-// 选择列 / 操作列的左右内边距
-const edgePadClassName = (columnId: string): string | undefined => {
-	if (columnId === "select") return "pl-4";
-	if (columnId === "actions") return "pr-4";
-	return undefined;
+// 选择/操作列边距；文本列 overflow-hidden，配合 truncate 吃掉超长内容，禁止撑出横向滚动
+const cellClassName = (columnId: string): string => {
+	if (columnId === "select") return "overflow-hidden pl-4";
+	if (columnId === "actions") return "overflow-hidden pr-4";
+	// max-w-0：table-fixed 下让弹性列按 col 宽收缩，truncate 才能生效
+	return "max-w-0 overflow-hidden";
 };
 
 // 表头与 body 共用 colgroup，按 ColumnDef.size 锁列宽
@@ -125,7 +126,7 @@ export function RuleTable({
 	return (
 		<div>
 			{/* // @ 表头：不滚动；选中时切成批量操作栏 */}
-			<Table className="table-fixed" containerClassName="overflow-x-visible">
+			<Table className="table-fixed" containerClassName="overflow-x-hidden">
 				<ColumnGroup columns={leafColumns} />
 				<AnimatePresence mode="wait">
 					{hasSelection ? (
@@ -137,9 +138,9 @@ export function RuleTable({
 							transition={{ duration: 0.15 }}
 						>
 							<TableRow className="border-b bg-accent/30 hover:bg-accent/30">
-								<TableCell colSpan={columns.length} className="p-0">
+								<TableCell colSpan={columns.length} className="overflow-hidden p-0">
 									<motion.div
-										className="flex items-center gap-2 px-4 py-2"
+										className="flex min-w-0 items-center gap-2 px-4 py-2"
 										initial={{ opacity: 0, y: -4 }}
 										animate={{ opacity: 1, y: 0 }}
 										transition={{ duration: 0.18, ease: "easeOut", delay: 0.05 }}
@@ -156,7 +157,7 @@ export function RuleTable({
 											<Icons.trash className="mr-1 size-3" />
 											批量删除
 										</Button>
-										<span className="ml-auto text-muted-foreground text-sm">
+										<span className="ml-auto truncate text-muted-foreground text-sm">
 											已选 {selectionCount} 项
 										</span>
 									</motion.div>
@@ -168,7 +169,7 @@ export function RuleTable({
 							{table.getHeaderGroups().map((headerGroup) => (
 								<TableRow key={headerGroup.id}>
 									{headerGroup.headers.map((header) => (
-										<TableHead key={header.id} className={edgePadClassName(header.id)}>
+										<TableHead key={header.id} className={cellClassName(header.id)}>
 											{header.isPlaceholder
 												? null
 												: flexRender(header.column.columnDef.header, header.getContext())}
@@ -181,12 +182,12 @@ export function RuleTable({
 				</AnimatePresence>
 			</Table>
 
-			{/* // > body 独立滚动：最少 10 行；滚动条只出现在这里 */}
+			{/* // > body 只纵向滚动：overflow-x-hidden 禁止横向条；最少 10 行 */}
 			<div
-				className="scrollbar-thin overflow-y-auto"
+				className="scrollbar-thin overflow-y-auto overflow-x-hidden"
 				style={{ minHeight: BODY_MIN_HEIGHT, maxHeight: BODY_MAX_HEIGHT }}
 			>
-				<Table className="table-fixed" containerClassName="overflow-x-visible">
+				<Table className="w-full table-fixed" containerClassName="overflow-x-hidden">
 					<ColumnGroup columns={leafColumns} />
 					<TableBody>
 						{table.getRowModel().rows.map((row, index) => (
@@ -197,7 +198,7 @@ export function RuleTable({
 								transition={itemTransition(index)}
 							>
 								{row.getVisibleCells().map((cell) => (
-									<TableCell key={cell.id} className={edgePadClassName(cell.column.id)}>
+									<TableCell key={cell.id} className={cellClassName(cell.column.id)}>
 										{flexRender(cell.column.columnDef.cell, cell.getContext())}
 									</TableCell>
 								))}
