@@ -25,7 +25,9 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { q, filter: filterEncoded, orgs, minStars, offset = 0 } = parsed.data;
+		const { q, filter: filterEncoded, orgs, minStars, page = 1 } = parsed.data;
+		// page 1-based → Prisma 的 skip 偏移量
+		const offset = (page - 1) * PAGE_SIZE;
 		const trimmedQuery = q?.trim() ?? "";
 		// > 解析字段开关：filter 为 base64 JSON（{title:true,description:true}）；解码失败或无 filter 参数时默认只搜 name
 		const filter = decodeFilters(filterEncoded) ?? { title: true };
@@ -78,16 +80,14 @@ export const GET = withPersonal(
 
 		const data = rows.map(toDiscoverSkillListItem);
 
-		// 是否还有下一页
+		// 是否还有下一页：本次返回满一页说明可能还有更多
 		const hasMore = rows.length === PAGE_SIZE;
-		const nextOffset = hasMore ? offset + rows.length : undefined;
 
 		// 经 Vo schema 校验
 		const voResult = discoverSkillListVoSchema.safeParse({
 			data,
 			total,
 			hasMore,
-			nextOffset,
 		});
 		if (!voResult.success) {
 			throw voResult.error;

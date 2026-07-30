@@ -35,8 +35,10 @@ export const GET = withPersonal(
 			filter: filterEncoded,
 			favorite,
 			sort,
-			offset = 0,
+			page = 1,
 		} = parsed.data;
+		// page 1-based → raw SQL 的 OFFSET 偏移量
+		const offset = (page - 1) * PAGE_SIZE;
 		const trimmedQuery = q?.trim() ?? "";
 
 		// > 解析搜索字段开关：filter 为 base64 JSON（{title:true,content:true}）；解码失败或无 filter 参数时默认只搜 name
@@ -140,15 +142,12 @@ export const GET = withPersonal(
 
 		// 是否还有下一页：本次返回满一页（=PAGE_SIZE）说明数据库可能还有更多，认为 hasMore=true；不足一页说明到底了
 		const hasMore = rows.length === PAGE_SIZE;
-		// 下一页起点：有下一页时，用"当前起点 + 本次实际返回条数"算出下一页的 offset；到底了则不提供
-		const nextOffset = hasMore ? offset + rows.length : undefined;
 
 		// 经 Vo schema 校验，确保响应形状与前端类型一致
 		const voResult = recordListVoSchema.safeParse({
 			data: rowsWithFavorite,
 			total,
 			hasMore,
-			nextOffset,
 		});
 		if (!voResult.success) {
 			throw voResult.error;

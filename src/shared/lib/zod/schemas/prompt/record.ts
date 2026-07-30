@@ -80,7 +80,8 @@ export const listRecordsDtoSchema = z.object({
 	filter: z.string().optional(),
 	favorite: z.coerce.boolean().optional(),
 	sort: z.enum(["recent", "mostCopied"]).optional(),
-	offset: z.coerce.number().int().min(0).optional(),
+	// 分页：page 为 1-based 页码
+	page: z.coerce.number().int().min(1).optional(),
 });
 
 // 收录列表查询入参类型
@@ -139,7 +140,6 @@ export const recordListVoSchema = z.object({
 	data: z.array(recordVoSchema),
 	total: z.number(),
 	hasMore: z.boolean(),
-	nextOffset: z.number().int().min(0).optional(),
 });
 
 // 收录列表响应类型
@@ -158,8 +158,9 @@ export const versionEditorSchema = z.object({
 // @ 入参
 // 版本历史列表查询入参
 export const listVersionsDtoSchema = z.object({
-	offset: z.coerce.number().int().min(0).optional(),
-	limit: z.coerce.number().int().min(1).max(50).optional(),
+	// 分页：page 为 1-based 页码
+	page: z.coerce.number().int().min(1).optional(),
+	pageSize: z.coerce.number().int().min(1).max(50).optional(),
 });
 
 // 版本历史列表查询入参类型
@@ -184,7 +185,6 @@ export const versionListVoSchema = z.object({
 	data: z.array(versionVoSchema),
 	total: z.number(),
 	hasMore: z.boolean(),
-	nextOffset: z.number().int().min(0).optional(),
 });
 
 // 版本历史列表响应类型

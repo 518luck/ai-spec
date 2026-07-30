@@ -9,7 +9,7 @@ export const getDrafts = async (params: ListDraftsDto = {}): Promise<DraftListVo
 	if (params.q) qs.set("q", params.q);
 	if (params.filter) qs.set("filter", params.filter);
 	if (params.folderId) qs.set("folderId", params.folderId);
-	if (params.offset !== undefined) qs.set("offset", String(params.offset));
+	if (params.page !== undefined) qs.set("page", String(params.page));
 
 	const response = await fetch(`/api/prompt/drafts?${qs.toString()}`);
 	if (!response.ok) {

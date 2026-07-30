@@ -63,17 +63,18 @@ export function DiscoverSkillsPage({
 	};
 
 	// SWR Infinite key：q/filter/orgs/minStars 变化自动重置到第一页
-	const getKey = (_pageIndex: number, previousPageData: DiscoverSkillListVo | null) => {
+	// pageIndex 天然 0-based 递增，直接当页码用，不依赖后端返回 nextOffset
+	const getKey = (pageIndex: number, previousPageData: DiscoverSkillListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
-		const offset = previousPageData?.nextOffset ?? 0;
-		return ["discover-skills", q, filter, orgs, minStars, offset] as const;
+		return ["discover-skills", q, filter, orgs, minStars, pageIndex] as const;
 	};
 
 	const { data, isLoading, isValidating, setSize, mutate } = useSWRInfinite(
 		getKey,
-		async ([, q, filter, orgs, minStars, offset]) =>
-			getDiscoverSkills({ q, filter, orgs, minStars, offset }),
+		async ([, q, filter, orgs, minStars, pageIndex]) =>
+			// pageIndex 0-based，API 用 1-based
+			getDiscoverSkills({ q, filter, orgs, minStars, page: pageIndex + 1 }),
 	);
 
 	const skills = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);

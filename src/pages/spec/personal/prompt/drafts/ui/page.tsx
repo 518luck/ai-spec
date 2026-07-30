@@ -51,11 +51,11 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 	});
 
 	// SWR Infinite key：q/filter/folderId 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
-	const getKey = (_pageIndex: number, previousPageData: DraftListVo | null) => {
+	// pageIndex 天然 0-based 递增，直接当页码用，不依赖后端返回 nextOffset
+	const getKey = (pageIndex: number, previousPageData: DraftListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
-		const offset = previousPageData?.nextOffset ?? 0;
-		return ["drafts", q, filter, folderId, offset] as const;
+		return ["drafts", q, filter, folderId, pageIndex] as const;
 	};
 
 	const {
@@ -64,8 +64,9 @@ export function PersonalDraftsPage({ q, filter, folderId }: ListDraftsDto): JSX.
 		isValidating,
 		setSize,
 		mutate: mutateDrafts,
-	} = useSWRInfinite(getKey, async ([, q, filter, folderId, offset]) =>
-		getDrafts({ q, filter, folderId, offset }),
+	} = useSWRInfinite(getKey, async ([, q, filter, folderId, pageIndex]) =>
+		// pageIndex 0-based，API 用 1-based
+		getDrafts({ q, filter, folderId, page: pageIndex + 1 }),
 	);
 
 	const drafts = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);

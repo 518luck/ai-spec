@@ -3,19 +3,19 @@
 import { resolveErrorMessage } from "@/entities/lib/fetch-error";
 import type { VersionListVo } from "@/shared/lib/zod/schemas/prompt/record";
 
-// > 获取版本历史列表
+// > 获取版本历史列表（page 为 1-based 页码）
 export const getVersions = async ({
 	recordId,
-	offset = 0,
-	limit = 20,
+	page = 1,
+	pageSize = 20,
 }: {
 	recordId: string;
-	offset?: number;
-	limit?: number;
+	page?: number;
+	pageSize?: number;
 }): Promise<VersionListVo> => {
 	const params = new URLSearchParams({
-		offset: String(offset),
-		limit: String(limit),
+		page: String(page),
+		pageSize: String(pageSize),
 	});
 
 	const response = await fetch(`/api/prompt/records/${recordId}/versions?${params}`);

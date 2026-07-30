@@ -15,7 +15,7 @@ export const getDiscoverSkills = async (
 	if (params?.filter) searchParams.set("filter", params.filter);
 	if (params?.orgs) searchParams.set("orgs", params.orgs);
 	if (params?.minStars !== undefined) searchParams.set("minStars", String(params.minStars));
-	if (params?.offset !== undefined) searchParams.set("offset", String(params.offset));
+	if (params?.page !== undefined) searchParams.set("page", String(params.page));
 
 	const url = `/api/discover/skills${searchParams.toString() ? `?${searchParams.toString()}` : ""}`;
 	const response = await fetch(url);

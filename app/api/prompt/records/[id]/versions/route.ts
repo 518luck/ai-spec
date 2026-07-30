@@ -19,7 +19,10 @@ export const GET = withPersonal(
 		if (!parsed.success) {
 			throw parsed.error;
 		}
-		const { offset = 0, limit = 20 } = parsed.data;
+		const { page = 1, pageSize } = parsed.data;
+		const size = pageSize ?? 20;
+		// page 1-based → Prisma 的 skip 偏移量
+		const offset = (page - 1) * size;
 
 		// > 验证收录存在且归属当前用户
 		const record = await prisma.promptRecord.findUnique({
@@ -37,7 +40,7 @@ export const GET = withPersonal(
 				where: { recordId: id },
 				orderBy: { versionNumber: "desc" },
 				skip: offset,
-				take: limit,
+				take: size,
 				select: {
 					id: true,
 					versionNumber: true,
@@ -56,15 +59,14 @@ export const GET = withPersonal(
 			prisma.promptRecordVersion.count({ where: { recordId: id } }),
 		]);
 
-		// 校验出参
+		// 校验出参：本次返回满一页说明可能还有更多
 		const result = versionListVoSchema.safeParse({
 			data: versions.map((v) => ({
 				...v,
 				createdAt: v.createdAt.toISOString(),
 			})),
 			total,
-			hasMore: offset + limit < total,
-			nextOffset: offset + limit < total ? offset + limit : undefined,
+			hasMore: versions.length === size,
 		});
 		if (!result.success) {
 			throw result.error;

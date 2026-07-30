@@ -56,7 +56,8 @@ export const listDiscoverSkillsDtoSchema = z.object({
 	orgs: z.string().optional(),
 	// 热度门槛：只返回 stars >= minStars 的条目（如 1000 表示 star>1k）
 	minStars: z.coerce.number().int().min(0).optional(),
-	offset: z.coerce.number().int().min(0).optional(),
+	// 分页：page 为 1-based 页码
+	page: z.coerce.number().int().min(1).optional(),
 });
 
 // 广场列表查询入参类型
@@ -71,7 +72,6 @@ export const discoverSkillListVoSchema = z.object({
 	data: z.array(discoverSkillListItemVoSchema),
 	total: z.number(),
 	hasMore: z.boolean(),
-	nextOffset: z.number().int().min(0).optional(),
 });
 
 // Organization 列表项（按 GitHub 组织分组，供前端侧边栏筛选）

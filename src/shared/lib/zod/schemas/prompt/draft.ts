@@ -66,7 +66,8 @@ export const listDraftsDtoSchema = z.object({
 	q: z.string().optional(),
 	filter: z.string().optional(),
 	folderId: z.string().optional(),
-	offset: z.coerce.number().int().min(0).optional(),
+	// 分页：page 为 1-based 页码
+	page: z.coerce.number().int().min(1).optional(),
 });
 
 // 草稿列表查询入参类型
@@ -112,7 +113,6 @@ export const draftListVoSchema = z.object({
 	data: z.array(draftVoSchema),
 	total: z.number(),
 	hasMore: z.boolean(),
-	nextOffset: z.number().int().min(0).optional(),
 });
 
 // 草稿列表响应类型

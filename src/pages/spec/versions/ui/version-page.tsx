@@ -30,15 +30,14 @@ export interface VersionListItem {
 export interface VersionListPage {
 	data: VersionListItem[];
 	hasMore: boolean;
-	nextOffset?: number;
 }
 
 // @ 注入给通用版本页的数据源与行为
 export interface VersionPageHandlers {
 	// 当前资源 id（如 recordId）：版本数据归属的资源，用于区分不同收录的 SWR 缓存
 	resourceId: string;
-	// 按分页拉版本列表（按时间倒序，第一条最新）；offset 为本次请求的起始偏移
-	fetchVersions: (offset: number) => Promise<VersionListPage>;
+	// 按分页拉版本列表（按时间倒序，第一条最新）；pageIndex 为 0-based 页码
+	fetchVersions: (pageIndex: number) => Promise<VersionListPage>;
 	// 拉指定版本的标题与内容全文（标题用于内容区上方独立渲染，避免依赖 content 首行 markdown 语法）
 	fetchVersionContent: (versionId: string) => Promise<{ title: string; content: string }>;
 	// 恢复此记录：返回跳转目标 URL（带上 versionId 等），由通用页执行 router.push
@@ -73,17 +72,17 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 
 	// > 版本列表 —— 分页拉取（useSWRInfinite + getKey 控制翻页停止）
 	// getKey：resourceId 变化时从头开始；上一页 hasMore=false 时返回 null 停止加载
-	const getKey = (_pageIndex: number, previousPageData: VersionListPage | null) => {
+	// pageIndex 天然 0-based 递增，直接当页码传给 fetchVersions，不依赖后端返回 nextOffset
+	const getKey = (pageIndex: number, previousPageData: VersionListPage | null) => {
 		if (previousPageData && !previousPageData.hasMore) return null;
-		const offset = previousPageData?.nextOffset ?? 0;
-		return ["versions", resourceId, offset] as const;
+		return ["versions", resourceId, pageIndex] as const;
 	};
 	const {
 		data: pages,
 		isLoading: listLoading,
 		isValidating,
 		setSize,
-	} = useSWRInfinite(getKey, ([, , offset]) => handlers.fetchVersions(offset));
+	} = useSWRInfinite(getKey, ([, , pageIndex]) => handlers.fetchVersions(pageIndex));
 
 	// 扁平化所有分页数据为单一版本列表；hasMore/hasPaged 从最后一页取
 	const versions = useMemo(() => pages?.flatMap((page) => page.data) ?? [], [pages]);

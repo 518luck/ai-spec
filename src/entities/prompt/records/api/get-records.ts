@@ -12,7 +12,7 @@ export const getRecords = async (params: ListRecordsDto = {}): Promise<RecordLis
 	if (params.filter) qs.set("filter", params.filter);
 	if (params.favorite) qs.set("favorite", "true");
 	if (params.sort) qs.set("sort", params.sort);
-	if (params.offset !== undefined) qs.set("offset", String(params.offset));
+	if (params.page !== undefined) qs.set("page", String(params.page));
 
 	const response = await fetch(`/api/prompt/records?${qs.toString()}`);
 	if (!response.ok) {

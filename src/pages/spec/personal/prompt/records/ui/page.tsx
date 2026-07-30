@@ -90,11 +90,11 @@ export function PersonalRecordsPage({
 	}, []);
 
 	// SWR Infinite key：folderId/tagIds/q/filter/favorite/sort 任一变化自动重置到第一页；上一页无更多数据时返回 null 停止加载
-	const getKey = (_pageIndex: number, previousPageData: RecordListVo | null) => {
+	// pageIndex 天然 0-based 递增，直接当页码用，不依赖后端返回 nextOffset
+	const getKey = (pageIndex: number, previousPageData: RecordListVo | null) => {
 		if (status !== "authenticated") return null;
 		if (previousPageData && !previousPageData.hasMore) return null;
-		const offset = previousPageData?.nextOffset ?? 0;
-		return ["records", folderId, tagIds, q, filter, favorite, sort, offset] as const;
+		return ["records", folderId, tagIds, q, filter, favorite, sort, pageIndex] as const;
 	};
 
 	const {
@@ -103,8 +103,9 @@ export function PersonalRecordsPage({
 		isValidating,
 		setSize,
 		mutate: mutateRecords,
-	} = useSWRInfinite(getKey, async ([, folderId, tagIds, q, filter, favorite, sort, offset]) =>
-		getRecords({ folderId, tagIds, q, filter, favorite, sort, offset }),
+	} = useSWRInfinite(getKey, async ([, folderId, tagIds, q, filter, favorite, sort, pageIndex]) =>
+		// pageIndex 0-based，API 用 1-based
+		getRecords({ folderId, tagIds, q, filter, favorite, sort, page: pageIndex + 1 }),
 	);
 
 	const records = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
