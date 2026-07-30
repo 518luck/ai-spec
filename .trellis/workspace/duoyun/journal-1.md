@@ -265,3 +265,28 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 12: 规约详情/编辑体系 + 版本管理 + 编辑器主题适配
+
+**Date**: 2026-07-31
+**Task**: 规约详情/编辑体系 + 版本管理 + 编辑器主题适配
+**Branch**: `main`
+
+### Summary
+
+本会话围绕规约详情/编辑做了大量功能：(1) 标签帮助提示——RuleToolbar 标签子菜单加 HelpTooltip 说明标签可穿透文件夹但不能跨领域空间，照搬 skill-filter 的 ml-auto + onPointerDown stopPropagation 写法。(2) 详情/编辑单页体系——table 点名称、card 点眼睛进详情 /rules/[id]（默认预览态），card 编辑/table-actions 编辑带 ?edit=1 进编辑态；删掉独立的 /edit 路由，用 query 区分预览/编辑，复用 edit-page + RuleEditorForm（加 initialPreview prop + editor-store 新增 setPreview 方法，与 togglePreview 对称不依赖当前态）。(3) 保存后缓存失效——edit-page handleSave 加 useSWRConfig.mutate 按 key 前缀失效 [rule,id] 和 [rules]，修复改完第一次进看不到新内容的 bug。(4) 编辑器主题适配——去掉 editorClassName 里强制 bg-transparent! 让编辑器背景跟随主题（vscode/xcode 等），TitlePageShell 加 headerStyle prop，rule-editor-form 取 editorBgColor 构造主题渐变涂状态栏（照搬 prompt-workspace），且仅编辑态生效（预览态走页面默认背景）。(5) 规约版本管理（大功能，照搬 prompt records 的混合 diff 方案）——新增 RuleVersion model（snapshot+diff+isSnapshot，v1+每10版存快照其余存增量diff）+ migration；rule PUT 事务里 name/content 变更时算 diff 存版本（folder/tags 不建版本）；新建版本列表/详情 API（复用 diff.ts 引擎 + 复用 prompt 的 version schema）；前端复用通用 VersionPage 注入 rule handlers；详情页加历史按钮入口 + ?useVersionId 恢复载入编辑器（不落库，待编辑保存才生成新版本）。另：grilling skill 多轮拷问确认了版本方案（混合diff/只记name+content/独立版本页/X载入不写库）。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a321c5a` | (see git log) |
+| `9e4cf7c` | (see git log) |
+| `2bbe680` | (see git log) |
+| `d9c9a77` | (see git log) |
+| `205f80f` | (see git log) |
+
+### Status
+
+[OK] **Completed**
