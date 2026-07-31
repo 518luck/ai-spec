@@ -4,7 +4,7 @@
 // > 数据由 TanStack Query 获取；表格渲染走 shadcn Data Table（columns + useReactTable）
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { RowSelectionState } from "@tanstack/react-table";
+import type { OnChangeFn, RowSelectionState, VisibilityState } from "@tanstack/react-table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useMemo, useState } from "react";
 import { ruleKeys } from "@/shared/lib/orpc/query-keys";
@@ -46,6 +46,9 @@ type RuleTableContainerProps = {
 	tagIds?: string;
 	q?: string;
 	onCreate?: () => void;
+	// 列可见性（由 page 层持久化到 localStorage，toolbar 和 table 共享）
+	columnVisibility: VisibilityState;
+	onColumnVisibilityChange: OnChangeFn<VisibilityState>;
 };
 
 // 表格容器：负责数据请求、分页、行选择和批量删除逻辑
@@ -55,6 +58,8 @@ export function RuleTableContainer({
 	tagIds,
 	q,
 	onCreate,
+	columnVisibility,
+	onColumnVisibilityChange,
 }: RuleTableContainerProps): JSX.Element {
 	const router = useRouter();
 	const pathname = usePathname();
@@ -158,6 +163,8 @@ export function RuleTableContainer({
 					onCreate={onCreate}
 					rowSelection={rowSelection}
 					onRowSelectionChange={setRowSelection}
+					columnVisibility={columnVisibility}
+					onColumnVisibilityChange={onColumnVisibilityChange}
 					onBatchDelete={() => setConfirmOpen(true)}
 				/>
 				<PaginationBar

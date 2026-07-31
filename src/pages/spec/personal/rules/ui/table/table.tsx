@@ -11,6 +11,7 @@ import {
 	type OnChangeFn,
 	type RowSelectionState,
 	useReactTable,
+	type VisibilityState,
 } from "@tanstack/react-table";
 import { AnimatePresence, motion } from "motion/react";
 import type { JSX } from "react";
@@ -63,6 +64,9 @@ type RuleDataTableProps = {
 	// 受控行选择（与容器 ConfirmDialog 共用）
 	rowSelection: RowSelectionState;
 	onRowSelectionChange: OnChangeFn<RowSelectionState>;
+	// 受控列可见性（由容器持久化到 localStorage）
+	columnVisibility: VisibilityState;
+	onColumnVisibilityChange: OnChangeFn<VisibilityState>;
 	// 批量删除
 	onBatchDelete: () => void;
 };
@@ -76,6 +80,8 @@ export function RuleTable({
 	onCreate,
 	rowSelection,
 	onRowSelectionChange,
+	columnVisibility,
+	onColumnVisibilityChange,
 	onBatchDelete,
 }: RuleDataTableProps): JSX.Element {
 	const table = useReactTable({
@@ -84,15 +90,18 @@ export function RuleTable({
 		getCoreRowModel: getCoreRowModel(),
 		getRowId: (row) => row.id,
 		onRowSelectionChange,
+		onColumnVisibilityChange,
 		enableRowSelection: true,
 		// 分页由 URL + 服务端负责，这里不做客户端分页
 		manualPagination: true,
 		state: {
 			rowSelection,
+			columnVisibility,
 		},
 	});
 
-	const leafColumns = table.getAllLeafColumns();
+	// > 只取可见列生成 colgroup：隐藏列不参与宽度分配，避免 table-fixed 下列宽重排
+	const leafColumns = table.getVisibleLeafColumns();
 	const selectionCount = table.getFilteredSelectedRowModel().rows.length;
 	const hasSelection = selectionCount > 0;
 	const rows = table.getRowModel().rows;

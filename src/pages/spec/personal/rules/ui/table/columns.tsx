@@ -3,7 +3,7 @@
 // # 规约表格列定义：对齐 shadcn Data Table 的 ColumnDef 写法
 // > 选择 / 名称 / 文件夹 / 标签 / 预览 / 更新时间 / 操作；名称与文件夹截断时 hover 出全文
 
-import type { ColumnDef } from "@tanstack/react-table";
+import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import Link from "next/link";
 import { TagChip } from "@/features/tag-combobox";
 import { formatRelativeTime } from "@/shared/lib/format-relative-time";
@@ -40,6 +40,8 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 	{
 		accessorKey: "name",
 		header: "名称",
+		// 名称列不可隐藏：表格至少需要一个可识别列
+		enableHiding: false,
 		// 收窄名称列，超长靠 TruncatedTooltip 看全文；点名称进详情（预览态）
 		size: 160,
 		cell: ({ row }) => (
@@ -78,7 +80,8 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 	{
 		accessorKey: "preview",
 		header: "预览",
-		// 预览只截断，不挂 tooltip（后续由后端限长）
+		// 预览只截断，不挂 tooltip（后续由后端限长）；固定宽度，隐藏其他列时不撑宽
+		size: 240,
 		cell: ({ row }) => (
 			<span className="block truncate text-muted-foreground">{row.getValue("preview")}</span>
 		),
@@ -103,7 +106,25 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 	},
 ];
 
-// > 标签列单元：空态显破折号；非空展示前 3 个只读 chip，超出收成「+N」药丸 hover 看全部
+// > 可隐藏列清单（用于列选择 UI 渲染）：select/name/actions 标了 enableHiding:false，不在此列
+export const TOGGLEABLE_COLUMNS = [
+	{ id: "folder", label: "文件夹" },
+	{ id: "tags", label: "标签" },
+	{ id: "preview", label: "预览" },
+	{ id: "updatedAt", label: "更新时间" },
+] as const;
+
+// > 默认列可见性：精简默认 3 列（名称+标签+更新时间），文件夹和预览默认隐藏
+export const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
+	name: true,
+	tags: true,
+	updatedAt: true,
+	folder: false,
+	preview: false,
+};
+
+// localStorage key：持久化用户列选择
+export const COLUMN_VISIBILITY_STORAGE_KEY = "rule-table-columns";
 const TAG_PREVIEW_LIMIT = 3;
 
 function RuleTagsCell({ tags }: { tags: RuleListItemVo["tags"] }) {

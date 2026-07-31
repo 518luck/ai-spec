@@ -4,19 +4,23 @@
 // > chips 单独放布局触发器之后并 flex-1 横滚，避免撑宽推动其它触发器
 // > tagOpen 联动过滤菜单的标签子面板与右侧 chips 条，状态内聚在此无需外传
 
+import type { OnChangeFn, VisibilityState } from "@tanstack/react-table";
 import { type JSX, useState } from "react";
 
 import { PanelTrigger } from "@/features/panel-trigger";
 import { TagCombobox } from "@/features/tag-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import { cn } from "@/shared/lib/utils";
+import { Badge } from "@/shared/ui/badge";
 import {
+	DropdownMenuSeparator,
 	DropdownMenuSub,
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 } from "@/shared/ui/dropdown-menu";
 import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
+import { TOGGLEABLE_COLUMNS } from "./table/columns";
 
 // 视图选项：表格（默认）与卡片网格
 const VIEW_OPTIONS = [
@@ -32,10 +36,18 @@ type RuleToolbarProps = {
 	value: RuleView;
 	// 点击切换；写 URL 由调用方负责
 	onViewChange: (next: RuleView) => void;
+	// 列可见性（仅表格视图时在布局菜单里显示勾选项）
+	columnVisibility: VisibilityState;
+	onColumnVisibilityChange: OnChangeFn<VisibilityState>;
 };
 
 // > 工具栏：过滤菜单 + 布局切换 + 标签条，chips 吃掉剩余空间内部横滚
-export function RuleToolbar({ value, onViewChange }: RuleToolbarProps): JSX.Element {
+export function RuleToolbar({
+	value,
+	onViewChange,
+	columnVisibility,
+	onColumnVisibilityChange,
+}: RuleToolbarProps): JSX.Element {
 	// tagOpen 联动过滤菜单标签子面板与右侧 chips 条
 	const [tagOpen, setTagOpen] = useState(false);
 
@@ -66,22 +78,50 @@ export function RuleToolbar({ value, onViewChange }: RuleToolbarProps): JSX.Elem
 				variant="layout"
 				menuClassName="w-auto"
 				menu={
-					<div className="flex gap-2 p-1">
-						{VIEW_OPTIONS.map((option) => (
-							<button
-								key={option.value}
-								type="button"
-								onClick={() => onViewChange(option.value)}
-								className={cn(
-									"flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-colors hover:text-foreground",
-									value === option.value && "bg-accent text-foreground",
-								)}
-							>
-								<option.icon className="size-4" />
-								<span className="text-xs">{option.label}</span>
-							</button>
-						))}
-					</div>
+					<>
+						<div className="flex gap-2 p-1">
+							{VIEW_OPTIONS.map((option) => (
+								<button
+									key={option.value}
+									type="button"
+									onClick={() => onViewChange(option.value)}
+									className={cn(
+										"flex items-center gap-2 rounded-md px-3 py-2 text-muted-foreground transition-colors hover:text-foreground",
+										value === option.value && "bg-accent text-foreground",
+									)}
+								>
+									<option.icon className="size-4" />
+									<span className="text-xs">{option.label}</span>
+								</button>
+							))}
+						</div>
+						{/* // @ 列勾选：仅表格视图显示，卡片视图无列的概念；Badge 点亮=显示，outline=隐藏 */}
+						{value === "table" ? (
+							<>
+								<DropdownMenuSeparator />
+								<div className="flex w-40 flex-wrap gap-1.5 p-1">
+									{TOGGLEABLE_COLUMNS.map((col) => {
+										const visible = columnVisibility[col.id] !== false;
+										return (
+											<Badge
+												key={col.id}
+												variant={visible ? "default" : "outline"}
+												className="cursor-pointer select-none text-xs"
+												onClick={() => {
+													onColumnVisibilityChange((prev) => ({
+														...prev,
+														[col.id]: !visible,
+													}));
+												}}
+											>
+												{col.label}
+											</Badge>
+										);
+									})}
+								</div>
+							</>
+						) : null}
+					</>
 				}
 			/>
 			{/* // @ 已选标签条：吃掉剩余空间内部横滚，不撑宽推动左侧触发器；未选时不占位 */}

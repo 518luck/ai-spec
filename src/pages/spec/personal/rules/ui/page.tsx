@@ -2,13 +2,13 @@
 
 // # 个人规约库页：规则列表表格，toolbar 含文件夹筛选，筛选条带含空间/标签过滤 + 搜索
 
+import type { VisibilityState } from "@tanstack/react-table";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { JSX } from "react";
-import { startTransition, useOptimistic } from "react";
+import { type JSX, startTransition, useOptimistic } from "react";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { SearchInput } from "@/features/search-input";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
-import { useHotkey } from "@/shared/hooks";
+import { useHotkey, useLocalStorage } from "@/shared/hooks";
 import type { ListRulesDto } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { Kbd } from "@/shared/ui/kbd";
@@ -16,6 +16,7 @@ import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { RuleList } from "./list";
 import { RuleSpaceCombobox } from "./rule-space-combobox";
 import { RuleToolbar, type RuleView } from "./rule-toolbar";
+import { COLUMN_VISIBILITY_STORAGE_KEY, DEFAULT_COLUMN_VISIBILITY } from "./table/columns";
 
 // URL 参数名；缺省或非法值一律回落表格
 const RULE_VIEW_PARAM = "view";
@@ -58,6 +59,13 @@ export function PersonalRulesPage({
 	// > C 键快速创建：跳转独立创建页，无弹窗态需要禁用，输入场景与模态抑制由 hook 内建
 	useHotkey({ combo: HOTKEYS.createNew.combo, onTrigger: handleCreateRule });
 
+	// @ 列可见性：localStorage 持久化，提升到 page 层让 toolbar（勾选 UI）和 table（渲染）共享
+	// useLocalStorage 已封装 SSR 兜底、JSON 序列化与写回逻辑；setter 原生支持函数式更新，可直接当 OnChangeFn 传给 table
+	const [columnVisibility, setColumnVisibility] = useLocalStorage<VisibilityState>(
+		COLUMN_VISIBILITY_STORAGE_KEY,
+		DEFAULT_COLUMN_VISIBILITY,
+	);
+
 	return (
 		<ToolbarPageShell
 			title="规约库"
@@ -77,7 +85,12 @@ export function PersonalRulesPage({
 				<div className="mb-6 flex items-center justify-between gap-3">
 					<div className="flex min-w-0 flex-1 items-center gap-2">
 						<RuleSpaceCombobox />
-						<RuleToolbar value={view} onViewChange={handleViewChange} />
+						<RuleToolbar
+							value={view}
+							onViewChange={handleViewChange}
+							columnVisibility={columnVisibility}
+							onColumnVisibilityChange={setColumnVisibility}
+						/>
 					</div>
 					<div className="flex items-center gap-2">
 						<SearchInput
@@ -94,6 +107,8 @@ export function PersonalRulesPage({
 					q={q}
 					view={view}
 					onCreate={handleCreateRule}
+					columnVisibility={columnVisibility}
+					onColumnVisibilityChange={setColumnVisibility}
 				/>
 			</PageWidthWrapper>
 		</ToolbarPageShell>
