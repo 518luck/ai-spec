@@ -333,3 +333,27 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 15: 列可见性持久化重构与功能维护
+
+**Date**: 2026-07-31
+**Task**: 列可见性持久化重构与功能维护
+**Branch**: `main`
+
+### Summary
+
+完成列可见性持久化功能：将 page.tsx 手写 useState + localStorage 同步逻辑重构为项目自带 useLocalStorage hook，删除冗余 useCallback 薄包装，setter 直接作为 OnChangeFn 传入 TanStack Table（类型形状一致，typecheck 通过）。另含定时扫描开关、Next 依赖升级至 16.2.12、shadcn agent skills 目录清理。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `05e7034` | (see git log) |
+| `ca6c764` | (see git log) |
+| `fd65430` | (see git log) |
+| `c209ead` | (see git log) |
+
+### Status
+
+[OK] **Completed**
