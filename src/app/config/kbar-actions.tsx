@@ -79,7 +79,7 @@ function useKBarActions() {
 			shortcut: [...HOTKEYS.goAgentsMd.kbarShortcut],
 			section: "导航",
 			keywords: "agents md ai-spec",
-			perform: () => navigateUnlessModal("/spec/personal/ai-spec/agents-md"),
+			perform: () => navigateUnlessModal("/spec/personal/agents-md"),
 		},
 		{
 			id: "go-settings",
