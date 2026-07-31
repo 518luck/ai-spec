@@ -11,7 +11,7 @@ import { useScrollProgress } from "@/shared/hooks";
 import { client } from "@/shared/lib/orpc/client";
 import { folderKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
-import { createFolderDtoSchema, type FolderResourceType } from "@/shared/lib/zod/schemas/folder";
+import { type FolderResourceType, FolderSchemas } from "@/shared/lib/zod/schemas/folder";
 import { Button } from "@/shared/ui/button";
 import {
 	Command,
@@ -172,7 +172,7 @@ export function FolderCombobox({
 		description?: string;
 		color: string;
 	}): Promise<void> => {
-		const parsed = createFolderDtoSchema.safeParse({
+		const parsed = FolderSchemas.createDto.safeParse({
 			...input,
 			resourceType,
 			spaceId,

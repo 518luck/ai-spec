@@ -14,24 +14,9 @@ import {
 	updateRule,
 } from "@/server/domain/rules/services";
 import { z } from "@/shared/lib/zod";
-import {
-	listVersionsDtoSchema,
-	versionDetailVoSchema,
-	versionListVoSchema,
-} from "@/shared/lib/zod/schemas/prompt/record";
-import {
-	createRuleDtoSchema,
-	listRulesDtoSchema,
-	ruleContentVoSchema,
-	ruleListVoSchema,
-	ruleVoSchema,
-	updateRuleDtoSchema,
-} from "@/shared/lib/zod/schemas/rule";
-import {
-	createRuleSpaceDtoSchema,
-	ruleSpaceListVoSchema,
-	ruleSpaceVoSchema,
-} from "@/shared/lib/zod/schemas/rule-space";
+import { RecordSchemas } from "@/shared/lib/zod/schemas/prompt/record";
+import { RuleSchemas } from "@/shared/lib/zod/schemas/rule";
+import { RuleSpaceSchemas } from "@/shared/lib/zod/schemas/rule-space";
 import { personalProcedure } from "../procedures";
 
 // 批量删除入参（原 route.ts 内联 schema，迁移补正式 Dto 前先就近定义）
@@ -48,8 +33,8 @@ export const rulesRouter = {
 	// 列表查询（GET /rules）
 	list: personalProcedure()
 		.route({ method: "GET", path: "/rules" })
-		.input(listRulesDtoSchema)
-		.output(ruleListVoSchema)
+		.input(RuleSchemas.listDto)
+		.output(RuleSchemas.listVo)
 		.handler(async ({ input, context }) => {
 			const tagIds = (input.tagIds ?? "")
 				.split(",")
@@ -69,8 +54,8 @@ export const rulesRouter = {
 	// 创建（POST /rules）
 	create: personalProcedure()
 		.route({ method: "POST", path: "/rules", successStatus: 201 })
-		.input(createRuleDtoSchema)
-		.output(ruleVoSchema)
+		.input(RuleSchemas.createDto)
+		.output(RuleSchemas.vo)
 		.handler(async ({ input, context }) => {
 			return createRule({
 				userId: context.session.user.id,
@@ -86,7 +71,7 @@ export const rulesRouter = {
 	getById: personalProcedure()
 		.route({ method: "GET", path: "/rules/{id}" })
 		.input(z.object({ id: z.string() }))
-		.output(ruleContentVoSchema)
+		.output(RuleSchemas.contentVo)
 		.handler(async ({ input, context }) => {
 			return getRuleById({ userId: context.session.user.id, id: input.id });
 		}),
@@ -94,8 +79,8 @@ export const rulesRouter = {
 	// 更新（PUT /rules/{id}）：含版本记录
 	update: personalProcedure()
 		.route({ method: "PUT", path: "/rules/{id}" })
-		.input(z.object({ id: z.string() }).extend(updateRuleDtoSchema.shape))
-		.output(ruleVoSchema)
+		.input(z.object({ id: z.string() }).extend(RuleSchemas.updateDto.shape))
+		.output(RuleSchemas.vo)
 		.handler(async ({ input, context }) => {
 			const { id, name, content, folderId, tags } = input;
 			return updateRule({
@@ -129,8 +114,8 @@ export const rulesRouter = {
 	versions: {
 		list: personalProcedure({ permissions: ["rules.read"] })
 			.route({ method: "GET", path: "/rules/{ruleId}/versions" })
-			.input(ruleIdPathSchema.extend(listVersionsDtoSchema.shape))
-			.output(versionListVoSchema)
+			.input(ruleIdPathSchema.extend(RecordSchemas.listVersionsDto.shape))
+			.output(RecordSchemas.versionListVo)
 			.handler(async ({ input, context }) => {
 				return listRuleVersions({
 					userId: context.session.user.id,
@@ -144,7 +129,7 @@ export const rulesRouter = {
 		detail: personalProcedure({ permissions: ["rules.read"] })
 			.route({ method: "GET", path: "/rules/{ruleId}/versions/{versionId}" })
 			.input(versionPathSchema)
-			.output(versionDetailVoSchema)
+			.output(RecordSchemas.versionDetailVo)
 			.handler(async ({ input, context }) => {
 				return getRuleVersionDetail({
 					userId: context.session.user.id,
@@ -160,7 +145,7 @@ export const ruleSpacesRouter = {
 	// 列表（GET /rule-spaces）
 	list: personalProcedure({ permissions: ["rules.read"] })
 		.route({ method: "GET", path: "/rule-spaces" })
-		.output(ruleSpaceListVoSchema)
+		.output(RuleSpaceSchemas.listVo)
 		.handler(async ({ context }) => {
 			return listRuleSpaces(context.session.user.id);
 		}),
@@ -168,8 +153,8 @@ export const ruleSpacesRouter = {
 	// 新建（POST /rule-spaces）
 	create: personalProcedure({ permissions: ["rules.write"] })
 		.route({ method: "POST", path: "/rule-spaces", successStatus: 201 })
-		.input(createRuleSpaceDtoSchema)
-		.output(ruleSpaceVoSchema)
+		.input(RuleSpaceSchemas.createDto)
+		.output(RuleSpaceSchemas.vo)
 		.handler(async ({ input, context }) => {
 			return createRuleSpace({
 				userId: context.session.user.id,

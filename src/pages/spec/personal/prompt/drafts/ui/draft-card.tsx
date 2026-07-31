@@ -7,7 +7,7 @@ import { toast } from "@/features/toast";
 import { client } from "@/shared/lib/orpc/client";
 import { draftKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
-import { deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import { DraftSchemas } from "@/shared/lib/zod/schemas/prompt/draft";
 
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
@@ -101,7 +101,7 @@ function DeleteDraftAction({ id }: { id: string }): JSX.Element {
 
 	// 确认删除：id 守卫 + 删除 + 通过 invalidate 重拉所有已挂载页
 	const handleConfirmDelete = async (): Promise<void> => {
-		const parsed = deleteDraftDtoSchema.safeParse({ id });
+		const parsed = DraftSchemas.deleteDto.safeParse({ id });
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "删除失败");
 			return;

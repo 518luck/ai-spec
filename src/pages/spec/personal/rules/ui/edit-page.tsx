@@ -9,7 +9,7 @@ import type { JSX } from "react";
 import { toast } from "@/features/toast";
 import { ruleKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
-import { updateRuleDtoSchema } from "@/shared/lib/zod/schemas/rule";
+import { RuleSchemas } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
@@ -47,7 +47,7 @@ export function EditRulePage({ id, mode = "edit", useVersionId }: EditRulePagePr
 
 	// 保存逻辑：schema 校验 + 更新 + toast + 跳回列表
 	const handleSave = async (payload: RuleEditorPayload): Promise<boolean> => {
-		const parsed = updateRuleDtoSchema.safeParse(payload);
+		const parsed = RuleSchemas.updateDto.safeParse(payload);
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请填写规约信息");
 			return false;

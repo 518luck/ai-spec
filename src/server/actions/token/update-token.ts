@@ -6,13 +6,13 @@ import { ActionError } from "@/server/errors/action-error";
 import { tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
-import { updateTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
+import { TokenSchemas } from "@/shared/lib/zod/schemas/token";
 
 // # 更新 API 密钥 Action：校验归属后更新令牌元信息并清除缓存
 
 // 更新 API 密钥：仅登录用户可改归属自己的令牌；可改 name/description/scopes，密钥本身不可改
 export const updateTokenAction = authUserActionClient
-	.inputSchema(updateTokenDtoSchema, {
+	.inputSchema(TokenSchemas.updateDto, {
 		// 把 Zod 校验错误整理成前端更容易消费的字段级错误结构
 		handleValidationErrorsShape: async (ve) => flattenValidationErrors(ve).fieldErrors,
 	})

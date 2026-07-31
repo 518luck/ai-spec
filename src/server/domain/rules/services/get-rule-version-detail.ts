@@ -2,10 +2,10 @@
 
 import { AiSpecError } from "@/server/errors/http-error";
 import { deserializeDiff, reconstructContent } from "@/server/utils/diff";
+import { mapEditor } from "@/server/utils/map-editor";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import type { VersionDetailVo } from "@/shared/lib/zod/schemas/prompt/record";
-import { mapEditor } from "@/server/utils/map-editor";
 
 export const getRuleVersionDetail = async ({
 	userId,

@@ -4,7 +4,7 @@
 
 import "@orpc/openapi/extensions/route"; // 启用 .route() 扩展（声明 method + path 给第三方）
 import { updateUser } from "@/server/domain/user/services";
-import { updateUserDtoSchema, userVoSchema } from "@/shared/lib/zod/schemas/user";
+import { UserSchemas } from "@/shared/lib/zod/schemas/user";
 import { protectedProcedure } from "../procedures";
 
 // > 用户 router：update（name / avatar / email / defaultWorkspace）
@@ -12,8 +12,8 @@ export const userRouter = {
 	// 更新当前登录用户资料（PATCH /user）
 	update: protectedProcedure
 		.route({ method: "PATCH", path: "/user" })
-		.input(updateUserDtoSchema)
-		.output(userVoSchema)
+		.input(UserSchemas.updateDto)
+		.output(UserSchemas.vo)
 		.handler(async ({ input, context }) => {
 			return updateUser({
 				userId: context.session.user.id,

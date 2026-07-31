@@ -9,7 +9,7 @@ import { client } from "@/shared/lib/orpc/client";
 import { recordKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
 import { cn } from "@/shared/lib/utils";
-import { deleteRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
+import { RecordSchemas } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { ContentCard } from "@/shared/ui/content-card";
@@ -182,7 +182,7 @@ function DeleteRecordAction({ id }: { id: string }): JSX.Element {
 
 	// 确认删除：id 守卫 + 删除 + 通过 invalidate 重拉所有已挂载页
 	const handleConfirmDelete = async (): Promise<void> => {
-		const parsed = deleteRecordDtoSchema.safeParse({ id });
+		const parsed = RecordSchemas.deleteDto.safeParse({ id });
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "删除失败");
 			return;

@@ -15,33 +15,21 @@ import {
 	updateRecord,
 } from "@/server/domain/prompt/records/services";
 import { z } from "@/shared/lib/zod";
-import {
-	createRecordDtoSchema,
-	createRecordVoSchema,
-	deleteRecordDtoSchema,
-	favoriteToggleVoSchema,
-	listRecordsDtoSchema,
-	listVersionsDtoSchema,
-	recordContentVoSchema,
-	recordListVoSchema,
-	updateRecordDtoSchema,
-	versionDetailVoSchema,
-	versionListVoSchema,
-} from "@/shared/lib/zod/schemas/prompt/record";
+import { RecordSchemas } from "@/shared/lib/zod/schemas/prompt/record";
 import { personalProcedure } from "../procedures";
 
 // 路径参数 schema（id / recordId / versionId 从 URL 取）
 const recordIdPathSchema = z.object({ id: z.string() });
 const versionPathSchema = z.object({ id: z.string(), versionId: z.string() });
 const copyVoSchema = z.object({ success: z.boolean() });
-  
+
 // > 收录主资源 router：list / create / getById / update / delete
 export const recordsRouter = {
 	// 列表查询（GET /prompt/records）
 	list: personalProcedure({ permissions: ["promptRecord.read"] })
 		.route({ method: "GET", path: "/prompt/records" })
-		.input(listRecordsDtoSchema)
-		.output(recordListVoSchema)
+		.input(RecordSchemas.listDto)
+		.output(RecordSchemas.listVo)
 		.handler(async ({ input, context }) => {
 			// tagIds 为逗号分隔字符串，解析成数组；为空表示不按标签筛选
 			const tagIds = (input.tagIds ?? "")
@@ -63,8 +51,8 @@ export const recordsRouter = {
 	// 创建（POST /prompt/records）：内联建 v1 快照版本
 	create: personalProcedure({ permissions: ["promptRecord.write"] })
 		.route({ method: "POST", path: "/prompt/records", successStatus: 201 })
-		.input(createRecordDtoSchema)
-		.output(createRecordVoSchema)
+		.input(RecordSchemas.createDto)
+		.output(RecordSchemas.createVo)
 		.handler(async ({ input, context }) => {
 			return createRecord({
 				userId: context.session.user.id,
@@ -80,7 +68,7 @@ export const recordsRouter = {
 	getById: personalProcedure({ permissions: ["promptRecord.read"] })
 		.route({ method: "GET", path: "/prompt/records/{id}" })
 		.input(recordIdPathSchema)
-		.output(recordContentVoSchema)
+		.output(RecordSchemas.contentVo)
 		.handler(async ({ input, context }) => {
 			return getRecordById({ userId: context.session.user.id, id: input.id });
 		}),
@@ -88,8 +76,8 @@ export const recordsRouter = {
 	// 部分更新（PATCH /prompt/records/{id}）：含版本记录
 	update: personalProcedure({ permissions: ["promptRecord.write"] })
 		.route({ method: "PATCH", path: "/prompt/records/{id}" })
-		.input(recordIdPathSchema.extend(updateRecordDtoSchema.shape))
-		.output(createRecordVoSchema)
+		.input(recordIdPathSchema.extend(RecordSchemas.updateDto.shape))
+		.output(RecordSchemas.createVo)
 		.handler(async ({ input, context }) => {
 			const { id, name, content, images, folderId, tags, message } = input;
 			return updateRecord({
@@ -102,7 +90,7 @@ export const recordsRouter = {
 	// 删除（DELETE /prompt/records/{id}）
 	delete: personalProcedure({ permissions: ["promptRecord.write"] })
 		.route({ method: "DELETE", path: "/prompt/records/{id}" })
-		.input(deleteRecordDtoSchema)
+		.input(RecordSchemas.deleteDto)
 		.handler(async ({ input, context }) => {
 			await deleteRecord({ userId: context.session.user.id, id: input.id });
 			return { success: true };
@@ -114,7 +102,7 @@ export const recordsRouter = {
 		toggle: personalProcedure({ permissions: ["promptRecord.write"] })
 			.route({ method: "POST", path: "/prompt/records/{id}/favorite" })
 			.input(recordIdPathSchema)
-			.output(favoriteToggleVoSchema)
+			.output(RecordSchemas.favoriteToggleVo)
 			.handler(async ({ input, context }) => {
 				return favoriteRecord({
 					userId: context.session.user.id,
@@ -126,7 +114,7 @@ export const recordsRouter = {
 		off: personalProcedure({ permissions: ["promptRecord.write"] })
 			.route({ method: "DELETE", path: "/prompt/records/{id}/favorite" })
 			.input(recordIdPathSchema)
-			.output(favoriteToggleVoSchema)
+			.output(RecordSchemas.favoriteToggleVo)
 			.handler(async ({ input, context }) => {
 				return unfavoriteRecord({
 					userId: context.session.user.id,
@@ -150,8 +138,8 @@ export const recordsRouter = {
 		// 版本列表
 		list: personalProcedure({ permissions: ["promptRecord.read"] })
 			.route({ method: "GET", path: "/prompt/records/{id}/versions" })
-			.input(recordIdPathSchema.extend(listVersionsDtoSchema.shape))
-			.output(versionListVoSchema)
+			.input(recordIdPathSchema.extend(RecordSchemas.listVersionsDto.shape))
+			.output(RecordSchemas.versionListVo)
 			.handler(async ({ input, context }) => {
 				return listRecordVersions({
 					userId: context.session.user.id,
@@ -165,7 +153,7 @@ export const recordsRouter = {
 		detail: personalProcedure({ permissions: ["promptRecord.read"] })
 			.route({ method: "GET", path: "/prompt/records/{id}/versions/{versionId}" })
 			.input(versionPathSchema)
-			.output(versionDetailVoSchema)
+			.output(RecordSchemas.versionDetailVo)
 			.handler(async ({ input, context }) => {
 				return getRecordVersionDetail({
 					userId: context.session.user.id,

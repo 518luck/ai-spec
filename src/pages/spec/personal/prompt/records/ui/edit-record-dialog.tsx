@@ -8,7 +8,7 @@ import { areTagsEqual } from "@/features/tag-combobox/lib";
 import { toast } from "@/features/toast";
 import { recordKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
-import { updateRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
+import { RecordSchemas } from "@/shared/lib/zod/schemas/prompt/record";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 
 type EditRecordDialogProps = {
@@ -71,7 +71,7 @@ export function EditRecordDialog({
 		}
 
 		// id 走 URL，body 只校验需要更新的字段
-		const parsed = updateRecordDtoSchema.safeParse({
+		const parsed = RecordSchemas.updateDto.safeParse({
 			name: data.name,
 			content: data.content,
 			folderId: data.folderId,

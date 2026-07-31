@@ -22,11 +22,7 @@ import { useScrollProgress } from "@/shared/hooks";
 import { client } from "@/shared/lib/orpc/client";
 import { tagKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
-import {
-	createTagDtoSchema,
-	type TagOptionVo,
-	type TagResourceType,
-} from "@/shared/lib/zod/schemas/tag";
+import { type TagOptionVo, type TagResourceType, TagSchemas } from "@/shared/lib/zod/schemas/tag";
 import {
 	Command,
 	CommandEmpty,
@@ -172,7 +168,7 @@ export function TagCombobox({
 	});
 	const handleCreate = async (input: { name: string; color: string }): Promise<void> => {
 		// 拼上当前组件实例的 resourceType 一起校验（input 来自 CreateTagDialog，只有 name+color）
-		const parsed = createTagDtoSchema.safeParse({ ...input, resourceType });
+		const parsed = TagSchemas.createDto.safeParse({ ...input, resourceType });
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "创建标签失败");
 			return;

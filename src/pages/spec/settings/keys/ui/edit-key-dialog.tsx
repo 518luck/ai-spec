@@ -9,7 +9,7 @@ import { type JSX, useState } from "react";
 import { toast } from "@/features/toast";
 import { updateTokenAction } from "@/server/actions/token/update-token";
 import type { ScopePresetValue } from "@/server/rbac/scopes";
-import { type TokenVo, tokenNameSchema } from "@/shared/lib/zod/schemas/token";
+import { TokenSchemas, type TokenVo } from "@/shared/lib/zod/schemas/token";
 import { Button } from "@/shared/ui/button";
 import {
 	Dialog,
@@ -82,7 +82,7 @@ export function EditKeyDialog({ open, onOpenChange, token }: EditKeyDialogProps)
 
 	// 提交保存：名称用与后端同一份 schema 预校验；限制权限下至少勾选一个资源；自定义过期必须选日期
 	const handleSave = (): void => {
-		const parsed = tokenNameSchema.safeParse(name);
+		const parsed = TokenSchemas.name.safeParse(name);
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请输入密钥名称");
 			return;

@@ -4,17 +4,12 @@
 import "@orpc/openapi/extensions/route"; // 启用 .route() 扩展（声明 method + path 给第三方）
 import { createFolder, listFolders } from "@/server/domain/folders/services";
 import { z } from "@/shared/lib/zod";
-import {
-	createFolderDtoSchema,
-	folderListVoSchema,
-	folderOptionVoSchema,
-	folderResourceTypeSchema,
-} from "@/shared/lib/zod/schemas/folder";
+import { FolderSchemas } from "@/shared/lib/zod/schemas/folder";
 import { personalProcedure } from "../procedures";
 
 // 列表查询入参（源 route.ts 直接读 searchParams 未走 zod，迁移补正式 input 校验）
 const listFoldersDtoSchema = z.object({
-	type: folderResourceTypeSchema.optional(),
+	type: FolderSchemas.resourceType.optional(),
 	spaceId: z.string().optional(),
 });
 
@@ -24,7 +19,7 @@ export const foldersRouter = {
 	list: personalProcedure()
 		.route({ method: "GET", path: "/folders" })
 		.input(listFoldersDtoSchema)
-		.output(folderListVoSchema)
+		.output(FolderSchemas.listVo)
 		.handler(async ({ input, context }) => {
 			return listFolders({
 				userId: context.session.user.id,
@@ -36,8 +31,8 @@ export const foldersRouter = {
 	// 新建（POST /folders）
 	create: personalProcedure()
 		.route({ method: "POST", path: "/folders", successStatus: 201 })
-		.input(createFolderDtoSchema)
-		.output(folderOptionVoSchema)
+		.input(FolderSchemas.createDto)
+		.output(FolderSchemas.optionVo)
 		.handler(async ({ input, context }) => {
 			return createFolder({
 				userId: context.session.user.id,

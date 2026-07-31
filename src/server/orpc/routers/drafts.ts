@@ -10,28 +10,18 @@ import {
 	updateDraft,
 } from "@/server/domain/prompt/drafts/services";
 import { z } from "@/shared/lib/zod";
-import {
-	createDraftDtoSchema,
-	createDraftVoSchema,
-	draftContentSchema,
-	draftContentVoSchema,
-	draftFolderIdSchema,
-	draftImagesSchema,
-	draftListVoSchema,
-	draftNameSchema,
-	listDraftsDtoSchema,
-} from "@/shared/lib/zod/schemas/prompt/draft";
+import { DraftSchemas } from "@/shared/lib/zod/schemas/prompt/draft";
 import { personalProcedure } from "../procedures";
 
 // 更新入参：id 走 URL 路径，body 内所有字段可选（部分更新）
-// updateDraftDtoSchema 带 .refine（至少一个字段），这里拆出 object 部分与路径参数合并后再补同样的 refine
+// DraftSchemas.updateDto 带 .refine（至少一个字段），这里拆出 object 部分与路径参数合并后再补同样的 refine
 const updateDraftInputSchema = z
 	.object({
 		id: z.string(),
-		name: draftNameSchema.optional(),
-		content: draftContentSchema.optional(),
-		images: draftImagesSchema.optional(),
-		folderId: draftFolderIdSchema.optional(),
+		name: DraftSchemas.name.optional(),
+		content: DraftSchemas.content.optional(),
+		images: DraftSchemas.images.optional(),
+		folderId: DraftSchemas.folderId.optional(),
 	})
 	.refine(
 		(data) =>
@@ -48,8 +38,8 @@ export const draftsRouter = {
 	// permissions: promptDraft.read
 	list: personalProcedure({ permissions: ["promptDraft.read"] })
 		.route({ method: "GET", path: "/prompt/drafts" })
-		.input(listDraftsDtoSchema)
-		.output(draftListVoSchema)
+		.input(DraftSchemas.listDto)
+		.output(DraftSchemas.listVo)
 		.handler(async ({ input, context }) => {
 			return listDrafts({
 				userId: context.session.user.id,
@@ -64,8 +54,8 @@ export const draftsRouter = {
 	// permissions: promptDraft.write
 	create: personalProcedure({ permissions: ["promptDraft.write"] })
 		.route({ method: "POST", path: "/prompt/drafts", successStatus: 201 })
-		.input(createDraftDtoSchema)
-		.output(createDraftVoSchema)
+		.input(DraftSchemas.createDto)
+		.output(DraftSchemas.createVo)
 		.handler(async ({ input, context }) => {
 			return createDraft({
 				userId: context.session.user.id,
@@ -81,7 +71,7 @@ export const draftsRouter = {
 	getById: personalProcedure({ permissions: ["promptDraft.read"] })
 		.route({ method: "GET", path: "/prompt/drafts/{id}" })
 		.input(z.object({ id: z.string() }))
-		.output(draftContentVoSchema)
+		.output(DraftSchemas.contentVo)
 		.handler(async ({ input, context }) => {
 			return getDraftById({ userId: context.session.user.id, id: input.id });
 		}),
@@ -91,7 +81,7 @@ export const draftsRouter = {
 	update: personalProcedure({ permissions: ["promptDraft.write"] })
 		.route({ method: "PATCH", path: "/prompt/drafts/{id}" })
 		.input(updateDraftInputSchema)
-		.output(createDraftVoSchema)
+		.output(DraftSchemas.createVo)
 		.handler(async ({ input, context }) => {
 			const { id, name, content, images, folderId } = input;
 			return updateDraft({

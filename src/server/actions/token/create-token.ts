@@ -5,7 +5,7 @@ import { authUserActionClient } from "@/server/actions/safe-action";
 import prisma from "@/shared/db";
 import { hashToken } from "@/shared/lib/auth/hash-token";
 import { nanoid } from "@/shared/lib/nanoid";
-import { createTokenDtoSchema, createTokenVoSchema } from "@/shared/lib/zod/schemas/token";
+import { TokenSchemas } from "@/shared/lib/zod/schemas/token";
 
 // # 创建 API 密钥 Action：生成密钥明文、落库哈希与脱敏片段，明文仅返回一次
 
@@ -19,11 +19,11 @@ const PARTIAL_KEY_TAIL_LENGTH = 4;
 
 // 创建 API 密钥：仅登录用户可调用；明文密钥只在本次返回，库里只存哈希与脱敏片段
 export const createTokenAction = authUserActionClient
-	.inputSchema(createTokenDtoSchema, {
+	.inputSchema(TokenSchemas.createDto, {
 		// 把 Zod 校验错误整理成前端更容易消费的字段级错误结构
 		handleValidationErrorsShape: async (ve) => flattenValidationErrors(ve).fieldErrors,
 	})
-	.outputSchema(createTokenVoSchema)
+	.outputSchema(TokenSchemas.createVo)
 	.action(async ({ parsedInput, ctx }) => {
 		const { name, description, scopes, expires } = parsedInput;
 		const userId = ctx.user.id;

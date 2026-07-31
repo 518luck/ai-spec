@@ -1,5 +1,5 @@
 import { PersonalRecordsPage } from "@/pages/spec/personal/prompt/records";
-import { listRecordsDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
+import { RecordSchemas } from "@/shared/lib/zod/schemas/prompt/record";
 
 // # 个人收录页（薄层路由）
 
@@ -23,7 +23,7 @@ export default async function Page({
 	const sp = await searchParams;
 	// ! 「使用此版本」两参数与快捷新建的 create 不参与列表查询；DTO schema 开发环境走 strict，解析前必须摘掉，否则未知键直接抛
 	const { useRecordId, useVersionId, create: _create, ...listParams } = sp;
-	const { folderId, tagIds, q, filter, favorite, sort } = listRecordsDtoSchema.parse(listParams);
+	const { folderId, tagIds, q, filter, favorite, sort } = RecordSchemas.listDto.parse(listParams);
 	return (
 		<PersonalRecordsPage
 			folderId={folderId}

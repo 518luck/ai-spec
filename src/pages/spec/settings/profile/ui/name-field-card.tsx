@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import type { JSX, ReactNode } from "react";
 
 import { client } from "@/shared/lib/orpc/client";
-import { userNameSchema } from "@/shared/lib/zod/schemas/user";
+import { UserSchemas } from "@/shared/lib/zod/schemas/user";
 
 import { EditableFieldCard } from "./editable-field-card";
 
@@ -22,7 +22,7 @@ export function NameFieldCard({ defaultValue, aside }: NameFieldCardProps): JSX.
 
 	// > 提交新名称：先本地校验长度避免无谓请求，再写库；失败抛错由卡片兜底 toast；成功后重铸 JWT 并刷新，使新名称同步到顶栏等位置
 	const handleSave = async (name: string): Promise<void> => {
-		const parsed = userNameSchema.safeParse(name);
+		const parsed = UserSchemas.name.safeParse(name);
 		if (!parsed.success) {
 			throw new Error(parsed.error.issues[0]?.message ?? "名称格式不正确");
 		}

@@ -7,7 +7,7 @@ import type { JSX } from "react";
 import { toast } from "@/features/toast";
 import { recordKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
-import { createRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
+import { RecordSchemas } from "@/shared/lib/zod/schemas/prompt/record";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 
 type CreateRecordDialogProps = {
@@ -27,7 +27,7 @@ export function CreateRecordDialog({ open, onOpenChange }: CreateRecordDialogPro
 
 	// 保存逻辑：name 兜底 + schema 校验 + 创建 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
-		const parsed = createRecordDtoSchema.safeParse({
+		const parsed = RecordSchemas.createDto.safeParse({
 			name: data.name || "无标题收录",
 			content: data.content,
 			folderId: data.folderId,

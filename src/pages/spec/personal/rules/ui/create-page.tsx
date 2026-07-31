@@ -8,7 +8,7 @@ import type { JSX } from "react";
 
 import { toast } from "@/features/toast";
 import { orpc } from "@/shared/lib/orpc/query-utils";
-import { createRuleDtoSchema } from "@/shared/lib/zod/schemas/rule";
+import { RuleSchemas } from "@/shared/lib/zod/schemas/rule";
 import { RuleEditorForm, type RuleEditorPayload } from "./rule-editor-form";
 
 type CreateRulePageProps = {
@@ -25,7 +25,7 @@ export function CreateRulePage({ spaceId }: CreateRulePageProps): JSX.Element {
 
 	// 保存逻辑：schema 校验 + 创建 + toast + 跳回列表；返回是否成功供表单控制按钮状态
 	const handleSave = async (payload: RuleEditorPayload): Promise<boolean> => {
-		const parsed = createRuleDtoSchema.safeParse({ ...payload, spaceId });
+		const parsed = RuleSchemas.createDto.safeParse({ ...payload, spaceId });
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "请填写规约信息");
 			return false;

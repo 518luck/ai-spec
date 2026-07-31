@@ -10,15 +10,7 @@ import {
 import { AiSpecError } from "@/server/errors/http-error";
 import { ratelimit } from "@/server/infrastructure/redis/reatlimit";
 import { z } from "@/shared/lib/zod";
-import {
-	discoverSkillListVoSchema,
-	importDiscoverSkillsDtoSchema,
-	importDiscoverSkillsVoSchema,
-	listDiscoverSkillsDtoSchema,
-	organizationListVoSchema,
-	reportDiscoverSkillDtoSchema,
-	reportDiscoverSkillVoSchema,
-} from "@/shared/lib/zod/schemas/discover-skill";
+import { DiscoverSkillSchemas } from "@/shared/lib/zod/schemas/discover-skill";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import { personalProcedure } from "../procedures";
 
@@ -30,8 +22,8 @@ export const discoverSkillsRouter = {
 	// 列表查询（GET /discover/skills）—— 广场公共索引，无 ownerId 隔离
 	list: personalProcedure({ permissions: ["discover.read"] })
 		.route({ method: "GET", path: "/discover/skills" })
-		.input(listDiscoverSkillsDtoSchema)
-		.output(discoverSkillListVoSchema)
+		.input(DiscoverSkillSchemas.listDto)
+		.output(DiscoverSkillSchemas.listVo)
 		.handler(async ({ input }) => {
 			return listDiscoverSkills({
 				q: input.q,
@@ -46,8 +38,8 @@ export const discoverSkillsRouter = {
 	// > 复用现有 importRepoSkills（与每日同步共用：抓取 → upsert → prune → 登记货源），重复导入即刷新
 	import: personalProcedure({ permissions: ["discover.write"] })
 		.route({ method: "POST", path: "/discover/skills/import", successStatus: 201 })
-		.input(importDiscoverSkillsDtoSchema)
-		.output(importDiscoverSkillsVoSchema)
+		.input(DiscoverSkillSchemas.importDto)
+		.output(DiscoverSkillSchemas.importVo)
 		.handler(async ({ input }) => {
 			const { saved } = await importRepoSkills({ url: input.url, addedFrom: "user-import" });
 			return { imported: saved.length, skills: saved };
@@ -58,8 +50,8 @@ export const discoverSkillsRouter = {
 	// > 复用现有 createDiscoverSkillReport：只收集入库，不自动下架；唯一约束 P2002→CONFLICT
 	report: personalProcedure({ permissions: ["discover.read"] })
 		.route({ method: "POST", path: "/discover/skills/{id}/report", successStatus: 201 })
-		.input(skillIdPathSchema.extend(reportDiscoverSkillDtoSchema.shape))
-		.output(reportDiscoverSkillVoSchema)
+		.input(skillIdPathSchema.extend(DiscoverSkillSchemas.reportDto.shape))
+		.output(DiscoverSkillSchemas.reportVo)
 		.handler(async ({ input, context }) => {
 			// 防刷：每用户 60 秒内最多 10 次反馈提交
 			try {
@@ -85,7 +77,7 @@ export const discoverOrganizationsRouter = {
 	// 组织列表（GET /discover/skills/organizations）—— raw SQL GROUP BY 聚合
 	list: personalProcedure({ permissions: ["discover.read"] })
 		.route({ method: "GET", path: "/discover/skills/organizations" })
-		.output(organizationListVoSchema)
+		.output(DiscoverSkillSchemas.organizationListVo)
 		.handler(async () => {
 			return listDiscoverOrganizations();
 		}),

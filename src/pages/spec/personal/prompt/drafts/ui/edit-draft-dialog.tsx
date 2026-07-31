@@ -8,7 +8,7 @@ import type { JSX } from "react";
 import { toast } from "@/features/toast";
 import { draftKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
-import { updateDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import { DraftSchemas } from "@/shared/lib/zod/schemas/prompt/draft";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 
 type EditDraftDialogProps = {
@@ -56,7 +56,7 @@ export function EditDraftDialog({
 		}
 
 		// id 走 URL，body 只校验需要更新的字段
-		const parsed = updateDraftDtoSchema.safeParse({
+		const parsed = DraftSchemas.updateDto.safeParse({
 			name: data.name,
 			content: data.content,
 			folderId: data.folderId,

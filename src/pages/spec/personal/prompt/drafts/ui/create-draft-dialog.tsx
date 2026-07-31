@@ -7,7 +7,7 @@ import type { JSX } from "react";
 import { toast } from "@/features/toast";
 import { draftKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
-import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import { DraftSchemas } from "@/shared/lib/zod/schemas/prompt/draft";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
 
 type CreateDraftDialogProps = {
@@ -27,7 +27,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 
 	// 保存逻辑：schema 校验 + 创建 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
-		const parsed = createDraftDtoSchema.safeParse({
+		const parsed = DraftSchemas.createDto.safeParse({
 			name: data.name,
 			content: data.content,
 			folderId: data.folderId,

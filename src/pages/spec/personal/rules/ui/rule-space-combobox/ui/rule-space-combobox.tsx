@@ -13,7 +13,7 @@ import { toast } from "@/features/toast";
 import { ruleSpaceKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
 import { cn } from "@/shared/lib/utils";
-import { createRuleSpaceDtoSchema } from "@/shared/lib/zod/schemas/rule-space";
+import { RuleSpaceSchemas } from "@/shared/lib/zod/schemas/rule-space";
 import { Button } from "@/shared/ui/button";
 import {
 	Command,
@@ -83,7 +83,7 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 		icon: string;
 		color: string;
 	}): Promise<void> => {
-		const parsed = createRuleSpaceDtoSchema.safeParse(input);
+		const parsed = RuleSpaceSchemas.createDto.safeParse(input);
 		if (!parsed.success) {
 			toast.error(parsed.error.issues[0]?.message ?? "创建空间失败");
 			return;

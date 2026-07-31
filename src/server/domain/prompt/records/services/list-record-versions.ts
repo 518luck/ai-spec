@@ -1,10 +1,10 @@
 // # 收录版本列表：按版本号倒序，校验收录归属
 
 import { AiSpecError } from "@/server/errors/http-error";
+import { mapEditor } from "@/server/utils/map-editor";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import type { VersionListVo } from "@/shared/lib/zod/schemas/prompt/record";
-import { mapEditor } from "@/server/utils/map-editor";
 
 export const listRecordVersions = async ({
 	userId,

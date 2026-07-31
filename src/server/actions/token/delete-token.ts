@@ -6,13 +6,13 @@ import { ActionError } from "@/server/errors/action-error";
 import { tokenCache } from "@/server/infrastructure/redis/token-cache";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
-import { deleteTokenDtoSchema } from "@/shared/lib/zod/schemas/token";
+import { TokenSchemas } from "@/shared/lib/zod/schemas/token";
 
 // # 删除 API 密钥 Action：校验归属后删除令牌并清除缓存
 
 // 删除 API 密钥：仅登录用户可删除归属自己的令牌；按 id 删除，校验归属防止越权删别人的
 export const deleteTokenAction = authUserActionClient
-	.inputSchema(deleteTokenDtoSchema, {
+	.inputSchema(TokenSchemas.deleteDto, {
 		// 把 Zod 校验错误整理成前端更容易消费的字段级错误结构
 		handleValidationErrorsShape: async (ve) => flattenValidationErrors(ve).fieldErrors,
 	})
