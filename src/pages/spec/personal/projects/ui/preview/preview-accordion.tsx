@@ -1,6 +1,6 @@
 "use client";
 
-// # 详情分组列表：资源（skill/plugin/mcp/agent）与文档（AGENTS.md）统一成手风琴分组
+// # 预览分组列表：资源（skill/plugin/mcp/agent）与文档（AGENTS.md）统一成手风琴分组
 
 import type { JSX } from "react";
 
@@ -42,13 +42,13 @@ interface Section {
 	rows: SectionRow[];
 }
 
-interface DetailAccordionProps {
+interface PreviewAccordionProps {
 	resources: AiResourceItem[];
 	agentsDocs: AgentsDocEntry[];
 }
 
 // > 资源按四类分组 + 文档单组，统一成平级手风琴
-export function DetailAccordion({ resources, agentsDocs }: DetailAccordionProps): JSX.Element {
+export function PreviewAccordion({ resources, agentsDocs }: PreviewAccordionProps): JSX.Element {
 	const sections: Section[] = [];
 
 	for (const meta of RESOURCE_META) {
