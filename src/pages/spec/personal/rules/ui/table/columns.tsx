@@ -6,6 +6,7 @@
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import Link from "next/link";
 import { type JSX, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { FolderIcon } from "@/features/folder-combobox";
 import { TagChip } from "@/features/tag-combobox";
 import { useResizeObserver } from "@/shared/hooks";
 import { formatRelativeTime } from "@/shared/lib/format-relative-time";
@@ -63,9 +64,15 @@ export const columns: ColumnDef<RuleListItemVo>[] = [
 		size: 128,
 		cell: ({ row }) => {
 			const folderName = row.original.folderName || "未分类";
+			const folderColor = row.original.folderColor;
 			return (
 				<span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">
-					<Icons.folderClosed className="size-4 shrink-0" />
+					<FolderIcon
+						color={folderColor ?? "#9ca3af"}
+						icon={folderColor ? undefined : Icons.folderX}
+						className="size-5 rounded-md"
+						iconClassName="size-3"
+					/>
 					<TruncatedTooltip text={folderName} />
 				</span>
 			);
