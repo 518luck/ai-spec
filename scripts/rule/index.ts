@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 
-// # 规约测试脚本编排器：按顺序调用 seed-spaces → folders → tags → rules
+// # 规约测试脚本编排器：按顺序调用 seed-spaces → folders → tags → rules → versions
 // > 复用 scripts/seed.ts 的 spawnSync 模式，支持 --only / --skip 临时覆盖
 // ! 必须从项目根目录运行： pnpm exec tsx scripts/rule/index.ts
 
@@ -38,6 +38,11 @@ const STEPS = {
 		enabled: true,
 		script: "scripts/rule/seed-rules.ts",
 		desc: "规约规则",
+	}),
+	versions: defineStep({
+		enabled: true,
+		script: "scripts/rule/seed-versions.ts",
+		desc: "规约版本历史",
 	}),
 } as const;
 
