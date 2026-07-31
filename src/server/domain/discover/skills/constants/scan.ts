@@ -4,5 +4,10 @@
 export const SOURCE_FAIL_THRESHOLD = 5;
 
 // 广场每日扫描的 cron 表达式（BullMQ 调度，默认按 UTC 时区）
-// 本地测试可设 DISCOVER_SCAN_CRON="*/1 * * * *"（每分钟触发）；生产留空走默认 04:00
+// 本地测试可设 DISCOVER_SCAN_CRON="*/1 * * * *"（每分钟触发）；设 "off" 关闭定时（仍可手动 enqueue）；生产留空走默认 04:00
 export const DISCOVER_SCAN_CRON = process.env.DISCOVER_SCAN_CRON || "0 4 * * *";
+
+// 是否启用定时扫描（"off" / "false" 关闭；其余走 DISCOVER_SCAN_CRON）
+export const DISCOVER_SCAN_CRON_ENABLED = !["off", "false"].includes(
+	DISCOVER_SCAN_CRON.trim().toLowerCase(),
+);
