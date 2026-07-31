@@ -49,7 +49,6 @@ import {
 	IconFileText,
 	IconFlag,
 	IconFlame,
-	IconFolder,
 	IconGift,
 	IconGitBranch,
 	IconGlobe,
@@ -85,6 +84,7 @@ import {
 	IconRobot,
 	IconRobotFace,
 	IconRocket,
+	IconRulerMeasure2,
 	IconSchool,
 	IconSearch,
 	IconServer,
@@ -146,7 +146,7 @@ type SpaceIconOption = {
 // 可选图标：覆盖代码 / 设计 / AI / 商务 / 学习等常见领域
 export const RULE_SPACE_ICON_OPTIONS: readonly SpaceIconOption[] = [
 	// @ 通用 / 容器（保留原有 key，保证历史数据兼容）
-	{ key: "rulesLibrary", label: "规约", icon: IconFolder, category: "general" },
+	{ key: "rulesLibrary", label: "规约", icon: IconRulerMeasure2, category: "general" },
 	{ key: "domain", label: "领域", icon: IconCategory, category: "general" },
 	{ key: "star", label: "收藏", icon: IconStar, category: "general" },
 	{ key: "bookmark", label: "书签", icon: IconBookmark, category: "general" },

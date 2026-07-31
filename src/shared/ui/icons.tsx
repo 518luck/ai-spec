@@ -36,7 +36,6 @@ import {
 	IconEyeOff,
 	IconEyeSearch,
 	IconFileAi,
-	IconFiles,
 	IconFileText,
 	IconFilter2,
 	IconFlag,
@@ -66,6 +65,7 @@ import {
 	IconFold,
 	IconHighlight,
 	IconListNumbers,
+	IconRulerMeasure2,
 	IconSearch,
 	IconSelector,
 	IconSettings,
@@ -111,14 +111,14 @@ export const Icons = {
 
 	prompt: IconNote,
 	agentsMd: IconFileAi,
-	rulesLibrary: IconFolder,
+	rulesLibrary: IconRulerMeasure2,
 	domain: IconCategory,
 	skills: IconBook,
 
 	github: IconBrandGithub, // skill 广场条目回链源仓库
 	aiAgents: IconBrandMetabrainz,
 	plugins: IconPlug,
-	projects: IconFiles,
+	projects: IconFolder,
 	members: IconUsers,
 	preference: IconAdjustmentsAlt,
 	key: IconKey,
