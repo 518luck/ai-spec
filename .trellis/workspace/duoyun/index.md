@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 15
+- **Total Sessions**: 16
 - **Last Active**: 2026-07-31
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~359 | Active |
+| `journal-1.md` | ~382 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 16 | 2026-07-31 | 修复 hydration、规约版本数据、表格列宽与标签折叠 | `e994f17`, `79c0c13`, `cea7a81` | `main` |
 | 15 | 2026-07-31 | 列可见性持久化重构与功能维护 | `05e7034`, `ca6c764`, `fd65430`, `c209ead` | `main` |
 | 14 | 2026-07-31 | zod schema 聚合化 + service 用例拆分 + lint 修复 | `fbc7e42`, `146572b` | `main` |
 | 13 | 2026-07-31 | 全量迁移至 oRPC + TanStack Query 架构 | `28f1d9d` | `main` |

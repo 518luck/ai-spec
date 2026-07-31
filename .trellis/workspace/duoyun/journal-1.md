@@ -357,3 +357,26 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 16: 修复 hydration、规约版本数据、表格列宽与标签折叠
+
+**Date**: 2026-07-31
+**Task**: 修复 hydration、规约版本数据、表格列宽与标签折叠
+**Branch**: `main`
+
+### Summary
+
+用 useSyncExternalStore 重写 useLocalStorage 根治 hydration mismatch；新增 seed-versions.ts 为 RuleVersion 补测试数据（高版本规则 50 版 + 少量版本规则）；修复表格隐藏列后列宽分布（功能列固定 px、内容列按原比例瓜分）；实现标签列按列宽动态折叠（测量层 + 贪心计算 + +N 折叠）。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `e994f17` | (see git log) |
+| `79c0c13` | (see git log) |
+| `cea7a81` | (see git log) |
+
+### Status
+
+[OK] **Completed**
