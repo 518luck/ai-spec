@@ -43,17 +43,37 @@ const cellClassName = (columnId: string): string => {
 	return "max-w-0 overflow-hidden";
 };
 
-// 表头与 body 共用 colgroup，按 ColumnDef.size 锁列宽
-const ColumnGroup = ({ columns }: { columns: Column<RuleListItemVo, unknown>[] }): JSX.Element => (
-	<colgroup>
-		{columns.map((column) => (
-			<col
-				key={column.id}
-				style={column.columnDef.size ? { width: column.columnDef.size } : undefined}
-			/>
-		))}
-	</colgroup>
-);
+// 功能列 id：固定 px 宽，不参与弹性分配，始终贴左右两侧
+const FIXED_COLUMN_IDS = new Set(["select", "actions"]);
+
+// 表头与 body 共用 colgroup：功能列锁固定 px，内容列按原 size 比例瓜分剩余宽度
+// > 解决 table-fixed 下隐藏列后所有列被等比拉伸、功能列变宽的问题
+const ColumnGroup = ({ columns }: { columns: Column<RuleListItemVo, unknown>[] }): JSX.Element => {
+	// 内容列 size 总和，用作按比例分配的分母
+	const contentTotal = columns
+		.filter((c) => !FIXED_COLUMN_IDS.has(c.id))
+		.reduce((sum, c) => sum + (c.columnDef.size ?? 0), 0);
+	// 固定列 px 总和，从表格宽度里先扣除
+	const fixedTotal = columns
+		.filter((c) => FIXED_COLUMN_IDS.has(c.id))
+		.reduce((sum, c) => sum + (c.columnDef.size ?? 0), 0);
+
+	return (
+		<colgroup>
+			{columns.map((column) => {
+				const size = column.columnDef.size ?? 0;
+				// 功能列固定 px；内容列按 size 占内容列总和的比例瓜分剩余宽度
+				if (FIXED_COLUMN_IDS.has(column.id)) {
+					return <col key={column.id} style={{ width: size }} />;
+				}
+				const ratio = contentTotal > 0 ? (size / contentTotal).toFixed(4) : "0";
+				return (
+					<col key={column.id} style={{ width: `calc((100% - ${fixedTotal}px) * ${ratio})` }} />
+				);
+			})}
+		</colgroup>
+	);
+};
 
 type RuleDataTableProps = {
 	columns: ColumnDef<RuleListItemVo, unknown>[];
