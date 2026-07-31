@@ -290,3 +290,24 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 13: 全量迁移至 oRPC + TanStack Query 架构
+
+**Date**: 2026-07-31
+**Task**: 全量迁移至 oRPC + TanStack Query 架构
+**Branch**: `main`
+
+### Summary
+
+将后端 22 个 Route Handler 全量迁移到 oRPC（RPC + OpenAPI 双导出），前端 SWR 全量替换为 TanStack Query。后端拆为 procedure 编排层 + service 用例文件层（每用例一文件），鉴权/错误/日志/限流通过 interceptor + middleware 链平移。删除全部旧 route.ts 和 entities/api 手写 fetch。同步更新 Trellis spec 规则。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `28f1d9d` | (see git log) |
+
+### Status
+
+[OK] **Completed**
