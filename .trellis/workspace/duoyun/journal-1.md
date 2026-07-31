@@ -380,3 +380,28 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 17: AI 规约模块信息架构重构与图标调整
+
+**Date**: 2026-07-31
+**Task**: AI 规约模块信息架构重构与图标调整
+**Branch**: `main`
+
+### Summary
+
+删除死代码 PersonalPage；去掉 ai-spec 中间层，agents-md 提到 personal 下；新增 Skills/Agents/Plugins 占位路由；通过 grilling 厘清 Claude Code 配置体系（Plugin 是打包产物、Skills/Agents 是独立创作单元），决策以项目为中枢、规约库为素材库、版本化引用，沉淀进 trellis spec 和根 README；导航重构（项目拎到分组1、原分组改名资源、AGENTS.md 收进项目）；规约库图标改 IconRulerMeasure2、项目图标改 IconFolder。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `9182517` | (see git log) |
+| `16fe341` | (see git log) |
+| `d504de2` | (see git log) |
+| `9351f69` | (see git log) |
+| `324d3bc` | (see git log) |
+
+### Status
+
+[OK] **Completed**
