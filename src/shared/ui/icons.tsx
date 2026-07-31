@@ -59,6 +59,7 @@ import {
 	IconPalette,
 	IconPencil,
 	IconPlug,
+	IconPlugConnected,
 	IconPlus,
 	IconQuote,
 	IconRepeat,
@@ -118,6 +119,7 @@ export const Icons = {
 	github: IconBrandGithub, // skill 广场条目回链源仓库
 	aiAgents: IconBrandMetabrainz,
 	plugins: IconPlug,
+	mcp: IconPlugConnected,
 	projects: IconFolder,
 	members: IconUsers,
 	preference: IconAdjustmentsAlt,
