@@ -74,12 +74,12 @@ function useKBarActions() {
 			perform: () => navigateUnlessModal("/spec/personal/rules"),
 		},
 		{
-			id: "go-agents-md",
+			id: "go-projects",
 			name: "去项目",
 			shortcut: [...HOTKEYS.goAgentsMd.kbarShortcut],
 			section: "导航",
 			keywords: "项目 agents md ai-spec",
-			perform: () => navigateUnlessModal("/spec/personal/agents-md"),
+			perform: () => navigateUnlessModal("/spec/personal/projects"),
 		},
 		{
 			id: "go-settings",

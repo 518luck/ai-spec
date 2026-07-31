@@ -19,7 +19,7 @@ import { DocCardGrid } from "./doc-cards";
 import { FileTree } from "./file-tree";
 import { ProjectCardGrid } from "./project-cards";
 
-export function PersonalAgentsMdPage(): JSX.Element {
+export function PersonalProjectsPage(): JSX.Element {
 	// 当前打开的项目；null 表示停留在首页项目列表
 	const [openedProjectId, setOpenedProjectId] = useState<string | null>(null);
 	// 项目内左侧树选中的文件夹

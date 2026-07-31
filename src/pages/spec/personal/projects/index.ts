@@ -1,1 +1,1 @@
-export { PersonalAgentsMdPage } from "./ui/page";
+export { PersonalProjectsPage } from "./ui/page";

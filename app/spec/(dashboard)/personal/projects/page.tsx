@@ -1,6 +1,6 @@
-import { PersonalAgentsMdPage } from "@/pages/spec/personal/agents-md";
+import { PersonalProjectsPage } from "@/pages/spec/personal/projects";
 
-// # 个人 AGENTS.md 页（薄层路由）
+// # 个人项目页（薄层路由）
 export default function Page() {
-	return <PersonalAgentsMdPage />;
+	return <PersonalProjectsPage />;
 }

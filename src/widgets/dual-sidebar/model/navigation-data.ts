@@ -182,8 +182,8 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
 					{
 						name: "项目",
 						icon: Icons.projects,
-						href: "/spec/personal/agents-md",
-						active: pathname === "/spec/personal/agents-md",
+						href: "/spec/personal/projects",
+						active: pathname === "/spec/personal/projects",
 					},
 				],
 			},
