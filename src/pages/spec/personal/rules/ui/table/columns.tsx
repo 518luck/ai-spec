@@ -5,7 +5,9 @@
 
 import type { ColumnDef, VisibilityState } from "@tanstack/react-table";
 import Link from "next/link";
+import { type JSX, type RefObject, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { TagChip } from "@/features/tag-combobox";
+import { useResizeObserver } from "@/shared/hooks";
 import { formatRelativeTime } from "@/shared/lib/format-relative-time";
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -125,16 +127,78 @@ export const DEFAULT_COLUMN_VISIBILITY: VisibilityState = {
 
 // localStorage key：持久化用户列选择
 export const COLUMN_VISIBILITY_STORAGE_KEY = "rule-table-columns";
-const TAG_PREVIEW_LIMIT = 3;
 
-function RuleTagsCell({ tags }: { tags: RuleListItemVo["tags"] }) {
-	if (tags.length === 0) {
-		return <span className="text-muted-foreground/50">—</span>;
-	}
-	const visible = tags.slice(0, TAG_PREVIEW_LIMIT);
+// chip 间距（Tailwind gap-1 = 4px），贪心计算时累加
+const CHIP_GAP = 4;
+// +N 占位宽度预估（px-2 + 两位数字 ≈ 40px）+ 一个 gap，始终预留避免闪烁
+const PLUS_N_RESERVED_WIDTH = 44;
+
+// > 按列宽动态折叠的标签列表：测量每个 chip 宽度，贪心放下能容纳的，超出收成 +N
+const OverflowTagList = ({ tags }: { tags: RuleListItemVo["tags"] }): JSX.Element => {
+	// 容器 ref：同时用于观测列宽变化
+	const containerRef = useRef<HTMLDivElement>(null);
+	const entry = useResizeObserver(containerRef as RefObject<Element | null>);
+	const containerWidth = entry?.contentRect.width ?? 0;
+
+	// 测量层 ref 数组：每个包裹 span 对应一个 chip，读其 offsetWidth
+	const measureRefs = useRef<Array<HTMLSpanElement | null>>([]);
+	const [chipWidths, setChipWidths] = useState<number[]>([]);
+
+	// 测量全部 chip 宽度：tags 内容变化时重测（用 length 做依赖，覆盖增删标签场景）
+	useLayoutEffect(() => {
+		if (tags.length === 0) {
+			setChipWidths([]);
+			return;
+		}
+		setChipWidths(measureRefs.current.map((el) => el?.offsetWidth ?? 0));
+	}, [tags.length]);
+
+	// 贪心计算可见 chip 数量：始终预留 +N 宽度，避免放下后 +N 挤不下的闪烁
+	const visibleCount = useMemo(() => {
+		if (containerWidth === 0 || chipWidths.length === 0) return tags.length;
+		// 全部放得下时不预留 +N
+		const totalWidth = chipWidths.reduce((sum, w) => sum + w, 0) + (tags.length - 1) * CHIP_GAP;
+		if (totalWidth <= containerWidth) return tags.length;
+
+		// 预留 +N 后的可用宽度
+		const available = containerWidth - PLUS_N_RESERVED_WIDTH;
+		let used = 0;
+		let count = 0;
+		for (let i = 0; i < chipWidths.length; i += 1) {
+			const need = chipWidths[i] + (i > 0 ? CHIP_GAP : 0);
+			if (used + need > available) break;
+			used += need;
+			count += 1;
+		}
+		// 至少显示 1 个，避免只剩 +N 的极端情况
+		return Math.max(count, 1);
+	}, [containerWidth, chipWidths, tags.length]);
+
+	const visible = tags.slice(0, visibleCount);
 	const hiddenCount = tags.length - visible.length;
+
 	return (
-		<div className="flex flex-wrap items-center gap-1">
+		<div
+			ref={containerRef}
+			className="flex w-full min-w-0 flex-nowrap items-center gap-1 overflow-hidden"
+		>
+			{/* 测量层：不可见，渲染全部 chip 用于读 offsetWidth；包裹 span 收集 ref */}
+			<div
+				aria-hidden="true"
+				className="pointer-events-none invisible absolute top-0 left-0 flex flex-nowrap items-center gap-1"
+			>
+				{tags.map((tag, i) => (
+					<span
+						key={tag.id}
+						ref={(el) => {
+							measureRefs.current[i] = el;
+						}}
+						className="inline-flex"
+					>
+						<TagChip name={tag.name} color={tag.color} />
+					</span>
+				))}
+			</div>
 			{visible.map((tag) => (
 				<TagChip key={tag.id} name={tag.name} color={tag.color} />
 			))}
@@ -147,7 +211,7 @@ function RuleTagsCell({ tags }: { tags: RuleListItemVo["tags"] }) {
 							</span>
 						}
 					/>
-					<TooltipContent className="flex max-w-xs flex-wrap gap-1">
+					<TooltipContent className="flex max-w-xs flex-wrap gap-1" showArrow={false}>
 						{tags.map((tag) => (
 							<TagChip key={tag.id} name={tag.name} color={tag.color} />
 						))}
@@ -156,4 +220,11 @@ function RuleTagsCell({ tags }: { tags: RuleListItemVo["tags"] }) {
 			)}
 		</div>
 	);
+};
+
+function RuleTagsCell({ tags }: { tags: RuleListItemVo["tags"] }) {
+	if (tags.length === 0) {
+		return <span className="text-muted-foreground/50">—</span>;
+	}
+	return <OverflowTagList tags={tags} />;
 }
