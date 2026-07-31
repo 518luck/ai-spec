@@ -14,6 +14,7 @@
 
 | 问题 | 类别 | 严重 |
 | --- | --- | --- |
+| [claude-code-config-hierarchy.md](./claude-code-config-hierarchy.md) | 产品领域认知 / 信息架构 | Info |
 | [webkit-tap-highlight.md](./webkit-tap-highlight.md) | 移动端 / CSS | Info |
 | [turbopack-webpack-flexbox.md](./turbopack-webpack-flexbox.md) | 构建系统 / 布局 | Warning |
 

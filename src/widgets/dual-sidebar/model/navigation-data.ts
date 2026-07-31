@@ -179,17 +179,17 @@ export const navAreaPanels: NavAreaPanels<NavContext, NavBusinessArea> = {
 						href: "/spec/personal/rules",
 						active: pathname === "/spec/personal/rules",
 					},
-				],
-			},
-			{
-				name: "AI 规约",
-				items: [
 					{
-						name: "AGENTS.md",
-						icon: Icons.agentsMd,
+						name: "项目",
+						icon: Icons.projects,
 						href: "/spec/personal/agents-md",
 						active: pathname === "/spec/personal/agents-md",
 					},
+				],
+			},
+			{
+				name: "资源",
+				items: [
 					{
 						name: "Skills",
 						icon: Icons.skills,

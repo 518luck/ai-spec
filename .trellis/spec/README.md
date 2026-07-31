@@ -35,7 +35,7 @@
 - [pre-implementation-checklist.md](./guides/pre-implementation-checklist.md) · [cross-layer-thinking-guide.md](./guides/cross-layer-thinking-guide.md)
 
 ### [big-question/](./big-question/index.md) — 踩坑记录
-- [webkit-tap-highlight.md](./big-question/webkit-tap-highlight.md) · [turbopack-webpack-flexbox.md](./big-question/turbopack-webpack-flexbox.md)
+- [claude-code-config-hierarchy.md](./big-question/claude-code-config-hierarchy.md) · [webkit-tap-highlight.md](./big-question/webkit-tap-highlight.md) · [turbopack-webpack-flexbox.md](./big-question/turbopack-webpack-flexbox.md)
 
 ## 常用命令
 
