@@ -29,10 +29,10 @@ interface ProjectCardProps {
 	onOpen: (projectId: string) => void;
 }
 
-// 单张项目卡：标题按钮的伪元素铺满卡面实现整卡可点，底部标注项目内文档数量
+// 单张项目卡：标题按钮的伪元素铺满卡面实现整卡可点，底部资源徽章展示 AGENTS.md 数量
 function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 	return (
-		<Card size="sm" className="relative transition hover:ring-foreground/25">
+		<Card size="sm" className="group relative transition hover:ring-foreground/25">
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2">
 					<Icons.projects className="size-4 shrink-0 text-muted-foreground" />
@@ -48,7 +48,7 @@ function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 			</CardHeader>
 			<CardFooter className="gap-1.5 text-muted-foreground text-xs">
 				<Icons.agentsMd className="size-3.5 shrink-0" />
-				{project.docCount} 份 AGENTS.md
+				<span>{project.docCount} 份 AGENTS.md</span>
 			</CardFooter>
 		</Card>
 	);

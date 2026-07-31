@@ -4,10 +4,10 @@
 
 import type { JSX } from "react";
 import { useState } from "react";
-
+import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { EmptyState } from "@/widgets/empty-state";
-import { PageWidthWrapper, TitlePageShell } from "@/widgets/page-shell";
+import { PageWidthWrapper, TitlePageShell, ToolbarPageShell } from "@/widgets/page-shell";
 import {
 	agentsTreeItems,
 	collectAgentsDocs,
@@ -55,11 +55,19 @@ export function PersonalAgentsMdPage(): JSX.Element {
 	// @ 首页：项目卡片列表
 	if (!openedProjectId) {
 		return (
-			<TitlePageShell title="AGENTS.md">
+			<ToolbarPageShell
+				title="项目"
+				actions={
+					<Button size="sm" variant="outline" className="gap-2">
+						<Icons.plus className="size-4" />
+						新建项目
+					</Button>
+				}
+			>
 				<PageWidthWrapper>
 					<ProjectCardGrid projects={collectProjects()} onOpen={handleProjectOpen} />
 				</PageWidthWrapper>
-			</TitlePageShell>
+			</ToolbarPageShell>
 		);
 	}
 
