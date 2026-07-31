@@ -6,7 +6,7 @@ import type { JSX } from "react";
 
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Icons } from "@/shared/ui/icons";
-import type { AgentsDocEntry } from "../model/mock-tree";
+import type { AgentsDocEntry } from "../../model/mock-tree";
 
 interface DocCardGridProps {
 	docs: AgentsDocEntry[];

@@ -16,14 +16,14 @@ import type { JSX } from "react";
 import { cn } from "@/shared/lib/utils";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
-import { resolveFolderIcon, rootFolderIcon } from "../lib/folder-icons";
+import { resolveFolderIcon, rootFolderIcon } from "../../lib/folder-icons";
 import {
 	AGENTS_TREE_ROOT_ID,
 	type AgentsTreeItem,
 	agentsTreeItems,
 	collectAgentsDocs,
 	getSubfolderIds,
-} from "../model/mock-tree";
+} from "../../model/mock-tree";
 
 interface FileTreeProps {
 	/** 当前打开的项目 id，树只展示该项目的文件夹；切换项目时用 key 重挂载 */

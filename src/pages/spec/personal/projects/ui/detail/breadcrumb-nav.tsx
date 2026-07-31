@@ -13,7 +13,7 @@ import {
 	BreadcrumbPage,
 	BreadcrumbSeparator,
 } from "@/shared/ui/breadcrumb";
-import { agentsTreeItems, getPathIds } from "../model/mock-tree";
+import { agentsTreeItems, getPathIds } from "../../model/mock-tree";
 
 interface BreadcrumbNavProps {
 	/** 当前路径末端 id：卡片态为选中的文件夹，阅读态为文档 id */
