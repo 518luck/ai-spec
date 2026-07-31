@@ -3,9 +3,8 @@
 // # 按 URL 导入弹窗：粘贴 GitHub 仓库链接，后端抓取其中所有 SKILL.md 入库
 
 import { type JSX, useState } from "react";
-
-import { importDiscoverSkills } from "@/entities/discover-skill";
 import { toast } from "@/features/toast";
+import { client } from "@/shared/lib/orpc/client";
 import { Button } from "@/shared/ui/button";
 import {
 	Dialog,
@@ -35,7 +34,7 @@ export function ImportDialog({ open, onOpenChange, onImported }: ImportDialogPro
 		if (!url.trim() || submitting) return;
 		setSubmitting(true);
 		try {
-			const { imported } = await importDiscoverSkills({ url: url.trim() });
+			const { imported } = await client.discoverSkills.import({ url: url.trim() });
 			toast.success(`成功导入 ${imported} 个 skill`);
 			setUrl("");
 			onImported();

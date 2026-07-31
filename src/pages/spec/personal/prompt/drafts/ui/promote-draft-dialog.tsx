@@ -2,13 +2,14 @@
 
 // # 草稿复用级联选择器：左侧选择资源类型，右侧选择该资源的归纳方式（文件夹/标签）
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type JSX, useState } from "react";
-import useSWRMutation from "swr/mutation";
-import { deleteDraft, getDraft } from "@/entities/prompt";
-import { createRecord } from "@/entities/prompt/records/api/create-record";
 import { FolderCombobox } from "@/features/folder-combobox";
 import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger";
 import { toast } from "@/features/toast";
+import { client } from "@/shared/lib/orpc/client";
+import { draftKeys, recordKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import { Checkbox } from "@/shared/ui/checkbox";
@@ -16,7 +17,6 @@ import { HelpTooltip } from "@/shared/ui/help-tooltip";
 import { Icons } from "@/shared/ui/icons";
 import { Label } from "@/shared/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 // 资源类型选项
 const resourceOptions = [
@@ -39,6 +39,7 @@ type PromoteDraftPopoverProps = {
 
 // # 草稿复用级联选择器：左侧资源类型，右侧文件夹+标签
 export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverProps): JSX.Element {
+	const qc = useQueryClient();
 	const [open, setOpen] = useState(false);
 	// 当前选中的资源类型
 	const [selectedResource] = useState(resourceOptions[0]);
@@ -48,32 +49,36 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 	const [tags, setTags] = useState<TagOptionVo[]>([]);
 	// 复用后是否删除草稿
 	const [deleteAfterPromote, setDeleteAfterPromote] = useState(false);
-	// 用于刷新草稿列表
-	const mutateDrafts = useDraftsMutate();
 
-	// 创建收录 mutation
-	const { trigger: triggerCreateRecord, isMutating } = useSWRMutation("promote-draft", async () => {
-		// 获取草稿全文
-		const { content } = await getDraft(id);
-		// 创建收录
-		return createRecord({
-			name,
-			content,
-			images: [],
-			folderId: folderId ?? "",
-			tags: tags.map((t) => t.id),
-		});
+	// 复用 mutation：拉草稿全文 → 创建收录 →（可选）删除原草稿；成功后失效 records / drafts 域
+	const { mutateAsync: promoteAsync, isPending } = useMutation({
+		mutationFn: async () => {
+			// 获取草稿全文
+			const { content } = await client.drafts.getById({ id });
+			// 创建收录
+			await orpc.records.create.call({
+				name,
+				content,
+				images: [],
+				folderId: folderId ?? "",
+				tags: tags.map((t) => t.id),
+			});
+			// 勾选了复用后删除，则删除原草稿
+			if (deleteAfterPromote) {
+				await client.drafts.delete({ id });
+			}
+		},
+		onSuccess: () => {
+			// 复用产生新收录 → 刷收录列表；删除草稿 → 刷草稿列表（即便没删也无害，幂等）
+			void qc.invalidateQueries({ queryKey: recordKeys.all });
+			void qc.invalidateQueries({ queryKey: draftKeys.all });
+		},
 	});
 
 	// 确认复用
 	const handleConfirm = async (): Promise<void> => {
 		try {
-			await triggerCreateRecord();
-			// 如果勾选了复用后删除，则删除草稿并刷新列表
-			if (deleteAfterPromote) {
-				await deleteDraft(id);
-				await mutateDrafts();
-			}
+			await promoteAsync();
 			toast.success(deleteAfterPromote ? "已复用到收录库并删除草稿" : "已复用到收录库");
 			setOpen(false);
 		} catch (error) {
@@ -162,8 +167,8 @@ export function PromoteDraftPopover({ id, name, trigger }: PromoteDraftPopoverPr
 									</Label>
 								</div>
 								<div className="p-3">
-									<Button className="w-full" onClick={handleConfirm} disabled={isMutating}>
-										{isMutating ? "复用中..." : "确认复用"}
+									<Button className="w-full" onClick={handleConfirm} disabled={isPending}>
+										{isPending ? "复用中..." : "确认复用"}
 									</Button>
 								</div>
 							</div>

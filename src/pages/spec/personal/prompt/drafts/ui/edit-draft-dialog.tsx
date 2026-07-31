@@ -1,16 +1,15 @@
 "use client";
 
-// # 草稿编辑弹窗 —— 薄包装，打开时拉取草稿全文，注入更新逻辑（SWR mutation + schema 校验）
+// # 草稿编辑弹窗 —— 薄包装，打开时拉取草稿全文，注入更新逻辑（TanStack mutation + schema 校验）
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { JSX } from "react";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
-import { getDraft, updateDraft } from "@/entities/prompt";
-import type { UpdateDraftArgs } from "@/entities/prompt/drafts/api/update-draft";
+
 import { toast } from "@/features/toast";
-import { type CreateDraftVo, updateDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
+import { draftKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
+import { updateDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
-import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 type EditDraftDialogProps = {
 	// 草稿 ID：拉全文 + 更新的主键
@@ -27,22 +26,23 @@ export function EditDraftDialog({
 	onOpenChange,
 	morphId,
 }: EditDraftDialogProps): JSX.Element {
-	// 打开弹窗时拉取草稿全文（列表只有截断预览），用 SWR 缓存避免重复请求；错误提示走全局 SWRConfig
-	const { data: fullDraft, isLoading } = useSWR(
-		open ? (["draft", id] as const) : null,
-		async ([, draftId]) => getDraft(draftId),
-	);
+	const qc = useQueryClient();
+	// 打开弹窗时拉取草稿全文（列表只有截断预览），用缓存避免重复请求；错误提示走全局 QueryCache
+	const { data: fullDraft, isLoading } = useQuery({
+		...orpc.drafts.getById.queryOptions({ input: { id } }),
+		enabled: !!open,
+	});
 
-	// 更新草稿 mutation：arg 形如 { id, ...payload }，id 走 URL 路径，其余字段进 body
-	const mutateDrafts = useDraftsMutate();
-	const { trigger: triggerUpdateDraft, isMutating } = useSWRMutation<
-		CreateDraftVo,
-		Error,
-		string,
-		UpdateDraftArgs
-	>("update-draft", async (_key, { arg }) => updateDraft(arg));
+	// 更新草稿 mutation：input 形如 { id, ...payload }，id 走 URL 路径，其余字段进 body
+	const { mutateAsync: updateDraftAsync, isPending } = useMutation({
+		...orpc.drafts.update.mutationOptions(),
+		onSuccess: () => {
+			// 重拉所有已挂载页 + 失效当前草稿全文缓存
+			void qc.invalidateQueries({ queryKey: draftKeys.all });
+		},
+	});
 
-	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
+	// 更新逻辑：schema 校验 + 更新 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		// name/content/folderId 都没变就不发请求（name 从全文响应取，不依赖外部传入；draft 的 name 可能为 null）
 		const originalFolderId = fullDraft?.folderId ?? null;
@@ -66,8 +66,7 @@ export function EditDraftDialog({
 			return;
 		}
 
-		await triggerUpdateDraft({ id, ...parsed.data });
-		await mutateDrafts();
+		await updateDraftAsync({ id, ...parsed.data });
 		toast.success("草稿已更新");
 	};
 
@@ -79,7 +78,7 @@ export function EditDraftDialog({
 			open={open}
 			onOpenChange={onOpenChange}
 			onSave={handleSave}
-			isSaving={isMutating}
+			isSaving={isPending}
 			isLoading={isLoadingState}
 			resourceType="promptDraft"
 			initialContent={fullDraft?.content ?? ""}

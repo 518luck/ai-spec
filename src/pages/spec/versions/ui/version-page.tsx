@@ -1,7 +1,9 @@
 "use client";
 
-// # 通用版本页：纯 UI + 交互，数据源和行为通过 props 注入，不耦合任何具体资源 API
+// # 通用版本页：纯 UI + 交互，数据源通过 TanStack Query + oRPC 获取，按 resourceType 区分 records/rules
+// > 不耦合任何具体资源 API：通过 handlers.resourceType 选择 oRPC procedure（records/rules.versions）
 
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { type Change, diffLines } from "diff";
 import { useRouter } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
@@ -10,9 +12,9 @@ import rehypeExternalLinks from "rehype-external-links";
 import rehypeHighlight from "rehype-highlight";
 import rehypeSlug from "rehype-slug";
 import remarkGfm from "remark-gfm";
-import useSWR from "swr";
-import useSWRInfinite from "swr/infinite";
-import { useInView } from "@/shared/hooks";
+import { useInfiniteLoad } from "@/shared/hooks";
+import { client } from "@/shared/lib/orpc/client";
+import { versionKeys } from "@/shared/lib/orpc/query-keys";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
@@ -20,32 +22,44 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { TitlePageShell } from "@/widgets/page-shell";
 import { VersionListPanel } from "./version-list-panel";
 
-// @ 版本列表项（通用形状：调用方按此返回即可复用本页）
+// @ 版本列表项（通用形状：records/rules 版本列表共用此结构）
 export interface VersionListItem {
 	id: string;
 	createdAt: string;
 }
 
-// @ 版本列表分页响应（与后端 VersionListVo 同构，调用方透传即可）
-export interface VersionListPage {
-	data: VersionListItem[];
-	hasMore: boolean;
-}
-
-// @ 注入给通用版本页的数据源与行为
+// @ 注入给通用版本页的资源标识与行为
 export interface VersionPageHandlers {
-	// 当前资源 id（如 recordId）：版本数据归属的资源，用于区分不同收录的 SWR 缓存
+	// 资源类型：决定走 records 还是 rules 的版本 procedure，并区分 queryKey
+	resourceType: "record" | "rule";
+	// 当前资源 id（recordId / ruleId）：版本数据归属的资源
 	resourceId: string;
-	// 按分页拉版本列表（按时间倒序，第一条最新）；pageIndex 为 0-based 页码
-	fetchVersions: (pageIndex: number) => Promise<VersionListPage>;
-	// 拉指定版本的标题与内容全文（标题用于内容区上方独立渲染，避免依赖 content 首行 markdown 语法）
-	fetchVersionContent: (versionId: string) => Promise<{ title: string; content: string }>;
 	// 恢复此记录：返回跳转目标 URL（带上 versionId 等），由通用页执行 router.push
 	buildUseUrl: (versionId: string) => string;
 }
 
 // @ 视图模式：普通视图或 diff 视图
 type ViewMode = "content" | "diff";
+
+// > 按资源类型分发版本列表请求（路径参数名不同：records 用 id，rules 用 ruleId）
+const fetchVersionsPage = (resourceType: "record" | "rule", resourceId: string, page: number) => {
+	if (resourceType === "rule") {
+		return client.rules.versions.list({ ruleId: resourceId, page, pageSize: 20 });
+	}
+	return client.records.versions.list({ id: resourceId, page, pageSize: 20 });
+};
+
+// > 按资源类型分发版本详情请求（路径参数名不同：records 用 id，rules 用 ruleId）
+const fetchVersionContent = (
+	resourceType: "record" | "rule",
+	resourceId: string,
+	versionId: string,
+) => {
+	if (resourceType === "rule") {
+		return client.rules.versions.detail({ ruleId: resourceId, versionId });
+	}
+	return client.records.versions.detail({ id: resourceId, versionId });
+};
 
 // @ 统一 Markdown 渲染器：GFM + 代码高亮 + 外链新窗口，普通视图与 diff 视图共用
 function MarkdownView({ children }: { children: string }): JSX.Element {
@@ -64,71 +78,89 @@ function MarkdownView({ children }: { children: string }): JSX.Element {
 }
 
 export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JSX.Element {
-	const { resourceId } = handlers;
+	const { resourceType, resourceId } = handlers;
 	const router = useRouter();
 	const [selectedId, setSelectedId] = useState<string | null>(null);
 	// 视图模式：普通内容或 diff 比较
 	const [viewMode, setViewMode] = useState<ViewMode>("content");
 
-	// > 版本列表 —— 分页拉取（useSWRInfinite + getKey 控制翻页停止）
-	// getKey：resourceId 变化时从头开始；上一页 hasMore=false 时返回 null 停止加载
-	// pageIndex 天然 0-based 递增，直接当页码传给 fetchVersions，不依赖后端返回 nextOffset
-	const getKey = (pageIndex: number, previousPageData: VersionListPage | null) => {
-		if (previousPageData && !previousPageData.hasMore) return null;
-		return ["versions", resourceId, pageIndex] as const;
-	};
+	// > 版本列表 —— 无限分页拉取（useInfiniteQuery + getNextPageParam 控制翻页停止）
+	// pageParam 为 1-based 页码，后端返回 hasMore 决定是否还有下一页
+	const versionsQueryKey = versionKeys.infinite(resourceType, resourceId);
 	const {
-		data: pages,
+		data: infiniteData,
 		isLoading: listLoading,
-		isValidating,
-		setSize,
-	} = useSWRInfinite(getKey, ([, , pageIndex]) => handlers.fetchVersions(pageIndex));
+		isFetchingNextPage,
+		fetchNextPage,
+		hasNextPage,
+	} = useInfiniteQuery({
+		queryKey: versionsQueryKey,
+		queryFn: ({ pageParam }) => fetchVersionsPage(resourceType, resourceId, pageParam),
+		initialPageParam: 1,
+		getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+			lastPage.hasMore ? (lastPageParam as number) + 1 : undefined,
+	});
 
-	// 扁平化所有分页数据为单一版本列表；hasMore/hasPaged 从最后一页取
-	const versions = useMemo(() => pages?.flatMap((page) => page.data) ?? [], [pages]);
-	const hasMore = pages?.[pages.length - 1]?.hasMore ?? false;
+	// 扁平化所有分页数据为单一版本列表
+	const pages = infiniteData?.pages;
+	const versions = useMemo<VersionListItem[]>(
+		() =>
+			(pages ?? []).flatMap((page) => page.data.map((v) => ({ id: v.id, createdAt: v.createdAt }))),
+		[pages],
+	);
 	const hasPaged = (pages?.length ?? 0) > 1;
 
-	// 首次加载完自动选中最新版（替代 useSWR 的 onSuccess，infinite 场景用 useEffect 监听）
+	// 首次加载完自动选中最新版
 	useEffect(() => {
 		if (!selectedId && versions.length > 0) {
 			setSelectedId(versions[0].id);
 		}
 	}, [versions, selectedId]);
 
-	// 哨兵进入视口时加载下一页（复用首页收录列表的无限滚动模式）
-	const { ref: sentinelRef, inView } = useInView({ threshold: 0 });
-	useEffect(() => {
-		if (inView && hasMore && !isValidating) {
-			void setSize((size) => size + 1);
-		}
-	}, [inView, hasMore, isValidating, setSize]);
+	// 哨兵进入视口时加载下一页（复用重写后的 useInfiniteLoad，接收 TanStack Query 的分页 API）
+	const sentinelRef = useInfiniteLoad({
+		hasNextPage,
+		isFetchingNextPage,
+		fetchNextPage: () => {
+			void fetchNextPage();
+		},
+	});
 
 	// > 最新版本 id（列表第一条）
 	const latestId = versions[0]?.id ?? null;
 
-	// > 选中版本的标题与内容（客户端异步拉取）
-	const { data: versionData, isLoading: contentLoading } = useSWR(
-		selectedId ? ["version-content", resourceId, selectedId] : null,
-		() =>
-			selectedId
-				? handlers.fetchVersionContent(selectedId)
-				: Promise.resolve({ title: "", content: "" }),
-		{ revalidateOnFocus: false },
-	);
+	// > 选中版本的标题与内容（客户端异步拉取，失焦不重拉）
+	const { data: versionData, isLoading: contentLoading } = useQuery({
+		queryKey: selectedId
+			? versionKeys.content(resourceType, resourceId, selectedId)
+			: ["versions", "content", "disabled", resourceType, resourceId],
+		queryFn: async () => {
+			// 未选中时返回空壳（enabled 已保证不会真触发，仅用于类型对齐）
+			if (!selectedId) return { title: "", content: "" };
+			// name 作为标题独立展示，content 原样渲染，互不干扰
+			const detail = await fetchVersionContent(resourceType, resourceId, selectedId);
+			return { title: detail.name, content: detail.content };
+		},
+		enabled: Boolean(selectedId),
+		refetchOnWindowFocus: false,
+	});
 	// 解构出标题与正文：标题单独渲染到内容区上方，正文走 Markdown
 	const title = versionData?.title ?? "";
 	const content = versionData?.content ?? "";
 
-	// > 最新版本内容（用于 diff 比较，只取 content 部分）
-	const { data: latestVersionData } = useSWR(
-		latestId ? ["version-content", resourceId, latestId] : null,
-		() =>
-			latestId
-				? handlers.fetchVersionContent(latestId)
-				: Promise.resolve({ title: "", content: "" }),
-		{ revalidateOnFocus: false },
-	);
+	// > 最新版本内容（用于 diff 比较，只取 content 部分；失焦不重拉）
+	const { data: latestVersionData } = useQuery({
+		queryKey: latestId
+			? versionKeys.content(resourceType, resourceId, latestId)
+			: ["versions", "content", "disabled-latest", resourceType, resourceId],
+		queryFn: async () => {
+			if (!latestId) return { title: "", content: "" };
+			const detail = await fetchVersionContent(resourceType, resourceId, latestId);
+			return { title: detail.name, content: detail.content };
+		},
+		enabled: Boolean(latestId),
+		refetchOnWindowFocus: false,
+	});
 	const latestContent = latestVersionData?.content ?? "";
 
 	// > diff 结果（diff 模式下计算，无差异时返回整段未变化块，渲染为无色块内容）
@@ -262,9 +294,9 @@ export function VersionPage({ handlers }: { handlers: VersionPageHandlers }): JS
 					isLoading={listLoading}
 					selectedId={selectedId}
 					onSelect={setSelectedId}
-					hasMore={hasMore}
+					hasMore={hasNextPage}
 					hasPaged={hasPaged}
-					isValidating={isValidating}
+					isValidating={isFetchingNextPage}
 					sentinelRef={sentinelRef}
 				/>
 			</div>

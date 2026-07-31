@@ -21,6 +21,8 @@ export const folderDescriptionSchema = z
 
 // 文件夹归属的资源类型，从 RBAC 可归类资源清单派生（单一真相，加资源只改 resource-ui.ts）
 export const folderResourceTypeSchema = z.enum(FOLDERABLE_RESOURCE_KEYS);
+// 资源类型字面量联合，供组件 prop 类型收窄用（避免传 string 导致 oRPC input 类型不匹配）
+export type FolderResourceType = z.infer<typeof folderResourceTypeSchema>;
 
 // 文件夹颜色：#RRGGBB 格式（不含 alpha 通道），DB 有 @default，这里必填校验格式
 export const folderColorSchema = z

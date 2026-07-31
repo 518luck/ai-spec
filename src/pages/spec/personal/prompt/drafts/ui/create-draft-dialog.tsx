@@ -1,17 +1,14 @@
 "use client";
-// # 草稿创建弹窗 —— 薄包装，注入草稿专属的保存逻辑（SWR mutation + schema 校验）
+// # 草稿创建弹窗 —— 薄包装，注入草稿专属的保存逻辑（TanStack mutation + schema 校验）
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { JSX } from "react";
-import useSWRMutation from "swr/mutation";
-import { createDraft } from "@/entities/prompt";
+
 import { toast } from "@/features/toast";
-import {
-	type CreateDraftDto,
-	type CreateDraftVo,
-	createDraftDtoSchema,
-} from "@/shared/lib/zod/schemas/prompt/draft";
+import { draftKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
+import { createDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
-import { useDraftsMutate } from "../model/drafts-mutate-context";
 
 type CreateDraftDialogProps = {
 	open: boolean;
@@ -19,16 +16,16 @@ type CreateDraftDialogProps = {
 };
 
 export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps): JSX.Element {
-	// 创建草稿 mutation：trigger 触发请求，isMutating 自动管理 loading 状态
-	const mutateDrafts = useDraftsMutate();
-	const { trigger: triggerCreateDraft, isMutating } = useSWRMutation<
-		CreateDraftVo,
-		Error,
-		string,
-		CreateDraftDto
-	>("create-draft", async (_key, { arg }) => createDraft(arg));
+	const qc = useQueryClient();
+	// 创建草稿 mutation：mutateAsync 触发请求，isPending 自动管理 loading 状态；成功后重拉所有已挂载页
+	const { mutateAsync: createDraftAsync, isPending } = useMutation({
+		...orpc.drafts.create.mutationOptions(),
+		onSuccess: () => {
+			void qc.invalidateQueries({ queryKey: draftKeys.all });
+		},
+	});
 
-	// 保存逻辑：schema 校验 + 创建 + 刷新缓存 + toast
+	// 保存逻辑：schema 校验 + 创建 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		const parsed = createDraftDtoSchema.safeParse({
 			name: data.name,
@@ -40,8 +37,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			return;
 		}
 
-		await triggerCreateDraft(parsed.data);
-		await mutateDrafts();
+		await createDraftAsync(parsed.data);
 		toast.success("草稿已创建");
 	};
 
@@ -50,7 +46,7 @@ export function CreateDraftDialog({ open, onOpenChange }: CreateDraftDialogProps
 			open={open}
 			onOpenChange={onOpenChange}
 			onSave={handleSave}
-			isSaving={isMutating}
+			isSaving={isPending}
 			resourceType="promptDraft"
 			emptyTitle="无标题草稿"
 		/>

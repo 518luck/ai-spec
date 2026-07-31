@@ -3,14 +3,15 @@
 // # 领域空间下拉：拉取当前用户的规约领域空间 + 切换（写 URL ?spaceId=）+ 内联新建
 // ! 空间是规约库的顶层隔离，切空间必须清掉 folderId / tagIds——文件夹和标签都出不了空间
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCommandState } from "cmdk";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useState } from "react";
-import useSWR from "swr";
 
-import { createRuleSpace, getRuleSpaces } from "@/entities/rule";
 import { toast } from "@/features/toast";
+import { ruleSpaceKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
 import { cn } from "@/shared/lib/utils";
 import { createRuleSpaceDtoSchema } from "@/shared/lib/zod/schemas/rule-space";
 import { Button } from "@/shared/ui/button";
@@ -44,15 +45,23 @@ type RuleSpaceComboboxProps = {
 export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.Element {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const qc = useQueryClient();
 	const [open, setOpen] = useState(false);
 	// 新建空间对话框：点「新建领域空间」或搜索无结果时打开
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	// 新建对话框预填名称：来自搜索词
 	const [createInitialName, setCreateInitialName] = useState("");
 
-	// 空间列表：错误处理与重试由全局 SwrProvider 统一配置
-	const { data, isLoading, mutate: refetchSpaces } = useSWR("rule-spaces", getRuleSpaces);
+	// 空间列表：queryKey 由 oRPC 按路径自动生成（前缀 ["ruleSpaces"]），广播失效用该前缀
+	const { data, isLoading } = useQuery({
+		...orpc.ruleSpaces.list.queryOptions(),
+	});
 	const spaces = data ?? [];
+	// 新建空间：Dto 全量校验后落库，成功后失效列表并切到新空间（返回值带新空间 id）
+	const { mutateAsync: createSpace } = useMutation({
+		...orpc.ruleSpaces.create.mutationOptions(),
+		onSuccess: () => qc.invalidateQueries({ queryKey: ruleSpaceKeys.all }),
+	});
 	// 当前空间：URL 指定优先；URL 没带或指向已删空间时回落列表首个
 	const urlSpaceId = searchParams?.get(SPACE_PARAM) ?? null;
 	const activeSpace = spaces.find((space) => space.id === urlSpaceId) ?? spaces[0];
@@ -68,7 +77,7 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 		setOpen(false);
 	};
 
-	// > 新建空间：Dto 全量校验后落库，成功后刷新列表并切到新空间
+	// > 新建空间：Dto 全量校验后落库，成功后失效列表并切到新空间
 	const handleCreate = async (input: {
 		name: string;
 		icon: string;
@@ -80,8 +89,7 @@ export function RuleSpaceCombobox({ className }: RuleSpaceComboboxProps): JSX.El
 			return;
 		}
 		try {
-			const created = await createRuleSpace(parsed.data);
-			await refetchSpaces();
+			const created = await createSpace(parsed.data);
 			setCreateDialogOpen(false);
 			handleSelect(created.id);
 		} catch (error) {

@@ -4,12 +4,13 @@
 // > 由外层 SkillFilter 包 DropdownMenu 和 chips 展示
 // > 数据来自 GET /api/discover/skills/organizations
 
+import { useQuery } from "@tanstack/react-query";
 import { type JSX, type KeyboardEvent, useCallback, useEffect, useMemo, useRef } from "react";
-import useSWR from "swr";
 
-import { getDiscoverOrganizations } from "@/entities/discover-skill";
 import { CommandScrollMask } from "@/features/command-scroll-mask";
 import { useScrollProgress } from "@/shared/hooks";
+import { client } from "@/shared/lib/orpc/client";
+import { discoverOrganizationKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
 import type { OrganizationListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
 import {
@@ -45,11 +46,11 @@ export function OrganizationCombobox({
 	onMount,
 	className,
 }: OrganizationComboboxProps): JSX.Element {
-	const {
-		data,
-		isLoading,
-		mutate: refetch,
-	} = useSWR(["discover-organizations"], () => getDiscoverOrganizations());
+	// 与 SkillFilter 共享同一 queryKey：TanStack 自动去重，组织数据全局缓存
+	const { data, isLoading, refetch } = useQuery({
+		queryKey: discoverOrganizationKeys.list(),
+		queryFn: () => client.discoverOrganizations.list(),
+	});
 	const allOrgs = useMemo<OrganizationListItemVo[]>(() => data?.data ?? [], [data]);
 	const selectedNames = useMemo(() => new Set(value), [value]);
 

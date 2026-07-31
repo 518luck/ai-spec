@@ -3,7 +3,7 @@
 import { useSession } from "next-auth/react";
 import type { JSX } from "react";
 
-import { updateUser } from "@/entities/user";
+import { client } from "@/shared/lib/orpc/client";
 import { emailSchema } from "@/shared/lib/zod/schemas/auth";
 
 import { EditableFieldCard } from "./editable-field-card";
@@ -29,7 +29,7 @@ export function EmailFieldCard({ defaultValue }: EmailFieldCardProps): JSX.Eleme
 			throw new Error("新邮箱与当前邮箱相同");
 		}
 		// 成功只代表确认邮件已入队；DB 邮箱未变，故不刷新 session/router
-		await updateUser({ email: parsed.data });
+		await client.user.update({ email: parsed.data });
 	};
 
 	return (

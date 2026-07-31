@@ -1,5 +1,1 @@
-export { createDraft } from "./api/create-draft";
-export { deleteDraft } from "./api/delete-draft";
-export { getDraft } from "./api/get-draft";
-export { getDrafts } from "./api/get-drafts";
-export { updateDraft } from "./api/update-draft";
+// # 草稿 entity：API 调用已迁移到 oRPC client（@/shared/lib/orpc/client），无遗留导出

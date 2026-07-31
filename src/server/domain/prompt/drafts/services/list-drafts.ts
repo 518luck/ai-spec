@@ -1,0 +1,94 @@
+// # 草稿列表查询：按搜索/文件夹筛选当前用户草稿（分页），返回 { data, total, hasMore }
+// raw SQL 在数据库层截取 preview（SUBSTRING(content,1,120)），count 用 Prisma 安全计数
+// ! raw SQL 的搜索条件必须和 Prisma where 同步，否则 total 和列表对不上
+
+import prisma from "@/shared/db";
+import { Prisma } from "@/shared/db/generator/client";
+import { decodeFilters } from "@/shared/lib/search-filter-codec";
+import type { DraftListVo } from "@/shared/lib/zod/schemas/prompt/draft";
+
+// 分页大小，由列表接口固定，前端不控制
+const PAGE_SIZE = 30;
+
+// 列表预览的截断长度（字符数），列表接口不返回 content 全文
+const PREVIEW_LENGTH = 120;
+
+// 列表查询参数（与 listDraftsDtoSchema 对齐，已由 zod 校验保证类型）
+type ListParams = {
+	userId: string;
+	q?: string;
+	filter?: string;
+	folderId?: string;
+	page?: number;
+};
+
+export const listDrafts = async ({
+	userId,
+	q,
+	filter: filterEncoded,
+	folderId,
+	page = 1,
+}: ListParams): Promise<DraftListVo> => {
+	const offset = (page - 1) * PAGE_SIZE;
+	const trimmedQuery = q?.trim() ?? "";
+
+	// > 解析字段开关：filter 为 base64 JSON（{title:true,content:true}）；解码失败或无 filter 参数时默认只搜 name
+	const filter = decodeFilters(filterEncoded) ?? { title: true };
+	// title=true 搜 name，content=true 搜 content；两开关都关时不加搜索条件（兜底，理论上前端不会产生）
+	const searchTitle = filter.title === true;
+	const searchContent = filter.content === true;
+
+	// 组合查询条件：ownerId 必有；选了文件夹按 folderId 筛选，未选则只看未分类（folderId 为 null）
+	const targetFolderId = folderId || null;
+	// 按开关动态拼 Prisma OR 条件（给 count 用）
+	const searchConditions: Prisma.PromptDraftWhereInput[] = [];
+	if (trimmedQuery && searchTitle) {
+		searchConditions.push({ name: { contains: trimmedQuery, mode: "insensitive" } });
+	}
+	if (trimmedQuery && searchContent) {
+		searchConditions.push({ content: { contains: trimmedQuery, mode: "insensitive" } });
+	}
+	const where: Prisma.PromptDraftWhereInput = {
+		ownerId: userId,
+		folderId: targetFolderId,
+		...(searchConditions.length > 0 && { OR: searchConditions }),
+	};
+
+	// 构造 SQL WHERE 与 ORDER BY 片段（Prisma 的 select 不支持字符串截断，用原生查询在数据库层完成）
+	const whereConditions: Prisma.Sql[] = [
+		Prisma.sql`owner_id = ${userId}`,
+		targetFolderId ? Prisma.sql`folder_id = ${targetFolderId}` : Prisma.sql`folder_id IS NULL`,
+	];
+	// > raw SQL 按同样开关拼搜索条件（必须和上面 Prisma where 同步，否则 total 和列表对不上）
+	if (trimmedQuery) {
+		const pattern = `%${trimmedQuery}%`;
+		const sqlParts: Prisma.Sql[] = [];
+		if (searchTitle) sqlParts.push(Prisma.sql`name ILIKE ${pattern}`);
+		if (searchContent) sqlParts.push(Prisma.sql`content ILIKE ${pattern}`);
+		if (sqlParts.length === 1) {
+			whereConditions.push(sqlParts[0]);
+		} else if (sqlParts.length > 1) {
+			whereConditions.push(Prisma.sql`(${Prisma.join(sqlParts, " OR ")})`);
+		}
+	}
+	const whereSql = Prisma.sql`WHERE ${Prisma.join(whereConditions, " AND ")}`;
+	const orderBySql = Prisma.sql`ORDER BY updated_at DESC`;
+
+	// 列表用原生查询在数据库层截取 preview；count 仍用 Prisma 安全计数
+	const [rows, total] = await Promise.all([
+		prisma.$queryRaw<
+			Array<{ id: string; name: string; preview: string }>
+		>`SELECT id, name, SUBSTRING(content, 1, ${PREVIEW_LENGTH}) AS preview
+			FROM prompt."PromptDraft"
+			${whereSql}
+			${orderBySql}
+			LIMIT ${PAGE_SIZE}
+			OFFSET ${offset}`,
+		prisma.promptDraft.count({ where }),
+	]);
+
+	// 是否还有下一页：本次返回满一页（=PAGE_SIZE）说明数据库可能还有更多，认为 hasMore=true；不足一页说明到底了
+	const hasMore = rows.length === PAGE_SIZE;
+
+	return { data: rows, total, hasMore };
+};

@@ -11,7 +11,7 @@ type InfiniteListFooterProps = {
 	hasMore: boolean;
 	// 是否已翻过页（已加载页数 > 1）；与 hasMore 组合判断短列表：首页即到底且未翻页时不渲染任何内容
 	hasPaged: boolean;
-	// 是否正在加载下一页（useSWRInfinite 的 isValidating）
+	// 是否正在加载下一页（调用方传 TanStack Query 的 isFetchingNextPage）
 	isValidating: boolean;
 	// 哨兵元素 ref，调用方用 useInView 返回的 ref 传入（兼容 RefObject 与 RefCallback 两种形态）
 	sentinelRef: Ref<HTMLDivElement>;

@@ -5,8 +5,8 @@
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { updateUser } from "@/entities/user";
 import { toast } from "@/features/toast";
+import { client } from "@/shared/lib/orpc/client";
 
 // 头像上传编排：选文件 → 开裁剪弹窗 → 提交 → 刷新 session 与路由
 export const useAvatarUpload = () => {
@@ -27,7 +27,7 @@ export const useAvatarUpload = () => {
 	const onConfirm = async (dataUrl: string): Promise<void> => {
 		setIsSubmitting(true);
 		try {
-			await updateUser({ avatar: dataUrl });
+			await client.user.update({ avatar: dataUrl });
 			// update 触发 jwt callback 的 trigger=update 分支重读 DB image
 			await update({});
 			// 让 profile 等服务端组件用新 token 重渲染

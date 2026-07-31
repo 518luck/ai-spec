@@ -1,26 +1,20 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { useRouter } from "next/navigation";
 import { type JSX, useState } from "react";
-import useSWRMutation from "swr/mutation";
-import {
-	deleteRecord,
-	favoriteRecord,
-	getRecord,
-	recordCopy,
-	unfavoriteRecord,
-} from "@/entities/prompt";
 import { toast } from "@/features/toast";
+import { client } from "@/shared/lib/orpc/client";
+import { recordKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
 import { cn } from "@/shared/lib/utils";
-import type { FavoriteToggleVo } from "@/shared/lib/zod/schemas/prompt/record";
 import { deleteRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
 import { Spinner } from "@/shared/ui/spinner";
-import { useRecordsMutate } from "../model/records-mutate-context";
 
 type RecordCardProps = {
 	// 收录 ID
@@ -53,15 +47,17 @@ export function RecordCard({
 	// 复制进行中标志：拉全文期间禁用按钮 + 触发卡片 loading 蒙层
 	const [isCopying, setIsCopying] = useState(false);
 
-	// 复制：拉全文 → 写剪贴板。一次性只读请求，不需要缓存，用裸 fetch + useState 最直接
+	// 复制：拉全文 → 写剪贴板。一次性只读请求，不需要缓存，用裸 client + useState 最直接
 	const handleCopy = async (): Promise<void> => {
 		setIsCopying(true);
 		try {
-			const { content } = await getRecord(id);
+			const { content } = await client.records.getById({ id });
 			copy(content);
 			toast.success("已复制");
 			// 记一次使用：fire-and-forget，不 await，失败不影响复制体验
-			recordCopy(id);
+			void client.records.copies({ id }).catch(() => {
+				// 统计是次要功能，静默失败
+			});
 		} catch {
 			toast.error("复制失败");
 		} finally {
@@ -102,23 +98,50 @@ export function RecordCard({
 	);
 }
 
-// 收藏★按钮：同步等 API 成功后通过 mutateRecords 重拉列表刷新激活态
+// 收藏★按钮：乐观更新 + 失败回滚，成功后 invalidate 整个 records 域
 function FavoriteButton({ id, favorite }: { id: string; favorite: boolean }): JSX.Element {
-	const mutateRecords = useRecordsMutate();
-	// 收藏开关 mutation；arg 为收录 id
-	const { trigger: triggerToggle, isMutating } = useSWRMutation<
-		FavoriteToggleVo,
-		Error,
-		string,
-		string
-	>("toggle-favorite-record", async (_key, { arg }) =>
-		favorite ? unfavoriteRecord(arg) : favoriteRecord(arg),
-	);
+	const qc = useQueryClient();
+	// 收藏开关 mutation：已收藏走 favorite.off，未收藏走 favorite.toggle（按当前态分流）
+	const { mutateAsync: toggleFavoriteAsync, isPending } = useMutation({
+		mutationFn: async () => {
+			// ProcedureUtils.call 即底层 client，直接传 procedure 输入
+			return favorite
+				? orpc.records.favorite.off.call({ id })
+				: orpc.records.favorite.toggle.call({ id });
+		},
+		// > 乐观更新：立即翻转 infinite 列表内本卡片的 favorite 标记，失败回滚
+		onMutate: async () => {
+			// 暂停正在进行的列表重拉，避免覆盖乐观值
+			await qc.cancelQueries({ queryKey: recordKeys.all });
+			qc.setQueriesData<{ pages: { data: { id: string; favorite: boolean }[] }[] }>(
+				{ queryKey: recordKeys.all },
+				(old) => {
+					if (!old) return old;
+					return {
+						...old,
+						pages: old.pages.map((page) => ({
+							...page,
+							data: page.data.map((item) =>
+								item.id === id ? { ...item, favorite: !favorite } : item,
+							),
+						})),
+					};
+				},
+			);
+		},
+		onError: () => {
+			// 回滚：让列表重拉还原真实状态
+			void qc.invalidateQueries({ queryKey: recordKeys.all });
+		},
+		onSettled: () => {
+			// 成功/失败后对齐后端真实状态
+			void qc.invalidateQueries({ queryKey: recordKeys.all });
+		},
+	});
 
 	const handleClick = async (): Promise<void> => {
 		try {
-			await triggerToggle(id);
-			await mutateRecords();
+			await toggleFavoriteAsync();
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "操作失败");
 		}
@@ -131,12 +154,12 @@ function FavoriteButton({ id, favorite }: { id: string; favorite: boolean }): JS
 			size="icon-sm"
 			aria-label={favorite ? "取消收藏" : "加入收藏"}
 			aria-pressed={favorite}
-			aria-busy={isMutating}
-			disabled={isMutating}
+			aria-busy={isPending}
+			disabled={isPending}
 			onClick={handleClick}
 			className="-mt-1 -mr-1 size-6 text-muted-foreground hover:text-foreground"
 		>
-			{isMutating ? (
+			{isPending ? (
 				<Spinner className="size-4" />
 			) : (
 				<Icons.star className={cn("size-4", favorite && "fill-current text-yellow-500")} />
@@ -147,15 +170,17 @@ function FavoriteButton({ id, favorite }: { id: string; favorite: boolean }): JS
 
 // 删除按钮 + 二次确认：确认后删除并重拉列表；失败时 toast 提示并 rethrow 让弹窗保持打开
 function DeleteRecordAction({ id }: { id: string }): JSX.Element {
-	const mutateRecords = useRecordsMutate();
+	const qc = useQueryClient();
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	// 删除收录 mutation；arg 为收录 id
-	const { trigger: triggerDeleteRecord } = useSWRMutation<void, Error, string, string>(
-		"delete-record",
-		async (_key, { arg }) => deleteRecord(arg),
-	);
+	// 删除收录 mutation；成功后 invalidate 整个 records 域重拉所有已挂载页
+	const { mutateAsync: deleteRecordAsync } = useMutation({
+		...orpc.records.delete.mutationOptions(),
+		onSuccess: () => {
+			void qc.invalidateQueries({ queryKey: recordKeys.all });
+		},
+	});
 
-	// 确认删除：id 守卫 + 删除 + 通过 infinite bound mutate 重拉所有已挂载页
+	// 确认删除：id 守卫 + 删除 + 通过 invalidate 重拉所有已挂载页
 	const handleConfirmDelete = async (): Promise<void> => {
 		const parsed = deleteRecordDtoSchema.safeParse({ id });
 		if (!parsed.success) {
@@ -163,8 +188,8 @@ function DeleteRecordAction({ id }: { id: string }): JSX.Element {
 			return;
 		}
 		try {
-			await triggerDeleteRecord(parsed.data.id);
-			await mutateRecords();
+			// mutationFn 接收的就是 procedure 输入（id 走路径参数）
+			await deleteRecordAsync({ id: parsed.data.id });
 			toast.success("已删除");
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "删除失败");

@@ -1,17 +1,18 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import copy from "copy-to-clipboard";
 import { type JSX, useState } from "react";
-import useSWRMutation from "swr/mutation";
-import { deleteDraft, getDraft } from "@/entities/prompt";
 import { toast } from "@/features/toast";
+import { client } from "@/shared/lib/orpc/client";
+import { draftKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
 import { deleteDraftDtoSchema } from "@/shared/lib/zod/schemas/prompt/draft";
 
 import { Button } from "@/shared/ui/button";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
-import { useDraftsMutate } from "../model/drafts-mutate-context";
 import { EditDraftDialog } from "./edit-draft-dialog";
 import { PromoteDraftPopover } from "./promote-draft-dialog";
 
@@ -32,11 +33,11 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 	// 形变锚点 id：卡片与编辑弹窗两侧共用，motion 靠它把面板从本卡的位置补间出去
 	const morphId = `draft-morph-${id}`;
 
-	// 复制：拉全文 → 写剪贴板。一次性只读请求，不需要缓存，用裸 fetch + useState 最直接
+	// 复制：拉全文 → 写剪贴板。一次性只读请求，不需要缓存，用裸 client + useState 最直接
 	const handleCopy = async (): Promise<void> => {
 		setIsCopying(true);
 		try {
-			const { content } = await getDraft(id);
+			const { content } = await client.drafts.getById({ id });
 			copy(content);
 			toast.success("已复制");
 		} catch {
@@ -88,15 +89,17 @@ export function DraftCard({ id, name, preview }: DraftCardProps): JSX.Element {
 
 // 删除按钮 + 二次确认：确认后删除并重拉列表；失败时 toast 提示并 rethrow 让弹窗保持打开
 function DeleteDraftAction({ id }: { id: string }): JSX.Element {
-	const mutateDrafts = useDraftsMutate();
+	const qc = useQueryClient();
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	// 删除草稿 mutation；arg 为草稿 id
-	const { trigger: triggerDeleteDraft } = useSWRMutation<void, Error, string, string>(
-		"delete-draft",
-		async (_key, { arg }) => deleteDraft(arg),
-	);
+	// 删除草稿 mutation；成功后 invalidate 整个 drafts 域重拉所有已挂载页
+	const { mutateAsync: deleteDraftAsync } = useMutation({
+		...orpc.drafts.delete.mutationOptions(),
+		onSuccess: () => {
+			void qc.invalidateQueries({ queryKey: draftKeys.all });
+		},
+	});
 
-	// 确认删除：id 守卫 + 删除 + 通过 infinite bound mutate 重拉所有已挂载页
+	// 确认删除：id 守卫 + 删除 + 通过 invalidate 重拉所有已挂载页
 	const handleConfirmDelete = async (): Promise<void> => {
 		const parsed = deleteDraftDtoSchema.safeParse({ id });
 		if (!parsed.success) {
@@ -104,8 +107,8 @@ function DeleteDraftAction({ id }: { id: string }): JSX.Element {
 			return;
 		}
 		try {
-			await triggerDeleteDraft(parsed.data.id);
-			await mutateDrafts();
+			// mutationFn 接收的就是 procedure 输入（id 走路径参数）
+			await deleteDraftAsync({ id: parsed.data.id });
 			toast.success("已删除");
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "删除失败");

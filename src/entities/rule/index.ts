@@ -1,10 +1,1 @@
-export { createRule } from "./api/create-rule";
-export { createRuleSpace } from "./api/create-rule-space";
-export { deleteRule } from "./api/delete-rule";
-export { deleteRules } from "./api/delete-rules";
-export { getRule } from "./api/get-rule";
-export { getRuleSpaces } from "./api/get-rule-spaces";
-export { getRuleVersionDetail } from "./api/get-rule-version-detail";
-export { getRuleVersions } from "./api/get-rule-versions";
-export { getRules } from "./api/get-rules";
-export { updateRule } from "./api/update-rule";
+// # 规约 entity：API 调用已迁移到 oRPC client（@/shared/lib/orpc/client），无遗留导出

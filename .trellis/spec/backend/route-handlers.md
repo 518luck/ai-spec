@@ -1,4 +1,8 @@
-# Route Handler
+# Route Handler —— ⚠️ 已废弃（新接口用 oRPC）
+
+> **本文档描述的 Route Handler + `withPersonal`/`withSession` 模式已废弃**。项目已迁移到 oRPC。
+> 新接口一律用 oRPC procedure，**禁止**新增 Route Handler。请遵循 [orpc-usage.md](./orpc-usage.md)。
+> 本文档保留仅说明旧模式（`withPersonal`/`withSession`/`withAxiomBodyLog` 的鉴权链路仍被保留的入口如 auth/debug 参考）。
 
 > 后端 API 入口是 Next.js Route Handler（`export const GET/POST/DELETE`）。权威源：`app/api/AGENTS.md`、`src/server/infrastructure/axiom/AGENTS.md`。
 

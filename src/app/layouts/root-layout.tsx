@@ -3,8 +3,8 @@
 import { Oxanium, Source_Code_Pro, Source_Serif_4 } from "next/font/google";
 import { cookies } from "next/headers";
 import { SessionProvider } from "next-auth/react";
+import { QueryProvider } from "@/app/providers/query-provider";
 import { RootThemeProvider } from "@/app/providers/root-theme-provider";
-import { SwrProvider } from "@/app/providers/swr-provider";
 import { Toaster } from "@/features/toast";
 import { DEFAULT_THEME } from "@/shared/configs/theme.config";
 import { ACTIVE_THEME_COOKIE } from "@/shared/lib/cookie/cookies";
@@ -49,7 +49,7 @@ export async function RootLayoutShell({ children }: { children: React.ReactNode 
 					<SessionProvider>
 						{/* initialTheme 与 SSR 注入值同源，避免挂载时覆盖正确主题 */}
 						<ActiveThemeProvider initialTheme={activeTheme}>
-							<SwrProvider>{children}</SwrProvider>
+							<QueryProvider>{children}</QueryProvider>
 						</ActiveThemeProvider>
 					</SessionProvider>
 					<Toaster />

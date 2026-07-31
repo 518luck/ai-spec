@@ -4,6 +4,7 @@
 // > 由外层容器（RecordFilter、editor-toolbar 等）自行包 Popover 和 chips 展示
 // > 传 value/onChange 时走受控模式（弹窗用），没传时自动读写 URL ?tagIds=a,b,c（导航栏筛选用）
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCommandState } from "cmdk";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -15,13 +16,17 @@ import {
 	useRef,
 	useState,
 } from "react";
-import useSWR from "swr";
-import { createTag, getTags } from "@/entities/tag";
 import { CommandScrollMask } from "@/features/command-scroll-mask";
 import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
+import { client } from "@/shared/lib/orpc/client";
+import { tagKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
-import { createTagDtoSchema, type TagOptionVo } from "@/shared/lib/zod/schemas/tag";
+import {
+	createTagDtoSchema,
+	type TagOptionVo,
+	type TagResourceType,
+} from "@/shared/lib/zod/schemas/tag";
 import {
 	Command,
 	CommandEmpty,
@@ -47,7 +52,7 @@ const stopMenuTypeahead = (e: KeyboardEvent): void => {
 
 type TagComboboxProps = {
 	// 标签归属的资源类型（如 "promptRecord"）；仅用于 SWR key 隔离缓存，为将来按资源过滤 tag 列表预留
-	resourceType: string;
+	resourceType: TagResourceType;
 	// 已选标签（完整对象：勾选回显需要 name/color）；传了走受控，没传自动从 URL 读 id 反查
 	value?: TagOptionVo[];
 	// 选中变化回调：传了走受控，没传自动写入 URL
@@ -72,12 +77,18 @@ export function TagCombobox({
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	const [createInitialName, setCreateInitialName] = useState("");
 
-	// 标签列表：按 resourceType 拉取当前用户的标签（后端按 ownerId+resourceType 隔离），SWR 托管缓存
+	// 标签列表：按 resourceType 拉取当前用户的标签（后端按 ownerId+resourceType 隔离），TanStack Query 托管缓存
+	// > queryKey 与 TagSelectTrigger 共用 tagKeys.list(resourceType)，两者共享同一缓存
+	const tagsQueryKey = tagKeys.list(resourceType);
 	const {
 		data: rawTags,
 		isLoading,
-		mutate: refetchTags,
-	} = useSWR(["tags", resourceType], () => getTags(resourceType));
+		refetch: refetchTags,
+	} = useQuery({
+		queryKey: tagsQueryKey,
+		queryFn: () => client.tags.list({ type: resourceType }),
+	});
+	const queryClient = useQueryClient();
 	const allTags = useMemo<TagOptionVo[]>(() => rawTags ?? [], [rawTags]);
 
 	// URL 模式下从 ?tagIds= 解析出 id 列表（用 useMemo 稳定引用，避免每次渲染新建数组）
@@ -150,7 +161,15 @@ export function TagCombobox({
 		[value, handleChange, selectedIds],
 	);
 
-	// > 新建标签：全量校验后落库，成功后刷新缓存、自动选中、关闭创建对话框
+	// > 新建标签：全量校验后落库，成功后失效缓存、自动选中、关闭创建对话框
+	const createTagMutation = useMutation({
+		mutationFn: (input: { name: string; color: string; resourceType: TagResourceType }) =>
+			client.tags.create(input),
+		onSuccess: () => {
+			// 失效当前资源类型的标签缓存（与 TagSelectTrigger 共享，chips 也会同步刷新）
+			void queryClient.invalidateQueries({ queryKey: tagsQueryKey });
+		},
+	});
 	const handleCreate = async (input: { name: string; color: string }): Promise<void> => {
 		// 拼上当前组件实例的 resourceType 一起校验（input 来自 CreateTagDialog，只有 name+color）
 		const parsed = createTagDtoSchema.safeParse({ ...input, resourceType });
@@ -159,8 +178,9 @@ export function TagCombobox({
 			return;
 		}
 		try {
-			const created = await createTag(parsed.data);
-			await refetchTags();
+			const created = await createTagMutation.mutateAsync(parsed.data);
+			// 失效与重拉同步完成后再选中（确保新标签已出现在列表里）
+			await queryClient.refetchQueries({ queryKey: tagsQueryKey });
 			handleChange([...value, created]);
 			setCreateDialogOpen(false);
 		} catch (error) {

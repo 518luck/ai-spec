@@ -1,11 +1,1 @@
-export { createDraft, deleteDraft, getDraft, getDrafts, updateDraft } from "./drafts";
-export {
-	createRecord,
-	deleteRecord,
-	favoriteRecord,
-	getRecord,
-	getRecords,
-	recordCopy,
-	unfavoriteRecord,
-	updateRecord,
-} from "./records";
+// # 提示词 entity：API 调用已迁移到 oRPC client（@/shared/lib/orpc/client），无遗留导出

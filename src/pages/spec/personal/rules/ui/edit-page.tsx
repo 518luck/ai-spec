@@ -1,19 +1,15 @@
 "use client";
 
-// # 编辑规约页：薄壳，SWR 拉取详情回填 + 注入更新专属的 schema 校验 + mutation 保存逻辑
+// # 编辑规约页：薄壳，TanStack Query 拉取详情回填 + 注入更新专属的 schema 校验 + mutation 保存逻辑
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
-import useSWR, { useSWRConfig } from "swr";
-import useSWRMutation from "swr/mutation";
 
-import { getRule, getRuleVersionDetail, updateRule } from "@/entities/rule";
 import { toast } from "@/features/toast";
-import {
-	type RuleVo,
-	type UpdateRuleDto,
-	updateRuleDtoSchema,
-} from "@/shared/lib/zod/schemas/rule";
+import { ruleKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
+import { updateRuleDtoSchema } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
@@ -31,21 +27,25 @@ type EditRulePageProps = {
 
 export function EditRulePage({ id, mode = "edit", useVersionId }: EditRulePageProps): JSX.Element {
 	const router = useRouter();
-	const { mutate } = useSWRConfig();
-	// 拉取规约详情用于回填
-	const { data: rule, isLoading } = useSWR(["rule", id], () => getRule(id));
-	// 有 useVersionId 时额外拉版本内容（恢复载入用，不落库）
-	const { data: versionDetail } = useSWR(
-		useVersionId ? ["rule-version-detail", id, useVersionId] : null,
-		() => getRuleVersionDetail({ ruleId: id, versionId: useVersionId as string }),
-	);
-	// 更新规约 mutation
-	const { trigger: triggerUpdateRule } = useSWRMutation<RuleVo, Error, string, UpdateRuleDto>(
-		`update-rule-${id}`,
-		async (_key, { arg }) => updateRule(id, arg),
-	);
+	const qc = useQueryClient();
+	// 拉取规约详情用于回填（queryKey 由 oRPC 按路径自动生成，前缀为 ["rules"]）
+	const { data: rule, isLoading } = useQuery({
+		...orpc.rules.getById.queryOptions({ input: { id } }),
+	});
+	// 有 useVersionId 时额外拉版本内容（恢复载入用，不落库）；无 useVersionId 时不请求
+	const { data: versionDetail } = useQuery({
+		...orpc.rules.versions.detail.queryOptions({
+			input: { ruleId: id, versionId: useVersionId ?? "" },
+		}),
+		enabled: !!useVersionId,
+	});
+	// 更新规约 mutation：成功后按 ["rules"] 前缀失效所有规约查询（详情+列表+无限滚动）
+	const { mutateAsync: updateRule } = useMutation({
+		...orpc.rules.update.mutationOptions(),
+		onSuccess: () => qc.invalidateQueries({ queryKey: ruleKeys.all }),
+	});
 
-	// 保存逻辑：schema 校验 + 更新 + 失效缓存（单条详情 + 列表）+ toast + 跳回列表
+	// 保存逻辑：schema 校验 + 更新 + toast + 跳回列表
 	const handleSave = async (payload: RuleEditorPayload): Promise<boolean> => {
 		const parsed = updateRuleDtoSchema.safeParse(payload);
 		if (!parsed.success) {
@@ -53,9 +53,7 @@ export function EditRulePage({ id, mode = "edit", useVersionId }: EditRulePagePr
 			return false;
 		}
 
-		await triggerUpdateRule(parsed.data);
-		// 失效单条详情与列表缓存，确保再进详情/列表是新数据
-		await mutate((key) => Array.isArray(key) && (key[0] === "rule" || key[0] === "rules"));
+		await updateRule({ id, ...parsed.data });
 		toast.success("规约已保存");
 		router.push("/spec/personal/rules");
 		return true;
@@ -88,7 +86,6 @@ export function EditRulePage({ id, mode = "edit", useVersionId }: EditRulePagePr
 				tags: rule.tags,
 			}}
 			onSave={handleSave}
-			// 版本历史入口：跳到该规约的版本页（列表 + diff + 恢复载入）
 			headerAction={
 				<Button
 					variant="ghost"

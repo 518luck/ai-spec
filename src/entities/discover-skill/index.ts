@@ -1,4 +1,1 @@
-export { getDiscoverOrganizations } from "./api/get-discover-organizations";
-export { getDiscoverSkills } from "./api/get-discover-skills";
-export { importDiscoverSkills } from "./api/import-discover-skills";
-export { reportDiscoverSkill } from "./api/report-discover-skill";
+// # 发现广场 skill entity：API 调用已迁移到 oRPC client（@/shared/lib/orpc/client），无遗留导出

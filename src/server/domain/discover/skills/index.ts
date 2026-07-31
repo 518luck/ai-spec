@@ -11,6 +11,8 @@ export {
 	fetchRepoHeadSha,
 	fetchRepoSkills,
 	importRepoSkills,
+	listDiscoverOrganizations,
+	listDiscoverSkills,
 	type ParsedSkill,
 	type RepoSkills,
 } from "./services";

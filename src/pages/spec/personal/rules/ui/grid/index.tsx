@@ -1,14 +1,14 @@
 "use client";
 
-// # 规约卡片容器：useSWRInfinite 无限滚动 + 加载/空态 + 渲染卡片网格
+// # 规约卡片容器：useInfiniteQuery 无限滚动 + 加载/空态 + 渲染卡片网格
 // > 哨兵进入视口自动加载下一页，数据请求和状态管理内聚在此
 
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { type JSX, useMemo } from "react";
-import useSWRInfinite from "swr/infinite";
 
-import { getRules } from "@/entities/rule";
 import { useInfiniteLoad } from "@/shared/hooks";
-import type { RuleListVo } from "@/shared/lib/zod/schemas/rule";
+import { client } from "@/shared/lib/orpc/client";
+import { ruleKeys } from "@/shared/lib/orpc/query-keys";
 import { Icons } from "@/shared/ui/icons";
 import { InfiniteListFooter } from "@/shared/ui/infinite-list-footer";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
@@ -34,28 +34,37 @@ export function RuleGridContainer({
 	q,
 	onCreate,
 }: RuleGridContainerProps): JSX.Element {
-	const getKey = (pageIndex: number, previousPageData: RuleListVo | null) => {
-		if (previousPageData && !previousPageData.hasMore) return null;
-		// useSWRInfinite 的 pageIndex 天然 0-based 递增，直接当页码用，不再依赖后端返回 nextOffset
-		return ["rules-infinite", folderId, spaceId, tagIds, q, pageIndex] as const;
-	};
-
 	const {
 		data: infiniteData,
 		isLoading,
-		isValidating,
-		setSize,
-	} = useSWRInfinite(getKey, ([, folderId, spaceId, tagIds, q, pageIndex]) =>
-		// pageIndex 0-based，API 用 1-based
-		getRules({ folderId, spaceId, tagIds, q, page: pageIndex + 1, pageSize: PAGE_SIZE }),
-	);
+		hasNextPage,
+		isFetchingNextPage,
+		fetchNextPage,
+	} = useInfiniteQuery({
+		queryKey: ruleKeys.infinite({ folderId, spaceId, tagIds, q }),
+		// pageParam 0-based，API 用 1-based
+		queryFn: ({ pageParam }) =>
+			client.rules.list({
+				folderId,
+				spaceId,
+				tagIds,
+				q,
+				page: pageParam + 1,
+				pageSize: PAGE_SIZE,
+			}),
+		initialPageParam: 0,
+		getNextPageParam: (lastPage, _allPages, lastPageParam) =>
+			lastPage.hasMore ? lastPageParam + 1 : undefined,
+	});
 
-	const rules = useMemo(() => infiniteData?.flatMap((page) => page.data) ?? [], [infiniteData]);
-	const hasMore = infiniteData?.[infiniteData.length - 1]?.hasMore ?? false;
-	const hasPaged = (infiniteData?.length ?? 0) > 1;
+	const rules = useMemo(
+		() => infiniteData?.pages.flatMap((page) => page.data) ?? [],
+		[infiniteData],
+	);
+	const hasPaged = (infiniteData?.pages.length ?? 0) > 1;
 
 	// 哨兵进入视口自动加载下一页
-	const sentinelRef = useInfiniteLoad({ hasMore, isValidating, setSize });
+	const sentinelRef = useInfiniteLoad({ hasNextPage, isFetchingNextPage, fetchNextPage });
 
 	if (isLoading) {
 		return (
@@ -82,9 +91,9 @@ export function RuleGridContainer({
 		<>
 			<RuleGrid rules={rules} />
 			<InfiniteListFooter
-				hasMore={hasMore}
+				hasMore={hasNextPage}
 				hasPaged={hasPaged}
-				isValidating={isValidating}
+				isValidating={isFetchingNextPage}
 				sentinelRef={sentinelRef}
 				endText="到底了，没有更多规约了"
 			/>

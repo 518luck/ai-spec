@@ -5,14 +5,15 @@
 // > 受控模式：传 value/onChange，由父组件管理选中状态
 // > URL 模式：不传 value/onChange，自动读写 ?tagIds=（导航栏筛选用）
 
+import { useQuery } from "@tanstack/react-query";
 import { cva } from "class-variance-authority";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import useSWR from "swr";
-import { getTags } from "@/entities/tag";
 import { useInertialScroll, useScrollProgress } from "@/shared/hooks";
+import { client } from "@/shared/lib/orpc/client";
+import { tagKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
-import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
+import type { TagOptionVo, TagResourceType } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
@@ -38,7 +39,7 @@ const tagSelectTriggerVariants = cva("flex items-center gap-1.5", {
 
 type TagSelectTriggerProps = {
 	// 标签归属的资源类型（如 "promptRecord"），透传给内嵌面板
-	resourceType: string;
+	resourceType: TagResourceType;
 	// 已选标签：传了走受控模式，没传自动从 URL 读 id 反查
 	value?: TagOptionVo[];
 	// 选中变化回调：传了走受控，没传自动写入 URL
@@ -98,8 +99,11 @@ export function TagSelectTrigger({
 		[controlledOpen, controlledOnOpenChange],
 	);
 
-	// 全量标签：URL 模式下用于从 id 反查 name/color 给 chips；SWR key 与 TagCombobox 一致，共享缓存
-	const { data: rawTags } = useSWR(["tags", resourceType], () => getTags(resourceType));
+	// 全量标签：URL 模式下用于从 id 反查 name/color 给 chips；queryKey 与 TagCombobox 一致，共享缓存
+	const { data: rawTags } = useQuery({
+		queryKey: tagKeys.list(resourceType),
+		queryFn: () => client.tags.list({ type: resourceType }),
+	});
 	const allTags = useMemo<TagOptionVo[]>(() => rawTags ?? [], [rawTags]);
 
 	// URL 模式下读出已选 tagIds（受控模式不用）

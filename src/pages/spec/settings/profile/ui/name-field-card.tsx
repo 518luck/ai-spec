@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import type { JSX, ReactNode } from "react";
 
-import { updateUser } from "@/entities/user";
+import { client } from "@/shared/lib/orpc/client";
 import { userNameSchema } from "@/shared/lib/zod/schemas/user";
 
 import { EditableFieldCard } from "./editable-field-card";
@@ -27,7 +27,7 @@ export function NameFieldCard({ defaultValue, aside }: NameFieldCardProps): JSX.
 			throw new Error(parsed.error.issues[0]?.message ?? "名称格式不正确");
 		}
 
-		await updateUser({ name });
+		await client.user.update({ name });
 
 		await update({});
 		router.refresh();

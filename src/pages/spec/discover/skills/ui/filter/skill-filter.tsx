@@ -3,13 +3,14 @@
 // # Skills 过滤器：PanelTrigger + 组织 + 热度（star 门槛）+ 右侧已选条件
 // > URL：?orgs=a,b & minStars=2000；列表始终按 star 数量递减
 
+import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef } from "react";
-import useSWR from "swr";
 
-import { getDiscoverOrganizations } from "@/entities/discover-skill";
 import { PanelTrigger } from "@/features/panel-trigger";
 import { useInertialScroll, useScrollProgress } from "@/shared/hooks";
+import { client } from "@/shared/lib/orpc/client";
+import { discoverOrganizationKeys } from "@/shared/lib/orpc/query-keys";
 import type { OrganizationListItemVo } from "@/shared/lib/zod/schemas/discover-skill";
 import {
 	DropdownMenuSub,
@@ -37,8 +38,11 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
-	// 组织全量：反查 chips 头像；与 OrganizationCombobox 共享 SWR 缓存
-	const { data } = useSWR(["discover-organizations"], () => getDiscoverOrganizations());
+	// 组织全量：反查 chips 头像；与 OrganizationCombobox 共享同一 queryKey 缓存（TanStack 自动去重）
+	const { data } = useQuery({
+		queryKey: discoverOrganizationKeys.list(),
+		queryFn: () => client.discoverOrganizations.list(),
+	});
 	const allOrgs = useMemo<OrganizationListItemVo[]>(() => data?.data ?? [], [data]);
 
 	// 已选组织 login

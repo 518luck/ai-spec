@@ -2,15 +2,16 @@
 
 // # 文件夹下拉选择框：按 resourceType 拉取列表 + 搜索/选中/内联创建（全量校验落库）
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import useSWR from "swr";
-import { createFolder, getFolders } from "@/entities/folder/api/folder";
 import { CommandScrollMask } from "@/features/command-scroll-mask";
 import { toast } from "@/features/toast";
 import { useScrollProgress } from "@/shared/hooks";
+import { client } from "@/shared/lib/orpc/client";
+import { folderKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
-import { createFolderDtoSchema } from "@/shared/lib/zod/schemas/folder";
+import { createFolderDtoSchema, type FolderResourceType } from "@/shared/lib/zod/schemas/folder";
 import { Button } from "@/shared/ui/button";
 import {
 	Command,
@@ -52,7 +53,7 @@ type EmptyOverride = {
 
 type FolderComboboxProps = {
 	// 文件夹归属的资源类型（如 "promptDraft"），决定拉取哪类文件夹 + 创建时归属
-	resourceType: string;
+	resourceType: FolderResourceType;
 	// 规约领域空间 id：仅规约文件夹需要，传了只拉该空间下的文件夹，新建也落到该空间
 	spaceId?: string;
 	// 当前选中的 folderId；传了（含 null = 未分类）走受控模式，没传自动从 URL ?folder=xxx 读写
@@ -111,15 +112,20 @@ export function FolderCombobox({
 	const [createDialogOpen, setCreateDialogOpen] = useState(false);
 	// 创建对话框预填名称：来自搜索词，点击「新建文件夹」列表项时清空
 	const [createInitialName, setCreateInitialName] = useState("");
-	// 文件夹列表：按 resourceType 拉取，由 SWR 托管缓存（key 变化自动重拉）
-	// 错误处理、失焦/重试策略由全局 SwrProvider 统一配置，这里无需重复
-	// ? 未来扩展：文件夹数量超过阈值（如 50）时，参考 Dub 的 folder-dropdown 智能切换模式——
-	// ? 检测超阈值后关闭 cmdk 内存过滤（shouldFilter={false}），改用后端搜索（getFolders 加 q 参数）+ useDebounce(300ms) 防抖
+	// 文件夹列表：按 resourceType 拉取，TanStack Query 托管缓存（queryKey 变化自动重拉）
+	// 错误处理、失焦/重试策略由全局 QueryProvider 统一配置，这里无需重复
+	// ?未来扩展：文件夹数量超过阈值（如 50）时，参考 Dub 的 folder-dropdown 智能切换模式——
+	// ? 检测超阈值后关闭 cmdk 内存过滤（shouldFilter={false}），改用后端搜索（list 加 q 参数）+ useDebounce(300ms) 防抖
+	const foldersQueryKey = folderKeys.list({ resourceType, spaceId });
 	const {
 		data: rawFolders,
 		isLoading,
-		mutate: refetchFolders,
-	} = useSWR(["folders", resourceType, spaceId], () => getFolders({ type: resourceType, spaceId }));
+		refetch: refetchFolders,
+	} = useQuery({
+		queryKey: foldersQueryKey,
+		queryFn: () => client.folders.list({ type: resourceType, spaceId }),
+	});
+	const queryClient = useQueryClient();
 	// 后端 VO 映射为下拉选项；rawFolders 为 undefined 时回退空数组
 	const folders = useMemo<FolderOption[]>(
 		() => (rawFolders ?? []).map((f) => ({ value: f.id, label: f.name, color: f.color })),
@@ -147,7 +153,20 @@ export function FolderCombobox({
 
 	const selectedOption = folders.find((opt) => opt.value === value);
 
-	// > 创建文件夹：全量 Dto schema 校验（含 resourceType），成功后追加到列表、选中并关闭弹层
+	// > 创建文件夹：全量 Dto schema 校验（含 resourceType），成功后失效列表缓存、选中并关闭弹层
+	const createFolderMutation = useMutation({
+		mutationFn: (input: {
+			name: string;
+			description?: string;
+			color: string;
+			resourceType: FolderResourceType;
+			spaceId?: string;
+		}) => client.folders.create(input),
+		onSuccess: () => {
+			// 创建成功后失效当前列表缓存（下次渲染会自动重拉），让新文件夹出现在列表里
+			void queryClient.invalidateQueries({ queryKey: foldersQueryKey });
+		},
+	});
 	const handleCreate = async (input: {
 		name: string;
 		description?: string;
@@ -163,15 +182,9 @@ export function FolderCombobox({
 			return;
 		}
 		try {
-			const created = await createFolder({
-				name: parsed.data.name,
-				description: parsed.data.description,
-				color: parsed.data.color,
-				resourceType: parsed.data.resourceType,
-				spaceId: parsed.data.spaceId,
-			});
-			// 创建成功后刷新缓存（替代手动 setFolders），让新文件夹出现在列表里
-			await refetchFolders();
+			const created = await createFolderMutation.mutateAsync(parsed.data);
+			// 失效与重拉同步完成后再选中（确保新文件夹已出现在列表里）
+			await queryClient.refetchQueries({ queryKey: foldersQueryKey });
 			// 自动选中新文件夹：受控模式走 onChange 回调，URL 模式走 router.replace
 			handleChange(created.id);
 			setOpen(false);

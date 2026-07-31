@@ -5,14 +5,14 @@
 ## 技术栈
 
 - **前端**：Next.js 16 App Router + React 19 + TypeScript strict + Tailwind v4 + shadcn/ui
-- **数据请求**：SWR（非 React Query）
+- **数据请求**：TanStack Query + oRPC client（非 SWR）
 - **表单**：react-hook-form + zodResolver
 - **状态**：useState / props / Context / zustand 按作用范围选
-- **后端入口**：Next.js Route Handler（非 oRPC）
-- **后端实现**：`src/server`（middleware / errors / rbac / actions / infrastructure）
+- **后端入口**：oRPC（RPC + OpenAPI 双导出），旧 Route Handler 已废弃
+- **后端实现**：`src/server`（orpc / domain / middleware / errors / rbac / actions / infrastructure）
 - **ORM**：Prisma（多 schema，单例 `@/shared/db`）
 - **认证**：NextAuth v5
-- **Server Actions**：next-safe-action
+- **Server Actions**：next-safe-action（仅 auth/token，资源 CRUD 走 oRPC）
 - **校验**：Zod v4（Dto 入 / Vo 出）
 - **日志**：Axiom
 - **队列**：BullMQ + ioredis（独立 worker 进程）
@@ -26,10 +26,10 @@
 - [typescript.md](./shared/typescript.md) · [code-quality.md](./shared/code-quality.md) · [dependencies.md](./shared/dependencies.md)
 
 ### [frontend/](./frontend/index.md) — 前端（`src/`）
-- [directory-structure.md](./frontend/directory-structure.md) · [components.md](./frontend/components.md) · [data-fetching.md](./frontend/data-fetching.md) · [state-management.md](./frontend/state-management.md) · [forms.md](./frontend/forms.md) · [toast-and-feedback.md](./frontend/toast-and-feedback.md) · [hooks.md](./frontend/hooks.md) · [css-layout.md](./frontend/css-layout.md) · [type-safety.md](./frontend/type-safety.md) · [quality.md](./frontend/quality.md)
+- [directory-structure.md](./frontend/directory-structure.md) · [components.md](./frontend/components.md) · [orpc-usage.md](./frontend/orpc-usage.md) · [data-fetching.md](./frontend/data-fetching.md) · [state-management.md](./frontend/state-management.md) · [forms.md](./frontend/forms.md) · [toast-and-feedback.md](./frontend/toast-and-feedback.md) · [hooks.md](./frontend/hooks.md) · [css-layout.md](./frontend/css-layout.md) · [type-safety.md](./frontend/type-safety.md) · [quality.md](./frontend/quality.md)
 
 ### [backend/](./backend/index.md) — 后端（`app/api` + `src/server`）
-- [directory-structure.md](./backend/directory-structure.md) · [route-handlers.md](./backend/route-handlers.md) · [error-handling.md](./backend/error-handling.md) · [authentication.md](./backend/authentication.md) · [server-actions.md](./backend/server-actions.md) · [database.md](./backend/database.md) · [logging.md](./backend/logging.md) · [queue.md](./backend/queue.md) · [redis.md](./backend/redis.md) · [storage.md](./backend/storage.md) · [type-safety.md](./backend/type-safety.md) · [quality.md](./backend/quality.md)
+- [directory-structure.md](./backend/directory-structure.md) · [orpc-usage.md](./backend/orpc-usage.md) · [route-handlers.md](./backend/route-handlers.md) · [error-handling.md](./backend/error-handling.md) · [authentication.md](./backend/authentication.md) · [server-actions.md](./backend/server-actions.md) · [database.md](./backend/database.md) · [logging.md](./backend/logging.md) · [queue.md](./backend/queue.md) · [redis.md](./backend/redis.md) · [storage.md](./backend/storage.md) · [type-safety.md](./backend/type-safety.md) · [quality.md](./backend/quality.md)
 
 ### [guides/](./guides/index.md) — 思维指南
 - [pre-implementation-checklist.md](./guides/pre-implementation-checklist.md) · [cross-layer-thinking-guide.md](./guides/cross-layer-thinking-guide.md)

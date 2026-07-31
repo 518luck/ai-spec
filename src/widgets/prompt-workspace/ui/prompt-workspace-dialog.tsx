@@ -23,6 +23,7 @@ import { useLocalStorage } from "@/shared/hooks";
 import { formatHotkey } from "@/shared/lib/format-hotkey";
 import { MORPH_CONTENT_TRANSITION, MORPH_RADIUS, MORPH_TRANSITION } from "@/shared/lib/motion";
 import { cn } from "@/shared/lib/utils";
+import type { FolderResourceType } from "@/shared/lib/zod/schemas/folder";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
 import { Dialog, DialogContent } from "@/shared/ui/dialog";
@@ -45,12 +46,12 @@ type PromptWorkspaceDialogProps = {
 	onOpenChange: (open: boolean) => void;
 	// 保存逻辑由外部注入（草稿传 createDraft，收录传 createRecord）
 	onSave: (data: PromptEditorSaveData) => Promise<void>;
-	// 保存中状态由外部管理（useSWRMutation 的 isMutating）
+	// 保存中状态由外部管理（useMutation 的 isPending）
 	isSaving: boolean;
 	// 加载中占位：编辑器区域显示 spinner，避免用不完整内容渲染
 	isLoading?: boolean;
 	// 文件夹归属的资源类型（"promptDraft" / "promptRecord"）
-	resourceType: string;
+	resourceType: FolderResourceType;
 	// 编辑器占位文案
 	placeholder?: string;
 	// 内容为空时的标题回退文案
@@ -262,7 +263,7 @@ export function PromptWorkspaceDialog({
 						</span>
 
 						{/* // @ 标签：仅收录启用；放大模式下显示 chips + 触发器，缩小模式下收起 */}
-						{tagsEnabled && isExpanded ? (
+						{tagsEnabled && isExpanded && resourceType === "promptRecord" ? (
 							<TagSelectTrigger
 								resourceType={resourceType}
 								value={tags}

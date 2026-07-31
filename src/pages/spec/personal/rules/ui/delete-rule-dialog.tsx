@@ -1,14 +1,13 @@
 "use client";
 
 // # 删除规约二次确认弹窗：表格行「…」菜单与卡片删除按钮共用
-// > 删完用 SWR 全局 mutate 按 key 前缀重拉所有规约列表（列表是客户端 SWR 数据，router.refresh 刷不到）
+// > 删完用 TanStack Query 按统一前缀 ruleKeys.all 失效所有规约查询（detail+list+infinite 一次性覆盖）
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import type { JSX } from "react";
-import { useSWRConfig } from "swr";
-import useSWRMutation from "swr/mutation";
-
-import { deleteRule } from "@/entities/rule";
 import { toast } from "@/features/toast";
+import { ruleKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 
@@ -23,17 +22,17 @@ type DeleteRuleDialogProps = {
 };
 
 export function DeleteRuleDialog({ rule, open, onOpenChange }: DeleteRuleDialogProps): JSX.Element {
-	const { mutate } = useSWRConfig();
-	// 删除规约 mutation
-	const { trigger: triggerDelete, isMutating: isDeleting } = useSWRMutation("delete-rule", () =>
-		deleteRule(rule.id),
-	);
+	const qc = useQueryClient();
+	// 删除规约 mutation：成功后失效全部规约查询，失败显式 toast
+	const { mutateAsync: triggerDelete, isPending: isDeleting } = useMutation({
+		...orpc.rules.delete.mutationOptions(),
+		onSuccess: () => qc.invalidateQueries({ queryKey: ruleKeys.all }),
+	});
 
-	// 确认删除：删除成功后重拉列表；失败时 rethrow 让弹窗保持打开供重试
+	// 确认删除：删除成功后提示；失败时显式 toast 并 rethrow 让弹窗保持打开供重试
 	const handleConfirmDelete = async (): Promise<void> => {
 		try {
-			await triggerDelete();
-			await mutate((key) => Array.isArray(key) && key[0] === "rules");
+			await triggerDelete({ id: rule.id });
 			toast.success("规约已删除");
 		} catch (error) {
 			toast.error(error instanceof Error && error.message ? error.message : "删除失败");

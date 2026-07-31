@@ -19,6 +19,8 @@ export const tagColorSchema = z
 
 // 标签归属的资源类型，从 RBAC 可打标签资源清单派生（单一真相，加资源只改 resource-ui.ts）
 export const tagResourceTypeSchema = z.enum(TAGGABLE_RESOURCE_KEYS);
+// 资源类型字面量联合，供组件 prop 类型收窄用
+export type TagResourceType = z.infer<typeof tagResourceTypeSchema>;
 
 // @ 入参
 // 创建标签入参：name + color + resourceType 必填；ownerId/teamId 由后端从 session 注入，不暴露进 Dto

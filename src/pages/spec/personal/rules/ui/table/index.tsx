@@ -1,14 +1,14 @@
 "use client";
 
 // # 规约表格容器：数据请求 + 传统分页 + 行选择 + 批量删除
-// > 数据由 useSWR 获取；表格渲染走 shadcn Data Table（columns + useReactTable）
+// > 数据由 TanStack Query 获取；表格渲染走 shadcn Data Table（columns + useReactTable）
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { RowSelectionState } from "@tanstack/react-table";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useCallback, useMemo, useState } from "react";
-import useSWR from "swr";
-
-import { deleteRules, getRules } from "@/entities/rule";
+import { ruleKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
 import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { PaginationBar } from "@/shared/ui/pagination-bar";
 import { columns } from "./columns";
@@ -59,17 +59,23 @@ export function RuleTableContainer({
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
+	const qc = useQueryClient();
 
 	// 从 URL 读取页码（0-based，给 PaginationBar 用）和每页条数
 	const page = parsePage(searchParams?.get(PAGE_PARAM) ?? null);
 	const pageSize = parsePageSize(searchParams?.get(PAGE_SIZE_PARAM) ?? null, DEFAULT_PAGE_SIZE);
 
 	// 获取规约列表，支持空间/文件夹/标签筛选和搜索 + 分页
-	// page + 1：PaginationBar 用 0-based，API 用 1-based
-	const { data, isLoading, mutate } = useSWR(
-		["rules", folderId, spaceId, tagIds, q, page, pageSize],
-		() => getRules({ folderId, spaceId, tagIds, q, page: page + 1, pageSize }),
-	);
+	// page + 1：PaginationBar 用 0-based，API 用 1-based；queryKey 内嵌全部筛选+分页，任一变化即作废重拉
+	const listParams = { folderId, spaceId, tagIds, q, page: page + 1, pageSize };
+	const { data, isLoading } = useQuery({
+		...orpc.rules.list.queryOptions({ input: listParams }),
+	});
+	// 批量删除：成功后按统一前缀失效所有规约查询
+	const { mutateAsync: batchDelete } = useMutation({
+		...orpc.rules.deleteMany.mutationOptions(),
+		onSuccess: () => qc.invalidateQueries({ queryKey: ruleKeys.all }),
+	});
 
 	const rules = data?.data ?? [];
 	const total = data?.total ?? 0;
@@ -126,20 +132,19 @@ export function RuleTableContainer({
 		[rowSelection],
 	);
 
-	// 批量删除确认回调
+	// 批量删除确认回调：调 batchDelete mutation，成功后 onSuccess 自动失效缓存
 	const handleBatchDeleteConfirm = useCallback(async () => {
 		setIsDeleting(true);
 		try {
-			await deleteRules(selectedIds);
+			await batchDelete({ ids: selectedIds });
 			setRowSelection({});
 			setConfirmOpen(false);
-			await mutate();
 		} catch {
-			// deleteRule 内部已处理错误提示
+			// batchDelete 的 onError 由全局 MutationCache 统一 toast
 		} finally {
 			setIsDeleting(false);
 		}
-	}, [selectedIds, mutate]);
+	}, [batchDelete, selectedIds]);
 
 	return (
 		<>

@@ -1,18 +1,15 @@
 "use client";
 
-// # 收录编辑弹窗 —— 薄包装，打开时拉取收录全文，注入更新逻辑（SWR mutation + schema 校验）
+// # 收录编辑弹窗 —— 薄包装，打开时拉取收录全文，注入更新逻辑（TanStack mutation + schema 校验）
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { JSX } from "react";
-import useSWR from "swr";
-import useSWRMutation from "swr/mutation";
-import { getRecord, updateRecord } from "@/entities/prompt";
-import { getVersionDetail } from "@/entities/prompt/records/api/get-version-detail";
-import type { UpdateRecordArgs } from "@/entities/prompt/records/api/update-record";
 import { areTagsEqual } from "@/features/tag-combobox/lib";
 import { toast } from "@/features/toast";
-import { type CreateRecordVo, updateRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
+import { recordKeys } from "@/shared/lib/orpc/query-keys";
+import { orpc } from "@/shared/lib/orpc/query-utils";
+import { updateRecordDtoSchema } from "@/shared/lib/zod/schemas/prompt/record";
 import { type PromptEditorSaveData, PromptWorkspaceDialog } from "@/widgets/prompt-workspace";
-import { useRecordsMutate } from "../model/records-mutate-context";
 
 type EditRecordDialogProps = {
 	// 收录 ID：拉全文 + 更新的主键
@@ -32,27 +29,31 @@ export function EditRecordDialog({
 	useVersionId,
 	morphId,
 }: EditRecordDialogProps): JSX.Element {
-	// 打开弹窗时拉取收录全文（列表只有截断预览），用 SWR 缓存避免重复请求；错误提示走全局 SWRConfig
-	const { data: fullRecord, isLoading } = useSWR(
-		open ? (["record", id] as const) : null,
-		async ([, recordId]) => getRecord(recordId),
-	);
+	const qc = useQueryClient();
+	// 打开弹窗时拉取收录全文（列表只有截断预览），用缓存避免重复请求；错误提示走全局 QueryCache
+	const { data: fullRecord, isLoading } = useQuery({
+		...orpc.records.getById.queryOptions({ input: { id } }),
+		enabled: !!open,
+	});
 	// 有 useVersionId 时拉取该版本内容，作为编辑器初始内容（不落库，待编辑）
-	const { data: versionContent } = useSWR(
-		open && useVersionId ? (["version-detail", id, useVersionId] as const) : null,
-		async ([, recordId, versionId]) => getVersionDetail({ recordId, versionId }),
-	);
+	const { data: versionContent } = useQuery({
+		...orpc.records.versions.detail.queryOptions({
+			input: { id, versionId: useVersionId ?? "" },
+		}),
+		// 弹窗打开且有 useVersionId 才拉版本详情
+		enabled: !!open && !!useVersionId,
+	});
 
-	// 更新收录 mutation：arg 形如 { id, ...payload }，id 走 URL 路径，其余字段进 body
-	const mutateRecords = useRecordsMutate();
-	const { trigger: triggerUpdateRecord, isMutating } = useSWRMutation<
-		CreateRecordVo,
-		Error,
-		string,
-		UpdateRecordArgs
-	>("update-record", async (_key, { arg }) => updateRecord(arg));
+	// 更新收录 mutation：input 形如 { id, ...payload }，id 走 URL 路径，其余字段进 body
+	const { mutateAsync: updateRecordAsync, isPending } = useMutation({
+		...orpc.records.update.mutationOptions(),
+		onSuccess: () => {
+			// 重拉所有已挂载页 + 失效当前收录全文缓存
+			void qc.invalidateQueries({ queryKey: recordKeys.all });
+		},
+	});
 
-	// 更新逻辑：schema 校验 + 更新 + 刷新缓存 + toast
+	// 更新逻辑：schema 校验 + 更新 + toast
 	const handleSave = async (data: PromptEditorSaveData): Promise<void> => {
 		// name/content/folderId/tags 都没变就不发请求（name 从全文响应取，不依赖外部传入）
 		const originalFolderId = fullRecord?.folderId ?? null;
@@ -81,8 +82,7 @@ export function EditRecordDialog({
 			return;
 		}
 
-		await triggerUpdateRecord({ id, ...parsed.data });
-		await mutateRecords();
+		await updateRecordAsync({ id, ...parsed.data });
 		toast.success("收录已更新");
 	};
 
@@ -96,7 +96,7 @@ export function EditRecordDialog({
 			open={open}
 			onOpenChange={onOpenChange}
 			onSave={handleSave}
-			isSaving={isMutating}
+			isSaving={isPending}
 			isLoading={isLoadingState}
 			resourceType="promptRecord"
 			initialContent={effectiveContent}

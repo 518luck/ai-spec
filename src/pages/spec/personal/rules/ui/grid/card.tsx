@@ -5,9 +5,8 @@
 import copy from "copy-to-clipboard";
 import { useRouter } from "next/navigation";
 import { type JSX, useState } from "react";
-
-import { getRule } from "@/entities/rule";
 import { toast } from "@/features/toast";
+import { client } from "@/shared/lib/orpc/client";
 import type { RuleListItemVo } from "@/shared/lib/zod/schemas/rule";
 import { Button } from "@/shared/ui/button";
 import { ContentCard } from "@/shared/ui/content-card";
@@ -28,7 +27,7 @@ export function RuleCard({ rule }: RuleCardProps): JSX.Element {
 	const handleCopy = async (): Promise<void> => {
 		setIsCopying(true);
 		try {
-			const { content } = await getRule(rule.id);
+			const { content } = await client.rules.getById({ id: rule.id });
 			copy(content);
 			toast.success("已复制");
 		} catch {

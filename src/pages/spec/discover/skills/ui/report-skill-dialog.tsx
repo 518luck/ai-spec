@@ -3,9 +3,8 @@
 // # Skill 反馈弹窗：选择原因 + 可选备注，只收集不自动下架
 
 import { type JSX, useEffect, useState } from "react";
-
-import { reportDiscoverSkill } from "@/entities/discover-skill";
 import { toast } from "@/features/toast";
+import { client } from "@/shared/lib/orpc/client";
 import type { DiscoverSkillReportReason } from "@/shared/lib/zod/schemas/discover-skill";
 import { Button } from "@/shared/ui/button";
 import {
@@ -66,8 +65,8 @@ export function ReportSkillDialog({
 		if (submitting) return;
 		setSubmitting(true);
 		try {
-			await reportDiscoverSkill({
-				skillId,
+			await client.discoverSkills.report({
+				id: skillId,
 				reason,
 				detail: detail.trim() || undefined,
 			});

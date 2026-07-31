@@ -1,4 +1,7 @@
-# 数据请求（SWR）
+# 数据请求（SWR）—— ⚠️ 已废弃
+
+> **本文档描述的 SWR 模式已废弃**。项目已迁移到 TanStack Query + oRPC client。
+> 新代码请遵循 [orpc-usage.md](./orpc-usage.md)。本文档保留仅作历史参考。
 
 > 本项目用 **SWR**（非 React Query）。权威源：`src/AGENTS.md`。
 

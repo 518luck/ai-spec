@@ -1,15 +1,16 @@
 "use client";
 
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
 import { useSession } from "next-auth/react";
 import { type JSX, useEffect, useMemo, useState } from "react";
-import useSWRInfinite from "swr/infinite";
 
-import { getDiscoverSkills } from "@/entities/discover-skill";
 import { SearchInput } from "@/features/search-input";
 import { useInView, useThumbSmooth } from "@/shared/hooks";
 import { setCookie } from "@/shared/lib/cookie/client-cookie";
 import { COOKIE_DEFAULTS, DISCOVER_SKILL_DESC_LANG_COOKIE } from "@/shared/lib/cookie/cookies";
+import { client } from "@/shared/lib/orpc/client";
+import { discoverSkillKeys } from "@/shared/lib/orpc/query-keys";
 import type {
 	DiscoverSkillListVo,
 	ListDiscoverSkillsDto,
@@ -62,33 +63,35 @@ export function DiscoverSkillsPage({
 		setCookie(DISCOVER_SKILL_DESC_LANG_COOKIE, next, COOKIE_DEFAULTS);
 	};
 
-	// SWR Infinite key：q/filter/orgs/minStars 变化自动重置到第一页
-	// pageIndex 天然 0-based 递增，直接当页码用，不依赖后端返回 nextOffset
-	const getKey = (pageIndex: number, previousPageData: DiscoverSkillListVo | null) => {
-		if (status !== "authenticated") return null;
-		if (previousPageData && !previousPageData.hasMore) return null;
-		return ["discover-skills", q, filter, orgs, minStars, pageIndex] as const;
-	};
+	const qc = useQueryClient();
 
-	const { data, isLoading, isValidating, setSize, mutate } = useSWRInfinite(
-		getKey,
-		async ([, q, filter, orgs, minStars, pageIndex]) =>
-			// pageIndex 0-based，API 用 1-based
-			getDiscoverSkills({ q, filter, orgs, minStars, page: pageIndex + 1 }),
-	);
+	// q/filter/orgs/minStars 变化即换 queryKey 自动重置到第一页
+	// pageParam 天然 0-based 递增，直接当页码用，不依赖后端返回 nextOffset
+	const { data, isLoading, isFetching, isFetchingNextPage, fetchNextPage } = useInfiniteQuery({
+		queryKey: discoverSkillKeys.infinite({ q, filter, orgs, minStars }),
+		queryFn: ({ pageParam }) =>
+			// pageParam 0-based，API 用 1-based
+			client.discoverSkills.list({ q, filter, orgs, minStars, page: pageParam + 1 }),
+		initialPageParam: 0,
+		getNextPageParam: (lastPage: DiscoverSkillListVo, _allPages, lastPageParam: number) =>
+			// 后端 hasMore=false 时不返回下一页；否则下一页 param = 当前 +1
+			lastPage.hasMore ? lastPageParam + 1 : undefined,
+		// 鉴权短路：未登录不发请求（对齐原 SWR getKey 返回 null）
+		enabled: status === "authenticated",
+	});
 
-	const skills = useMemo(() => data?.flatMap((page) => page.data) ?? [], [data]);
-	const total = data?.[0]?.total ?? 0;
-	const hasMore = data?.[data.length - 1]?.hasMore ?? false;
-	const hasPaged = (data?.length ?? 0) > 1;
+	const skills = useMemo(() => data?.pages.flatMap((page) => page.data) ?? [], [data]);
+	const total = data?.pages[0]?.total ?? 0;
+	const hasMore = data?.pages[data.pages.length - 1]?.hasMore ?? false;
+	const hasPaged = (data?.pages.length ?? 0) > 1;
 
 	// 底部哨兵进入视口且还有下一页、未在加载中时，自动加载下一页
 	const { ref: sentinelRef, inView } = useInView({ threshold: 0 });
 	useEffect(() => {
-		if (inView && hasMore && !isValidating) {
-			void setSize((s) => s + 1);
+		if (inView && hasMore && !isFetching) {
+			void fetchNextPage();
 		}
-	}, [inView, hasMore, isValidating, setSize]);
+	}, [inView, hasMore, isFetching, fetchNextPage]);
 
 	// > 滚动条平滑过渡：内容追加新页时短暂开启
 	const thumbSmooth = useThumbSmooth(skills.length);
@@ -129,7 +132,7 @@ export function DiscoverSkillsPage({
 				<InfiniteListFooter
 					hasMore={hasMore}
 					hasPaged={hasPaged}
-					isValidating={isValidating}
+					isValidating={isFetchingNextPage}
 					sentinelRef={sentinelRef}
 					endText="到底了，没有更多 skills 了"
 				/>
@@ -161,7 +164,7 @@ export function DiscoverSkillsPage({
 							<ImportDialog
 								open={importOpen}
 								onOpenChange={setImportOpen}
-								onImported={() => mutate()}
+								onImported={() => void qc.invalidateQueries({ queryKey: discoverSkillKeys.all })}
 							/>
 						</>
 					) : null}
