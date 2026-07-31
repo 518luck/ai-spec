@@ -8,7 +8,7 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 13
+- **Total Sessions**: 14
 - **Last Active**: 2026-07-31
 <!-- @@@/auto:current-status -->
 
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~313 | Active |
+| `journal-1.md` | ~335 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 14 | 2026-07-31 | zod schema 聚合化 + service 用例拆分 + lint 修复 | `fbc7e42`, `146572b` | `main` |
 | 13 | 2026-07-31 | 全量迁移至 oRPC + TanStack Query 架构 | `28f1d9d` | `main` |
 | 12 | 2026-07-31 | 规约详情/编辑体系 + 版本管理 + 编辑器主题适配 | `a321c5a`, `9e4cf7c`, `2bbe680`, `d9c9a77`, `205f80f` | `main` |
 | 11 | 2026-07-30 | 编辑器状态栏布局调整与标签选择器重构 | `9f1b657`, `de8eced`, `8c6cd31` | `main` |

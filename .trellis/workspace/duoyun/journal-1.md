@@ -311,3 +311,25 @@ RuleTable 分页栏增加每页条数 Select 选择器（10/20/50）、首页快
 ### Status
 
 [OK] **Completed**
+
+
+## Session 14: zod schema 聚合化 + service 用例拆分 + lint 修复
+
+**Date**: 2026-07-31
+**Task**: zod schema 聚合化 + service 用例拆分 + lint 修复
+**Branch**: `main`
+
+### Summary
+
+将 8 个领域 schema 文件的 84 个 schema 值收进聚合对象（DraftSchemas/RecordSchemas 等），type 保留独立导出，约 90 个消费文件改为点号访问。service 层从对象模式拆为每用例一文件（34 个文件），共用工具提至 utils/。清理 _shared.ts，修复 lint 残留 warning。
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fbc7e42` | (see git log) |
+| `146572b` | (see git log) |
+
+### Status
+
+[OK] **Completed**
