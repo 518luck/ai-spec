@@ -352,7 +352,9 @@ const CODE_RICH_CONTENT = [
 	"// 异步获取用户数据并处理错误",
 	"async function fetchUser(id) {",
 	"  try {",
+	// biome-ignore lint/suspicious/noTemplateCurlyInString: 示例代码文本，${id} 是展示内容非模板占位符
 	"    const res = await fetch(`/api/users/${id}`);",
+	// biome-ignore lint/suspicious/noTemplateCurlyInString: 示例代码文本，${res.status} 是展示内容非模板占位符
 	"    if (!res.ok) throw new Error(`HTTP ${res.status}`);",
 	"    const data = await res.json();",
 	"    return data;",
@@ -396,6 +398,7 @@ const CODE_RICH_CONTENT = [
 	"# 批量重命名当前目录下的 .jpeg 文件为 .jpg",
 	"for file in *.jpeg; do",
 	'    if [ -f "$file" ]; then',
+	// biome-ignore lint/suspicious/noTemplateCurlyInString: 示例代码文本，${file%.jpeg} 是 shell 语法非模板占位符
 	'        mv "$file" "${file%.jpeg}.jpg"',
 	"    fi",
 	"done",

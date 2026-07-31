@@ -73,7 +73,6 @@ import {
 	IconSparkleHighlight,
 	IconStar,
 	IconSun,
-	IconTable,
 	IconTag,
 	IconTagPlus,
 	IconTrash,
