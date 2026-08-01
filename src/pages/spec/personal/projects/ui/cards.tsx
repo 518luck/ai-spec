@@ -1,11 +1,13 @@
 "use client";
 
-// # 项目卡片网格：首页按项目制列出接入的仓库，点击打开该项目的详情抽屉
+// # 项目卡片网格：首页按项目列出接入的仓库，整卡点击打开预览抽屉，hover 可进入完整页
 
+import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 
 import type { ProjectListItemVo } from "@/shared/lib/zod/schemas/project";
-import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
+import { Button } from "@/shared/ui/button";
+import { ContentCard } from "@/shared/ui/content-card";
 import { Icons } from "@/shared/ui/icons";
 
 interface ProjectCardGridProps {
@@ -31,28 +33,31 @@ interface ProjectCardProps {
 	onOpen: () => void;
 }
 
-// 单张项目卡：标题按钮的伪元素铺满卡面实现整卡可点，底部展示文档计数
-// > AI 资源计数（skill/plugin/mcp/agent）暂未接入后端，统一占位"暂无 AI 资源"，等 git 同步能力上线后再做
+// 单张项目卡：整卡点击打开预览抽屉；hover 出“进入完整页”快捷入口；底部展示文档计数
 function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
+	const router = useRouter();
 	return (
-		<Card size="sm" className="group relative transition hover:ring-foreground/25">
-			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<Icons.projects className="size-4 shrink-0 text-muted-foreground" />
-					<button
-						type="button"
-						onClick={onOpen}
-						className="min-w-0 cursor-pointer truncate outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
-					>
-						{project.name}
-					</button>
-				</CardTitle>
-				<CardDescription className="line-clamp-2">{project.description}</CardDescription>
-			</CardHeader>
-			<CardFooter className="gap-1.5 text-muted-foreground text-xs">
-				<Icons.agentsMd className="size-3.5 shrink-0" />
-				<span>{project.docCount} 篇文档</span>
-			</CardFooter>
-		</Card>
+		<ContentCard
+			name={project.name}
+			preview={project.description || "暂无描述"}
+			onClick={onOpen}
+			clickAriaLabel="打开项目预览"
+			actions={
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					aria-label="进入完整页"
+					onClick={() => router.push(`/spec/personal/projects/${project.id}`)}
+				>
+					<Icons.folderOpen className="size-4" />
+				</Button>
+			}
+			footer={
+				<span className="flex items-center gap-1.5 text-muted-foreground text-xs">
+					<Icons.agentsMd className="size-3.5 shrink-0" />
+					{project.docCount} 篇文档
+				</span>
+			}
+		/>
 	);
 }

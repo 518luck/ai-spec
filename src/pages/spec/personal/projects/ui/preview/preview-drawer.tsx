@@ -85,7 +85,7 @@ function PreviewContent({ projectId }: { projectId: string }): JSX.Element {
 					href={`/spec/personal/projects/${projectId}`}
 					className="text-muted-foreground text-xs hover:text-foreground"
 				>
-					在完整页面打开 <Icons.promote className="inline size-3" />
+					进入项目 <Icons.folderOpen className="inline size-3" />
 				</Link>
 			</SheetHeader>
 			<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
