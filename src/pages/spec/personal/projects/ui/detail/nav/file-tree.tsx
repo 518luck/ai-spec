@@ -2,14 +2,14 @@
 
 // # VSCode 风格文件夹树：headless-tree 管理展开/选中/焦点/键盘导航，只渲染文件夹，点击上抛选中
 
-import type { ItemInstance } from "@headless-tree/core";
+import type { ItemInstance } from "@headless-tree/core"; // 树节点实例类型（封装单节点的状态查询与事件绑定）
 import {
-	expandAllFeature,
-	hotkeysCoreFeature,
-	selectionFeature,
-	syncDataLoaderFeature,
+	expandAllFeature, // 全部展开/收起能力（treeApi.expandAll / collapseAll）
+	hotkeysCoreFeature, // 键盘导航（上下左右/回车，对应 VSCode 文件树快捷键）
+	selectionFeature, // 选中态管理（单选高亮、setSelectedItems 受控）
+	syncDataLoaderFeature, // 同步数据加载（getItem/getChildren 直接返回数据，非异步）
 } from "@headless-tree/core";
-import { useTree } from "@headless-tree/react";
+import { useTree } from "@headless-tree/react"; // React 绑定：useTree hook 把配置转成 treeApi
 import Image from "next/image";
 import type { JSX } from "react";
 import { cn } from "@/shared/lib/utils";
@@ -113,7 +113,7 @@ export function FileTree({
 			</div>
 			<div
 				{...treeApi.getContainerProps("项目文档文件夹树")}
-				className="flex flex-col gap-px p-2 outline-none"
+				className="flex flex-col p-2 outline-none"
 			>
 				{treeApi.getItems().map((item) => (
 					<FileTreeRow
@@ -167,16 +167,15 @@ function FileTreeRow({
 	const indentPx = ancestorIds.length * INDENT_PX;
 
 	return (
+		// 外层行：无圆角、无 gap，让缩进竖线贯穿相邻行形成连续长线（VSCode .monaco-list-row 紧贴排列）
+		// ! 圆角背景不能画在这一层，否则竖线会在圆角处断裂
 		<div
 			{...item.getProps()}
-			className={cn(
-				"relative flex h-5.5 shrink-0 cursor-pointer items-center rounded-md pr-2 text-sm outline-none",
-				"hover:bg-accent/60 focus-visible:ring-1 focus-visible:ring-ring",
-				item.isSelected() && "bg-accent text-accent-foreground",
-			)}
+			className="relative flex h-5.5 shrink-0 cursor-pointer items-center text-sm outline-none"
 		>
-			{/* // @ 缩进辅助线容器：绝对定位、不挡点击，每层一条 1px 竖线，选中项祖先链高亮 */}
-			<div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 flex">
+			{/* // @ 缩进辅助线容器：绝对定位、占满整行高度、不挡点击；每层一条 1px 竖线，选中项祖先链高亮 */}
+			{/* z-10 让竖线浮于内层选中背景之上，选中时竖线仍可见（VSCode indent-guide 同理） */}
+			<div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 flex">
 				{ancestorIds.map((ancestorId) => (
 					<span
 						key={ancestorId}
@@ -187,20 +186,36 @@ function FileTreeRow({
 					/>
 				))}
 			</div>
-			<Icons.chevronRight
-				style={{ marginLeft: indentPx }}
+			{/* // @ 内层内容：圆角背景 + hover/选中态画在这里，避免外层圆角切断竖线 */}
+			<div
 				className={cn(
-					"size-3.5 shrink-0 text-muted-foreground transition-transform",
-					isExpanded && "rotate-90",
-					!item.isFolder() && "invisible",
+					"flex h-5 flex-1 items-center gap-1.5 rounded-md pr-2",
+					"hover:bg-accent/60",
+					item.isSelected() && "bg-accent text-accent-foreground",
 				)}
-			/>
-			{/* // > 本地 SVG 小图标不走优化器：unoptimized 直出原文件 */}
-			<Image src={iconSrc} alt="" width={16} height={16} unoptimized className="size-4 shrink-0" />
-			<span className="truncate">{item.getItemName()}</span>
-			{docCount > 0 ? (
-				<span className="ml-auto text-muted-foreground text-xs tabular-nums">{docCount}</span>
-			) : null}
+			>
+				<Icons.chevronRight
+					style={{ marginLeft: indentPx }}
+					className={cn(
+						"size-3.5 shrink-0 text-muted-foreground transition-transform",
+						isExpanded && "rotate-90",
+						!item.isFolder() && "invisible",
+					)}
+				/>
+				{/* // > 本地 SVG 小图标不走优化器：unoptimized 直出原文件 */}
+				<Image
+					src={iconSrc}
+					alt=""
+					width={16}
+					height={16}
+					unoptimized
+					className="size-4 shrink-0"
+				/>
+				<span className="truncate">{item.getItemName()}</span>
+				{docCount > 0 ? (
+					<span className="ml-auto text-muted-foreground text-xs tabular-nums">{docCount}</span>
+				) : null}
+			</div>
 		</div>
 	);
 }
