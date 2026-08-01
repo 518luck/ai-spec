@@ -18,7 +18,8 @@ export function ProjectCardGrid({ projects, onOpen }: ProjectCardGridProps): JSX
 	return (
 		<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 			{projects.map((project) => (
-				<ProjectCard key={project.id} project={project} onOpen={onOpen} />
+				// 在 map 里用闭包绑定 id，Card 只接收无参 onOpen，不让 id 倒流
+				<ProjectCard key={project.id} project={project} onOpen={() => onOpen(project.id)} />
 			))}
 		</div>
 	);
@@ -26,7 +27,8 @@ export function ProjectCardGrid({ projects, onOpen }: ProjectCardGridProps): JSX
 
 interface ProjectCardProps {
 	project: ProjectListItemVo;
-	onOpen: (projectId: string) => void;
+	/** 卡片被点击时触发，id 由上层闭包绑定，本组件不感知 */
+	onOpen: () => void;
 }
 
 // 单张项目卡：标题按钮的伪元素铺满卡面实现整卡可点，底部展示文档计数
@@ -39,7 +41,7 @@ function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 					<Icons.projects className="size-4 shrink-0 text-muted-foreground" />
 					<button
 						type="button"
-						onClick={() => onOpen(project.id)}
+						onClick={onOpen}
 						className="min-w-0 cursor-pointer truncate outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
 					>
 						{project.name}

@@ -62,8 +62,39 @@ export function PersonalProjectsPage({
 		() => infiniteData?.pages.flatMap((page) => page.data) ?? [],
 		[infiniteData],
 	);
+
 	const hasPaged = (infiniteData?.pages.length ?? 0) > 1;
 	const sentinelRef = useInfiniteLoad({ hasNextPage, isFetchingNextPage, fetchNextPage });
+
+	// 列表主体：首屏 loading / 空状态 / 网格 + 无限滚动底部分三种状态，扁平化避免嵌套三元
+	const renderProjectsBody = (): JSX.Element => {
+		if (isLoading) {
+			return (
+				<div className="flex h-60 items-center justify-center text-muted-foreground">
+					<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
+				</div>
+			);
+		}
+		if (projects.length === 0) {
+			return (
+				<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
+					<EmptyAction q={q} icon={<Icons.projects />} actionLabel="新建项目" />
+				</div>
+			);
+		}
+		return (
+			<>
+				<ProjectCardGrid projects={projects} onOpen={setOpenProjectId} />
+				<InfiniteListFooter
+					hasMore={hasNextPage}
+					hasPaged={hasPaged}
+					isValidating={isFetchingNextPage}
+					sentinelRef={sentinelRef}
+					endText="到底了，没有更多项目了"
+				/>
+			</>
+		);
+	};
 
 	return (
 		<>
@@ -84,33 +115,13 @@ export function PersonalProjectsPage({
 					</Button>
 				}
 			>
-				<PageWidthWrapper>
-					{isLoading ? (
-						<div className="flex h-60 items-center justify-center text-muted-foreground">
-							<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-						</div>
-					) : projects.length === 0 ? (
-						<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
-							<EmptyAction q={q} icon={<Icons.projects />} actionLabel="新建项目" />
-						</div>
-					) : (
-						<>
-							<ProjectCardGrid projects={projects} onOpen={setOpenProjectId} />
-							<InfiniteListFooter
-								hasMore={hasNextPage}
-								hasPaged={hasPaged}
-								isValidating={isFetchingNextPage}
-								sentinelRef={sentinelRef}
-								endText="到底了，没有更多项目了"
-							/>
-						</>
-					)}
-				</PageWidthWrapper>
+				<PageWidthWrapper>{renderProjectsBody()}</PageWidthWrapper>
 			</ToolbarPageShell>
 			<ProjectPreviewDrawer
 				projectId={openProjectId}
 				onOpenChange={(open) => {
-					if (!open) setOpenProjectId(null);
+					if (open) return;
+					setOpenProjectId(null);
 				}}
 			/>
 		</>
