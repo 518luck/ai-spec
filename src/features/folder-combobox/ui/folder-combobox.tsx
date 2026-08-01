@@ -4,10 +4,8 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CommandScrollMask } from "@/features/command-scroll-mask";
+import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/features/toast";
-import { useScrollProgress } from "@/shared/hooks";
 import { client } from "@/shared/lib/orpc/client";
 import { folderKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
@@ -131,25 +129,10 @@ export function FolderCombobox({
 		() => (rawFolders ?? []).map((f) => ({ value: f.id, label: f.name, color: f.color })),
 		[rawFolders],
 	);
-	// 列表滚动容器 ref：驱动 useScrollProgress 算进度，底部接 ScrollMask 渐变遮罩
-	const listRef = useRef<HTMLDivElement>(null);
-	const { scrollProgress, scrollable, updateScrollProgress } = useScrollProgress(listRef);
-
 	// 弹层打开时刷新一次，保证列表新鲜
 	useEffect(() => {
 		if (open) void refetchFolders();
 	}, [open, refetchFolders]);
-
-	// > 重算滚动进度：弹层打开/数据到达时，容器可见高度被 max-h-72 钉死（ResizeObserver 失效），
-	// > 且 cmdk 的 item 注册晚于本 effect（同步读 scrollHeight 拿到未撑开的值），需双 rAF 跨过布局后再测量
-	// biome-ignore lint/correctness/useExhaustiveDependencies: open/rawFolders 作为触发信号，effect body 不读它们但需响应其变化
-	useEffect(() => {
-		if (!open) return;
-		const id = requestAnimationFrame(() => {
-			requestAnimationFrame(() => updateScrollProgress());
-		});
-		return () => cancelAnimationFrame(id);
-	}, [open, rawFolders, updateScrollProgress]);
 
 	const selectedOption = folders.find((opt) => opt.value === value);
 
@@ -240,83 +223,75 @@ export function FolderCombobox({
 				<Command>
 					{/* CommandInput：cmdk 自动管过滤（按 CommandItem 的 value 匹配输入） */}
 					<CommandInput placeholder="搜索文件夹..." />
-					<div className="relative">
-						<CommandList ref={listRef} onScroll={updateScrollProgress} className="max-h-72">
-							<CommandEmpty>
-								<CreateButton
-									onSelect={(name) => {
-										setCreateInitialName(name);
-										setCreateDialogOpen(true);
-									}}
+					<CommandList showMask className="max-h-72">
+						<CommandEmpty>
+							<CreateButton
+								onSelect={(name) => {
+									setCreateInitialName(name);
+									setCreateDialogOpen(true);
+								}}
+							/>
+						</CommandEmpty>
+						{/* // > 不加入任何文件夹（folderId=null），始终置顶；value 含多关键词便于搜索命中 */}
+						<CommandGroup>
+							<CommandItem
+								value="未分类 无文件夹 不加入 none"
+								onSelect={() => {
+									handleChange(null);
+									setOpen(false);
+								}}
+								className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
+							>
+								<FolderIcon color={FOLDER_NEUTRAL_COLOR} icon={Icons.folderX} />
+								<span className="text-muted-foreground">未分类</span>
+								<Icons.check
+									className={cn("ml-auto size-4", value === null ? "opacity-100" : "opacity-0")}
 								/>
-							</CommandEmpty>
-							{/* // > 不加入任何文件夹（folderId=null），始终置顶；value 含多关键词便于搜索命中 */}
+							</CommandItem>
+						</CommandGroup>
+						<CommandSeparator />
+
+						{/* // > 文件夹列表：首次加载中用骨架占位，有缓存后 SWR 直接返回旧数据不闪骨架 */}
+						{isLoading ? (
 							<CommandGroup>
-								<CommandItem
-									value="未分类 无文件夹 不加入 none"
-									onSelect={() => {
-										handleChange(null);
-										setOpen(false);
-									}}
-									className="cursor-pointer bg-transparent! hover:bg-accent! hover:text-accent-foreground!"
-								>
-									<FolderIcon color={FOLDER_NEUTRAL_COLOR} icon={Icons.folderX} />
-									<span className="text-muted-foreground">未分类</span>
-									<Icons.check
-										className={cn("ml-auto size-4", value === null ? "opacity-100" : "opacity-0")}
+								{["a", "b", "c"].map((k) => (
+									<div key={k} className="flex items-center gap-2 px-2 py-1.5">
+										<Skeleton className="size-4 shrink-0 rounded" />
+										<Skeleton className="h-4 flex-1" />
+									</div>
+								))}
+							</CommandGroup>
+						) : (
+							<CommandGroup>
+								{folders.map((option) => (
+									<FolderOptionItem
+										key={option.value}
+										option={option}
+										selected={value === option.value}
+										onSelect={() => {
+											handleChange(option.value);
+											setOpen(false);
+										}}
 									/>
-								</CommandItem>
+								))}
 							</CommandGroup>
-							<CommandSeparator />
+						)}
 
-							{/* // > 文件夹列表：首次加载中用骨架占位，有缓存后 SWR 直接返回旧数据不闪骨架 */}
-							{isLoading ? (
-								<CommandGroup>
-									{["a", "b", "c"].map((k) => (
-										<div key={k} className="flex items-center gap-2 px-2 py-1.5">
-											<Skeleton className="size-4 shrink-0 rounded" />
-											<Skeleton className="h-4 flex-1" />
-										</div>
-									))}
-								</CommandGroup>
-							) : (
-								<CommandGroup>
-									{folders.map((option) => (
-										<FolderOptionItem
-											key={option.value}
-											option={option}
-											selected={value === option.value}
-											onSelect={() => {
-												handleChange(option.value);
-												setOpen(false);
-											}}
-										/>
-									))}
-								</CommandGroup>
-							)}
-
-							{/* // > 新建文件夹：作为列表项放在分组里，和文件夹列表视觉统一 */}
-							{showCreateSeparator && <CommandSeparator />}
-							<CommandGroup>
-								<CommandItem
-									value="新建文件夹 创建 new create"
-									onSelect={() => {
-										setCreateInitialName("");
-										setCreateDialogOpen(true);
-									}}
-									className="not-first:mt-2 cursor-pointer bg-transparent! text-muted-foreground hover:bg-accent! hover:text-accent-foreground!"
-								>
-									<CreateFolderItemContent label="新建文件夹" />
-								</CommandItem>
-							</CommandGroup>
-						</CommandList>
-						{/* // 底部渐变遮罩：仅列表可滚时显示；滚到底自动淡出，订阅 cmdk 搜索词避免过滤时闪烁 */}
-						<CommandScrollMask
-							scrollProgress={scrollProgress}
-							enabled={scrollable}
-							onSearchChange={updateScrollProgress}
-						/>
-					</div>
+						{/* // > 新建文件夹：作为列表项放在分组里，和文件夹列表视觉统一 */}
+						{showCreateSeparator && <CommandSeparator />}
+						<CommandGroup>
+							<CommandItem
+								value="新建文件夹 创建 new create"
+								onSelect={() => {
+									setCreateInitialName("");
+									setCreateDialogOpen(true);
+								}}
+								className="not-first:mt-2 cursor-pointer bg-transparent! text-muted-foreground hover:bg-accent! hover:text-accent-foreground!"
+							>
+								<CreateFolderItemContent label="新建文件夹" />
+							</CommandItem>
+						</CommandGroup>
+					</CommandList>
 					<CreateFolderDialog
 						open={createDialogOpen}
 						onOpenChange={setCreateDialogOpen}

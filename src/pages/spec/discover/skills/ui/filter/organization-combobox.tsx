@@ -5,10 +5,8 @@
 // > 数据来自 GET /api/discover/skills/organizations
 
 import { useQuery } from "@tanstack/react-query";
-import { type JSX, type KeyboardEvent, useCallback, useEffect, useMemo, useRef } from "react";
+import { type JSX, type KeyboardEvent, useCallback, useEffect, useMemo } from "react";
 
-import { CommandScrollMask } from "@/features/command-scroll-mask";
-import { useScrollProgress } from "@/shared/hooks";
 import { client } from "@/shared/lib/orpc/client";
 import { discoverOrganizationKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
@@ -54,24 +52,11 @@ export function OrganizationCombobox({
 	const allOrgs = useMemo<OrganizationListItemVo[]>(() => data?.data ?? [], [data]);
 	const selectedNames = useMemo(() => new Set(value), [value]);
 
-	// 列表滚动容器 ref：驱动 ScrollMask 渐变
-	const listRef = useRef<HTMLDivElement>(null);
-	const { scrollProgress, scrollable, updateScrollProgress } = useScrollProgress(listRef);
-
 	// 挂载时刷新一次，保证组织统计新鲜（外层 SubMenu 每次展开会重新挂载本面板）
 	useEffect(() => {
 		void refetch();
 		onMount?.();
 	}, [refetch, onMount]);
-
-	// > 重算滚动进度：数据到达时容器可见高度被 max-h 钉死，需双 rAF 跨过布局后再测量
-	// biome-ignore lint/correctness/useExhaustiveDependencies: allOrgs 作为触发信号，effect body 不读它但需响应其变化
-	useEffect(() => {
-		const id = requestAnimationFrame(() => {
-			requestAnimationFrame(() => updateScrollProgress());
-		});
-		return () => cancelAnimationFrame(id);
-	}, [allOrgs, updateScrollProgress]);
 
 	// 切换某个组织的选中态：已选则移除，未选则追加
 	const toggleOrg = useCallback(
@@ -91,46 +76,38 @@ export function OrganizationCombobox({
 			<div onKeyDownCapture={stopMenuTypeahead}>
 				<CommandInput placeholder="搜索组织…" />
 			</div>
-			<div className="relative">
-				<CommandList ref={listRef} onScroll={updateScrollProgress} className="max-h-64">
-					<CommandEmpty>
-						<span className="text-muted-foreground">没有匹配的组织</span>
-					</CommandEmpty>
+			<CommandList showMask className="max-h-64">
+				<CommandEmpty>
+					<span className="text-muted-foreground">没有匹配的组织</span>
+				</CommandEmpty>
 
-					{isLoading ? (
-						<CommandGroup>
-							{["a", "b", "c"].map((k) => (
-								<div key={k} className="flex items-center gap-2 px-2 py-1.5">
-									<Skeleton className="size-5 shrink-0 rounded-full" />
-									<Skeleton className="h-4 flex-1" />
-									<Skeleton className="h-3 w-6" />
-								</div>
-							))}
-						</CommandGroup>
-					) : allOrgs.length === 0 ? (
-						<CommandGroup>
-							<div className="px-2 py-1.5 text-muted-foreground text-sm">还没有可筛选的组织</div>
-						</CommandGroup>
-					) : (
-						<CommandGroup>
-							{allOrgs.map((org) => (
-								<OrganizationOptionItem
-									key={org.authorName}
-									org={org}
-									selected={selectedNames.has(org.authorName)}
-									onSelect={() => toggleOrg(org.authorName)}
-								/>
-							))}
-						</CommandGroup>
-					)}
-				</CommandList>
-				{/* // 底部弥散遮罩：仅列表可滚时显示；色取 popover 与弹层一致 */}
-				<CommandScrollMask
-					scrollProgress={scrollProgress}
-					enabled={scrollable}
-					onSearchChange={updateScrollProgress}
-				/>
-			</div>
+				{isLoading ? (
+					<CommandGroup>
+						{["a", "b", "c"].map((k) => (
+							<div key={k} className="flex items-center gap-2 px-2 py-1.5">
+								<Skeleton className="size-5 shrink-0 rounded-full" />
+								<Skeleton className="h-4 flex-1" />
+								<Skeleton className="h-3 w-6" />
+							</div>
+						))}
+					</CommandGroup>
+				) : allOrgs.length === 0 ? (
+					<CommandGroup>
+						<div className="px-2 py-1.5 text-muted-foreground text-sm">还没有可筛选的组织</div>
+					</CommandGroup>
+				) : (
+					<CommandGroup>
+						{allOrgs.map((org) => (
+							<OrganizationOptionItem
+								key={org.authorName}
+								org={org}
+								selected={selectedNames.has(org.authorName)}
+								onSelect={() => toggleOrg(org.authorName)}
+							/>
+						))}
+					</CommandGroup>
+				)}
+			</CommandList>
 		</Command>
 	);
 }

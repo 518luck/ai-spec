@@ -1,11 +1,13 @@
 "use client";
 
-import type * as React from "react";
-import { Command as CommandPrimitive } from "cmdk";
-
-import { cn } from "@/shared/lib/utils";
-import { InputGroup, InputGroupAddon } from "@/shared/ui/input-group";
+import { Command as CommandPrimitive, useCommandState } from "cmdk";
 import { SearchIcon } from "lucide-react";
+import type * as React from "react";
+import { useEffect, useRef } from "react";
+import { cn } from "@/shared/lib/utils";
+import { ScrollMask } from "@/shared/ui/scroll-mask";
+import { InputGroup, InputGroupAddon } from "@/shared/ui/input-group";
+import { useScrollProgress } from "@/shared/hooks";
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
 	return (
@@ -45,19 +47,68 @@ function CommandInput({
 
 function CommandList({
 	className,
-	ref,
+	ref: externalRef,
+	onScroll: externalOnScroll,
+	showMask = false,
 	...props
-}: React.ComponentProps<typeof CommandPrimitive.List>) {
+}: React.ComponentProps<typeof CommandPrimitive.List> & {
+	showMask?: boolean;
+}) {
+	const listRef = useRef<HTMLDivElement>(null);
+	const { scrollProgress, scrollable, updateScrollProgress } = useScrollProgress(listRef);
+
+	// > 监听子节点变化：数据到达时容器可见高度被 max-h 钉死（ResizeObserver 失效），
+	// > 且 cmdk 的 item 注册晚于 React 渲染，用 MutationObserver 检测 DOM 变更后双 rAF 重算进度
+	useEffect(() => {
+		if (!showMask) return;
+		const el = listRef.current;
+		if (!el) return;
+
+		const observer = new MutationObserver(() => {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => updateScrollProgress());
+			});
+		});
+		observer.observe(el, { childList: true, subtree: true });
+
+		return () => observer.disconnect();
+	}, [showMask, updateScrollProgress]);
+
+	// 不需要遮罩时保持原行为，直接透传
+	if (!showMask) {
+		return (
+			<CommandPrimitive.List
+				ref={externalRef}
+				data-slot="command-list"
+				className={cn(
+					"scrollbar-thin max-h-72 scroll-py-1 overflow-y-auto overflow-x-hidden outline-none",
+					className,
+				)}
+				onScroll={externalOnScroll}
+				{...props}
+			/>
+		);
+	}
+
+	// > 开启遮罩：内部接管 ref + onScroll，底部渲染 CommandScrollMask
 	return (
-		<CommandPrimitive.List
-			ref={ref}
-			data-slot="command-list"
-			className={cn(
-				"scrollbar-thin max-h-72 scroll-py-1 overflow-y-auto overflow-x-hidden outline-none",
-				className,
-			)}
-			{...props}
-		/>
+		<div className="relative">
+			<CommandPrimitive.List
+				ref={listRef}
+				data-slot="command-list"
+				className={cn(
+					"scrollbar-thin max-h-72 scroll-py-1 overflow-y-auto overflow-x-hidden outline-none",
+					className,
+				)}
+				onScroll={updateScrollProgress}
+				{...props}
+			/>
+			<CommandScrollMask
+				scrollProgress={scrollProgress}
+				enabled={scrollable}
+				onSearchChange={updateScrollProgress}
+			/>
+		</div>
 	);
 }
 
@@ -119,6 +170,39 @@ function CommandItem({
 		>
 			{children}
 		</CommandPrimitive.Item>
+	);
+}
+
+// > cmdk 列表专用底部渐变遮罩：订阅搜索词驱动 rAF 重算，跨过 cmdk 过滤后的 DOM 重排帧再读真实尺寸
+// ! 必须在 Command 内部使用（依赖 useCommandState），由 CommandList 在 showMask 时内部调用，不对外导出
+function CommandScrollMask({
+	scrollProgress,
+	onSearchChange,
+	enabled = true,
+	maskColor = "var(--popover)",
+	className,
+}: {
+	scrollProgress: number;
+	onSearchChange: () => void;
+	enabled?: boolean;
+	maskColor?: string;
+	className?: string;
+}): React.JSX.Element | null {
+	const search = useCommandState((state) => state.search);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: search 作为 cmdk 过滤的触发信号
+	useEffect(() => {
+		const id = requestAnimationFrame(onSearchChange);
+		return () => cancelAnimationFrame(id);
+	}, [search, onSearchChange]);
+
+	return (
+		<ScrollMask
+			scrollProgress={scrollProgress}
+			enabled={enabled}
+			maskColor={maskColor}
+			className={className}
+		/>
 	);
 }
 

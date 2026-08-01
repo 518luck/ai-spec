@@ -7,18 +7,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCommandState } from "cmdk";
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-	type JSX,
-	type KeyboardEvent,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
-import { CommandScrollMask } from "@/features/command-scroll-mask";
+import { type JSX, type KeyboardEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "@/features/toast";
-import { useScrollProgress } from "@/shared/hooks";
 import { client } from "@/shared/lib/orpc/client";
 import { tagKeys } from "@/shared/lib/orpc/query-keys";
 import { cn } from "@/shared/lib/utils";
@@ -107,24 +97,11 @@ export function TagCombobox({
 	// 已选 id 集合：快速判断勾选状态
 	const selectedIds = useMemo(() => new Set(value.map((t) => t.id)), [value]);
 
-	// 列表滚动容器 ref：驱动 ScrollMask 渐变
-	const listRef = useRef<HTMLDivElement>(null);
-	const { scrollProgress, scrollable, updateScrollProgress } = useScrollProgress(listRef);
-
 	// 挂载时刷新一次，保证列表新鲜（外层 Popover 每次打开都会重新挂载本面板）
 	useEffect(() => {
 		void refetchTags();
 		onMount?.();
 	}, [refetchTags, onMount]);
-
-	// > 重算滚动进度：数据到达时容器可见高度被 max-h 钉死，需双 rAF 跨过布局后再测量
-	// biome-ignore lint/correctness/useExhaustiveDependencies: rawTags 作为触发信号，effect body 不读它但需响应其变化
-	useEffect(() => {
-		const id = requestAnimationFrame(() => {
-			requestAnimationFrame(() => updateScrollProgress());
-		});
-		return () => cancelAnimationFrame(id);
-	}, [rawTags, updateScrollProgress]);
 
 	// onChange 传了走回调，没传改 URL（写回 id 列表）
 	const handleChange = useCallback(
@@ -190,74 +167,64 @@ export function TagCombobox({
 			<div onKeyDownCapture={stopMenuTypeahead}>
 				<CommandInput placeholder="搜索标签..." />
 			</div>
-			<div className="relative">
-				<CommandList ref={listRef} onScroll={updateScrollProgress} className="max-h-64">
-					<CommandEmpty>
-						<CreateButtonOnEmpty
-							onSelect={(name) => {
-								setCreateInitialName(name);
-								setCreateDialogOpen(true);
-							}}
-						/>
-					</CommandEmpty>
+			<CommandList showMask className="max-h-64">
+				<CommandEmpty>
+					<CreateButtonOnEmpty
+						onSelect={(name) => {
+							setCreateInitialName(name);
+							setCreateDialogOpen(true);
+						}}
+					/>
+				</CommandEmpty>
 
-					{isLoading ? (
-						<CommandGroup>
-							{["a", "b", "c"].map((k) => (
-								<div key={k} className="flex items-center gap-2 px-2 py-1.5">
-									<Skeleton className="size-4 shrink-0 rounded-full" />
-									<Skeleton className="h-4 flex-1" />
-								</div>
-							))}
-						</CommandGroup>
-					) : allTags.length === 0 ? (
-						<CommandGroup>
-							<div className="px-2 py-1.5 text-muted-foreground text-sm">
-								还没有标签，新建一个吧
-							</div>
-						</CommandGroup>
-					) : (
-						<CommandGroup>
-							{allTags.map((tag) => (
-								<TagOptionItem
-									key={tag.id}
-									tag={tag}
-									selected={selectedIds.has(tag.id)}
-									onSelect={() => toggleTag(tag)}
-								/>
-							))}
-						</CommandGroup>
-					)}
-
-					<CommandSeparator />
+				{isLoading ? (
 					<CommandGroup>
-						<CommandItem
-							value="新建标签 创建 new create"
-							onSelect={() => {
-								setCreateInitialName("");
-								setCreateDialogOpen(true);
-							}}
-							className="not-first:mt-2 cursor-pointer bg-transparent! text-muted-foreground hover:bg-accent! hover:text-accent-foreground!"
-						>
-							<span
-								className="flex size-7 shrink-0 items-center justify-center rounded-md"
-								style={{
-									backgroundColor: `color-mix(in srgb, ${TAG_NEUTRAL_COLOR} 15%, transparent)`,
-								}}
-							>
-								<Icons.tagAdd className="size-4" style={{ color: TAG_NEUTRAL_COLOR }} />
-							</span>
-							<span>新建标签</span>
-						</CommandItem>
+						{["a", "b", "c"].map((k) => (
+							<div key={k} className="flex items-center gap-2 px-2 py-1.5">
+								<Skeleton className="size-4 shrink-0 rounded-full" />
+								<Skeleton className="h-4 flex-1" />
+							</div>
+						))}
 					</CommandGroup>
-				</CommandList>
-				{/* // 底部弥散遮罩：仅列表可滚时显示；色取 popover 与弹层一致 */}
-				<CommandScrollMask
-					scrollProgress={scrollProgress}
-					enabled={scrollable}
-					onSearchChange={updateScrollProgress}
-				/>
-			</div>
+				) : allTags.length === 0 ? (
+					<CommandGroup>
+						<div className="px-2 py-1.5 text-muted-foreground text-sm">还没有标签，新建一个吧</div>
+					</CommandGroup>
+				) : (
+					<CommandGroup>
+						{allTags.map((tag) => (
+							<TagOptionItem
+								key={tag.id}
+								tag={tag}
+								selected={selectedIds.has(tag.id)}
+								onSelect={() => toggleTag(tag)}
+							/>
+						))}
+					</CommandGroup>
+				)}
+
+				<CommandSeparator />
+				<CommandGroup>
+					<CommandItem
+						value="新建标签 创建 new create"
+						onSelect={() => {
+							setCreateInitialName("");
+							setCreateDialogOpen(true);
+						}}
+						className="not-first:mt-2 cursor-pointer bg-transparent! text-muted-foreground hover:bg-accent! hover:text-accent-foreground!"
+					>
+						<span
+							className="flex size-7 shrink-0 items-center justify-center rounded-md"
+							style={{
+								backgroundColor: `color-mix(in srgb, ${TAG_NEUTRAL_COLOR} 15%, transparent)`,
+							}}
+						>
+							<Icons.tagAdd className="size-4" style={{ color: TAG_NEUTRAL_COLOR }} />
+						</span>
+						<span>新建标签</span>
+					</CommandItem>
+				</CommandGroup>
+			</CommandList>
 			<CreateTagDialog
 				open={createDialogOpen}
 				onOpenChange={setCreateDialogOpen}
