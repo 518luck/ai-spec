@@ -5,7 +5,7 @@ import { Command as CommandPrimitive } from "cmdk";
 
 import { cn } from "@/shared/lib/utils";
 import { InputGroup, InputGroupAddon } from "@/shared/ui/input-group";
-import { SearchIcon, CheckIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
 	return (
@@ -118,7 +118,6 @@ function CommandItem({
 			{...props}
 		>
 			{children}
-			<CheckIcon className="ml-auto opacity-0 group-data-[checked=true]/command-item:opacity-100" />
 		</CommandPrimitive.Item>
 	);
 }
