@@ -170,7 +170,7 @@ function FileTreeRow({
 		<div
 			{...item.getProps()}
 			className={cn(
-				"relative flex h-[22px] shrink-0 cursor-pointer items-center rounded-md pr-2 text-sm outline-none",
+				"relative flex h-5.5 shrink-0 cursor-pointer items-center rounded-md pr-2 text-sm outline-none",
 				"hover:bg-accent/60 focus-visible:ring-1 focus-visible:ring-ring",
 				item.isSelected() && "bg-accent text-accent-foreground",
 			)}
