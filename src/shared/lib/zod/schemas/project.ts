@@ -1,8 +1,7 @@
 import { z } from "@/shared/lib/zod";
 
-// # 项目（Project）相关 zod schema：项目列表/详情 + 项目文档（AGENTS.md）列表/详情校验
+// # 项目（Project）相关 zod schema：项目列表/详情/新建 + 项目文档（AGENTS.md）列表/详情校验
 // > schema 值分两个聚合对象：ProjectSchemas（项目）+ AgentsMdSchemas（项目文档），type 保留独立导出
-// > MVP 仅覆盖只读：list / getById，不含 create/update/delete
 
 // @ 拼装件（局部变量，供 Dto/Vo 组装用）
 // 项目名：必填，1~64 字。refine 只校验纯空白，不改写用户输入
@@ -81,6 +80,13 @@ export const ProjectSchemas = {
 	folderId,
 
 	// @ 入参 Dto
+	// 新建项目入参：名称必填，描述与文件夹归属可选
+	createDto: z.object({
+		name,
+		description,
+		folderId,
+	}),
+
 	// 项目列表查询入参：文件夹筛选 + 搜索 + 分页
 	listDto: z.object({
 		folderId: z.string().optional(),
@@ -116,6 +122,7 @@ export const AgentsMdSchemas = {
 } as const;
 
 // @ 派生类型（保留独立导出，消费侧 import type）
+export type CreateProjectDto = z.infer<typeof ProjectSchemas.createDto>;
 export type ListProjectsDto = z.infer<typeof ProjectSchemas.listDto>;
 export type ProjectVo = z.infer<typeof ProjectSchemas.vo>;
 export type ProjectListItemVo = z.infer<typeof ProjectSchemas.listItemVo>;

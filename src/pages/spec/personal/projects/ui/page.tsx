@@ -16,6 +16,7 @@ import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EmptyAction } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { ProjectCardGrid } from "./cards";
+import { CreateProjectDialog } from "./create-project-dialog";
 import { FolderFilterSelect } from "./folder-filter-select";
 import { ProjectPreviewDrawer } from "./preview/preview-drawer";
 
@@ -36,6 +37,7 @@ export function PersonalProjectsPage({
 }: PersonalProjectsPageProps): JSX.Element {
 	const [folderId, setFolderId] = useState<string | null>(null);
 	const [openProjectId, setOpenProjectId] = useState<string | null>(null);
+	const [createOpen, setCreateOpen] = useState(false);
 
 	// 项目列表：folderId / q 变化自动重拉；pageParam 0-based，API 用 1-based
 	const {
@@ -78,7 +80,12 @@ export function PersonalProjectsPage({
 		if (projects.length === 0) {
 			return (
 				<div className="flex items-center justify-center" style={{ minHeight: 540 }}>
-					<EmptyAction q={q} icon={<Icons.projects />} actionLabel="新建项目" />
+					<EmptyAction
+						q={q}
+						icon={<Icons.projects />}
+						actionLabel="新建项目"
+						onAction={() => setCreateOpen(true)}
+					/>
 				</div>
 			);
 		}
@@ -109,7 +116,7 @@ export function PersonalProjectsPage({
 					/>
 				}
 				actions={
-					<Button size="sm" variant="outline" className="gap-2">
+					<Button size="sm" variant="outline" className="gap-2" onClick={() => setCreateOpen(true)}>
 						<Icons.plus className="size-4" />
 						新建项目
 					</Button>
@@ -124,6 +131,7 @@ export function PersonalProjectsPage({
 					setOpenProjectId(null);
 				}}
 			/>
+			<CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
 		</>
 	);
 }
