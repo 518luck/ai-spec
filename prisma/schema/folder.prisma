@@ -36,6 +36,7 @@ model Folder {
   promptDrafts  PromptDraft[]  @relation("FolderItems_PromptDraft") // 文件夹内的草稿（多态：文件夹删除→SetNull，资源保留）
   promptRecords PromptRecord[] @relation("FolderItems_PromptRecord") // 文件夹内的收录记录（多态：文件夹删除→SetNull，资源保留）
   rules         Rule[]         @relation("FolderItems_Rule") // 文件夹内的规则（文件夹删除→规则保留，folderId 置空）
+  projects      Project[]      @relation("FolderItems_Project") // 文件夹内的项目（文件夹删除→项目保留，folderId 置空）
 
   // ⑥ 索引
   @@index([ownerId]) // 加速"我的文件夹"查询

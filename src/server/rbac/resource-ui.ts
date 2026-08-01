@@ -22,6 +22,7 @@ export const FOLDERABLE_RESOURCE_KEYS = [
 	"discover",
 	"agents",
 	"plugins",
+	"project",
 ] as const satisfies readonly ResourceKey[];
 
 // @ 可打标签的内容资源子集；收录（PromptRecordTag）+ 规约（RuleTag），将来扩展在此追加
@@ -48,9 +49,14 @@ export const RESOURCES = [
 		description: "可复用的规则约定片段",
 	},
 	{
-		key: "agentMD",
-		name: "AGENTS.md",
-		description: "指导 AI 行为的项目规约文档",
+		key: "plugins",
+		name: "Plugins",
+		description: "供 AI 调用的外部工具集",
+	},
+	{
+		key: "project",
+		name: "项目",
+		description: "接入的代码仓库，AGENTS.md 的顶层容器（个人/团队通用）",
 	},
 	{
 		key: "discover",

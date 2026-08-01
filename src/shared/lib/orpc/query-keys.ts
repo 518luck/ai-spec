@@ -49,6 +49,20 @@ export const folderKeys = {
 		[...folderKeys.all, "list", params] as const,
 } as const;
 
+// 项目
+export const projectKeys = {
+	all: ["projects"] as const,
+	lists: () => [...projectKeys.all, "list"] as const,
+	list: (params: Record<string, unknown>) => [...projectKeys.lists(), params] as const,
+	infinite: (params: Record<string, unknown>) => [...projectKeys.all, "infinite", params] as const,
+	details: () => [...projectKeys.all, "detail"] as const,
+	detail: (id: string) => [...projectKeys.details(), { id }] as const,
+	agentsMds: (projectId: string, folderPath?: string) =>
+		[...projectKeys.all, "agentsMds", { projectId, folderPath }] as const,
+	agentsMdContent: (projectId: string, id: string) =>
+		[...projectKeys.all, "agentsMdContent", { projectId, id }] as const,
+} as const;
+
 // 标签
 export const tagKeys = {
 	all: ["tags"] as const,

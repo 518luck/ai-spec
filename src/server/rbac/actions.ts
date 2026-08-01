@@ -10,8 +10,8 @@ const RESOURCE_KEYS = [
 	"discover", // 发现广场
 	"agents", // 智能体
 	"plugins", // Plugins
+	"project", // 项目（个人/团队通用）
 	// —— 团队专属概念 ——
-	"project", // 团队项目
 	"member", // 团队成员
 	"team", // 团队设置
 ] as const;
@@ -115,20 +115,20 @@ export const ACTION_DEFS = [
 		apiKeyGrantable: true,
 		description: "编辑 Plugins",
 	},
-
-	// —— 团队专属概念（API Key 不可授予）——
 	{
 		action: "project.read",
-		teamOnly: true,
-		apiKeyGrantable: false,
-		description: "查看团队项目",
+		teamOnly: false,
+		apiKeyGrantable: true,
+		description: "浏览项目",
 	},
 	{
 		action: "project.write",
-		teamOnly: true,
-		apiKeyGrantable: false,
-		description: "管理团队项目",
+		teamOnly: false,
+		apiKeyGrantable: true,
+		description: "管理项目",
 	},
+
+	// —— 团队专属概念（API Key 不可授予）——
 	{
 		action: "member.read",
 		teamOnly: true,

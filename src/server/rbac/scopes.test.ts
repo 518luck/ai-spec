@@ -10,8 +10,8 @@ import {
 
 // 户口本：登记的 scope 数量应与权威表一致，新增 scope 时两处需同步
 describe("SCOPES 户口本", () => {
-	test("包含全部 16 个合法 scope", () => {
-		expect(SCOPES.length).toBe(16);
+	test("包含全部 18 个合法 scope", () => {
+		expect(SCOPES.length).toBe(18);
 	});
 });
 

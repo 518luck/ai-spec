@@ -12,22 +12,25 @@ import {
 import { useTree } from "@headless-tree/react";
 import Image from "next/image";
 import type { JSX } from "react";
-
 import { cn } from "@/shared/lib/utils";
+import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import {
-	AGENTS_TREE_ROOT_ID,
-	type AgentsTreeItem,
-	agentsTreeItems,
-	collectAgentsDocs,
+	collectFolderAgentsMds,
 	getSubfolderIds,
-} from "../../../model/mock-tree";
+	PROJECT_TREE_ROOT_ID,
+	type ProjectTreeNode,
+} from "../../../model/path-utils";
 import type { FolderIconPair } from "../folder-icons";
 
 interface FileTreeProps {
 	/** 当前打开的项目 id，树只展示该项目的文件夹；切换项目时用 key 重挂载 */
 	projectId: string;
+	/** 项目内文件夹树（由扁平文档列表按 path 前缀推导） */
+	tree: Record<string, ProjectTreeNode>;
+	/** 项目全部文档（用于计算各文件夹子树的文档数角标） */
+	agentsMds: AgentsMdListItemVo[];
 	/** 当前选中的文件夹 id（受控）：面包屑等外部跳转时树高亮同步 */
 	selectedFolderId: string;
 	/** 展开的文件夹集合（受控）：面包屑跳转深层文件夹时由页面补齐祖先路径 */
@@ -44,6 +47,8 @@ interface FileTreeProps {
 
 export function FileTree({
 	projectId,
+	tree,
+	agentsMds,
 	selectedFolderId,
 	expandedFolderIds,
 	onExpandedChange,
@@ -51,16 +56,16 @@ export function FileTree({
 	iconsMap,
 	defaultIconPair,
 }: FileTreeProps): JSX.Element {
-	const tree = useTree<AgentsTreeItem>({
-		rootItemId: AGENTS_TREE_ROOT_ID,
+	const treeApi = useTree<ProjectTreeNode>({
+		rootItemId: PROJECT_TREE_ROOT_ID,
 		getItemName: (item) => item.getItemData().name,
 		// 有子文件夹才可展开、显示箭头；文件不进树，末级文件夹按叶节点处理
-		isItemFolder: (item) => getSubfolderIds(item.getId()).length > 0,
+		isItemFolder: (item) => getSubfolderIds(item.getId(), tree).length > 0,
 		dataLoader: {
-			getItem: (itemId) => agentsTreeItems[itemId],
+			getItem: (itemId) => tree[itemId],
 			// 根下只挂当前项目，让项目文件夹本身成为树的第一行（选中可看项目全部文档）
 			getChildren: (itemId) =>
-				itemId === AGENTS_TREE_ROOT_ID ? [projectId] : getSubfolderIds(itemId),
+				itemId === PROJECT_TREE_ROOT_ID ? [projectId] : getSubfolderIds(itemId, tree),
 		},
 		// 选中与展开都受页面控制：树内交互经 setXxx 上抛，外部（面包屑）跳转时高亮与展开自动同步
 		state: {
@@ -88,7 +93,7 @@ export function FileTree({
 						variant="ghost"
 						size="icon-sm"
 						aria-label="全部展开"
-						onClick={() => void tree.expandAll()}
+						onClick={() => void treeApi.expandAll()}
 					>
 						<Icons.expandAll className="size-4" />
 					</Button>
@@ -96,20 +101,22 @@ export function FileTree({
 						variant="ghost"
 						size="icon-sm"
 						aria-label="全部收起"
-						onClick={() => tree.collapseAll()}
+						onClick={() => treeApi.collapseAll()}
 					>
 						<Icons.collapseAll className="size-4" />
 					</Button>
 				</div>
 			</div>
 			<div
-				{...tree.getContainerProps("AGENTS.md 文件夹树")}
+				{...treeApi.getContainerProps("项目文档文件夹树")}
 				className="flex flex-col gap-px p-2 outline-none"
 			>
-				{tree.getItems().map((item) => (
+				{treeApi.getItems().map((item) => (
 					<FileTreeRow
 						key={item.getId()}
 						item={item}
+						tree={tree}
+						agentsMds={agentsMds}
 						iconsMap={iconsMap}
 						defaultIconPair={defaultIconPair}
 					/>
@@ -122,10 +129,14 @@ export function FileTree({
 // 单行节点：层级缩进 + 展开箭头 + material-icon-theme 文件夹图标 + 名称 + 子树内文档数角标
 function FileTreeRow({
 	item,
+	tree,
+	agentsMds,
 	iconsMap,
 	defaultIconPair,
 }: {
-	item: ItemInstance<AgentsTreeItem>;
+	item: ItemInstance<ProjectTreeNode>;
+	tree: Record<string, ProjectTreeNode>;
+	agentsMds: AgentsMdListItemVo[];
 	iconsMap: Record<string, FolderIconPair>;
 	defaultIconPair: FolderIconPair;
 }): JSX.Element {
@@ -135,7 +146,7 @@ function FileTreeRow({
 	const iconPair = iconsMap[item.getId()] ?? defaultIconPair;
 	const iconSrc = isExpanded ? iconPair.open : iconPair.closed;
 	// 该文件夹子树内（含各层子文件夹）的 AGENTS.md 数量
-	const docCount = collectAgentsDocs(item.getId()).length;
+	const docCount = collectFolderAgentsMds(item.getId(), tree, agentsMds).length;
 
 	return (
 		<button

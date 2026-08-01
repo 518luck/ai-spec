@@ -56,9 +56,9 @@ model User {
   rules        Rule[]         @relation("RuleOwner")
   ruleVersions RuleVersion[]  @relation("RuleVersionEditor") // 该用户创建的规则版本记录
 
-  // AGENTS.md 反向关系：该用户创建的项目与文档
-  agentsProjects AgentsProject[] @relation("AgentsProjectOwner")
-  agentsDocs     AgentsDoc[]     @relation("AgentsDocOwner")
+  // 项目反向关系：该用户创建的项目与项目文档
+  projects Project[]  @relation("AgentsProjectOwner")
+  agentsMds AgentsMd[] @relation("AgentsDocOwner")
 
   // 发现广场：该用户提交的 skill 反馈
   discoverSkillReports DiscoverSkillReport[]

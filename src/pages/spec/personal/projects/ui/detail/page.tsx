@@ -2,8 +2,11 @@
 
 import type { JSX } from "react";
 
+import { getProjectById, listAgentsMds } from "@/server/domain/projects/services";
+import { auth } from "@/shared/lib/auth/auth";
+import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
 import { TitlePageShell } from "@/widgets/page-shell";
-import { agentsTreeItems } from "../../model/mock-tree";
+import { buildProjectTree, getSubfolderIds, PROJECT_TREE_ROOT_ID } from "../../model/path-utils";
 import { ProjectDetailClient } from "./detail-client";
 import {
 	DEFAULT_FOLDER_ICON_ID,
@@ -18,18 +21,24 @@ type ProjectDetailPageProps = {
 	projectId: string;
 };
 
-// > 服务端组件：预解析项目子树内所有文件夹的图标，按需动态加载后下发给客户端
+// > 服务端组件：预取项目信息 + 文档列表，按文件夹名预解析图标后下发给客户端
 export async function ProjectDetailPage({
 	projectId,
 }: ProjectDetailPageProps): Promise<JSX.Element> {
-	const { iconsMap, defaultIconPair } = await preloadFolderIcons(projectId);
-	// 页面标题用项目名，取不到时回退到 id（与列表卡片取名逻辑一致）
-	const projectName = agentsTreeItems[projectId]?.name ?? projectId;
+	const session = await auth();
+	const userId = session?.user?.id;
+	// 未登录返回壳子，客户端路由会因 oRPC 401 自动重定向到登录页
+	const project = userId ? await getProjectById({ userId, id: projectId }).catch(() => null) : null;
+	const agentsMds = userId && project ? await listAgentsMds({ userId, projectId }) : [];
+	const projectName = project?.name ?? projectId;
+
+	const { iconsMap, defaultIconPair } = await preloadFolderIcons(projectId, agentsMds);
 
 	return (
 		<TitlePageShell title={projectName} scrollable={false}>
 			<ProjectDetailClient
 				projectId={projectId}
+				agentsMds={agentsMds}
 				iconsMap={iconsMap}
 				defaultIconPair={defaultIconPair}
 			/>
@@ -37,44 +46,36 @@ export async function ProjectDetailPage({
 	);
 }
 
-/** 收集某项目子树内的全部文件夹 itemId（含项目根本身），用于预解析图标 */
-const collectFolderIds = (projectId: string): string[] => {
+// 预解析项目内所有文件夹图标：folder 名 → iconId → 动态加载 SVG
+// 树结构由扁平文档列表按 path 前缀推导，图标按文件夹名匹配 material-icon-theme
+const preloadFolderIcons = async (
+	projectId: string,
+	agentsMds: AgentsMdListItemVo[],
+): Promise<{ iconsMap: Record<string, FolderIconPair>; defaultIconPair: FolderIconPair }> => {
+	const tree = buildProjectTree(projectId, agentsMds);
+	// 收集树内全部文件夹 itemId（含项目根本身）
 	const folderIds: string[] = [];
-	const stack = [projectId];
+	const stack = [PROJECT_TREE_ROOT_ID];
 	while (stack.length > 0) {
 		const id = stack.pop();
 		if (!id) continue;
-		const node = agentsTreeItems[id];
-		if (!node?.children) continue; // 文件节点（无 children）跳过
+		const node = tree[id];
+		if (!node?.children) continue; // 文件节点跳过
 		folderIds.push(id);
-		stack.push(...node.children);
+		stack.push(...getSubfolderIds(id, tree));
 	}
-	return folderIds;
-};
 
-/**
- * 预解析项目内所有文件夹图标：folder 名 → iconId → 动态加载 SVG 对
- *
- * 根节点用 ROOT_FOLDER_ICON_ID，其余按文件夹名解析，未命中回退 DEFAULT_FOLDER_ICON_ID；
- * 去重后并发加载，避免同一 iconId 重复请求
- */
-const preloadFolderIcons = async (
-	projectId: string,
-): Promise<{ iconsMap: Record<string, FolderIconPair>; defaultIconPair: FolderIconPair }> => {
-	const folderIds = collectFolderIds(projectId);
-
-	// itemId → iconId；根节点固定 root 图标，其余按名解析
+	// itemId → iconId；项目根用 root 图标，其余按文件夹名解析
 	const itemIdToIconId: Record<string, string> = {};
 	for (const folderId of folderIds) {
 		const isRoot = folderId === projectId;
-		const name = agentsTreeItems[folderId]?.name ?? "";
+		const name = tree[folderId]?.name ?? "";
 		itemIdToIconId[folderId] = isRoot ? ROOT_FOLDER_ICON_ID : resolveFolderIconId(name);
 	}
 
-	// 去重 iconId 后并发加载，避免重复请求同一图标对
+	// 去重 iconId 后并发加载，兜底图标一并加载
 	const uniqueIconIds = [...new Set(Object.values(itemIdToIconId))];
-	uniqueIconIds.push(DEFAULT_FOLDER_ICON_ID); // 兜底图标也一并加载
-
+	uniqueIconIds.push(DEFAULT_FOLDER_ICON_ID);
 	const loadedPairs = await Promise.all(
 		uniqueIconIds.map(async (iconId) => [iconId, await loadFolderIconPair(iconId)] as const),
 	);
@@ -86,8 +87,5 @@ const preloadFolderIcons = async (
 		iconsMap[folderId] = pairByIconId[iconId];
 	}
 
-	return {
-		iconsMap,
-		defaultIconPair: pairByIconId[DEFAULT_FOLDER_ICON_ID],
-	};
+	return { iconsMap, defaultIconPair: pairByIconId[DEFAULT_FOLDER_ICON_ID] };
 };

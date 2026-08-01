@@ -1,13 +1,13 @@
-// # AGENTS.md 域：项目（文档的顶层容器）+ 文档（路径定位的 AGENTS.md 文件）
+// # 项目域：项目（接入的代码仓库，AGENTS.md 的顶层容器）+ 文档（路径定位的 AGENTS.md 文件）
 //
-// 结构对应前端 src/pages/spec/personal/ai-spec/agents-md：
+// 结构对应前端 src/pages/spec/personal/projects：
 //   项目卡片 → 文件夹树 / 文档卡片 → 文档阅读
-// ! 文件夹不建表：文档以项目内相对路径（path）定位，树结构、层级、文件夹计数
-//   全部由路径前缀推导（对应前端 getSubfolderIds / collectAgentsDocs），天然不存在"空文件夹"脏状态
+// ! 项目内的文件夹树不建表：文档以项目内相对路径（path）定位，树结构、层级、文件夹计数
+//   全部由路径前缀推导（对应前端 getSubfolderIds / collectAgentsMds），天然不存在"空文件夹"脏状态
 
 // 项目：AGENTS.md 的顶层容器，对应一个代码仓库
 // 当前为用户手建；repoUrl 预留给将来的 git 仓库同步
-model AgentsProject {
+model Project {
   // ① 主键
   id String @id @default(cuid())
 
@@ -15,28 +15,31 @@ model AgentsProject {
   name        String // 项目名（如 "ai-spec"），亦是文件夹树根节点的显示名
   description String? // 项目简介，项目卡片的副标题
   repoUrl     String? @map("repo_url") // 仓库地址，null=纯手建；预留给将来的 git 同步
+  folderId    String? @map("folder_id") // 所属分组文件夹（个人空间的跨项目分组，如"工作/个人/学习"）；null=未分类
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedAt DateTime @updatedAt        @map("updated_at")
 
   // ④ 外键列
   ownerId String  @map("owner_id")
   teamId  String? @map("team_id") // null=个人项目，非 null=团队项目（与 RuleSpace 对称）
 
   // ⑤ 关联关系
-  owner User        @relation("AgentsProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其项目）
-  team  Team?       @relation("TeamAgentsProjects", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其项目；null=个人项目）
-  docs  AgentsDoc[] // 项目下的全部文档
+  owner  User        @relation("AgentsProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其项目）
+  team   Team?       @relation("TeamAgentsProjects", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其项目；null=个人项目）
+  folder Folder?     @relation("FolderItems_Project", fields: [folderId], references: [id], onDelete: SetNull) // 所属分组文件夹（文件夹删除→项目保留，folderId 置空）
+  docs   AgentsMd[] // 项目下的全部文档
 
   // ⑥ 索引
   @@index([ownerId]) // 加速"我的项目"查询（首页项目卡片）
   @@index([teamId]) // 加速团队项目查询
+  @@index([folderId]) // 加速按文件夹筛选项目
   @@schema("agents")
 }
 
 // 文档：一份 AGENTS.md 文件，以项目内相对路径定位（如 "AGENTS.md"、"app/api/AGENTS.md"）
-model AgentsDoc {
+model AgentsMd {
   // ① 主键
   id String @id @default(cuid())
 
@@ -46,15 +49,15 @@ model AgentsDoc {
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedAt DateTime @updatedAt        @map("updated_at")
 
   // ④ 外键列
   ownerId   String @map("owner_id")
   projectId String @map("project_id")
 
   // ⑤ 关联关系
-  owner   User          @relation("AgentsDocOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文档；团队项目中可与项目 owner 不同）
-  project AgentsProject @relation(fields: [projectId], references: [id], onDelete: Cascade) // 所属项目（项目删除→级联删其下文档）
+  owner   User    @relation("AgentsDocOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文档；团队项目中可与项目 owner 不同）
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // 所属项目（项目删除→级联删其下文档）
 
   // ⑥ 索引
   @@unique([projectId, path]) // 同一项目内路径唯一，兼作"项目内按路径取文档"的查询索引

@@ -23,7 +23,8 @@
 		"scan": "tsx scripts/trigger-scan.ts",
 		"test:scan:one": "tsx scripts/trigger-scan.ts --source=ComposioHQ/awesome-claude-skills",
 		"translate": "tsx scripts/trigger-translate.ts",
-		"test:translate": "tsx scripts/trigger-translate.ts --limit=10 --no-chain"
+		"test:translate": "tsx scripts/trigger-translate.ts --limit=10 --no-chain",
+		"seed:projects": "tsx scripts/projects/seed-projects.ts"
 	},
 	"dependencies": {
 		"@auth/prisma-adapter": "^2.11.2",

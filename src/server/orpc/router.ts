@@ -4,6 +4,7 @@
 import { discoverOrganizationsRouter, discoverSkillsRouter } from "./routers/discover-skills";
 import { draftsRouter } from "./routers/drafts";
 import { foldersRouter } from "./routers/folders";
+import { projectsRouter } from "./routers/projects";
 import { recordsRouter } from "./routers/records";
 import { ruleSpacesRouter, rulesRouter } from "./routers/rules";
 import { tagsRouter } from "./routers/tags";
@@ -18,6 +19,7 @@ export const appRouter = {
 	discoverSkills: discoverSkillsRouter,
 	discoverOrganizations: discoverOrganizationsRouter,
 	folders: foldersRouter,
+	projects: projectsRouter,
 	tags: tagsRouter,
 	user: userRouter,
 };

@@ -32,6 +32,9 @@ export const RESOURCE_SCOPES: readonly ResourceScopeEntry[] = [
 	// ---------- AGENTS.md ----------
 	{ scope: "agentMD.read", type: "read", resource: "agentMD" },
 	{ scope: "agentMD.write", type: "write", resource: "agentMD" },
+	// ---------- 项目（个人/团队通用）----------
+	{ scope: "project.read", type: "read", resource: "project" },
+	{ scope: "project.write", type: "write", resource: "project" },
 	// ---------- 发现广场 ----------
 	{ scope: "discover.read", type: "read", resource: "discover" },
 	{ scope: "discover.write", type: "write", resource: "discover" },

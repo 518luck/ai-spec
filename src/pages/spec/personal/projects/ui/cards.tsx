@@ -4,13 +4,12 @@
 
 import type { JSX } from "react";
 
-import { Badge } from "@/shared/ui/badge";
+import type { ProjectListItemVo } from "@/shared/lib/zod/schemas/project";
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from "@/shared/ui/card";
-import { type Icon, Icons } from "@/shared/ui/icons";
-import type { ProjectEntry } from "../model/mock-tree";
+import { Icons } from "@/shared/ui/icons";
 
 interface ProjectCardGridProps {
-	projects: ProjectEntry[];
+	projects: ProjectListItemVo[];
 	/** 点击卡片时上抛项目 id，由调用方决定打开抽屉或跳转 */
 	onOpen: (projectId: string) => void;
 }
@@ -19,26 +18,20 @@ export function ProjectCardGrid({ projects, onOpen }: ProjectCardGridProps): JSX
 	return (
 		<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 			{projects.map((project) => (
-				<ProjectCard key={project.projectId} project={project} onOpen={onOpen} />
+				<ProjectCard key={project.id} project={project} onOpen={onOpen} />
 			))}
 		</div>
 	);
 }
 
 interface ProjectCardProps {
-	project: ProjectEntry;
+	project: ProjectListItemVo;
 	onOpen: (projectId: string) => void;
 }
 
-// 单张项目卡：标题按钮的伪元素铺满卡面实现整卡可点，底部资源徽章展示各类 AI 资源数量
+// 单张项目卡：标题按钮的伪元素铺满卡面实现整卡可点，底部展示文档计数
+// > AI 资源计数（skill/plugin/mcp/agent）暂未接入后端，统一占位"暂无 AI 资源"，等 git 同步能力上线后再做
 function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
-	const badges = [
-		{ key: "skill", icon: Icons.skills, count: project.resourceCount.skill },
-		{ key: "plugin", icon: Icons.plugins, count: project.resourceCount.plugin },
-		{ key: "mcp", icon: Icons.mcp, count: project.resourceCount.mcp },
-		{ key: "agent", icon: Icons.aiAgents, count: project.resourceCount.agent },
-	].filter((b) => b.count > 0);
-
 	return (
 		<Card size="sm" className="group relative transition hover:ring-foreground/25">
 			<CardHeader>
@@ -46,7 +39,7 @@ function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 					<Icons.projects className="size-4 shrink-0 text-muted-foreground" />
 					<button
 						type="button"
-						onClick={() => onOpen(project.projectId)}
+						onClick={() => onOpen(project.id)}
 						className="min-w-0 cursor-pointer truncate outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-2 focus-visible:after:ring-ring"
 					>
 						{project.name}
@@ -54,23 +47,10 @@ function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 				</CardTitle>
 				<CardDescription className="line-clamp-2">{project.description}</CardDescription>
 			</CardHeader>
-			<CardFooter className="gap-1.5">
-				{badges.length > 0 ? (
-					badges.map((b) => <ResourceBadge key={b.key} icon={b.icon} count={b.count} />)
-				) : (
-					<span className="text-muted-foreground text-xs">暂无 AI 资源</span>
-				)}
+			<CardFooter className="gap-1.5 text-muted-foreground text-xs">
+				<Icons.agentsMd className="size-3.5 shrink-0" />
+				<span>{project.docCount} 篇文档</span>
 			</CardFooter>
 		</Card>
-	);
-}
-
-// 资源计数徽章：图标 + 数字，secondary 配色融入卡片底栏
-function ResourceBadge({ icon: Icon, count }: { icon: Icon; count: number }): JSX.Element {
-	return (
-		<Badge variant="secondary" className="gap-1 text-xs">
-			<Icon />
-			{count}
-		</Badge>
 	);
 }

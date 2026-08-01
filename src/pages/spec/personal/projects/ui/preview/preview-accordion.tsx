@@ -4,6 +4,7 @@
 
 import type { JSX } from "react";
 
+import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
 import {
 	Accordion,
 	AccordionContent,
@@ -12,7 +13,18 @@ import {
 } from "@/shared/ui/accordion";
 import { Badge } from "@/shared/ui/badge";
 import { type Icon, Icons } from "@/shared/ui/icons";
-import type { AgentsDocEntry, AiResourceItem, AiResourceType } from "../../model/mock-tree";
+
+// AI 资源类型枚举：项目收录的 skill / 插件 / MCP / agent 等条目（暂未接入后端，调用方传空数组）
+type AiResourceType = "skill" | "plugin" | "mcp" | "agent";
+
+// 单条 AI 资源
+interface AiResourceItem {
+	id: string;
+	name: string;
+	type: AiResourceType;
+	description: string;
+	source?: string;
+}
 
 // 资源类型元数据：标签、图标，按固定顺序渲染
 const RESOURCE_META: { type: AiResourceType; label: string; icon: Icon }[] = [
@@ -44,11 +56,11 @@ interface Section {
 
 interface PreviewAccordionProps {
 	resources: AiResourceItem[];
-	agentsDocs: AgentsDocEntry[];
+	agentsMds: AgentsMdListItemVo[];
 }
 
 // > 资源按四类分组 + 文档单组，统一成平级手风琴
-export function PreviewAccordion({ resources, agentsDocs }: PreviewAccordionProps): JSX.Element {
+export function PreviewAccordion({ resources, agentsMds }: PreviewAccordionProps): JSX.Element {
 	const sections: Section[] = [];
 
 	for (const meta of RESOURCE_META) {
@@ -74,21 +86,22 @@ export function PreviewAccordion({ resources, agentsDocs }: PreviewAccordionProp
 		});
 	}
 
-	if (agentsDocs.length > 0) {
+	if (agentsMds.length > 0) {
 		sections.push({
 			key: "agentsMd",
 			title: "AGENTS.md",
 			icon: Icons.agentsMd,
-			rows: agentsDocs.map((agentsDoc) => ({
-				id: agentsDoc.fileId,
+			rows: agentsMds.map((agentsMd) => ({
+				id: agentsMd.id,
 				cells: [
-					{ text: agentsDoc.title, className: "min-w-0 flex-1 truncate" },
+					{ text: agentsMd.title, className: "min-w-0 flex-1 truncate" },
 					{
-						text: agentsDoc.excerpt,
+						text: agentsMd.excerpt,
 						className: "min-w-0 max-w-40 truncate text-muted-foreground text-xs",
 					},
 					{
-						text: agentsDoc.folderPath,
+						// 文件夹路径由 path 去掉末段（文件名）得出，顶层文档显示为项目根
+						text: agentsMd.path.includes("/") ? agentsMd.path.replace(/\/[^/]+$/, "") : "/",
 						className: "shrink-0 font-mono text-muted-foreground text-xs",
 					},
 				],
