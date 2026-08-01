@@ -67,6 +67,7 @@ export function CreateFolderDialog({
 					</DialogDescription>
 					<FolderIcon
 						color={color}
+						icon={Icons.folderPlus}
 						className="absolute top-4 right-4 size-12 rounded-lg"
 						iconClassName="size-6"
 					/>

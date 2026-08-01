@@ -14,7 +14,11 @@ type TemplateTreeProps = {
 };
 
 // > 模板文件树：根节点显示项目名，嵌套 border-l 形成缩进引导线
-export function TemplateTree({ templateKey, projectName, className }: TemplateTreeProps): JSX.Element {
+export function TemplateTree({
+	templateKey,
+	projectName,
+	className,
+}: TemplateTreeProps): JSX.Element {
 	const template = PROJECT_TEMPLATES.find((t) => t.key === templateKey) ?? PROJECT_TEMPLATES[0];
 	const rootName = projectName.trim() || "my-project";
 

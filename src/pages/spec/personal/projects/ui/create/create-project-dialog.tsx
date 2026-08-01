@@ -4,7 +4,8 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { type JSX, useEffect, useState } from "react";
-import { FolderCombobox } from "@/features/folder-combobox";
+import { FolderCombobox, FolderIcon } from "@/features/folder-combobox";
+import { FOLDER_NEUTRAL_COLOR } from "@/features/folder-combobox/config/folder-colors";
 import { toast } from "@/features/toast";
 import { projectKeys } from "@/shared/lib/orpc/query-keys";
 import { orpc } from "@/shared/lib/orpc/query-utils";
@@ -19,6 +20,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/shared/ui/dialog";
+import { Icons } from "@/shared/ui/icons";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
@@ -35,6 +37,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
 	const [folderId, setFolderId] = useState<string | null>(null);
+	// 右上角预览图标色：跟随选中的文件夹，未分类用中性灰
+	const [folderColor, setFolderColor] = useState<string>(FOLDER_NEUTRAL_COLOR);
 	const [templateKey, setTemplateKey] = useState<string>("blank");
 
 	// 创建项目 mutation：成功后广播失效，刷新项目列表
@@ -51,6 +55,7 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 			setName("");
 			setDescription("");
 			setFolderId(null);
+			setFolderColor(FOLDER_NEUTRAL_COLOR);
 			setTemplateKey("blank");
 		}
 	}, [open]);
@@ -74,9 +79,17 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent showCloseButton={false} className="sm:max-w-2xl">
-				<DialogHeader>
+				<DialogHeader className="relative">
 					<DialogTitle>新建项目</DialogTitle>
-					<DialogDescription>创建一个属于你的项目，取个好记的名字吧。</DialogDescription>
+					<DialogDescription className="pr-16">
+						创建一个属于你的项目，取个好记的名字吧。
+					</DialogDescription>
+					<FolderIcon
+						color={folderColor}
+						icon={Icons.folderPlus}
+						className="absolute top-4 right-4 size-12 rounded-lg"
+						iconClassName="size-6"
+					/>
 				</DialogHeader>
 
 				<DialogContentBody className="flex gap-4">
@@ -94,36 +107,37 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 								autoFocus
 							/>
 						</div>
-<div className="flex flex-col gap-2">
-								<Label>描述（可选）</Label>
-								<Textarea
-									className="max-h-32"
-									value={description}
-									onChange={(e) => setDescription(e.target.value)}
-									placeholder="补充说明项目用途"
-									rows={3}
-								/>
-							</div>
-							<div className="flex flex-col gap-2">
-								<Label>选择模板</Label>
-								<TemplateCombobox templateKey={templateKey} onTemplateChange={setTemplateKey} />
-							</div>
-							<div className="flex flex-col gap-2">
-								<Label>所属文件夹（可选）</Label>
-								<FolderCombobox
-									resourceType="project"
-									value={folderId}
-									onChange={setFolderId}
-									className="h-9 w-full border border-input"
-								/>
-							</div>
+						<div className="flex flex-col gap-2">
+							<Label>描述（可选）</Label>
+							<Textarea
+								className="max-h-32"
+								value={description}
+								onChange={(e) => setDescription(e.target.value)}
+								placeholder="补充说明项目用途"
+								rows={3}
+							/>
 						</div>
+						<div className="flex flex-col gap-2">
+							<Label>选择模板</Label>
+							<TemplateCombobox templateKey={templateKey} onTemplateChange={setTemplateKey} />
+						</div>
+						<div className="flex flex-col gap-2">
+							<Label>所属文件夹（可选）</Label>
+							<FolderCombobox
+								resourceType="project"
+								value={folderId}
+								onChange={setFolderId}
+								onChangeOption={(option) => setFolderColor(option?.color ?? FOLDER_NEUTRAL_COLOR)}
+								className="h-9 w-full border border-input"
+							/>
+						</div>
+					</div>
 
-						{/* // 右侧：文件结构预览 */}
-						<div className="flex w-72 shrink-0 flex-col gap-2">
-							<span className="text-muted-foreground text-xs">文件结构</span>
-							<TemplateTree templateKey={templateKey} projectName={name} className="flex-1" />
-						</div>
+					{/* // 右侧：文件结构预览 */}
+					<div className="flex w-72 shrink-0 flex-col gap-2">
+						<span className="text-muted-foreground text-xs">文件结构</span>
+						<TemplateTree templateKey={templateKey} projectName={name} className="flex-1" />
+					</div>
 				</DialogContentBody>
 
 				<DialogFooter>

@@ -58,6 +58,8 @@ type FolderComboboxProps = {
 	value?: string | null;
 	// 选中回调；传了走受控模式，没传自动写入 URL
 	onChange?: (folderId: string | null) => void;
+	// 选中回调（含 color 等展示信息）：未分类/无选中时回调 null；与 onChange 同时触发
+	onChangeOption?: (option: FolderOption | null) => void;
 	// 图标模式：只显示图标不显示文字，hover 时 Tooltip 显示文件夹名
 	iconOnly?: boolean;
 	// value=null 时若 URL 指定 param 为 "true"，trigger 显示这套覆盖（如收藏视图）；URL 模式下选文件夹会顺带清掉该 param
@@ -72,6 +74,7 @@ export function FolderCombobox({
 	spaceId,
 	value: controlledValue,
 	onChange: controlledOnChange,
+	onChangeOption,
 	iconOnly = false,
 	emptyOverride,
 	className,
@@ -88,28 +91,7 @@ export function FolderCombobox({
 		emptyOverride && value === null && searchParams?.get(emptyOverride.param) === "true",
 	);
 	// onChange 传了走回调，没传改 URL；选任何文件夹时若启用 emptyOverride，同时清掉对应 param（互斥）
-	const handleChange = useCallback(
-		(folderId: string | null) => {
-			if (controlledOnChange) {
-				controlledOnChange(folderId);
-				return;
-			}
-			const params = new URLSearchParams(searchParams?.toString() ?? "");
-			if (folderId) params.set("folderId", folderId);
-			else params.delete("folderId");
-			// > 切到具体文件夹/未分类时退出覆盖视图（如收藏视图），清掉对应 param
-			if (emptyOverride && params.get(emptyOverride.param) === "true") {
-				params.delete(emptyOverride.param);
-			}
-			router.replace(`?${params.toString()}`, { scroll: false });
-		},
-		[controlledOnChange, emptyOverride, searchParams, router],
-	);
-	const [open, setOpen] = useState(false);
-	// 创建文件夹对话框：点击「新建文件夹」列表项或搜索无结果时打开
-	const [createDialogOpen, setCreateDialogOpen] = useState(false);
-	// 创建对话框预填名称：来自搜索词，点击「新建文件夹」列表项时清空
-	const [createInitialName, setCreateInitialName] = useState("");
+	// 注意：依赖 folders，声明在 folders 之后
 	// 文件夹列表：按 resourceType 拉取，TanStack Query 托管缓存（queryKey 变化自动重拉）
 	// 错误处理、失焦/重试策略由全局 QueryProvider 统一配置，这里无需重复
 	// ?未来扩展：文件夹数量超过阈值（如 50）时，参考 Dub 的 folder-dropdown 智能切换模式——
@@ -129,6 +111,32 @@ export function FolderCombobox({
 		() => (rawFolders ?? []).map((f) => ({ value: f.id, label: f.name, color: f.color })),
 		[rawFolders],
 	);
+	const handleChange = useCallback(
+		(folderId: string | null) => {
+			// 同步回调完整 option（含 color），未分类/无选中为 null
+			if (onChangeOption) {
+				onChangeOption(folderId ? (folders.find((f) => f.value === folderId) ?? null) : null);
+			}
+			if (controlledOnChange) {
+				controlledOnChange(folderId);
+				return;
+			}
+			const params = new URLSearchParams(searchParams?.toString() ?? "");
+			if (folderId) params.set("folderId", folderId);
+			else params.delete("folderId");
+			// > 切到具体文件夹/未分类时退出覆盖视图（如收藏视图），清掉对应 param
+			if (emptyOverride && params.get(emptyOverride.param) === "true") {
+				params.delete(emptyOverride.param);
+			}
+			router.replace(`?${params.toString()}`, { scroll: false });
+		},
+		[controlledOnChange, onChangeOption, folders, emptyOverride, searchParams, router],
+	);
+	const [open, setOpen] = useState(false);
+	// 创建文件夹对话框：点击「新建文件夹」列表项或搜索无结果时打开
+	const [createDialogOpen, setCreateDialogOpen] = useState(false);
+	// 创建对话框预填名称：来自搜索词，点击「新建文件夹」列表项时清空
+	const [createInitialName, setCreateInitialName] = useState("");
 	// 弹层打开时刷新一次，保证列表新鲜
 	useEffect(() => {
 		if (open) void refetchFolders();
