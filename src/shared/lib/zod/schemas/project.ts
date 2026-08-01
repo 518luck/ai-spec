@@ -106,11 +106,12 @@ export const ProjectSchemas = {
 	}),
 } as const;
 
-// 项目文档聚合 schema：嵌套在 projectsRouter.agentsMds 下
+// 项目文档聚合 schema：独立挂在 agentsMdsRouter 下，projectId 作为必传入参（原走 URL 路径，现走 query）
 export const AgentsMdSchemas = {
 	// @ 入参 Dto
-	// 文档列表查询入参：projectId 走 URL 路径，folderPath 为可选的路径前缀筛选
+	// 文档列表查询入参：projectId 必传（定位所属项目），folderPath 为可选的路径前缀筛选
 	listDto: z.object({
+		projectId: z.string(),
 		folderPath: z.string().optional(),
 	}),
 

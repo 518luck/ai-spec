@@ -2,7 +2,8 @@
 
 import type { JSX } from "react";
 
-import { getProjectById, listAgentsMds } from "@/server/domain/projects/services";
+import { listAgentsMds } from "@/server/domain/agents-mds";
+import { getProjectById } from "@/server/domain/projects/services";
 import { auth } from "@/shared/lib/auth/auth";
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
 import { TitlePageShell } from "@/widgets/page-shell";

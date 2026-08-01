@@ -55,7 +55,7 @@ function PreviewContent({ projectId }: { projectId: string }): JSX.Element {
 	// 项目文档列表：取全量供抽屉展示
 	const { data: agentsMds } = useQuery({
 		queryKey: projectKeys.agentsMds(projectId),
-		queryFn: () => client.projects.agentsMds.list({ projectId }),
+		queryFn: () => client.agentsMds.list({ projectId }),
 	});
 
 	if (projectLoading || !project) {

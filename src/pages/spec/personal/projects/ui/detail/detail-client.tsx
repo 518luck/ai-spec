@@ -118,7 +118,7 @@ const RightPane = ({
 	// 阅读态：取文档全文（仅打开文档时请求）
 	const { data: agentsMd, isLoading } = useQuery({
 		queryKey: projectKeys.agentsMdContent(projectId, openedAgentsMdId ?? ""),
-		queryFn: () => client.projects.agentsMds.getById({ projectId, id: openedAgentsMdId as string }),
+		queryFn: () => client.agentsMds.getById({ projectId, id: openedAgentsMdId as string }),
 		enabled: Boolean(openedAgentsMdId),
 	});
 

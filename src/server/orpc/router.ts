@@ -1,6 +1,7 @@
 // # oRPC 根 router：聚合所有领域子 router
 // 注意：错误码注册在 error-registry.d.ts 环境声明里，TS 自动加载，无需 import
 
+import { agentsMdsRouter } from "./routers/agents-mds";
 import { discoverOrganizationsRouter, discoverSkillsRouter } from "./routers/discover-skills";
 import { draftsRouter } from "./routers/drafts";
 import { foldersRouter } from "./routers/folders";
@@ -20,6 +21,7 @@ export const appRouter = {
 	discoverOrganizations: discoverOrganizationsRouter,
 	folders: foldersRouter,
 	projects: projectsRouter,
+	agentsMds: agentsMdsRouter,
 	tags: tagsRouter,
 	user: userRouter,
 };
