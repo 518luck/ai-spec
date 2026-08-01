@@ -16,7 +16,7 @@ import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { EmptyAction } from "@/widgets/empty-state";
 import { PageWidthWrapper, ToolbarPageShell } from "@/widgets/page-shell";
 import { ProjectCardGrid } from "./cards";
-import { CreateProjectDialog } from "./create-project-dialog";
+import { CreateProjectDialog } from "./create/create-project-dialog";
 import { FolderFilterSelect } from "./folder-filter-select";
 import { ProjectPreviewDrawer } from "./preview/preview-drawer";
 
