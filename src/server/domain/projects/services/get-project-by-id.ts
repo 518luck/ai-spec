@@ -20,7 +20,7 @@ export const getProjectById = async ({
 			description: true,
 			folderId: true,
 			folder: { select: { name: true, color: true } },
-			_count: { select: { docs: true } },
+			_count: { select: { agentsMds: true } },
 			createdAt: true,
 			updatedAt: true,
 		},
@@ -35,7 +35,7 @@ export const getProjectById = async ({
 		folderId: project.folderId,
 		folderName: project.folder?.name ?? null,
 		folderColor: project.folder?.color ?? null,
-		docCount: project._count.docs,
+		docCount: project._count.agentsMds,
 		createdAt: project.createdAt.toISOString(),
 		updatedAt: project.updatedAt.toISOString(),
 	};

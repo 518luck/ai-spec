@@ -1,0 +1,31 @@
+// # 项目文档（AGENTS.md）：以项目内相对路径定位的文档文件
+//
+// ! 项目内的文件夹树不建表：文档以项目内相对路径（path）定位，树结构、层级、文件夹计数
+//   全部由路径前缀推导（对应前端 getSubfolderIds / collectAgentsMds），天然不存在"空文件夹"脏状态
+
+// 文档：一份 AGENTS.md 文件，以项目内相对路径定位（如 "AGENTS.md"、"app/api/AGENTS.md"）
+model AgentsMd {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段
+  path    String // 项目内相对路径，路径前缀即文件夹层级；根目录文档为 "AGENTS.md"
+  content String @db.Text // 文档正文（markdown）
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt        @map("updated_at")
+
+  // ④ 外键列
+  ownerId   String @map("owner_id")
+  projectId String @map("project_id")
+
+  // ⑤ 关联关系
+  owner   User    @relation("AgentsDocOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文档；团队项目中可与项目 owner 不同）
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // 所属项目（项目删除→级联删其下文档）
+
+  // ⑥ 索引
+  @@unique([projectId, path]) // 同一项目内路径唯一，兼作"项目内按路径取文档"的查询索引
+  @@index([ownerId]) // 加速"我创建的文档"查询
+  @@schema("agents")
+}
