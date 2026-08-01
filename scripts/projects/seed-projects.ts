@@ -10,18 +10,24 @@ import "../../workers/queue/worker-globals";
 
 import prisma from "@/shared/db";
 
+// 模拟当前用户在数据库中的 ID（与 scripts/db/* 共用同一个测试用户）
+// ! 此 ID 必须与 scripts/db/user.ts 的 OWNER_ID 保持一致
+const OWNER_ID = "cmrjdu92f0001099de7h2zu5p";
+
 // @ seed 数据：从原 mock-tree.ts 搬运的 3 个项目及其 AGENTS.md 文档
 
 // 单个项目的全部 AGENTS.md 文档（path → content）
 type Docs = Record<string, string>;
 
 // 项目 seed 数据：name/description/folderName/folderColor/docs
+// > unclassified=true 表示未分类项目（folderId 置 null，跳过文件夹创建）
 type ProjectSeed = {
 	name: string;
 	description: string;
 	folderName: string;
 	folderColor: string;
 	docs: Docs;
+	unclassified?: boolean;
 };
 
 const PROJECT_SEEDS: ProjectSeed[] = [
@@ -93,33 +99,93 @@ const PROJECT_SEEDS: ProjectSeed[] = [
 			].join("\n"),
 		},
 	},
+	{
+		// 未分类项目：测试 folderId=null 场景；多层文件树覆盖 12 个节点
+		name: "fullstack-saas",
+		description: "全栈 SaaS 模板（未分类测试数据），多层级 AGENTS.md 配置",
+		folderName: "",
+		folderColor: "#9ca3af",
+		unclassified: true,
+		docs: {
+			"AGENTS.md": [
+				"# 全栈 SaaS 模板",
+				"",
+				"Monorepo 结构，前后端 + 共享包，统一用 pnpm workspace 管理。",
+			].join("\n"),
+			"apps/AGENTS.md": ["# 应用层", "", "部署单元：web、api、admin 三个独立应用。"].join("\n"),
+			"apps/web/AGENTS.md": [
+				"# Web 前台",
+				"",
+				"Next.js App Router，SSR 优先，客户端交互用 islands 模式。",
+			].join("\n"),
+			"apps/web/components/AGENTS.md": [
+				"# 组件库",
+				"",
+				"业务组件按领域分目录，通用组件下沉到 packages/ui。",
+			].join("\n"),
+			"apps/api/AGENTS.md": [
+				"# API 服务",
+				"",
+				"oRPC + tRPC 混合，procedure 按 domain 分 router，统一 zod 校验。",
+			].join("\n"),
+			"apps/api/routes/AGENTS.md": [
+				"# 路由层",
+				"",
+				"薄层 controller，业务逻辑委托给 services，禁止在 router 写 DB 查询。",
+			].join("\n"),
+			"apps/admin/AGENTS.md": [
+				"# 管理后台",
+				"",
+				"独立鉴权，仅限内部角色访问，复用 api 服务的 domain 层。",
+			].join("\n"),
+			"packages/AGENTS.md": ["# 共享包", "", "跨应用复用的代码：ui、db、config、types。"].join(
+				"\n",
+			),
+			"packages/db/AGENTS.md": [
+				"# 数据库包",
+				"",
+				"Prisma client 单例 + schema，所有应用共享同一 client 实例。",
+			].join("\n"),
+			"packages/ui/AGENTS.md": [
+				"# UI 组件包",
+				"",
+				"shadcn 基础上的业务封装，用 Tailwind v4，禁止内联样式。",
+			].join("\n"),
+			"infra/AGENTS.md": [
+				"# 基础设施",
+				"",
+				"Docker Compose 本地编排，生产用 k8s，CI/CD 走 GitHub Actions。",
+			].join("\n"),
+			"docs/AGENTS.md": ["# 项目文档", "", "架构决策记录（ADR）与 RFC 放此目录，按编号归档。"].join(
+				"\n",
+			),
+		},
+	},
 ];
 
-// 从命令行参数解析 --userId
-const parseUserId = (): string | undefined => {
+// 从命令行参数解析 --userId（可选覆盖，默认用 OWNER_ID）
+const parseUserId = (): string => {
 	const match = process.argv.find((arg) => arg.startsWith("--userId="));
-	return match?.slice("--userId=".length);
+	return match?.slice("--userId=".length) ?? OWNER_ID;
 };
 
 const seed = async (): Promise<void> => {
-	const explicitUserId = parseUserId();
-	// 取指定用户，否则回落到库中第一个用户
-	const owner = explicitUserId
-		? await prisma.user.findUnique({
-				where: { id: explicitUserId },
-				select: { id: true, email: true },
-			})
-		: await prisma.user.findFirst({ select: { id: true, email: true } });
+	// 固定使用 OWNER_ID（与 scripts/db/user.ts 共用同一测试用户），保证 seed 数据落到主账号下
+	const owner = await prisma.user.findUnique({
+		where: { id: parseUserId() },
+		select: { id: true, email: true },
+	});
 	if (!owner) {
-		console.error("❌ 找不到用户，请先注册一个账号，或通过 --userId=xxx 指定");
+		console.error("❌ 找不到 OWNER_ID 对应的用户，请先运行 pnpm db:user 创建测试用户");
 		process.exit(1);
 	}
 
 	console.warn(`👤 使用 owner: ${owner.email} (${owner.id})`);
 
-	// 先确保该 owner 下的 3 个分组文件夹存在（按 name + owner 幂等）
+	// 先确保该 owner 下的分组文件夹存在（按 name + owner 幂等）；未分类项目跳过
+	const classifiedSeeds = PROJECT_SEEDS.filter((s) => !s.unclassified);
 	const folders = await Promise.all(
-		PROJECT_SEEDS.map(async (seedItem) => {
+		classifiedSeeds.map(async (seedItem) => {
 			const existing = await prisma.folder.findFirst({
 				where: { name: seedItem.folderName, ownerId: owner.id, teamId: null },
 				select: { id: true },
@@ -139,9 +205,11 @@ const seed = async (): Promise<void> => {
 		}),
 	);
 
-	// 逐个项目 upsert：按 (ownerId, name) 幂等，文件夹归属写在 project.folderId
-	for (const [index, seedItem] of PROJECT_SEEDS.entries()) {
-		const folderId = folders[index]?.id ?? null;
+	// 逐个项目 upsert：按 (ownerId, name) 幂等，文件夹归属写在 project.folderId（未分类为 null）
+	for (const seedItem of PROJECT_SEEDS) {
+		const folderId = seedItem.unclassified
+			? null
+			: (folders.find((f) => f.name === seedItem.folderName)?.id ?? null);
 
 		// 项目按 (ownerId, name) 查找，存在则更新 description/folderId，不存在则新建
 		const existingProject = await prisma.project.findFirst({
