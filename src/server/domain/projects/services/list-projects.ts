@@ -12,7 +12,7 @@ type ListParams = {
 	pageSize: number;
 };
 
-// > folderId 为 null 表示"全部"，q 对 name/description 做 OR 模糊匹配，返回 {data, total, hasMore}
+// > folderId 为 null 表示"未分类"（筛 folderId IS NULL），q 对 name/description 做 OR 模糊匹配，返回 {data, total, hasMore}
 export const listProjects = async ({
 	userId,
 	folderId,
@@ -26,8 +26,8 @@ export const listProjects = async ({
 	const where = {
 		ownerId: userId,
 		teamId: null,
-		// folderId 传了非空串才参与筛选；undefined 不筛选，"" 归一为 null（未分类）
-		...(targetFolderId && { folderId: targetFolderId }),
+		// 选了文件夹按 folderId 筛选，未选归一为 null（未分类，筛 folderId IS NULL）
+		folderId: targetFolderId,
 		...(trimmedQuery && {
 			OR: [
 				{ name: { contains: trimmedQuery, mode: "insensitive" as const } },
