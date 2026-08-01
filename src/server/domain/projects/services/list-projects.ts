@@ -69,11 +69,5 @@ export const listProjects = async ({
 		updatedAt: project.updatedAt.toISOString(),
 	}));
 
-	// 临时调试日志（验证完删除）：写到文件，因 dev server stdout 被缓冲
-	const fs = await import("node:fs");
-	fs.appendFileSync(
-		"/tmp/projects-debug.log",
-		`[listProjects] userId=${userId} folderId=${folderId} q=${q} found=${projects.length} total=${total} data=${JSON.stringify(data.map((d) => d.name))}\n`,
-	);
 	return { data, total, hasMore: projects.length === pageSize };
 };
