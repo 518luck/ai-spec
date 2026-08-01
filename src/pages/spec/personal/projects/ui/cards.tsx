@@ -40,8 +40,10 @@ function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 		<ContentCard
 			name={project.name}
 			preview={project.description || "暂无描述"}
+			previewClassName="line-clamp-2"
 			onClick={onOpen}
 			clickAriaLabel="打开项目预览"
+			className="aspect-auto h-36"
 			actions={
 				<Button
 					variant="ghost"

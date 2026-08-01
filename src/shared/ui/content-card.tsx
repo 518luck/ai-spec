@@ -82,7 +82,11 @@ export function ContentCard({
 					type="button"
 					aria-label={clickAriaLabel}
 					className="absolute inset-0 z-0"
-					onClick={onClick}
+					onClick={(e) => {
+						onClick();
+						// 点击后立即失焦：整卡点击（如打开抽屉）不应残留焦点，否则 group-focus-within 会让 actions 一直显示
+						e.currentTarget.blur();
+					}}
 					disabled={isPending}
 				/>
 			) : null}
