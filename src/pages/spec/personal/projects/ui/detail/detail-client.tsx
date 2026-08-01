@@ -16,6 +16,8 @@ import { FileTree } from "./nav/file-tree";
 interface ProjectDetailClientProps {
 	/** 当前打开的项目 id（来自 URL 参数） */
 	projectId: string;
+	/** 项目名，作为树根的显示名 */
+	projectName: string;
 	/** 服务端预取的 AGENTS.md 文档列表（首屏快照） */
 	agentsMds: AgentsMdListItemVo[];
 	/** 服务端预解析的各文件夹图标对，按 itemId 索引 */
@@ -27,13 +29,17 @@ interface ProjectDetailClientProps {
 // > 客户端交互岛屿：选中文件夹 / 阅读文档 / 展开节点均在此管理，文档树由服务端快照内存构建
 export function ProjectDetailClient({
 	projectId,
+	projectName,
 	agentsMds,
 	iconsMap,
 	defaultIconPair,
 }: ProjectDetailClientProps): JSX.Element {
 	const router = useRouter();
-	// 由扁平文档列表按 path 前缀推导内存树（项目内文件夹不建表）
-	const tree = useMemo(() => buildProjectTree(projectId, agentsMds), [projectId, agentsMds]);
+	// 由扁平文档列表按 path 前缀推导内存树（项目内文件夹不建表）；项目根显示项目名
+	const tree = useMemo(
+		() => buildProjectTree(projectId, agentsMds, projectName),
+		[projectId, agentsMds, projectName],
+	);
 	// 左侧树选中的文件夹；进入时默认选中项目根
 	const [selectedFolderId, setSelectedFolderId] = useState<string>(projectId);
 	// 当前阅读的文档 id；null 表示停留在文档卡片列表

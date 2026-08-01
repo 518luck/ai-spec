@@ -32,14 +32,16 @@ export const getAncestorFolderIds = (folderId: string, projectId: string): strin
 
 // 从全量文档列表构建树节点表：文件夹节点从 path 前缀派生，文件节点对应实际文档
 // 返回值包含虚拟根节点（PROJECT_TREE_ROOT_ID），其 children 为顶层文件夹/文件
+// @param projectName 项目根的显示名；不传则回退到 projectId
 export const buildProjectTree = (
 	projectId: string,
 	agentsMds: AgentsMdListItemVo[],
+	projectName?: string,
 ): Record<string, ProjectTreeNode> => {
 	const nodes: Record<string, ProjectTreeNode> = {
 		[PROJECT_TREE_ROOT_ID]: { name: "root", children: [projectId] },
-		// 项目根本身作为树的第一层节点，选中时可看项目全部文档
-		[projectId]: { name: projectId, children: [] },
+		// 项目根本身作为树的第一层节点，显示项目名；id 仍是 cuid 的 projectId 保证唯一
+		[projectId]: { name: projectName ?? projectId, children: [] },
 	};
 
 	for (const agentsMd of agentsMds) {
@@ -87,9 +89,11 @@ export const getSubfolderIds = (itemId: string, tree: Record<string, ProjectTree
 	(tree[itemId]?.children ?? []).filter((childId) => Boolean(tree[childId]?.children));
 
 // 收集树内全部文件夹的 id → 名字映射（含项目根本身，不含虚拟根）；供图标预解析遍历使用
+// @param projectName 项目根的显示名；不传则根节点名字回退到 projectId
 export const collectFolderNames = (
 	projectId: string,
 	tree: Record<string, ProjectTreeNode>,
+	projectName?: string,
 ): Record<string, string> => {
 	const result: Record<string, string> = {};
 	// 从项目根开始（跳过不渲染的虚拟根），DFS 收集全部文件夹
@@ -99,7 +103,7 @@ export const collectFolderNames = (
 		if (!id) continue;
 		const node = tree[id];
 		if (!node?.children) continue; // 文件节点跳过
-		result[id] = id === projectId ? projectId : node.name;
+		result[id] = id === projectId ? (projectName ?? projectId) : node.name;
 		stack.push(...getSubfolderIds(id, tree));
 	}
 	return result;

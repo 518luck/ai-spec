@@ -27,9 +27,9 @@ export async function ProjectDetailPage({
 	const projectName = project?.name ?? projectId;
 
 	// 收集树内文件夹名 → 预解析图标对（根用 root 图标，其余按名字匹配）
-	const tree = buildProjectTree(projectId, agentsMds);
+	const tree = buildProjectTree(projectId, agentsMds, projectName);
 	const { iconsMap, defaultIconPair } = await preloadFolderIconPairs(
-		collectFolderNames(projectId, tree),
+		collectFolderNames(projectId, tree, projectName),
 		projectId,
 	);
 
@@ -37,6 +37,7 @@ export async function ProjectDetailPage({
 		<TitlePageShell title={projectName} scrollable={false}>
 			<ProjectDetailClient
 				projectId={projectId}
+				projectName={projectName}
 				agentsMds={agentsMds}
 				iconsMap={iconsMap}
 				defaultIconPair={defaultIconPair}
