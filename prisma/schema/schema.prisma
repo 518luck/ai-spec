@@ -15,7 +15,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  schemas  = ["auth", "token", "prompt", "folder", "team", "shared", "rule", "agents", "discover"]
+  schemas  = ["auth", "token", "prompt", "folder", "team", "shared", "rule", "project", "agents_md", "discover"]
 }
 
 // 用户本人信息
@@ -52,12 +52,12 @@ model User {
   folderMemberships FolderMember[] // 用户被授予例外权限的文件夹列表
 
   // 规约库反向关系：该用户创建的领域空间与规则
-  ruleSpaces   RuleSpace[]    @relation("RuleSpaceOwner")
-  rules        Rule[]         @relation("RuleOwner")
-  ruleVersions RuleVersion[]  @relation("RuleVersionEditor") // 该用户创建的规则版本记录
+  ruleSpaces   RuleSpace[]   @relation("RuleSpaceOwner")
+  rules        Rule[]        @relation("RuleOwner")
+  ruleVersions RuleVersion[] @relation("RuleVersionEditor") // 该用户创建的规则版本记录
 
   // 项目反向关系：该用户创建的项目与项目文档
-  projects Project[]  @relation("AgentsProjectOwner")
+  projects  Project[]  @relation("AgentsProjectOwner")
   agentsMds AgentsMd[] @relation("AgentsDocOwner")
 
   // 发现广场：该用户提交的 skill 反馈

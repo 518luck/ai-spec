@@ -36,5 +36,5 @@ model Project {
   @@index([ownerId]) // 加速"我的项目"查询（首页项目卡片）
   @@index([teamId]) // 加速团队项目查询
   @@index([folderId]) // 加速按文件夹筛选项目
-  @@schema("agents")
+  @@schema("project")
 }

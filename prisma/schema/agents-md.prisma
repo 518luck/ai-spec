@@ -27,5 +27,5 @@ model AgentsMd {
   // ⑥ 索引
   @@unique([projectId, path]) // 同一项目内路径唯一，兼作"项目内按路径取文档"的查询索引
   @@index([ownerId]) // 加速"我创建的文档"查询
-  @@schema("agents")
+  @@schema("agents_md")
 }
