@@ -10,8 +10,10 @@ import {
 	syncDataLoaderFeature, // 同步数据加载（getItem/getChildren 直接返回数据，非异步）
 } from "@headless-tree/core";
 import { useTree } from "@headless-tree/react"; // React 绑定：useTree hook 把配置转成 treeApi
+import { AnimatePresence, motion } from "motion/react"; // 图标切换的淡入淡出
 import Image from "next/image";
 import type { JSX } from "react";
+import { useSessionStorage } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
 import { Button } from "@/shared/ui/button";
@@ -87,28 +89,58 @@ export function FileTree({
 	// 选中项的祖先链：这些层级的缩进竖线高亮（VSCode 风格，直观显示归属路径）
 	const activeAncestorIds = new Set(getAncestorFolderIds(selectedFolderId, projectId));
 
+	// 全部展开意图：记录用户是否点了"全部展开"，决定工具栏图标切换
+	// > 存 sessionStorage（按项目隔离），与 expandedFolderIds 同生命周期，刷新后一致恢复
+	// ! 不反推(expandedFolderIds 是否覆盖所有可展开项)：headless-tree 的 expandAll 在受控+异步模式下
+	//   不会把所有深层节点都加入 expandedFolderIds，反推不可靠；直接记录用户意图
+	const [isAllExpanded, setIsAllExpanded] = useSessionStorage<boolean>(
+		`project:${projectId}:allExpanded`,
+		false,
+	);
+
 	return (
 		<div className="flex flex-col">
-			{/* // @ 顶部工具条：全部展开 / 全部收起 */}
+			{/* // @ 顶部工具条：全部展开 / 全部收起（同槽位切换，motion 淡入淡出） */}
 			<div className="flex items-center justify-between px-3 pt-2">
 				<span className="text-muted-foreground text-xs">文件夹</span>
-				<div className="flex items-center">
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						aria-label="全部展开"
-						onClick={() => void treeApi.expandAll()}
-					>
-						<Icons.expandAll className="size-4" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon-sm"
-						aria-label="全部收起"
-						onClick={() => treeApi.collapseAll()}
-					>
-						<Icons.collapseAll className="size-4" />
-					</Button>
+				<div className="relative flex h-7 w-7 items-center justify-center">
+					<AnimatePresence initial={false} mode="wait">
+						{isAllExpanded ? (
+							<MotionButton
+								key="collapse"
+								variant="ghost"
+								size="icon-sm"
+								aria-label="全部收起"
+								initial={{ opacity: 0, scale: 0.85 }}
+								animate={{ opacity: 1, scale: 1 }}
+								exit={{ opacity: 0, scale: 0.85 }}
+								transition={{ duration: 0.15, ease: "easeOut" }}
+								onClick={() => {
+									setIsAllExpanded(false);
+									treeApi.collapseAll();
+								}}
+							>
+								<Icons.libraryMinus className="size-4" />
+							</MotionButton>
+						) : (
+							<MotionButton
+								key="expand"
+								variant="ghost"
+								size="icon-sm"
+								aria-label="全部展开"
+								initial={{ opacity: 0, scale: 0.85 }}
+								animate={{ opacity: 1, scale: 1 }}
+								exit={{ opacity: 0, scale: 0.85 }}
+								transition={{ duration: 0.15, ease: "easeOut" }}
+								onClick={() => {
+									setIsAllExpanded(true);
+									void treeApi.expandAll();
+								}}
+							>
+								<Icons.libraryPlus className="size-4" />
+							</MotionButton>
+						)}
+					</AnimatePresence>
 				</div>
 			</div>
 			<div
@@ -134,6 +166,9 @@ export function FileTree({
 
 // 每级缩进宽度（px）：与 VSCode 默认 indent=8 对齐
 const INDENT_PX = 8;
+
+// 动效按钮：motion 包装 Button，用于工具栏图标切换时的淡入淡出
+const MotionButton = motion.create(Button);
 
 // 单行节点：缩进辅助线（祖先链 active 高亮）+ 展开箭头 + 文件夹图标 + 名称 + 子树文档数
 function FileTreeRow({

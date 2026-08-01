@@ -3,7 +3,7 @@
 // # 搜索输入框：左侧搜索图标 + 输入框（防抖写 URL）+ 有内容时显示清空按钮
 
 import { AnimatePresence, motion } from "motion/react";
-import { type JSX, useRef, useState } from "react";
+import { type JSX, useEffect, useRef, useState } from "react";
 import { HOTKEYS } from "@/shared/configs/hotkeys.config";
 import { useDebounce, useHotkey } from "@/shared/hooks";
 import type { SearchFilters } from "@/shared/lib/search-filter-codec";
@@ -43,16 +43,14 @@ export function SearchInputField({
 		onTrigger: () => inputRef.current?.focus(),
 	});
 
-	// 防抖写 URL：value 每次变化重设定时器，停止输入后执行 fn
-	useDebounce(
-		() => {
-			const trimmed = value.trim();
-			if (trimmed) setParam(param, trimmed);
-			else if (getParam(param)) deleteParam(param);
-		},
-		SEARCH_DEBOUNCE_MS,
-		[value],
-	);
+	// 防抖写 URL：value 变化后延迟 MS 才产出 debouncedValue，停止输入后 effect 写 URL
+	const debouncedValue = useDebounce(value, SEARCH_DEBOUNCE_MS);
+	useEffect(() => {
+		const trimmed = debouncedValue.trim();
+		if (trimmed) setParam(param, trimmed);
+		else if (getParam(param)) deleteParam(param);
+		// getParam/setParam/deleteParam 均为 useCallback 稳定引用，实际只在 debouncedValue 变化时触发
+	}, [debouncedValue, getParam, setParam, deleteParam]);
 
 	// 清空：立即清空输入并同步删除 URL 参数（即时响应，不等防抖）
 	const handleClear = (): void => {

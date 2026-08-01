@@ -1,8 +1,8 @@
 // # Hooks Barrel：本目录唯一对外出口，自实现 hook 与第三方 hook 转发都从这里统一导入
 
 // @ 第三方 hook 转发
+export { useDebounce, useSessionStorage } from "@uidotdev/usehooks"; // useDebounce 防抖值；useSessionStorage 读写会话存储（支持函数式更新，无 stale closure）
 export { useInView } from "react-intersection-observer"; // 监听元素与视口/滚动容器的交叉状态
-export { default as useDebounce } from "react-use/lib/useDebounce"; // 回调式防抖：延迟 ms 后执行 fn，返回 [isPending, cancel]
 // @ 自实现 hook
 export { useHotkey } from "./use-hotkey"; // 全局快捷键绑定（修饰键组合/焦点排除/IME 防护；react-use 的 useKey 无这些能力故自实现）
 export { useInertialScroll } from "./use-inertial-scroll"; // 滚动容器惯性缓动（rAF + lerp），wheel/scrollTo 都走动画

@@ -50,6 +50,8 @@ import {
 	IconItalic,
 	IconKey,
 	IconLayoutGrid,
+	IconLibraryMinus,
+	IconLibraryPlus,
 	IconLayoutSidebarLeftExpand,
 	IconLink,
 	IconLogin,
@@ -164,6 +166,8 @@ export const Icons = {
 	// 树形列表：全部展开 / 全部收起
 	expandAll: IconChevronsDown,
 	collapseAll: IconChevronsUp,
+	libraryPlus: IconLibraryPlus, // 文件夹树：全部展开（与 collapseAll 同槽位切换显示）
+	libraryMinus: IconLibraryMinus, // 文件夹树：全部收起
 	folderClosed: IconFolder,
 	folderOpen: IconFolderOpen,
 	folderX: IconFolderX,

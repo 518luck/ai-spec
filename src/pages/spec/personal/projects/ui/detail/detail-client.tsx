@@ -5,7 +5,7 @@
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
-
+import { useSessionStorage } from "@/shared/hooks";
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
 import { buildProjectTree, collectFolderAgentsMds, getPathIds } from "../../model/path-utils";
 import { RightPane } from "./content/right-pane";
@@ -45,7 +45,11 @@ export function ProjectDetailClient({
 	// 当前阅读的文档 id；null 表示停留在文档卡片列表
 	const [openedAgentsMdId, setOpenedAgentsMdId] = useState<string | null>(null);
 	// 树中展开的文件夹集合（受控），面包屑跳转时补齐祖先路径
-	const [expandedFolderIds, setExpandedFolderIds] = useState<string[]>([projectId]);
+	// > 存 sessionStorage（按项目隔离），刷新后恢复展开状态，关标签页清空
+	const [expandedFolderIds, setExpandedFolderIds] = useSessionStorage<string[]>(
+		`project:${projectId}:expanded`,
+		[projectId],
+	);
 
 	// 切换文件夹（树点击或面包屑跳转）：右侧退回该文件夹的文档卡片列表，并展开目标路径上的全部祖先
 	const handleFolderSelect = (folderId: string): void => {
