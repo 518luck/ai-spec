@@ -4,6 +4,12 @@
 
 这个并不是你所熟悉的Next.js项目,前端的业务代码都在src下面,后端的代码都在app/api下面
 
+## 产品本质（重要）
+
+本平台是 **AI 配置沉淀平台**，不是文档管理系统。
+
+- AGENTS.md / Skills / MCP / Plugins 都是 **AI 配置**（assets），是用户沉淀的可复用资产，不是普通文档。
+
 ## 项目结构
 
 ```
@@ -213,6 +219,7 @@ class StorageClient {
 - 行为或用法变更时，同步更新文档和测试。
 - 绝不通过删除、跳过或注释掉测试来使其通过；修复底层代码。
 <!-- TRELLIS:START -->
+
 # Trellis Instructions
 
 These instructions are for AI assistants working in this project.
@@ -227,6 +234,7 @@ This project is managed by Trellis. The working knowledge you need lives under `
 If a Trellis command is available on your platform (e.g. `/trellis:finish-work`, `/trellis:continue`), prefer it over manual steps. Not every platform exposes every command.
 
 If you're using Codex or another agent-capable tool, additional project-scoped helpers may live in:
+
 - `.agents/skills/` — reusable Trellis skills
 - `.codex/agents/` — optional custom subagents
 
