@@ -34,3 +34,35 @@ export const loadFolderIconPair = async (iconId: string): Promise<FolderIconPair
 	]);
 	return { closed: closed.default, open: open.default };
 };
+
+// > 批量预解析文件夹图标：按名字解析 iconId → 去重 → 并发加载 → 回填 folderId → 图标对
+// @param folderNames - 树内全部文件夹的 id → 名字映射（由 collectFolderNames 收集）
+// @param projectId   - 项目根 id，根文件夹用 root 图标
+// @returns iconsMap 按 folderId 索引；defaultIconPair 为未命中的兜底
+export const preloadFolderIconPairs = async (
+	folderNames: Record<string, string>,
+	projectId: string,
+): Promise<{ iconsMap: Record<string, FolderIconPair>; defaultIconPair: FolderIconPair }> => {
+	// folderId → iconId；项目根用 root 图标，其余按文件夹名解析
+	const folderIdToIconId: Record<string, string> = {};
+	for (const [folderId, name] of Object.entries(folderNames)) {
+		folderIdToIconId[folderId] =
+			folderId === projectId ? ROOT_FOLDER_ICON_ID : resolveFolderIconId(name);
+	}
+
+	// 去重 iconId 后并发加载，兜底图标一并加载
+	const uniqueIconIds = [...new Set(Object.values(folderIdToIconId)), DEFAULT_FOLDER_ICON_ID];
+	const pairByIconId = Object.fromEntries(
+		await Promise.all(
+			uniqueIconIds.map(async (iconId) => [iconId, await loadFolderIconPair(iconId)] as const),
+		),
+	);
+
+	// folderId → 图标对
+	const iconsMap: Record<string, FolderIconPair> = {};
+	for (const [folderId, iconId] of Object.entries(folderIdToIconId)) {
+		iconsMap[folderId] = pairByIconId[iconId];
+	}
+
+	return { iconsMap, defaultIconPair: pairByIconId[DEFAULT_FOLDER_ICON_ID] };
+};

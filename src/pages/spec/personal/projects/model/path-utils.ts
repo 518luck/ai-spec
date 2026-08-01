@@ -33,9 +33,6 @@ export const buildProjectTree = (
 		[projectId]: { name: projectId, children: [] },
 	};
 
-	const projectNode = nodes[projectId];
-	if (!projectNode.children) projectNode.children = [];
-
 	for (const agentsMd of agentsMds) {
 		const segments = agentsMd.path.split("/");
 		// 末段是文件名，前面的段是文件夹层级
@@ -80,26 +77,43 @@ const projectAppendChild = (
 export const getSubfolderIds = (itemId: string, tree: Record<string, ProjectTreeNode>): string[] =>
 	(tree[itemId]?.children ?? []).filter((childId) => Boolean(tree[childId]?.children));
 
+// 收集树内全部文件夹的 id → 名字映射（含项目根本身，不含虚拟根）；供图标预解析遍历使用
+export const collectFolderNames = (
+	projectId: string,
+	tree: Record<string, ProjectTreeNode>,
+): Record<string, string> => {
+	const result: Record<string, string> = {};
+	// 从项目根开始（跳过不渲染的虚拟根），DFS 收集全部文件夹
+	const stack = [projectId];
+	while (stack.length > 0) {
+		const id = stack.pop();
+		if (!id) continue;
+		const node = tree[id];
+		if (!node?.children) continue; // 文件节点跳过
+		result[id] = id === projectId ? projectId : node.name;
+		stack.push(...getSubfolderIds(id, tree));
+	}
+	return result;
+};
+
 // 递归收集某文件夹子树内的全部文档，供右侧卡片列表展示
 export const collectFolderAgentsMds = (
 	folderId: string,
 	tree: Record<string, ProjectTreeNode>,
 	agentsMds: AgentsMdListItemVo[],
 ): AgentsMdListItemVo[] => {
-	const agentsMdIds = new Set<string>();
+	// DFS 遍历子树：文件夹节点继续下钻，文件节点（无 children）收集其 id
+	const docIds = new Set<string>();
 	const stack = [folderId];
 	while (stack.length > 0) {
 		const id = stack.pop();
 		if (!id) continue;
-		const node = tree[id];
-		if (!node?.children) continue; // 文件节点跳过
-		for (const childId of node.children) {
-			if (tree[childId]?.children) {
-				stack.push(childId);
-			} else {
-				agentsMdIds.add(childId);
-			}
+		const children = tree[id]?.children;
+		if (!children) continue; // 文件节点跳过
+		for (const childId of children) {
+			if (tree[childId]?.children) stack.push(childId);
+			else docIds.add(childId);
 		}
 	}
-	return agentsMds.filter((agentsMd) => agentsMdIds.has(agentsMd.id));
+	return agentsMds.filter((agentsMd) => docIds.has(agentsMd.id));
 };

@@ -2,19 +2,13 @@
 
 // # 项目内视图客户端容器：持有选中/展开/阅读状态，渲染面包屑 + 文件夹树 + 文档区
 
-import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
 
-import { client } from "@/shared/lib/orpc/client";
-import { projectKeys } from "@/shared/lib/orpc/query-keys";
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
-import { Icons } from "@/shared/ui/icons";
-import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
-import { EmptyState } from "@/widgets/empty-state";
 import { buildProjectTree, collectFolderAgentsMds, getPathIds } from "../../model/path-utils";
-import { AgentsMdCardGrid } from "./agents-md-cards";
+import { RightPane } from "./content/right-pane";
 import type { FolderIconPair } from "./folder-icons";
 import { BreadcrumbNav } from "./nav/breadcrumb-nav";
 import { FileTree } from "./nav/file-tree";
@@ -102,52 +96,3 @@ export function ProjectDetailClient({
 		</div>
 	);
 }
-
-// 右侧主体：文档阅读 / 加载中 / 空文件夹 / 卡片列表 四种状态，扁平化避免嵌套三元
-const RightPane = ({
-	projectId,
-	openedAgentsMdId,
-	folderAgentsMds,
-	onOpenAgentsMd,
-}: {
-	projectId: string;
-	openedAgentsMdId: string | null;
-	folderAgentsMds: AgentsMdListItemVo[];
-	onOpenAgentsMd: (agentsMdId: string) => void;
-}): JSX.Element => {
-	// 阅读态：取文档全文（仅打开文档时请求）
-	const { data: agentsMd, isLoading } = useQuery({
-		queryKey: projectKeys.agentsMdContent(projectId, openedAgentsMdId ?? ""),
-		queryFn: () => client.agentsMds.getById({ projectId, id: openedAgentsMdId as string }),
-		enabled: Boolean(openedAgentsMdId),
-	});
-
-	if (openedAgentsMdId) {
-		if (isLoading || !agentsMd) {
-			return (
-				<div className="flex min-h-60 flex-1 items-center justify-center">
-					<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
-				</div>
-			);
-		}
-		return (
-			<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
-				<pre className="whitespace-pre-wrap px-6 py-4 font-mono text-sm leading-6">
-					{agentsMd.content}
-				</pre>
-			</div>
-		);
-	}
-
-	if (folderAgentsMds.length === 0) {
-		return <EmptyState icon={Icons.agentsMd} description="该文件夹下还没有 AGENTS.md 文档" />;
-	}
-
-	return (
-		<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
-			<div className="px-6 py-4">
-				<AgentsMdCardGrid agentsMds={folderAgentsMds} onOpen={onOpenAgentsMd} />
-			</div>
-		</div>
-	);
-};
