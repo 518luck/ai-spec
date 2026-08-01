@@ -19,6 +19,15 @@ export const getPathIds = (pathId: string): string[] => {
 	return parts.map((_, index) => parts.slice(0, index + 1).join("/"));
 };
 
+// 取某文件夹的完整祖先链 id（从项目根到自身，含两端）；项目根本身返回 [projectId]
+// > 与 getPathIds 的区别：getPathIds 只按路径前缀拆分，不含非路径型的项目根；本函数补齐项目根
+export const getAncestorFolderIds = (folderId: string, projectId: string): string[] => {
+	const pathIds = getPathIds(folderId);
+	// folderId === projectId 时 getPathIds 返回 [projectId]，无需补
+	if (folderId === projectId) return [projectId];
+	return [projectId, ...pathIds];
+};
+
 // @ 扁平文档列表 → 内存文件夹树
 
 // 从全量文档列表构建树节点表：文件夹节点从 path 前缀派生，文件节点对应实际文档

@@ -18,6 +18,7 @@ import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import {
 	collectFolderAgentsMds,
+	getAncestorFolderIds,
 	getSubfolderIds,
 	PROJECT_TREE_ROOT_ID,
 	type ProjectTreeNode,
@@ -83,6 +84,9 @@ export function FileTree({
 		features: [syncDataLoaderFeature, selectionFeature, hotkeysCoreFeature, expandAllFeature],
 	});
 
+	// 选中项的祖先链：这些层级的缩进竖线高亮（VSCode 风格，直观显示归属路径）
+	const activeAncestorIds = new Set(getAncestorFolderIds(selectedFolderId, projectId));
+
 	return (
 		<div className="flex flex-col">
 			{/* // @ 顶部工具条：全部展开 / 全部收起 */}
@@ -115,10 +119,12 @@ export function FileTree({
 					<FileTreeRow
 						key={item.getId()}
 						item={item}
+						projectId={projectId}
 						tree={tree}
 						agentsMds={agentsMds}
 						iconsMap={iconsMap}
 						defaultIconPair={defaultIconPair}
+						activeAncestorIds={activeAncestorIds}
 					/>
 				))}
 			</div>
@@ -126,41 +132,63 @@ export function FileTree({
 	);
 }
 
-// 单行节点：层级缩进 + 展开箭头 + material-icon-theme 文件夹图标 + 名称 + 子树内文档数角标
+// 每级缩进宽度（px）：与 VSCode 默认 indent=8 对齐
+const INDENT_PX = 8;
+
+// 单行节点：缩进辅助线（祖先链 active 高亮）+ 展开箭头 + 文件夹图标 + 名称 + 子树文档数
 function FileTreeRow({
 	item,
+	projectId,
 	tree,
 	agentsMds,
 	iconsMap,
 	defaultIconPair,
+	activeAncestorIds,
 }: {
 	item: ItemInstance<ProjectTreeNode>;
+	projectId: string;
 	tree: Record<string, ProjectTreeNode>;
 	agentsMds: AgentsMdListItemVo[];
 	iconsMap: Record<string, FolderIconPair>;
 	defaultIconPair: FolderIconPair;
+	// 选中文件夹的祖先链 id 集合；命中则对应层级的竖线高亮
+	activeAncestorIds: Set<string>;
 }): JSX.Element {
 	const isExpanded = item.isExpanded();
-	const { level } = item.getItemMeta();
 	// 图标对由服务端按 itemId 预解析传入，未命中（动态新增的文件夹等）回退通用文件夹
 	const iconPair = iconsMap[item.getId()] ?? defaultIconPair;
 	const iconSrc = isExpanded ? iconPair.open : iconPair.closed;
 	// 该文件夹子树内（含各层子文件夹）的 AGENTS.md 数量
 	const docCount = collectFolderAgentsMds(item.getId(), tree, agentsMds).length;
 
+	// 当前行到项目根的祖先链（含两端）；slice(0,-1) 去掉自身，留祖先用于竖线渲染
+	const ancestorIds = getAncestorFolderIds(item.getId(), projectId).slice(0, -1);
+	// chevron 缩进：每多一层祖先多 INDENT_PX；项目根无祖先 → 0
+	const indentPx = ancestorIds.length * INDENT_PX;
+
 	return (
-		<button
+		<div
 			{...item.getProps()}
-			type="button"
-			// 依层级缩进模拟目录树；数值随 level 动态计算，只能用行内样式
-			style={{ paddingLeft: `${level * 16 + 8}px` }}
 			className={cn(
-				"flex h-7 shrink-0 cursor-pointer items-center gap-1.5 rounded-md pr-2 text-sm outline-none",
+				"relative flex h-[22px] shrink-0 cursor-pointer items-center rounded-md pr-2 text-sm outline-none",
 				"hover:bg-accent/60 focus-visible:ring-1 focus-visible:ring-ring",
 				item.isSelected() && "bg-accent text-accent-foreground",
 			)}
 		>
+			{/* // @ 缩进辅助线容器：绝对定位、不挡点击，每层一条 1px 竖线，选中项祖先链高亮 */}
+			<div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 flex">
+				{ancestorIds.map((ancestorId) => (
+					<span
+						key={ancestorId}
+						className={cn(
+							"w-2 shrink-0 border-l",
+							activeAncestorIds.has(ancestorId) ? "border-foreground/40" : "border-transparent",
+						)}
+					/>
+				))}
+			</div>
 			<Icons.chevronRight
+				style={{ marginLeft: indentPx }}
 				className={cn(
 					"size-3.5 shrink-0 text-muted-foreground transition-transform",
 					isExpanded && "rotate-90",
@@ -173,6 +201,6 @@ function FileTreeRow({
 			{docCount > 0 ? (
 				<span className="ml-auto text-muted-foreground text-xs tabular-nums">{docCount}</span>
 			) : null}
-		</button>
+		</div>
 	);
 }
