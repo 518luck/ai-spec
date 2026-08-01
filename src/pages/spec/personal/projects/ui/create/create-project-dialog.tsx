@@ -94,29 +94,36 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 								autoFocus
 							/>
 						</div>
-						<div className="flex flex-col gap-2">
-							<Label>描述（可选）</Label>
-							<Textarea
-								className="max-h-32"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								placeholder="补充说明项目用途"
-								rows={3}
-							/>
+<div className="flex flex-col gap-2">
+								<Label>描述（可选）</Label>
+								<Textarea
+									className="max-h-32"
+									value={description}
+									onChange={(e) => setDescription(e.target.value)}
+									placeholder="补充说明项目用途"
+									rows={3}
+								/>
+							</div>
+							<div className="flex flex-col gap-2">
+								<Label>选择模板</Label>
+								<TemplateCombobox templateKey={templateKey} onTemplateChange={setTemplateKey} />
+							</div>
+							<div className="flex flex-col gap-2">
+								<Label>所属文件夹（可选）</Label>
+								<FolderCombobox
+									resourceType="project"
+									value={folderId}
+									onChange={setFolderId}
+									className="h-9 w-full border border-input"
+								/>
+							</div>
 						</div>
-						<div className="flex flex-col gap-2">
-							<Label>所属文件夹（可选）</Label>
-							<FolderCombobox resourceType="project" value={folderId} onChange={setFolderId} />
-						</div>
-					</div>
 
-					{/* // 右侧：模板选择 + 文件结构预览 */}
-					<div className="flex w-72 shrink-0 flex-col gap-2">
-						<span className="text-muted-foreground text-xs">选择模板</span>
-						<TemplateCombobox templateKey={templateKey} onTemplateChange={setTemplateKey} />
-						<span className="mt-1 text-muted-foreground text-xs">文件结构</span>
-						<TemplateTree templateKey={templateKey} projectName={name} />
-					</div>
+						{/* // 右侧：文件结构预览 */}
+						<div className="flex w-72 shrink-0 flex-col gap-2">
+							<span className="text-muted-foreground text-xs">文件结构</span>
+							<TemplateTree templateKey={templateKey} projectName={name} className="flex-1" />
+						</div>
 				</DialogContentBody>
 
 				<DialogFooter>
