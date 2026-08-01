@@ -5,7 +5,7 @@
 import type { JSX } from "react";
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
-import { PROJECT_TEMPLATES, type TemplateFileNode } from "./templates";
+import { PROJECT_TEMPLATES, type TemplateFileNode } from "./mock/templates";
 
 type TemplateTreeProps = {
 	templateKey: string;

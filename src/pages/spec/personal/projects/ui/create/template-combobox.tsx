@@ -15,7 +15,7 @@ import {
 } from "@/shared/ui/command";
 import { Icons } from "@/shared/ui/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
-import { PROJECT_TEMPLATES } from "./templates";
+import { PROJECT_TEMPLATES } from "./mock/templates";
 
 type TemplateComboboxProps = {
 	templateKey: string;
