@@ -22,7 +22,8 @@ import {
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Textarea } from "@/shared/ui/textarea";
-import { TemplateTreePreview } from "./template-tree-preview";
+import { TemplateCombobox } from "./template-combobox";
+import { TemplateTree } from "./template-tree";
 
 type CreateProjectDialogProps = {
 	open: boolean;
@@ -110,12 +111,11 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 					</div>
 
 					{/* // 右侧：模板选择 + 文件结构预览 */}
-					<div className="w-72 shrink-0">
-						<TemplateTreePreview
-							templateKey={templateKey}
-							onTemplateChange={setTemplateKey}
-							projectName={name}
-						/>
+					<div className="flex w-72 shrink-0 flex-col gap-2">
+						<span className="text-muted-foreground text-xs">选择模板</span>
+						<TemplateCombobox templateKey={templateKey} onTemplateChange={setTemplateKey} />
+						<span className="mt-1 text-muted-foreground text-xs">文件结构</span>
+						<TemplateTree templateKey={templateKey} projectName={name} />
 					</div>
 				</DialogContentBody>
 
