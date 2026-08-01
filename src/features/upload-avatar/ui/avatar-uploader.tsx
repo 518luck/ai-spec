@@ -4,7 +4,7 @@
 
 import { useSession } from "next-auth/react";
 
-import { UserAvatar } from "@/entities/user";
+import { UserAvatar } from "@/features/user-avatar";
 import { cn } from "@/shared/lib/utils";
 import { FileUpload } from "@/shared/ui/file-upload";
 import { Icons } from "@/shared/ui/icons";

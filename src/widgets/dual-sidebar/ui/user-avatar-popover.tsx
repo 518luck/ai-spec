@@ -5,7 +5,7 @@
 import { signOut, useSession } from "next-auth/react";
 import type { JSX } from "react";
 
-import { UserAvatar } from "@/entities/user";
+import { UserAvatar } from "@/features/user-avatar";
 import { cn } from "@/shared/lib/utils";
 import { Icons } from "@/shared/ui/icons";
 import {
