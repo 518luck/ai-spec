@@ -41,9 +41,10 @@ export function BreadcrumbNav({
 	const lastIndex = segments.length - 1;
 
 	return (
-		// 紧凑高度（h-7 ≈ VSCode 面包屑）：只占一行导航；置于标题栏时无需自带 border-b（标题栏已分隔）
+		// 紧凑高度（h-7 ≈ VSCode 面包屑）：只占一行导航；自带高度不自带 border-b（分隔线由外层容器负责）
+		// 覆盖 BreadcrumbList 的 flex-wrap 为 nowrap + min-w-max：路径超宽时不折行不压缩，交给外层容器横向滚动
 		<Breadcrumb className="flex h-7 shrink-0 items-center text-xs">
-			<BreadcrumbList>
+			<BreadcrumbList className="min-w-max flex-nowrap">
 				<BreadcrumbItem>
 					<BreadcrumbLink
 						render={<button type="button" onClick={onNavigateHome} className="cursor-pointer" />}

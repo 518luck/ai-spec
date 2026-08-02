@@ -181,7 +181,7 @@ export function ProjectDetailClient({
 
 	return (
 		<TitlePageShell
-			// 标题栏不放标题：左侧项目内搜索框（封装组件，写 URL q 参数）+ 右侧导航面包屑（VSCode 顶部工具条风格）
+			// 标题栏不放标题：左侧项目内搜索框（封装组件，写 URL q 参数）；面包屑在下方独立栏
 			title={
 				<div className="flex w-full items-center gap-6">
 					{/* 项目内搜索：字段可多选（标题/内容），特殊字段 scope 启用范围单选（本项目/全项目） */}
@@ -189,13 +189,6 @@ export function ProjectDetailClient({
 						className="max-w-sm"
 						filters={["title", "content", "scope"]}
 						defaultFilter="title"
-					/>
-					<BreadcrumbNav
-						tree={tree}
-						agentsMds={agentsMds}
-						currentId={openedAgentsMd?.id ?? selectedFolderId}
-						onNavigateHome={() => router.back()}
-						onNavigateFolder={handleFolderSelect}
 					/>
 				</div>
 			}
@@ -229,8 +222,17 @@ export function ProjectDetailClient({
 					{/* // 缩放手柄：贴 aside 右边缘，拖拽调整文件夹树宽度 */}
 					<SidebarResizeHandle width={sidebarWidth} onWidthChange={setSidebarWidth} />
 				</aside>
-				{/* // @ 右侧内容区：配置卡片列表 / 配置阅读（面包屑在标题栏） */}
+				{/* // @ 右侧内容区：面包屑独立栏（只占本区域，超宽横向滚动，VSCode 风格）+ 配置卡片列表 / 配置阅读 */}
 				<section className="flex min-w-0 flex-1 flex-col">
+					<div className="flex h-7 shrink-0 items-center overflow-x-auto border-b px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+						<BreadcrumbNav
+							tree={tree}
+							agentsMds={agentsMds}
+							currentId={openedAgentsMd?.id ?? selectedFolderId}
+							onNavigateHome={() => router.back()}
+							onNavigateFolder={handleFolderSelect}
+						/>
+					</div>
 					<RightPane
 						projectId={projectId}
 						openedAgentsMd={openedAgentsMd}
