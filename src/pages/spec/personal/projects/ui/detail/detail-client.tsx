@@ -1,6 +1,7 @@
 "use client";
 
 // # 项目内视图客户端容器：持有选中/展开/阅读/搜索状态，渲染面包屑 + 文件夹树 + 配置区
+// > 数据流自上而下：URL 输入 → 状态 → 派生 → 查询 → 回调 → UI 计算 → JSX
 
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -23,11 +24,9 @@ import {
 	collectFolderAgentsMds,
 	getFolderAncestorIds,
 } from "../../model/path-utils";
-import { RightPane } from "./content/right-pane";
+import { RightPane } from "./content";
 import type { FolderIconPair } from "./folder-icons";
-import { BreadcrumbNav } from "./nav/breadcrumb-nav";
-import { FileTree } from "./nav/file-tree";
-import { SidebarResizeHandle } from "./nav/sidebar-resize-handle";
+import { BreadcrumbNav, FileTree, SidebarResizeHandle } from "./nav";
 
 interface ProjectDetailClientProps {
 	/** 当前打开的项目 id（来自 URL 参数） */
@@ -57,11 +56,8 @@ export function ProjectDetailClient({
 	defaultIconPair,
 }: ProjectDetailClientProps): JSX.Element {
 	const router = useRouter();
-	// 由文件夹表与配置挂载关系构建内存树；项目根文件夹显示项目名
-	const tree = useMemo(
-		() => buildProjectTree(projectFolders, agentsMds, rootFolderId, projectName),
-		[projectFolders, agentsMds, rootFolderId, projectName],
-	);
+
+	// @ 状态：树选中/展开、编辑器打开、侧栏宽度
 	// 左侧树选中的文件夹；进入时默认选中项目根文件夹
 	const [selectedFolderId, setSelectedFolderId] = useState<string>(rootFolderId);
 	// 当前阅读的配置（含所属项目 id：全项目搜索打开的可能属于其他项目，取全文必须用项目自己的 id）
@@ -80,25 +76,70 @@ export function ProjectDetailClient({
 		"projects:detail:sidebarWidth",
 		256,
 	);
-	// 标题栏搜索词：由 SearchInput 写入 URL ?q=，此处读取驱动过滤（跨文件夹搜索全项目配置）
+
+	// @ URL 输入：搜索词 + 筛选条件（字段开关/范围）解码
 	const searchParams = useSearchParams();
 	const searchQuery = searchParams?.get("q") ?? "";
-	// 解码筛选条件：字段开关（名字/内容）+ 范围（本项目/全项目，缺省本项目）
 	const searchFilters: SearchFilters = useMemo(
 		() => decodeFilters(searchParams?.get("filter") ?? undefined) ?? {},
 		[searchParams],
 	);
-	// 搜索范围：缺省本项目
+	// 搜索范围：缺省本项目；参与搜索的字段：按开关收集（title 开关对应后端的 name 字段——配置以文件名为标识）
 	const searchScope = searchFilters.scope ?? "project";
-	// 参与搜索的字段：按开关收集（title 开关对应后端的 name 字段——配置以文件名为标识）；join 成字符串作 queryKey 的一部分（数组引用不稳定，直接作 key 会多请求）
 	const searchFields = useMemo(() => {
 		const fields: AgentsMdSearchFieldKey[] = [];
 		if (searchFilters.title) fields.push("name");
 		if (searchFilters.content) fields.push("content");
 		return fields;
 	}, [searchFilters]);
+	// 字段 join 成字符串作 queryKey 的一部分（数组引用不稳定，直接作 key 会多请求）
 	const searchFieldsKey = searchFields.join(",");
 
+	// @ 派生：内存树 + 当前文件夹配置
+	const tree = useMemo(
+		() => buildProjectTree(projectFolders, agentsMds, rootFolderId, projectName),
+		[projectFolders, agentsMds, rootFolderId, projectName],
+	);
+	const folderAgentsMds = useMemo(
+		() => collectFolderAgentsMds(selectedFolderId, tree, agentsMds),
+		[selectedFolderId, tree, agentsMds],
+	);
+
+	// @ 搜索查询：关键词非空时启用；本项目走 list（带 q/fields），全项目走 listAll（跨全部项目）
+	//   "搜内容"需要 content 全文，前端预取只有 name+excerpt，因此必须后端搜索
+	//   两个查询按 scope 互斥启用（enabled 带 scope 判断），data 类型各自明确
+	const isAllScope = searchScope === "all";
+	const searchEnabled = Boolean(searchQuery.trim());
+	const { data: allScopeResults } = useQuery({
+		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
+		queryFn: () => client.agentsMds.listAll({ q: searchQuery, fields: searchFields }),
+		enabled: searchEnabled && isAllScope,
+	});
+	const { data: projectResults } = useQuery({
+		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
+		queryFn: () => client.agentsMds.list({ projectId, q: searchQuery, fields: searchFields }),
+		enabled: searchEnabled && !isAllScope,
+	});
+	// 当前生效的搜索结果（未搜索时为空数组，展示层回退到文件夹子树）
+	const searchResults = isAllScope ? allScopeResults : projectResults;
+
+	// @ 派生：展示列表（搜索态为后端结果，否则为当前文件夹子树）、项目名映射、文件夹名映射
+	const visibleAgentsMds = useMemo(() => {
+		if (!searchEnabled) return folderAgentsMds;
+		return searchResults ?? [];
+	}, [searchEnabled, folderAgentsMds, searchResults]);
+	// 全项目搜索时：docId → 项目名（卡片底部标注项目归属）；本项目搜索仍用文件夹名映射
+	const projectNames = useMemo(() => {
+		if (!isAllScope) return undefined;
+		return Object.fromEntries((allScopeResults ?? []).map((item) => [item.id, item.projectName]));
+	}, [isAllScope, allScopeResults]);
+	// 文件夹 id → 名称映射（卡片底部标注挂载位置用）
+	const folderNames = useMemo(
+		() => Object.fromEntries(projectFolders.map((folder) => [folder.id, folder.name])),
+		[projectFolders],
+	);
+
+	// @ 回调：切换文件夹 / 打开配置 / 编辑器返回与保存 / 视图切换 / 创建删除联动
 	// 切换文件夹（树点击或面包屑跳转）：右侧退回该文件夹的配置卡片列表，并展开目标路径上的全部祖先
 	const handleFolderSelect = (folderId: string): void => {
 		setSelectedFolderId(folderId);
@@ -108,7 +149,7 @@ export function ProjectDetailClient({
 		]);
 	};
 
-	// > 打开配置阅读：全项目搜索时按结果项定位其所属项目（可能不是当前项目），其余场景用当前项目
+	// > 打开配置：全项目搜索时按结果项定位其所属项目（可能不是当前项目），其余场景用当前项目
 	const handleOpenAgentsMd = (id: string): void => {
 		if (isAllScope) {
 			const item = (allScopeResults ?? []).find((result) => result.id === id);
@@ -128,20 +169,11 @@ export function ProjectDetailClient({
 		router.refresh();
 	};
 
-	// 标题栏右侧"切换为编辑器"：打开当前展示列表第一条（搜索态为搜索结果，否则为当前文件夹配置）
+	// 标题栏"切换为编辑器"：打开当前展示列表第一条（搜索态为搜索结果，否则为当前文件夹配置）
 	const handleSwitchToEditor = (): void => {
 		const first = visibleAgentsMds[0];
 		if (first) setOpenedAgentsMd({ id: first.id, projectId });
 	};
-
-	// > 搜索词变化时关闭编辑器回到鸟瞰图：搜索态强制列表展示（结果卡片可点开进编辑器）
-	//   用 ref 记录上次词：跳过首帧，避免覆盖"单配置默认打开编辑器"的初始状态
-	const prevSearchQueryRef = useRef(searchQuery);
-	useEffect(() => {
-		if (prevSearchQueryRef.current === searchQuery) return;
-		prevSearchQueryRef.current = searchQuery;
-		setOpenedAgentsMd(null);
-	}, [searchQuery]);
 
 	// 创建文件/文件夹成功后的联动：展开新路径祖先，文件夹创建后选中它（右侧联动），再刷新服务端数据
 	const handleCreated = (id: string, kind: "file" | "folder"): void => {
@@ -165,52 +197,18 @@ export function ProjectDetailClient({
 		router.refresh();
 	};
 
-	// 当前选中文件夹下的全部配置
-	const folderAgentsMds = useMemo(
-		() => collectFolderAgentsMds(selectedFolderId, tree, agentsMds),
-		[selectedFolderId, tree, agentsMds],
-	);
+	// > 搜索词变化时关闭编辑器回到鸟瞰图：搜索态强制列表展示（结果卡片可点开进编辑器）
+	//   用 ref 记录上次词：跳过首帧，避免覆盖"单配置默认打开编辑器"的初始状态
+	const prevSearchQueryRef = useRef(searchQuery);
+	useEffect(() => {
+		if (prevSearchQueryRef.current === searchQuery) return;
+		prevSearchQueryRef.current = searchQuery;
+		setOpenedAgentsMd(null);
+	}, [searchQuery]);
 
-	// > 搜索态查询：关键词非空时启用；本项目走 list（带 q/fields），全项目走 listAll（跨全部项目）
-	//   "搜内容"需要 content 全文，前端预取只有 name+excerpt，因此必须后端搜索
-	//   两个查询按 scope 互斥启用（enabled 里带 scope 判断），data 类型各自明确
-	const isAllScope = searchScope === "all";
-	const searchEnabled = Boolean(searchQuery.trim());
-	const { data: allScopeResults } = useQuery({
-		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
-		queryFn: () => client.agentsMds.listAll({ q: searchQuery, fields: searchFields }),
-		enabled: searchEnabled && isAllScope,
-	});
-	const { data: projectResults } = useQuery({
-		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
-		queryFn: () => client.agentsMds.list({ projectId, q: searchQuery, fields: searchFields }),
-		enabled: searchEnabled && !isAllScope,
-	});
-	// 当前生效的搜索结果（未搜索时为空数组，展示层回退到文件夹子树）
-	const searchResults = isAllScope ? allScopeResults : projectResults;
-
-	// 展示给右侧的配置：搜索态为后端搜索结果，否则为当前文件夹子树
-	const visibleAgentsMds = useMemo(() => {
-		if (!searchEnabled) return folderAgentsMds;
-		return searchResults ?? [];
-	}, [searchEnabled, folderAgentsMds, searchResults]);
-
-	// 全项目搜索时：docId → 项目名（卡片底部标注项目归属）；本项目搜索仍用文件夹名映射
-	const projectNames = useMemo(() => {
-		if (!isAllScope) return undefined;
-		return Object.fromEntries((allScopeResults ?? []).map((item) => [item.id, item.projectName]));
-	}, [isAllScope, allScopeResults]);
-
-	// 文件夹 id → 名称映射（卡片底部标注挂载位置用）
-	const folderNames = useMemo(
-		() => Object.fromEntries(projectFolders.map((folder) => [folder.id, folder.name])),
-		[projectFolders],
-	);
-
-	// > 标题栏右端视图切换按钮：编辑器内可切回鸟瞰图；鸟瞰图仅单卡时可切编辑器（多卡编辑入口靠点卡片）
-	//   渲染函数提前 return 分支，各状态一目了然
+	// @ UI 计算：标题栏视图切换按钮、面包屑横滚
+	// > 编辑器内可切回鸟瞰图；鸟瞰图仅单卡时可切编辑器（多卡编辑入口靠点卡片）
 	const renderViewSwitchButton = (): JSX.Element | null => {
-		// 编辑器内：切回鸟瞰图（网格图标）
 		if (openedAgentsMd !== null) {
 			return (
 				<Button
@@ -224,7 +222,6 @@ export function ProjectDetailClient({
 				</Button>
 			);
 		}
-		// 鸟瞰图：仅单卡时可切编辑器；多卡编辑入口靠点卡片，不显示按钮
 		if (visibleAgentsMds.length !== 1) return null;
 		return (
 			<Button
@@ -239,14 +236,13 @@ export function ProjectDetailClient({
 		);
 	};
 
-	// > 面包屑横滚：滚轮划过去横向滚动（rAF 惯性），不触发页面纵向滚动；内容未溢出时自动放行页面滚动
-	//   滚轮监听由 hook 原生绑定，不再传 onWheel（避免事件被处理两次）
+	// 面包屑横滚：滚轮划过去横向滚动（rAF 惯性），不触发页面纵向滚动；内容未溢出时自动放行页面滚动
 	const breadcrumbScrollRef = useRef<HTMLDivElement>(null);
 	useInertialScroll(breadcrumbScrollRef, { direction: "horizontal" });
 
 	return (
 		<TitlePageShell
-			// 标题栏不放标题：左侧项目内搜索框（封装组件，写 URL q 参数）；面包屑在下方独立栏
+			// 标题栏不放标题：居中搜索框 + 右端视图切换按钮；面包屑在下方独立栏
 			title={
 				<div className="relative flex w-full items-center justify-center">
 					{/* 项目内搜索：字段可多选（标题/内容），特殊字段 scope 启用范围单选（本项目/全项目） */}
