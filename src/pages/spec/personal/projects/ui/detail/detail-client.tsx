@@ -231,8 +231,11 @@ export function ProjectDetailClient({
 	return (
 		<TitlePageShell
 			// 标题栏双态：编辑器态 = 编辑器状态栏；列表态 = 居中搜索框
+			// > 标题栏浮层：不占布局高度，内容从页面顶端起算，滚动时穿过半透明标题栏（VSCode 效果）
+			//   树滚动区与 section 各自 pt-16 让位，首行不被遮住
 			title={renderTitleBar()}
 			scrollable={false}
+			floatingHeader
 		>
 			<div className="flex min-h-0 flex-1">
 				{/* // @ 左侧：文件夹树侧栏（宽度可拖拽调整，VSCode 风格；会话级持久化） */}
@@ -241,7 +244,7 @@ export function ProjectDetailClient({
 					className="relative flex min-h-0 shrink-0 flex-col border-r"
 					style={{ width: sidebarWidth }}
 				>
-					<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
+					<div className="scrollbar-thin min-h-0 flex-1 overflow-auto pt-16">
 						{/* 数据指纹作 key：创建/刷新后数量变化即重挂载，headless-tree 受控模式下数据变化
 					    不会刷新已展开节点的子列表，重挂载让新节点立即可见 */}
 						<FileTree
@@ -263,7 +266,7 @@ export function ProjectDetailClient({
 					<SidebarResizeHandle width={sidebarWidth} onWidthChange={setSidebarWidth} />
 				</aside>
 				{/* // @ 右侧内容区：面包屑独立栏（只占本区域，滚轮横向滚动，VSCode 风格）+ 编辑器内容区 / 鸟瞰图 */}
-				<section className="flex min-w-0 flex-1 flex-col">
+				<section className="flex min-w-0 flex-1 flex-col pt-16">
 					<div
 						ref={breadcrumbScrollRef}
 						className="flex h-7 shrink-0 items-center overflow-x-auto border-b px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -288,6 +291,8 @@ export function ProjectDetailClient({
 									ref={editorRef}
 									value={editContent}
 									onChange={setEditContent}
+									// > 编辑器滚动区在面包屑下方、无浮层遮挡：覆盖全局样式的 pt-48px（浮层场景让位用），文本贴顶；左右 padding 与预览态对齐
+									editorClassName="[&_.cm-scroller]:px-6! [&_.cm-scroller]:pt-0!"
 									previewClassName="px-6 py-4"
 									onSubmitShortcut={handleSave}
 								/>
