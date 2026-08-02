@@ -12,8 +12,8 @@ import { SearchInput } from "@/features/search-input";
 import { useInertialScroll, useSessionStorage } from "@/shared/hooks";
 import type { AgentsMdListItemVo, ProjectFolderListItemVo } from "@/shared/lib/zod/schemas/project";
 import { Button } from "@/shared/ui/button";
+import { DoubleEditableInput } from "@/shared/ui/double-editable-input";
 import { Icons } from "@/shared/ui/icons";
-import { Input } from "@/shared/ui/input";
 import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { TitlePageShell } from "@/widgets/page-shell";
 import {
@@ -184,24 +184,30 @@ export function ProjectDetailClient({
 		);
 	};
 
-	// > 标题栏内容：编辑器态渲染状态栏（返回/名称/快捷栏/保存），列表态渲染居中搜索框 + 右端切换按钮
+	// > 标题栏内容：编辑器态渲染状态栏（返回/名称在左，快捷栏/保存在右），列表态渲染居中搜索框 + 右端切换按钮
 	const renderTitleBar = (): JSX.Element => {
 		if (openedAgentsMd) {
 			return (
 				<div className="flex w-full items-center gap-2">
+					{/* // 左侧：返回 + 名称（双击修改，纯文本无底色） */}
 					<Button variant="ghost" size="icon-sm" aria-label="返回" onClick={handleBackFromEditor}>
 						<Icons.chevronLeft className="size-4" />
 					</Button>
-					<Input
+					<DoubleEditableInput
 						value={editName}
-						onChange={(e) => setEditName(e.target.value)}
+						onCommit={setEditName}
 						placeholder="配置名称"
-						className="h-7 max-w-64"
+						textClassName="h-7 text-sm"
+						// 编辑态输入框限宽，避免撑满标题栏
+						inputClassName="h-7 max-w-64"
 					/>
-					{mounted ? <QuickToolbar editorRef={editorRef} isExpanded /> : null}
-					<Button size="sm" className="ml-auto" disabled={isSaving} onClick={handleSave}>
-						{isSaving ? "保存中..." : "保存"}
-					</Button>
+					{/* // 右侧：快捷栏 + 保存（ml-auto 推右） */}
+					<div className="ml-auto flex items-center gap-2">
+						{mounted ? <QuickToolbar editorRef={editorRef} isExpanded /> : null}
+						<Button size="sm" disabled={isSaving} onClick={handleSave}>
+							{isSaving ? "保存中..." : "保存"}
+						</Button>
+					</div>
 				</div>
 			);
 		}

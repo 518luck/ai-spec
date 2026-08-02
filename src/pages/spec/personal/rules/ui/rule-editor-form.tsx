@@ -20,9 +20,8 @@ import { TagSelectTrigger } from "@/features/tag-combobox/ui/tag-select-trigger"
 import { useMounted } from "@/shared/hooks";
 import type { TagOptionVo } from "@/shared/lib/zod/schemas/tag";
 import { Button } from "@/shared/ui/button";
+import { DoubleEditableInput } from "@/shared/ui/double-editable-input";
 import { Icons } from "@/shared/ui/icons";
-import { Input } from "@/shared/ui/input";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
 import { TitlePageShell } from "@/widgets/page-shell";
 
 // 表单提交载荷：创建/更新共用形状
@@ -145,7 +144,15 @@ export function RuleEditorForm({
 						<Icons.chevronLeft className="size-4" />
 					</Button>
 					{/* // @ 名称即页面标题：有名称就顶掉「创建规约/编辑规约」；平时是纯文本，双击才变输入框 */}
-					<EditableName value={name} fallback={headerTitle} onCommit={handleNameCommit} />
+					<DoubleEditableInput
+						value={name}
+						fallback={headerTitle}
+						onCommit={handleNameCommit}
+						placeholder="规约名称"
+						tooltip="双击修改名称（默认取正文首行）"
+						textClassName="h-9 flex-1 font-semibold text-lg"
+						inputClassName="h-9 min-w-0 flex-1 border-none bg-transparent px-1 font-semibold text-lg shadow-none focus-visible:ring-0 md:text-lg dark:bg-transparent"
+					/>
 					{/* // @ 标签：chips 在左、+ 按钮贴右；紧凑 chips 模式，未选时只显示 + 按钮 */}
 					<TagSelectTrigger
 						resourceType="rules"
@@ -187,82 +194,5 @@ export function RuleEditorForm({
 				/>
 			</div>
 		</TitlePageShell>
-	);
-}
-
-type EditableNameProps = {
-	// 当前名称，空串表示还没取到（正文为空）
-	value: string;
-	// 名称为空时顶上的页面标题（创建规约/编辑规约）
-	fallback: string;
-	// 提交新名称（失焦或回车）；空串表示交还给正文首行接管
-	onCommit: (next: string) => void;
-};
-
-// 双击才可编辑的页面标题：平时是一行纯文本（无边框无底色），双击或回车切成输入框，失焦/回车提交、Esc 放弃
-function EditableName({ value, fallback, onCommit }: EditableNameProps): JSX.Element {
-	const [isEditing, setIsEditing] = useState(false);
-	// 编辑期间的草稿；Esc 直接丢弃不回写
-	const [draft, setDraft] = useState(value);
-	const inputRef = useRef<HTMLInputElement>(null);
-
-	// 切进编辑态后聚焦并全选，省得用户先手动删一遍旧名字
-	useEffect(() => {
-		if (!isEditing) return;
-		inputRef.current?.focus();
-		inputRef.current?.select();
-	}, [isEditing]);
-
-	// 进入编辑：以当前名称起草
-	const startEditing = (): void => {
-		setDraft(value);
-		setIsEditing(true);
-	};
-
-	// 提交草稿并退出编辑
-	const commit = (): void => {
-		setIsEditing(false);
-		onCommit(draft.trim());
-	};
-
-	// 回车提交、Esc 放弃；两者都会让输入框卸载，不会再触发 blur 提交一次
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-		if (e.key === "Enter") commit();
-		if (e.key === "Escape") setIsEditing(false);
-	};
-
-	if (isEditing) {
-		return (
-			<Input
-				ref={inputRef}
-				value={draft}
-				onChange={(e) => setDraft(e.target.value)}
-				onBlur={commit}
-				onKeyDown={handleKeyDown}
-				placeholder="规约名称"
-				maxLength={64}
-				className="h-9 min-w-0 flex-1 border-none bg-transparent px-1 font-semibold text-lg shadow-none focus-visible:ring-0 md:text-lg dark:bg-transparent"
-			/>
-		);
-	}
-
-	return (
-		<h1 className="flex min-w-0 flex-1 font-semibold text-lg">
-			<Tooltip>
-				<TooltipTrigger
-					render={
-						<button
-							type="button"
-							onDoubleClick={startEditing}
-							onKeyDown={(e) => e.key === "Enter" && startEditing()}
-							className="flex h-9 min-w-0 flex-1 cursor-text items-center px-1 text-left"
-						/>
-					}
-				>
-					<span className="truncate">{value || fallback}</span>
-				</TooltipTrigger>
-				<TooltipContent>双击修改名称（默认取正文首行）</TooltipContent>
-			</Tooltip>
-		</h1>
 	);
 }
