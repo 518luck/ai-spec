@@ -29,14 +29,13 @@ const repoUrl = z
 // 项目所属分组文件夹：null/空串表示未分类
 const folderId = z.string().nullable().or(z.literal(""));
 
-// 路径段名（文件名/文件夹名共用）：不含路径分隔符与空白，防止跨层级注入
+// 配置/文件夹名共用：不含路径分隔符（防止层级符号混入名字导致语义混乱）；表关联模型下名字独立成字段，允许空格
 const segmentName = z
 	.string({ error: "请输入名称" })
 	.trim()
 	.min(1, { error: "请输入名称" })
 	.max(64, { error: "名称长度不能超过 64 个字符" })
-	.refine((s) => !/[\\/]/.test(s), { error: "名称不能包含 / 或 \\" })
-	.refine((s) => !/\s/.test(s), { error: "名称不能包含空白字符" });
+	.refine((s) => !/[\\/]/.test(s), { error: "名称不能包含 / 或 \\" });
 
 // @ 出参 Vo
 // 项目列表项：卡片展示用，含文件夹归属信息与配置计数，不含资源计数（资源计数前端硬编码）
