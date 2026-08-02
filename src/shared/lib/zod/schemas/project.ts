@@ -72,6 +72,15 @@ const agentsMdListItemVo = z.object({
 	folderIds: z.array(z.string()),
 });
 
+// 搜索字段开关（与详情页搜索 UI 的字段选项对齐）：名字 / 内容；缺省时名字和内容都搜
+const agentsMdSearchField = z.enum(["name", "content"]);
+
+// 全项目搜索结果项：本项目列表项 + 项目归属（卡片底部标注所属项目名）
+const agentsMdSearchVo = agentsMdListItemVo.extend({
+	projectId: z.string(),
+	projectName: z.string(),
+});
+
 // 项目配置详情：阅读态取全文用
 const agentsMdContentVo = z.object({
 	id: z.string(),
@@ -123,11 +132,23 @@ export const ProjectSchemas = {
 
 // 项目配置聚合 schema：独立挂在 agentsMdsRouter 下，projectId 作为必传入参
 export const AgentsMdSchemas = {
+	// @ 拼装件（也导出，消费侧可能单独用）
+	searchField: agentsMdSearchField,
+
 	// @ 入参 Dto
-	// 配置列表查询入参：projectId 必传（定位所属项目），folderId 为可选的文件夹筛选（直接挂载）
+	// 配置列表查询入参：projectId 必传（定位所属项目），folderId 为可选的文件夹筛选（直接挂载），
+	// q/fields 为搜索参数（fields 缺省时名字和内容都搜）
 	listDto: z.object({
 		projectId: z.string(),
 		folderId: z.string().optional(),
+		q: z.string().optional(),
+		fields: z.array(agentsMdSearchField).optional(),
+	}),
+
+	// 全项目搜索入参：q 必填（无关键词的全项目搜索无意义），fields 缺省时名字和内容都搜
+	listAllDto: z.object({
+		q: z.string(),
+		fields: z.array(agentsMdSearchField).optional(),
 	}),
 
 	// 新建配置入参：folderId 必传（配置创建即挂载到该文件夹），name 默认 AGENTS.md 可改
@@ -142,6 +163,9 @@ export const AgentsMdSchemas = {
 	// 配置列表响应：单项目配置量可控，不分页
 	listVo: z.array(agentsMdListItemVo),
 	contentVo: agentsMdContentVo,
+	// 全项目搜索结果项与响应
+	searchVo: agentsMdSearchVo,
+	listAllVo: z.array(agentsMdSearchVo),
 } as const;
 
 // 项目内文件夹聚合 schema：独立挂在 projectFoldersRouter 下，projectId 作为必传入参
@@ -177,6 +201,10 @@ export type CreateAgentsMdDto = z.infer<typeof AgentsMdSchemas.createDto>;
 export type AgentsMdListItemVo = z.infer<typeof AgentsMdSchemas.listItemVo>;
 export type AgentsMdListVo = z.infer<typeof AgentsMdSchemas.listVo>;
 export type AgentsMdContentVo = z.infer<typeof AgentsMdSchemas.contentVo>;
+export type AgentsMdSearchFieldKey = z.infer<typeof AgentsMdSchemas.searchField>;
+export type ListAllAgentsMdsDto = z.infer<typeof AgentsMdSchemas.listAllDto>;
+export type AgentsMdSearchVo = z.infer<typeof AgentsMdSchemas.searchVo>;
+export type AgentsMdSearchListVo = z.infer<typeof AgentsMdSchemas.listAllVo>;
 
 export type ListProjectFoldersDto = z.infer<typeof ProjectFolderSchemas.listDto>;
 export type CreateProjectFolderDto = z.infer<typeof ProjectFolderSchemas.createDto>;

@@ -1,10 +1,14 @@
 // # 搜索字段开关编解码（codec）：SearchFilters ↔ URL base64，前后端共享
 
-// 扁平 filter 状态类型：布尔开关字段（true=参与搜索）
+// 搜索范围：project=仅当前项目（默认），all=跨全部项目；单选（与字段的多选开关区分）
+export type SearchScope = "project" | "all";
+
+// 扁平 filter 状态类型：布尔开关字段（true=参与搜索）+ 单选范围（缺省 project）
 export type SearchFilters = Partial<{
 	title: boolean;
 	content: boolean;
 	description: boolean;
+	scope: SearchScope;
 }>;
 
 // > 编码 filter 状态为 URL 参数值：先 base64 再 encodeURIComponent（base64 的 +/= 在 URL 里有特殊含义，必须包裹）

@@ -15,12 +15,14 @@ import { AgentsMdCardGrid } from "./agents-md-cards";
 
 interface RightPaneProps {
 	projectId: string;
-	/** 当前阅读的配置 id；null 表示停留在配置卡片列表 */
-	openedAgentsMdId: string | null;
-	/** 当前选中文件夹下的全部配置（搜索态为过滤后的全项目匹配项） */
+	/** 当前阅读的配置（含所属项目 id：全项目搜索打开的其他项目配置，取全文用其项目 id）；null 表示停留在配置卡片列表 */
+	openedAgentsMd: { id: string; projectId: string } | null;
+	/** 当前选中文件夹下的全部配置（搜索态为后端搜索结果） */
 	folderAgentsMds: AgentsMdListItemVo[];
 	/** 文件夹 id → 名称映射（卡片底部标注挂载位置用） */
 	folderNames: Record<string, string>;
+	/** 配置 id → 项目名映射（全项目搜索时标注项目归属；本项目搜索为 undefined） */
+	projectNames?: Record<string, string>;
 	/** 空列表提示文案（搜索无结果时用搜索专用文案） */
 	emptyHint?: string;
 	/** 打开某份配置进入阅读态 */
@@ -30,20 +32,28 @@ interface RightPaneProps {
 // 右侧主体：配置阅读 / 加载中 / 空文件夹 / 卡片列表 四种状态，扁平化避免嵌套三元
 export function RightPane({
 	projectId,
-	openedAgentsMdId,
+	openedAgentsMd,
 	folderAgentsMds,
 	folderNames,
+	projectNames,
 	emptyHint,
 	onOpenAgentsMd,
 }: RightPaneProps): JSX.Element {
-	// 阅读态：取配置全文（仅打开配置时请求）
+	// 阅读态：取配置全文（仅打开配置时请求）；queryKey 带所属项目 id（跨项目打开时缓存隔离）
 	const { data: agentsMd, isLoading } = useQuery({
-		queryKey: projectKeys.agentsMdContent(projectId, openedAgentsMdId ?? ""),
-		queryFn: () => client.agentsMds.getById({ projectId, id: openedAgentsMdId as string }),
-		enabled: Boolean(openedAgentsMdId),
+		queryKey: projectKeys.agentsMdContent(
+			openedAgentsMd?.projectId ?? projectId,
+			openedAgentsMd?.id ?? "",
+		),
+		queryFn: () =>
+			client.agentsMds.getById({
+				projectId: openedAgentsMd?.projectId ?? projectId,
+				id: openedAgentsMd?.id ?? "",
+			}),
+		enabled: Boolean(openedAgentsMd),
 	});
 
-	if (openedAgentsMdId) {
+	if (openedAgentsMd) {
 		if (isLoading || !agentsMd) {
 			return (
 				<div className="flex min-h-60 flex-1 items-center justify-center">
@@ -75,6 +85,7 @@ export function RightPane({
 				<AgentsMdCardGrid
 					agentsMds={folderAgentsMds}
 					folderNames={folderNames}
+					projectNames={projectNames}
 					onOpen={onOpenAgentsMd}
 				/>
 			</div>

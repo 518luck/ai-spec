@@ -2,7 +2,12 @@
 // > 配置是项目的子资源，projectId 作为必传参数（列表/详情均需先校验项目归属）
 
 import "@orpc/openapi/extensions/route"; // 启用 .route() 扩展（声明 method + path 给第三方）
-import { createAgentsMd, getAgentsMd, listAgentsMds } from "@/server/domain/agents-mds/services";
+import {
+	createAgentsMd,
+	getAgentsMd,
+	listAgentsMds,
+	listAllAgentsMds,
+} from "@/server/domain/agents-mds/services";
 import { z } from "@/shared/lib/zod";
 import { AgentsMdSchemas } from "@/shared/lib/zod/schemas/project";
 import { personalProcedure } from "../procedures";
@@ -10,9 +15,9 @@ import { personalProcedure } from "../procedures";
 // 配置 id 路径参数
 const agentsMdIdPathSchema = z.object({ id: z.string() });
 
-// > 项目配置 router：list / getById / create（projectId 必传，service 内校验项目归属）
+// > 项目配置 router：list / getById / create / 全项目搜索（projectId 必传，service 内校验项目归属）
 export const agentsMdsRouter = {
-	// 配置列表（GET /agents-mds?projectId=...）
+	// 配置列表（GET /agents-mds?projectId=...&q=...&fields=...）
 	list: personalProcedure()
 		.route({ method: "GET", path: "/agents-mds" })
 		.input(AgentsMdSchemas.listDto)
@@ -22,6 +27,21 @@ export const agentsMdsRouter = {
 				userId: context.session.user.id,
 				projectId: input.projectId,
 				folderId: input.folderId,
+				q: input.q,
+				fields: input.fields,
+			});
+		}),
+
+	// 全项目搜索（GET /agents-mds/search?q=...&fields=...）：跨当前用户全部项目，结果带项目归属
+	listAll: personalProcedure()
+		.route({ method: "GET", path: "/agents-mds/search" })
+		.input(AgentsMdSchemas.listAllDto)
+		.output(AgentsMdSchemas.listAllVo)
+		.handler(async ({ input, context }) => {
+			return listAllAgentsMds({
+				userId: context.session.user.id,
+				q: input.q,
+				fields: input.fields,
 			});
 		}),
 

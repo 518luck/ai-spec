@@ -2,12 +2,19 @@
 
 // # 项目内视图客户端容器：持有选中/展开/阅读/搜索状态，渲染面包屑 + 文件夹树 + 配置区
 
+import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
 import { useMemo, useState } from "react";
 import { SearchInput } from "@/features/search-input";
 import { useSessionStorage } from "@/shared/hooks";
-import type { AgentsMdListItemVo, ProjectFolderListItemVo } from "@/shared/lib/zod/schemas/project";
+import { client } from "@/shared/lib/orpc/client";
+import { decodeFilters, type SearchFilters } from "@/shared/lib/search-filter-codec";
+import type {
+	AgentsMdListItemVo,
+	AgentsMdSearchFieldKey,
+	ProjectFolderListItemVo,
+} from "@/shared/lib/zod/schemas/project";
 import { TitlePageShell } from "@/widgets/page-shell";
 import {
 	buildProjectTree,
@@ -55,8 +62,10 @@ export function ProjectDetailClient({
 	);
 	// 左侧树选中的文件夹；进入时默认选中项目根文件夹
 	const [selectedFolderId, setSelectedFolderId] = useState<string>(rootFolderId);
-	// 当前阅读的配置 id；null 表示停留在配置卡片列表
-	const [openedAgentsMdId, setOpenedAgentsMdId] = useState<string | null>(null);
+	// 当前阅读的配置（含所属项目 id：全项目搜索打开的可能属于其他项目，取全文必须用项目自己的 id）
+	const [openedAgentsMd, setOpenedAgentsMd] = useState<{ id: string; projectId: string } | null>(
+		null,
+	);
 	// 树中展开的文件夹集合（受控），面包屑跳转时补齐祖先路径
 	// > 存 sessionStorage（按项目隔离），刷新后恢复展开状态，关标签页清空
 	const [expandedFolderIds, setExpandedFolderIds] = useSessionStorage<string[]>(
@@ -71,14 +80,39 @@ export function ProjectDetailClient({
 	// 标题栏搜索词：由 SearchInput 写入 URL ?q=，此处读取驱动过滤（跨文件夹搜索全项目配置）
 	const searchParams = useSearchParams();
 	const searchQuery = searchParams?.get("q") ?? "";
+	// 解码筛选条件：字段开关（名字/内容）+ 范围（本项目/全项目，缺省本项目）
+	const searchFilters: SearchFilters = useMemo(
+		() => decodeFilters(searchParams?.get("filter") ?? undefined) ?? {},
+		[searchParams],
+	);
+	// 搜索范围：缺省本项目
+	const searchScope = searchFilters.scope ?? "project";
+	// 参与搜索的字段：按开关收集（title 开关对应后端的 name 字段——配置以文件名为标识）；join 成字符串作 queryKey 的一部分（数组引用不稳定，直接作 key 会多请求）
+	const searchFields = useMemo(() => {
+		const fields: AgentsMdSearchFieldKey[] = [];
+		if (searchFilters.title) fields.push("name");
+		if (searchFilters.content) fields.push("content");
+		return fields;
+	}, [searchFilters]);
+	const searchFieldsKey = searchFields.join(",");
 
 	// 切换文件夹（树点击或面包屑跳转）：右侧退回该文件夹的配置卡片列表，并展开目标路径上的全部祖先
 	const handleFolderSelect = (folderId: string): void => {
 		setSelectedFolderId(folderId);
-		setOpenedAgentsMdId(null);
+		setOpenedAgentsMd(null);
 		setExpandedFolderIds((prev) => [
 			...new Set([...prev, ...getFolderAncestorIds(folderId, tree)]),
 		]);
+	};
+
+	// > 打开配置阅读：全项目搜索时按结果项定位其所属项目（可能不是当前项目），其余场景用当前项目
+	const handleOpenAgentsMd = (id: string): void => {
+		if (isAllScope) {
+			const item = (allScopeResults ?? []).find((result) => result.id === id);
+			setOpenedAgentsMd(item ? { id, projectId: item.projectId } : { id, projectId });
+		} else {
+			setOpenedAgentsMd({ id, projectId });
+		}
 	};
 
 	// 创建文件/文件夹成功后的联动：展开新路径祖先，文件夹创建后选中它（右侧联动），再刷新服务端数据
@@ -86,7 +120,7 @@ export function ProjectDetailClient({
 		if (kind === "folder") {
 			setExpandedFolderIds((prev) => [...new Set([...prev, ...getFolderAncestorIds(id, tree)])]);
 			setSelectedFolderId(id);
-			setOpenedAgentsMdId(null);
+			setOpenedAgentsMd(null);
 		}
 		// 创建文件时父文件夹即当前选中项（已展开），无需额外展开
 		// RSC 预取快照模式：router.refresh() 触发服务端重新执行预取，树/卡片拿到最新数据
@@ -97,7 +131,7 @@ export function ProjectDetailClient({
 	const handleDeleted = (folderId: string, parentId: string | null): void => {
 		if (selectedFolderId === folderId) {
 			setSelectedFolderId(parentId ?? rootFolderId);
-			setOpenedAgentsMdId(null);
+			setOpenedAgentsMd(null);
 			setExpandedFolderIds((prev) => prev.filter((id) => id !== folderId));
 		}
 		router.refresh();
@@ -109,16 +143,35 @@ export function ProjectDetailClient({
 		[selectedFolderId, tree, agentsMds],
 	);
 
-	// 展示给右侧的配置：搜索态为全项目匹配项（按名称/摘要，忽略大小写），否则为当前文件夹子树
+	// > 搜索态查询：关键词非空时启用；本项目走 list（带 q/fields），全项目走 listAll（跨全部项目）
+	//   "搜内容"需要 content 全文，前端预取只有 name+excerpt，因此必须后端搜索
+	//   两个查询按 scope 互斥启用（enabled 里带 scope 判断），data 类型各自明确
+	const isAllScope = searchScope === "all";
+	const searchEnabled = Boolean(searchQuery.trim());
+	const { data: allScopeResults } = useQuery({
+		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
+		queryFn: () => client.agentsMds.listAll({ q: searchQuery, fields: searchFields }),
+		enabled: searchEnabled && isAllScope,
+	});
+	const { data: projectResults } = useQuery({
+		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
+		queryFn: () => client.agentsMds.list({ projectId, q: searchQuery, fields: searchFields }),
+		enabled: searchEnabled && !isAllScope,
+	});
+	// 当前生效的搜索结果（未搜索时为空数组，展示层回退到文件夹子树）
+	const searchResults = isAllScope ? allScopeResults : projectResults;
+
+	// 展示给右侧的配置：搜索态为后端搜索结果，否则为当前文件夹子树
 	const visibleAgentsMds = useMemo(() => {
-		const keyword = searchQuery.trim().toLowerCase();
-		if (!keyword) return folderAgentsMds;
-		return agentsMds.filter(
-			(agentsMd) =>
-				agentsMd.name.toLowerCase().includes(keyword) ||
-				agentsMd.excerpt.toLowerCase().includes(keyword),
-		);
-	}, [searchQuery, folderAgentsMds, agentsMds]);
+		if (!searchEnabled) return folderAgentsMds;
+		return searchResults ?? [];
+	}, [searchEnabled, folderAgentsMds, searchResults]);
+
+	// 全项目搜索时：docId → 项目名（卡片底部标注项目归属）；本项目搜索仍用文件夹名映射
+	const projectNames = useMemo(() => {
+		if (!isAllScope) return undefined;
+		return Object.fromEntries((allScopeResults ?? []).map((item) => [item.id, item.projectName]));
+	}, [isAllScope, allScopeResults]);
 
 	// 文件夹 id → 名称映射（卡片底部标注挂载位置用）
 	const folderNames = useMemo(
@@ -131,11 +184,16 @@ export function ProjectDetailClient({
 			// 标题栏不放标题：左侧项目内搜索框（封装组件，写 URL q 参数）+ 右侧导航面包屑（VSCode 顶部工具条风格）
 			title={
 				<div className="flex w-full items-center gap-6">
-					<SearchInput className="max-w-sm" />
+					{/* 项目内搜索：字段可多选（标题/内容），特殊字段 scope 启用范围单选（本项目/全项目） */}
+					<SearchInput
+						className="max-w-sm"
+						filters={["title", "content", "scope"]}
+						defaultFilter="title"
+					/>
 					<BreadcrumbNav
 						tree={tree}
 						agentsMds={agentsMds}
-						currentId={openedAgentsMdId ?? selectedFolderId}
+						currentId={openedAgentsMd?.id ?? selectedFolderId}
 						onNavigateHome={() => router.back()}
 						onNavigateFolder={handleFolderSelect}
 					/>
@@ -175,11 +233,12 @@ export function ProjectDetailClient({
 				<section className="flex min-w-0 flex-1 flex-col">
 					<RightPane
 						projectId={projectId}
-						openedAgentsMdId={openedAgentsMdId}
+						openedAgentsMd={openedAgentsMd}
 						folderAgentsMds={visibleAgentsMds}
 						folderNames={folderNames}
+						projectNames={projectNames}
 						emptyHint={searchQuery.trim() ? "未找到匹配的配置" : undefined}
-						onOpenAgentsMd={setOpenedAgentsMdId}
+						onOpenAgentsMd={handleOpenAgentsMd}
 					/>
 				</section>
 			</div>

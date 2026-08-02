@@ -4,7 +4,7 @@ import { AiSpecError } from "@/server/errors/http-error";
 import prisma from "@/shared/db";
 import { ErrorCode } from "@/shared/lib/zod/schemas/error";
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
-import { makeAgentsMdListItem } from "./list-agents-mds";
+import { makeAgentsMdListItem } from "../lib/agents-md-item";
 
 // 新配置默认正文模板：摘要取首个非标题正文行
 const makeDefaultContent = (name: string): string => `# ${name}
