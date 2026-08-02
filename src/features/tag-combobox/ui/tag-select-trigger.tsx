@@ -149,8 +149,8 @@ export function TagSelectTrigger({
 		scrollable: chipsScrollable,
 		updateScrollProgress: updateChipsProgress,
 	} = useScrollProgress(chipsScrollRef, { direction: "horizontal" });
-	// 横向惯性滚动：wheel 直接绑 handleWheel，箭头点击走 scrollTo，都走 rAF + lerp 缓动
-	const { handleWheel: handleChipsWheel, scrollTo: scrollChipsTo } = useInertialScroll(
+	// 横向惯性滚动：滚轮监听由 hook 原生绑定（不再传 onWheel，避免事件被处理两次），箭头点击走 scrollTo
+	const { scrollTo: scrollChipsTo } = useInertialScroll(
 		chipsScrollRef,
 		// chips 条件挂载：有选中标签时再绑原生 wheel
 		{ direction: "horizontal", enabled: chips.length > 0 },
@@ -209,7 +209,6 @@ export function TagSelectTrigger({
 				<div className="group relative min-w-0 flex-1">
 					<div
 						ref={chipsScrollRef}
-						onWheel={handleChipsWheel}
 						onScroll={updateChipsProgress}
 						className="flex items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 					>

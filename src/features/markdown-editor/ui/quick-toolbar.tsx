@@ -98,7 +98,8 @@ export function QuickToolbar({ editorRef, isExpanded }: QuickToolbarProps): JSX.
 	const startPos = useRef<{ x: number; y: number } | null>(null);
 	// 快捷栏横滚容器：wheel 转横向 + 惯性缓动
 	const toolbarScrollRef = useRef<HTMLDivElement>(null);
-	const { handleWheel: handleToolbarWheel } = useInertialScroll(toolbarScrollRef, {
+	// 滚轮监听由 hook 原生绑定（不再传 onWheel，避免事件被处理两次）
+	useInertialScroll(toolbarScrollRef, {
 		direction: "horizontal",
 		// 工具条条件挂载：有快捷项时再绑原生 wheel
 		enabled: activeToolbarItems.length > 0,
@@ -128,7 +129,6 @@ export function QuickToolbar({ editorRef, isExpanded }: QuickToolbarProps): JSX.
 					>
 						<div
 							ref={toolbarScrollRef}
-							onWheel={handleToolbarWheel}
 							onScroll={updateToolbarProgress}
 							className={cn(
 								"overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",

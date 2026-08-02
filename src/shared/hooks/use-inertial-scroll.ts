@@ -4,7 +4,6 @@
 // > 工作原理：wheel 事件把 delta 累加到 target，rAF 循环用 lerp 让 current 渐进逼近 target
 // ! 横向把纵向滚轮转横滚时必须用非 passive 原生监听，React onWheel 无法可靠 preventDefault，否则页面会跟着滚
 
-import type { WheelEvent } from "react";
 import { type RefObject, useCallback, useEffect, useLayoutEffect, useRef } from "react";
 
 type UseInertialScrollOptions = {
@@ -16,12 +15,11 @@ type UseInertialScrollOptions = {
 	enabled?: boolean;
 };
 
-// > 返回可绑到 onWheel 的 handler 与编程式 scrollTo，均走 rAF 缓动
+// > 返回编程式 scrollTo 与 cancel；wheel 监听由内部原生非 passive 绑定，使用处无需（也不应）再绑 onWheel
 export function useInertialScroll(
 	ref: RefObject<HTMLElement | null>,
 	{ direction = "vertical", smooth = 0.2, enabled = true }: UseInertialScrollOptions = {},
 ): {
-	handleWheel: (e: WheelEvent<HTMLElement>) => void;
 	scrollTo: (delta: number) => void;
 	cancel: () => void;
 } {
@@ -80,21 +78,20 @@ export function useInertialScroll(
 		[readCurrent, scheduleTick],
 	);
 
-	// 处理一次 wheel：横向可转纵轮；返回是否已消费事件（需 preventDefault）
+	// 处理一次 wheel：横滚容器把纵轮/横手势都转成横向位移；返回是否已消费事件（需 preventDefault）
 	const consumeWheel = useCallback(
 		(e: Pick<globalThis.WheelEvent, "deltaX" | "deltaY">): boolean => {
 			const el = ref.current;
 			if (!el) return false;
 
 			if (direction === "horizontal") {
-				// 真实横向手势交给浏览器；仅把「纵向为主」的滚轮转成横滚
-				if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return false;
-
 				const maxScroll = el.scrollWidth - el.clientWidth;
 				// 内容未溢出：不拦截，让页面正常竖滚
 				if (maxScroll <= 1) return false;
 
-				const delta = e.deltaY;
+				// > 横向手势（deltaX 为主）也接管：统一转成横滚并拦截默认行为，
+				//   否则浏览器对容器横滚的同时，页面/父级仍会跟着竖滚（上下微动）
+				const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
 				const atStart = el.scrollLeft <= 0 && delta < 0;
 				const atEnd = el.scrollLeft >= maxScroll - 1 && delta > 0;
 				// 已到边缘还继续往外滚：放行页面滚动
@@ -108,16 +105,6 @@ export function useInertialScroll(
 			return false;
 		},
 		[direction, ref, scrollTo],
-	);
-
-	// > 兼容旧的 React onWheel；主路径已改原生非 passive，这里作后备
-	const handleWheel = useCallback(
-		(e: WheelEvent) => {
-			if (consumeWheel(e)) {
-				e.preventDefault();
-			}
-		},
-		[consumeWheel],
 	);
 
 	// > 原生 wheel + passive:false，才能挡住页面跟着竖滚（React 合成 wheel 不可靠）
@@ -141,5 +128,5 @@ export function useInertialScroll(
 	// 卸载时清理 rAF，避免内存泄漏与跨组件污染
 	useEffect(() => cancel, [cancel]);
 
-	return { handleWheel, scrollTo, cancel };
+	return { scrollTo, cancel };
 }

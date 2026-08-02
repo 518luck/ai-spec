@@ -125,7 +125,8 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 		scrollable: chipsScrollable,
 		updateScrollProgress: updateChipsProgress,
 	} = useScrollProgress(chipsScrollRef, { direction: "horizontal" });
-	const { handleWheel: handleChipsWheel, scrollTo: scrollChipsTo } = useInertialScroll(
+	// 滚轮监听由 hook 原生绑定（不再传 onWheel，避免事件被处理两次），箭头点击走 scrollTo
+	const { scrollTo: scrollChipsTo } = useInertialScroll(
 		chipsScrollRef,
 		// chips 条件挂载：有选中项时再绑原生 wheel，避免 ref 为空时漏绑
 		{ direction: "horizontal", enabled: chipsCount > 0 },
@@ -190,7 +191,6 @@ export function SkillFilter({ className }: SkillFilterProps): JSX.Element {
 					<div className="group relative min-w-0 max-w-56 flex-1 sm:max-w-142">
 						<div
 							ref={chipsScrollRef}
-							onWheel={handleChipsWheel}
 							onScroll={updateChipsProgress}
 							className="flex items-center gap-1.5 overflow-x-auto py-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
 						>

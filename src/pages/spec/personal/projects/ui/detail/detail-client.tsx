@@ -5,9 +5,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { SearchInput } from "@/features/search-input";
-import { useSessionStorage } from "@/shared/hooks";
+import { useInertialScroll, useSessionStorage } from "@/shared/hooks";
 import { client } from "@/shared/lib/orpc/client";
 import { decodeFilters, type SearchFilters } from "@/shared/lib/search-filter-codec";
 import type {
@@ -179,6 +179,11 @@ export function ProjectDetailClient({
 		[projectFolders],
 	);
 
+	// > 面包屑横滚：滚轮划过去横向滚动（rAF 惯性），不触发页面纵向滚动；内容未溢出时自动放行页面滚动
+	//   滚轮监听由 hook 原生绑定，不再传 onWheel（避免事件被处理两次）
+	const breadcrumbScrollRef = useRef<HTMLDivElement>(null);
+	useInertialScroll(breadcrumbScrollRef, { direction: "horizontal" });
+
 	return (
 		<TitlePageShell
 			// 标题栏不放标题：左侧项目内搜索框（封装组件，写 URL q 参数）；面包屑在下方独立栏
@@ -222,9 +227,12 @@ export function ProjectDetailClient({
 					{/* // 缩放手柄：贴 aside 右边缘，拖拽调整文件夹树宽度 */}
 					<SidebarResizeHandle width={sidebarWidth} onWidthChange={setSidebarWidth} />
 				</aside>
-				{/* // @ 右侧内容区：面包屑独立栏（只占本区域，超宽横向滚动，VSCode 风格）+ 配置卡片列表 / 配置阅读 */}
+				{/* // @ 右侧内容区：面包屑独立栏（只占本区域，滚轮横向滚动，VSCode 风格）+ 配置卡片列表 / 配置阅读 */}
 				<section className="flex min-w-0 flex-1 flex-col">
-					<div className="flex h-7 shrink-0 items-center overflow-x-auto border-b px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+					<div
+						ref={breadcrumbScrollRef}
+						className="flex h-7 shrink-0 items-center overflow-x-auto border-b px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+					>
 						<BreadcrumbNav
 							tree={tree}
 							agentsMds={agentsMds}
