@@ -1,10 +1,9 @@
-// # 项目域：项目（接入的代码仓库，AGENTS.md 的顶层容器）
+// # 项目域：项目（接入的代码仓库，AGENTS.md 的顶层容器）+ 项目内文件夹
 //
 // 结构对应前端 src/pages/spec/personal/projects：
-//   项目卡片 → 文件夹树 / 文档卡片 → 文档阅读
-// ! 项目内的文件夹树不建表：文档以项目内相对路径（path）定位，树结构、层级、文件夹计数
-//   全部由路径前缀推导（对应前端 getSubfolderIds / collectAgentsMds），天然不存在"空文件夹"脏状态
-//   （AgentsMd 文档模型见 agents-md.prisma）
+//   项目卡片 → 文件夹树 / 配置卡片 → 配置阅读
+// ! 项目内文件夹为树形表（parentId 自关联），每项目一条根文件夹记录；配置与文件夹多对多
+//   关联（AgentsMdFolder 中间表，见 agents-md.prisma），不再有路径前缀推导
 
 // 项目：AGENTS.md 的顶层容器，对应一个代码仓库
 // 当前为用户手建；repoUrl 预留给将来的 git 仓库同步
@@ -30,11 +29,43 @@ model Project {
   owner     User       @relation("AgentsProjectOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其项目）
   team      Team?      @relation("TeamAgentsProjects", fields: [teamId], references: [id], onDelete: Cascade) // 所属团队（团队删除→级联删其项目；null=个人项目）
   folder    Folder?    @relation("FolderItems_Project", fields: [folderId], references: [id], onDelete: SetNull) // 所属分组文件夹（文件夹删除→项目保留，folderId 置空）
-  agentsMds AgentsMd[] // 项目下的全部 AGENTS.md 文档（模型见 agents-md.prisma）
+  agentsMds      AgentsMd[]      // 项目下的全部 AGENTS.md 配置（模型见 agents-md.prisma）
+  projectFolders ProjectFolder[] // 项目下的文件夹树（模型见下文）
 
   // ⑥ 索引
   @@index([ownerId]) // 加速"我的项目"查询（首页项目卡片）
   @@index([teamId]) // 加速团队项目查询
   @@index([folderId]) // 加速按文件夹筛选项目
+  @@schema("project")
+}
+
+// 项目内文件夹：树形结构（parentId 自关联），可独立于配置存在（纯归纳组织）
+// 每项目一条根文件夹记录（parentId=null，name 与项目名一致）：顶层配置/文件夹都挂它下面，
+// 文件树的第一行就是它（前端显示项目名）
+// ! 只与项目挂钩（projectId），不记录创建者：文件夹是项目的子资源，删除用户时项目已级联删除
+model ProjectFolder {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段
+  name     String  // 文件夹名（如 "app"）；根文件夹 name 与项目名一致
+  parentId String? @map("parent_id") // 父文件夹 id；null = 项目根下
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // ④ 外键列
+  projectId String @map("project_id")
+
+  // ⑤ 关联关系
+  project   Project          @relation(fields: [projectId], references: [id], onDelete: Cascade) // 所属项目（项目删除→级联删其下文件夹）
+  parent    ProjectFolder?   @relation("ProjectFolderTree", fields: [parentId], references: [id], onDelete: Cascade) // 父文件夹（父删→级联删其子树）
+  children  ProjectFolder[]  @relation("ProjectFolderTree") // 子文件夹
+  agentsMds AgentsMdFolder[] // 挂载的 AGENTS.md 配置（多对多中间表，模型见 agents-md.prisma）
+
+  // ⑥ 索引
+  @@unique([projectId, parentId, name]) // 同层同名唯一（根文件夹层 parentId=null 亦生效）
+  @@index([projectId]) // 加速"项目内全部文件夹"查询
   @@schema("project")
 }

@@ -36,6 +36,7 @@ import {
 	IconEyeOff,
 	IconEyeSearch,
 	IconFileAi,
+	IconFilePlus,
 	IconFileText,
 	IconFilter2,
 	IconFlag,
@@ -69,6 +70,7 @@ import {
 	IconHighlight,
 	IconListNumbers,
 	IconRulerMeasure2,
+	IconRefresh,
 	IconSearch,
 	IconSelector,
 	IconSettings,
@@ -168,6 +170,9 @@ export const Icons = {
 	collapseAll: IconChevronsUp,
 	libraryPlus: IconLibraryPlus, // 文件夹树：全部展开（与 collapseAll 同槽位切换显示）
 	libraryMinus: IconLibraryMinus, // 文件夹树：全部收起
+	// 文件树工具栏：创建 / 刷新
+	filePlus: IconFilePlus, // 创建 AGENTS.md 配置
+	refresh: IconRefresh, // 刷新当前项目配置与文件夹数据
 	folderClosed: IconFolder,
 	folderOpen: IconFolderOpen,
 	folderX: IconFolderX,

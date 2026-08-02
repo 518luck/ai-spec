@@ -64,7 +64,7 @@ export const listProjects = async ({
 		folderId: project.folderId,
 		folderName: project.folder?.name ?? null,
 		folderColor: project.folder?.color ?? null,
-		docCount: project._count.agentsMds,
+		agentsMdCount: project._count.agentsMds,
 		createdAt: project.createdAt.toISOString(),
 		updatedAt: project.updatedAt.toISOString(),
 	}));

@@ -1,4 +1,4 @@
-// # 项目单条详情：返回名称/简介/文件夹归属 + 文档计数（抽屉取数用）
+// # 项目单条详情：返回名称/简介/文件夹归属 + 配置计数（抽屉取数用）
 
 import { AiSpecError } from "@/server/errors/http-error";
 import prisma from "@/shared/db";
@@ -35,7 +35,7 @@ export const getProjectById = async ({
 		folderId: project.folderId,
 		folderName: project.folder?.name ?? null,
 		folderColor: project.folder?.color ?? null,
-		docCount: project._count.agentsMds,
+		agentsMdCount: project._count.agentsMds,
 		createdAt: project.createdAt.toISOString(),
 		updatedAt: project.updatedAt.toISOString(),
 	};

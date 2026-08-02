@@ -1,7 +1,7 @@
 import { z } from "@/shared/lib/zod";
 
-// # 项目（Project）相关 zod schema：项目列表/详情/新建 + 项目文档（AGENTS.md）列表/详情校验
-// > schema 值分两个聚合对象：ProjectSchemas（项目）+ AgentsMdSchemas（项目文档），type 保留独立导出
+// # 项目（Project）相关 zod schema：项目列表/详情/新建 + 项目配置（AGENTS.md）与项目内文件夹校验
+// > schema 值分三个聚合对象：ProjectSchemas（项目）+ AgentsMdSchemas（项目配置）+ ProjectFolderSchemas（项目内文件夹），type 保留独立导出
 
 // @ 拼装件（局部变量，供 Dto/Vo 组装用）
 // 项目名：必填，1~64 字。refine 只校验纯空白，不改写用户输入
@@ -29,8 +29,17 @@ const repoUrl = z
 // 项目所属分组文件夹：null/空串表示未分类
 const folderId = z.string().nullable().or(z.literal(""));
 
+// 路径段名（文件名/文件夹名共用）：不含路径分隔符与空白，防止跨层级注入
+const segmentName = z
+	.string({ error: "请输入名称" })
+	.trim()
+	.min(1, { error: "请输入名称" })
+	.max(64, { error: "名称长度不能超过 64 个字符" })
+	.refine((s) => !/[\\/]/.test(s), { error: "名称不能包含 / 或 \\" })
+	.refine((s) => !/\s/.test(s), { error: "名称不能包含空白字符" });
+
 // @ 出参 Vo
-// 项目列表项：卡片展示用，含文件夹归属信息与文档计数，不含资源计数（资源计数前端硬编码）
+// 项目列表项：卡片展示用，含文件夹归属信息与配置计数，不含资源计数（资源计数前端硬编码）
 const projectListItemVo = z.object({
 	id: z.string(),
 	name: z.string(),
@@ -38,7 +47,7 @@ const projectListItemVo = z.object({
 	folderId: z.string().nullable(),
 	folderName: z.string().nullable(),
 	folderColor: z.string().nullable(),
-	docCount: z.number(),
+	agentsMdCount: z.number(),
 	createdAt: z.iso.datetime(),
 	updatedAt: z.iso.datetime(),
 });
@@ -51,24 +60,31 @@ const projectVo = z.object({
 	folderId: z.string().nullable(),
 	folderName: z.string().nullable(),
 	folderColor: z.string().nullable(),
-	docCount: z.number(),
+	agentsMdCount: z.number(),
 	createdAt: z.iso.datetime(),
 	updatedAt: z.iso.datetime(),
 });
 
-// 项目文档列表项：卡片展示用，标题与摘要从 content 提取
+// 项目配置列表项：卡片展示用，标题直接用文件名 name，摘要从 content 提取；folderIds 为挂载的文件夹（多对多）
 const agentsMdListItemVo = z.object({
 	id: z.string(),
-	path: z.string(),
-	title: z.string(),
+	name: z.string(),
 	excerpt: z.string(),
+	folderIds: z.array(z.string()),
 });
 
-// 项目文档详情：阅读态取全文用
+// 项目配置详情：阅读态取全文用
 const agentsMdContentVo = z.object({
 	id: z.string(),
-	path: z.string(),
+	name: z.string(),
 	content: z.string(),
+});
+
+// 项目内文件夹列表项：树形结构，parentId 为父文件夹 id（null=项目根下）
+const projectFolderListItemVo = z.object({
+	id: z.string(),
+	parentId: z.string().nullable(),
+	name: z.string(),
 });
 
 // @ 聚合对象：所有 schema 值按「拼装件 / 入参 Dto / 出参 Vo」分组
@@ -106,20 +122,48 @@ export const ProjectSchemas = {
 	}),
 } as const;
 
-// 项目文档聚合 schema：独立挂在 agentsMdsRouter 下，projectId 作为必传入参（原走 URL 路径，现走 query）
+// 项目配置聚合 schema：独立挂在 agentsMdsRouter 下，projectId 作为必传入参
 export const AgentsMdSchemas = {
 	// @ 入参 Dto
-	// 文档列表查询入参：projectId 必传（定位所属项目），folderPath 为可选的路径前缀筛选
+	// 配置列表查询入参：projectId 必传（定位所属项目），folderId 为可选的文件夹筛选（直接挂载）
 	listDto: z.object({
 		projectId: z.string(),
-		folderPath: z.string().optional(),
+		folderId: z.string().optional(),
+	}),
+
+	// 新建配置入参：folderId 必传（配置创建即挂载到该文件夹），name 默认 AGENTS.md 可改
+	createDto: z.object({
+		projectId: z.string(),
+		folderId: z.string(),
+		name: segmentName,
 	}),
 
 	// @ 出参 Vo
 	listItemVo: agentsMdListItemVo,
-	// 文档列表响应：单项目文档量可控，不分页
+	// 配置列表响应：单项目配置量可控，不分页
 	listVo: z.array(agentsMdListItemVo),
 	contentVo: agentsMdContentVo,
+} as const;
+
+// 项目内文件夹聚合 schema：独立挂在 projectFoldersRouter 下，projectId 作为必传入参
+export const ProjectFolderSchemas = {
+	// @ 入参 Dto
+	// 文件夹列表查询入参：projectId 必传（定位所属项目）
+	listDto: z.object({
+		projectId: z.string(),
+	}),
+
+	// 新建文件夹入参：parentId 为父文件夹 id（缺省=项目根文件夹下），name 为文件夹名
+	createDto: z.object({
+		projectId: z.string(),
+		parentId: z.string().optional(),
+		name: segmentName,
+	}),
+
+	// @ 出参 Vo
+	listItemVo: projectFolderListItemVo,
+	// 文件夹列表响应：单项目文件夹量可控，不分页
+	listVo: z.array(projectFolderListItemVo),
 } as const;
 
 // @ 派生类型（保留独立导出，消费侧 import type）
@@ -130,6 +174,12 @@ export type ProjectListItemVo = z.infer<typeof ProjectSchemas.listItemVo>;
 export type ProjectListVo = z.infer<typeof ProjectSchemas.listVo>;
 
 export type ListAgentsMdsDto = z.infer<typeof AgentsMdSchemas.listDto>;
+export type CreateAgentsMdDto = z.infer<typeof AgentsMdSchemas.createDto>;
 export type AgentsMdListItemVo = z.infer<typeof AgentsMdSchemas.listItemVo>;
 export type AgentsMdListVo = z.infer<typeof AgentsMdSchemas.listVo>;
 export type AgentsMdContentVo = z.infer<typeof AgentsMdSchemas.contentVo>;
+
+export type ListProjectFoldersDto = z.infer<typeof ProjectFolderSchemas.listDto>;
+export type CreateProjectFolderDto = z.infer<typeof ProjectFolderSchemas.createDto>;
+export type ProjectFolderListItemVo = z.infer<typeof ProjectFolderSchemas.listItemVo>;
+export type ProjectFolderListVo = z.infer<typeof ProjectFolderSchemas.listVo>;

@@ -14,9 +14,9 @@ import prisma from "@/shared/db";
 // ! 此 ID 必须与 scripts/db/user.ts 的 OWNER_ID 保持一致
 const OWNER_ID = "cmrjdu92f0001099de7h2zu5p";
 
-// @ seed 数据：从原 mock-tree.ts 搬运的 3 个项目及其 AGENTS.md 文档
+// @ seed 数据：从原 mock-tree.ts 搬运的 3 个项目及其 AGENTS.md 配置
 
-// 单个项目的全部 AGENTS.md 文档（path → content）
+// 单个项目的全部 AGENTS.md 配置（path → content）
 type Docs = Record<string, string>;
 
 // 项目 seed 数据：name/description/folderName/folderColor/docs
@@ -156,7 +156,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
 				"",
 				"Docker Compose 本地编排，生产用 k8s，CI/CD 走 GitHub Actions。",
 			].join("\n"),
-			"docs/AGENTS.md": ["# 项目文档", "", "架构决策记录（ADR）与 RFC 放此目录，按编号归档。"].join(
+			"docs/AGENTS.md": ["# 项目配置", "", "架构决策记录（ADR）与 RFC 放此目录，按编号归档。"].join(
 				"\n",
 			),
 		},
@@ -233,15 +233,70 @@ const seed = async (): Promise<void> => {
 					select: { id: true, name: true },
 				});
 
-		// 文档按 (projectId, path) upsert
-		for (const [path, content] of Object.entries(seedItem.docs)) {
-			await prisma.agentsMd.upsert({
-				where: { projectId_path: { projectId: project.id, path } },
-				create: { path, content, ownerId: owner.id, projectId: project.id },
-				update: { content },
+		// 项目创建/更新后确保根文件夹存在（新模型每项目一条 parentId=null 记录，顶层挂载点）
+		// > 复合唯一键 where 不允许 nullable 字段为 null，根文件夹用 findFirst + create 幂等
+		let rootFolder = await prisma.projectFolder.findFirst({
+			where: { projectId: project.id, parentId: null },
+			select: { id: true },
+		});
+		if (!rootFolder) {
+			rootFolder = await prisma.projectFolder.create({
+				data: { name: project.name, parentId: null, projectId: project.id },
+				select: { id: true },
 			});
 		}
-		console.warn(`✅ 项目「${project.name}」已导入（${Object.keys(seedItem.docs).length} 篇文档）`);
+
+		// 配置按 path 导入：前缀物化文件夹链（parentId 挂接），配置挂到最近前缀文件夹
+		for (const [path, content] of Object.entries(seedItem.docs)) {
+			const segments = path.split("/");
+			const fileName = segments[segments.length - 1];
+
+			// 逐层 upsert 文件夹（同层同名幂等），从根文件夹开始
+			let parentFolderId = rootFolder.id;
+			for (const segment of segments.slice(0, -1)) {
+				const folder = await prisma.projectFolder.upsert({
+					where: {
+						projectId_parentId_name: {
+							projectId: project.id,
+							parentId: parentFolderId,
+							name: segment,
+						},
+					},
+					create: {
+						name: segment,
+						parentId: parentFolderId,
+						projectId: project.id,
+					},
+					update: {},
+					select: { id: true },
+				});
+				parentFolderId = folder.id;
+			}
+
+			// 配置：同文件夹同名查重（多对多下 (projectId, name) 不再唯一），不存在则创建并挂载
+			const existing = await prisma.agentsMd.findFirst({
+				where: {
+					projectId: project.id,
+					name: fileName,
+					folders: { some: { projectFolderId: parentFolderId } },
+				},
+				select: { id: true },
+			});
+			const doc =
+				existing ??
+				(await prisma.agentsMd.create({
+					data: { name: fileName, content, projectId: project.id, ownerId: owner.id },
+					select: { id: true },
+				}));
+			await prisma.agentsMdFolder.upsert({
+				where: {
+					agentsMdId_projectFolderId: { agentsMdId: doc.id, projectFolderId: parentFolderId },
+				},
+				create: { agentsMdId: doc.id, projectFolderId: parentFolderId },
+				update: {},
+			});
+		}
+		console.warn(`✅ 项目「${project.name}」已导入（${Object.keys(seedItem.docs).length} 份配置）`);
 	}
 
 	console.warn("\n🎉 seed 完成。数据已导入，前端验证无误后可删除 scripts/seed-projects.ts");

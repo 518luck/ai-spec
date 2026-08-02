@@ -4,7 +4,7 @@
 // ! Account / Session 为 better-auth 等第三方库的固定表结构，沿用库原生命名，禁止改名（见 prisma/AGENTS.md）。
 
 // 这是你的 Prisma 模式文件（Schema file），
-// 在文档中了解更多信息：https://pris.ly/d/prisma-schema
+// 在配置中了解更多信息：https://pris.ly/d/prisma-schema
 
 // 只需几秒即可获取一个免费的托管版 Postgres 数据库：执行 npx create-db
 
@@ -56,7 +56,7 @@ model User {
   rules        Rule[]        @relation("RuleOwner")
   ruleVersions RuleVersion[] @relation("RuleVersionEditor") // 该用户创建的规则版本记录
 
-  // 项目反向关系：该用户创建的项目与项目文档
+  // 项目反向关系：该用户创建的项目与项目配置
   projects  Project[]  @relation("AgentsProjectOwner")
   agentsMds AgentsMd[] @relation("AgentsDocOwner")
 

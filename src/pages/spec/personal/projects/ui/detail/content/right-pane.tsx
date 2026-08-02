@@ -1,6 +1,6 @@
 "use client";
 
-// # 项目详情右侧主体：文档阅读 / 加载中 / 空文件夹 / 卡片列表 四态切换
+// # 项目详情右侧主体：配置阅读 / 加载中 / 空文件夹 / 卡片列表 四态切换
 
 import { useQuery } from "@tanstack/react-query";
 import type { JSX } from "react";
@@ -15,22 +15,25 @@ import { AgentsMdCardGrid } from "./agents-md-cards";
 
 interface RightPaneProps {
 	projectId: string;
-	/** 当前阅读的文档 id；null 表示停留在文档卡片列表 */
+	/** 当前阅读的配置 id；null 表示停留在配置卡片列表 */
 	openedAgentsMdId: string | null;
-	/** 当前选中文件夹下的全部文档 */
+	/** 当前选中文件夹下的全部配置 */
 	folderAgentsMds: AgentsMdListItemVo[];
-	/** 打开某篇文档进入阅读态 */
+	/** 文件夹 id → 名称映射（卡片底部标注挂载位置用） */
+	folderNames: Record<string, string>;
+	/** 打开某份配置进入阅读态 */
 	onOpenAgentsMd: (agentsMdId: string) => void;
 }
 
-// 右侧主体：文档阅读 / 加载中 / 空文件夹 / 卡片列表 四种状态，扁平化避免嵌套三元
+// 右侧主体：配置阅读 / 加载中 / 空文件夹 / 卡片列表 四种状态，扁平化避免嵌套三元
 export function RightPane({
 	projectId,
 	openedAgentsMdId,
 	folderAgentsMds,
+	folderNames,
 	onOpenAgentsMd,
 }: RightPaneProps): JSX.Element {
-	// 阅读态：取文档全文（仅打开文档时请求）
+	// 阅读态：取配置全文（仅打开配置时请求）
 	const { data: agentsMd, isLoading } = useQuery({
 		queryKey: projectKeys.agentsMdContent(projectId, openedAgentsMdId ?? ""),
 		queryFn: () => client.agentsMds.getById({ projectId, id: openedAgentsMdId as string }),
@@ -55,13 +58,17 @@ export function RightPane({
 	}
 
 	if (folderAgentsMds.length === 0) {
-		return <EmptyState icon={Icons.agentsMd} description="该文件夹下还没有 AGENTS.md 文档" />;
+		return <EmptyState icon={Icons.agentsMd} description="该文件夹下还没有 AGENTS.md 配置" />;
 	}
 
 	return (
 		<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
 			<div className="px-6 py-4">
-				<AgentsMdCardGrid agentsMds={folderAgentsMds} onOpen={onOpenAgentsMd} />
+				<AgentsMdCardGrid
+					agentsMds={folderAgentsMds}
+					folderNames={folderNames}
+					onOpen={onOpenAgentsMd}
+				/>
 			</div>
 		</div>
 	);

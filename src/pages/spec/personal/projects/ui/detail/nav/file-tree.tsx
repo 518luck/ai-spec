@@ -12,7 +12,8 @@ import {
 import { useTree } from "@headless-tree/react"; // React 绑定：useTree hook 把配置转成 treeApi
 import { AnimatePresence, motion } from "motion/react"; // 图标切换的淡入淡出
 import Image from "next/image";
-import type { JSX } from "react";
+import { useRouter } from "next/navigation";
+import { type JSX, useState } from "react";
 import { useSessionStorage } from "@/shared/hooks";
 import { cn } from "@/shared/lib/utils";
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
@@ -20,19 +21,21 @@ import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import {
 	collectFolderAgentsMds,
-	getAncestorFolderIds,
+	getFolderAncestorIds,
 	getSubfolderIds,
 	PROJECT_TREE_ROOT_ID,
 	type ProjectTreeNode,
 } from "../../../model/path-utils";
 import type { FolderIconPair } from "../folder-icons";
+import { CreateFileDialog } from "./create-file-dialog";
+import { CreateFolderDialog } from "./create-folder-dialog";
 
 interface FileTreeProps {
 	/** 当前打开的项目 id，树只展示该项目的文件夹；切换项目时用 key 重挂载 */
 	projectId: string;
-	/** 项目内文件夹树（由扁平文档列表按 path 前缀推导） */
+	/** 项目内文件夹树（显式文件夹表记录与配置路径推导合并构建） */
 	tree: Record<string, ProjectTreeNode>;
-	/** 项目全部文档（用于计算各文件夹子树的文档数角标） */
+	/** 项目全部配置（用于计算各文件夹子树的配置数角标） */
 	agentsMds: AgentsMdListItemVo[];
 	/** 当前选中的文件夹 id（受控）：面包屑等外部跳转时树高亮同步 */
 	selectedFolderId: string;
@@ -42,6 +45,8 @@ interface FileTreeProps {
 	onExpandedChange: (updater: string[] | ((old: string[]) => string[])) => void;
 	/** 点击文件夹时上抛其 id，供右侧卡片区联动 */
 	onFolderSelect: (folderId: string) => void;
+	/** 创建文件/文件夹成功后的联动（展开/选中由页面持有受控状态） */
+	onCreated: (id: string, kind: "file" | "folder") => void;
 	/** 服务端预解析的各文件夹图标对，按 itemId 索引 */
 	iconsMap: Record<string, FolderIconPair>;
 	/** 通用兜底图标对（未命中 iconsMap 时使用） */
@@ -56,9 +61,17 @@ export function FileTree({
 	expandedFolderIds,
 	onExpandedChange,
 	onFolderSelect,
+	onCreated,
 	iconsMap,
 	defaultIconPair,
 }: FileTreeProps): JSX.Element {
+	const router = useRouter();
+	// 创建文件/文件夹对话框开关
+	const [createFileOpen, setCreateFileOpen] = useState(false);
+	const [createFolderOpen, setCreateFolderOpen] = useState(false);
+	// 当前选中文件夹（新文件/文件夹创建在它之下）；其显示名供对话框提示文案使用
+	const parentFolderId = selectedFolderId;
+	const parentFolderName = tree[parentFolderId]?.name ?? parentFolderId;
 	const treeApi = useTree<ProjectTreeNode>({
 		rootItemId: PROJECT_TREE_ROOT_ID,
 		getItemName: (item) => item.getItemData().name,
@@ -66,9 +79,11 @@ export function FileTree({
 		isItemFolder: (item) => getSubfolderIds(item.getId(), tree).length > 0,
 		dataLoader: {
 			getItem: (itemId) => tree[itemId],
-			// 根下只挂当前项目，让项目文件夹本身成为树的第一行（选中可看项目全部文档）
+			// 根下只挂项目根文件夹（树第一行，显示项目名），其余按父子挂接
 			getChildren: (itemId) =>
-				itemId === PROJECT_TREE_ROOT_ID ? [projectId] : getSubfolderIds(itemId, tree),
+				itemId === PROJECT_TREE_ROOT_ID
+					? (tree[PROJECT_TREE_ROOT_ID]?.children ?? [])
+					: getSubfolderIds(itemId, tree),
 		},
 		// 选中与展开都受页面控制：树内交互经 setXxx 上抛，外部（面包屑）跳转时高亮与展开自动同步
 		state: {
@@ -87,7 +102,7 @@ export function FileTree({
 	});
 
 	// 选中项的祖先链：这些层级的缩进竖线高亮（VSCode 风格，直观显示归属路径）
-	const activeAncestorIds = new Set(getAncestorFolderIds(selectedFolderId, projectId));
+	const activeAncestorIds = new Set(getFolderAncestorIds(selectedFolderId, tree));
 
 	// 全部展开意图：记录用户是否点了"全部展开"，决定工具栏图标切换
 	// > 存 sessionStorage（按项目隔离），与 expandedFolderIds 同生命周期，刷新后一致恢复
@@ -100,58 +115,103 @@ export function FileTree({
 
 	return (
 		<div className="flex flex-col">
-			{/* // @ 顶部工具条：全部展开 / 全部收起（同槽位切换，motion 淡入淡出） */}
+			{/* // @ 顶部工具条：创建文件 / 创建文件夹 / 刷新 / 全部展开-收起（展开收起同槽位切换，motion 淡入淡出） */}
 			<div className="flex items-center justify-between px-3 pt-2">
-				<span className="text-muted-foreground text-xs">文件夹</span>
-				<div className="relative flex h-7 w-7 items-center justify-center">
-					<AnimatePresence initial={false} mode="wait">
-						{isAllExpanded ? (
-							<MotionButton
-								key="collapse"
-								variant="ghost"
-								size="icon-sm"
-								aria-label="全部收起"
-								initial={{ opacity: 0, scale: 0.85 }}
-								animate={{ opacity: 1, scale: 1 }}
-								exit={{ opacity: 0, scale: 0.85 }}
-								transition={{ duration: 0.15, ease: "easeOut" }}
-								onClick={() => {
-									setIsAllExpanded(false);
-									treeApi.collapseAll();
-								}}
-							>
-								<Icons.libraryMinus className="size-4" />
-							</MotionButton>
-						) : (
-							<MotionButton
-								key="expand"
-								variant="ghost"
-								size="icon-sm"
-								aria-label="全部展开"
-								initial={{ opacity: 0, scale: 0.85 }}
-								animate={{ opacity: 1, scale: 1 }}
-								exit={{ opacity: 0, scale: 0.85 }}
-								transition={{ duration: 0.15, ease: "easeOut" }}
-								onClick={() => {
-									setIsAllExpanded(true);
-									void treeApi.expandAll();
-								}}
-							>
-								<Icons.libraryPlus className="size-4" />
-							</MotionButton>
-						)}
-					</AnimatePresence>
+				<span className="text-muted-foreground text-xs">AGENTS.md 管理</span>
+				<div className="flex items-center">
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						aria-label="新建配置"
+						title="新建配置"
+						onClick={() => setCreateFileOpen(true)}
+					>
+						<Icons.filePlus className="size-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						aria-label="新建文件夹"
+						title="新建文件夹"
+						onClick={() => setCreateFolderOpen(true)}
+					>
+						<Icons.folderPlus className="size-4" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						aria-label="刷新"
+						title="刷新"
+						onClick={() => router.refresh()}
+					>
+						<Icons.refresh className="size-4" />
+					</Button>
+					<div className="relative flex h-7 w-7 items-center justify-center">
+						<AnimatePresence initial={false} mode="wait">
+							{isAllExpanded ? (
+								<MotionButton
+									key="collapse"
+									variant="ghost"
+									size="icon-sm"
+									aria-label="全部收起"
+									initial={{ opacity: 0, scale: 0.85 }}
+									animate={{ opacity: 1, scale: 1 }}
+									exit={{ opacity: 0, scale: 0.85 }}
+									transition={{ duration: 0.15, ease: "easeOut" }}
+									onClick={() => {
+										setIsAllExpanded(false);
+										treeApi.collapseAll();
+									}}
+								>
+									<Icons.libraryMinus className="size-4" />
+								</MotionButton>
+							) : (
+								<MotionButton
+									key="expand"
+									variant="ghost"
+									size="icon-sm"
+									aria-label="全部展开"
+									initial={{ opacity: 0, scale: 0.85 }}
+									animate={{ opacity: 1, scale: 1 }}
+									exit={{ opacity: 0, scale: 0.85 }}
+									transition={{ duration: 0.15, ease: "easeOut" }}
+									onClick={() => {
+										setIsAllExpanded(true);
+										void treeApi.expandAll();
+									}}
+								>
+									<Icons.libraryPlus className="size-4" />
+								</MotionButton>
+							)}
+						</AnimatePresence>
+					</div>
 				</div>
 			</div>
+			{/* // @ 创建对话框：提交成功后上抛新路径，由页面展开/选中并刷新 */}
+			<CreateFileDialog
+				open={createFileOpen}
+				onOpenChange={setCreateFileOpen}
+				projectId={projectId}
+				parentFolderId={parentFolderId}
+				parentFolderName={parentFolderName}
+				onCreated={(id) => onCreated(id, "file")}
+			/>
+			<CreateFolderDialog
+				open={createFolderOpen}
+				onOpenChange={setCreateFolderOpen}
+				projectId={projectId}
+				parentFolderId={parentFolderId}
+				parentFolderName={parentFolderName}
+				onCreated={(id) => onCreated(id, "folder")}
+			/>
 			<div
-				{...treeApi.getContainerProps("项目文档文件夹树")}
+				{...treeApi.getContainerProps("项目配置文件夹树")}
 				className="flex flex-col p-2 outline-none"
 			>
 				{treeApi.getItems().map((item) => (
 					<FileTreeRow
 						key={item.getId()}
 						item={item}
-						projectId={projectId}
 						tree={tree}
 						agentsMds={agentsMds}
 						iconsMap={iconsMap}
@@ -170,10 +230,9 @@ const INDENT_PX = 8;
 // 动效按钮：motion 包装 Button，用于工具栏图标切换时的淡入淡出
 const MotionButton = motion.create(Button);
 
-// 单行节点：缩进辅助线（祖先链 active 高亮）+ 展开箭头 + 文件夹图标 + 名称 + 子树文档数
+// 单行节点：缩进辅助线（祖先链 active 高亮）+ 展开箭头 + 文件夹图标 + 名称 + 子树配置数
 function FileTreeRow({
 	item,
-	projectId,
 	tree,
 	agentsMds,
 	iconsMap,
@@ -181,7 +240,6 @@ function FileTreeRow({
 	activeAncestorIds,
 }: {
 	item: ItemInstance<ProjectTreeNode>;
-	projectId: string;
 	tree: Record<string, ProjectTreeNode>;
 	agentsMds: AgentsMdListItemVo[];
 	iconsMap: Record<string, FolderIconPair>;
@@ -194,10 +252,10 @@ function FileTreeRow({
 	const iconPair = iconsMap[item.getId()] ?? defaultIconPair;
 	const iconSrc = isExpanded ? iconPair.open : iconPair.closed;
 	// 该文件夹子树内（含各层子文件夹）的 AGENTS.md 数量
-	const docCount = collectFolderAgentsMds(item.getId(), tree, agentsMds).length;
+	const agentsMdCount = collectFolderAgentsMds(item.getId(), tree, agentsMds).length;
 
-	// 当前行到项目根的祖先链（含两端）；slice(0,-1) 去掉自身，留祖先用于竖线渲染
-	const ancestorIds = getAncestorFolderIds(item.getId(), projectId).slice(0, -1);
+	// 当前行到项目根文件夹的祖先链（含两端）；slice(0,-1) 去掉自身，留祖先用于竖线渲染
+	const ancestorIds = getFolderAncestorIds(item.getId(), tree).slice(0, -1);
 	// chevron 缩进：每多一层祖先多 INDENT_PX；项目根无祖先 → 0
 	const indentPx = ancestorIds.length * INDENT_PX;
 
@@ -247,8 +305,10 @@ function FileTreeRow({
 					className="size-4 shrink-0"
 				/>
 				<span className="truncate">{item.getItemName()}</span>
-				{docCount > 0 ? (
-					<span className="ml-auto text-muted-foreground text-xs tabular-nums">{docCount}</span>
+				{agentsMdCount > 0 ? (
+					<span className="ml-auto text-muted-foreground text-xs tabular-nums">
+						{agentsMdCount}
+					</span>
 				) : null}
 			</div>
 		</div>

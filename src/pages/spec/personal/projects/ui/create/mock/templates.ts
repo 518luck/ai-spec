@@ -15,7 +15,7 @@ export type ProjectTemplate = {
 	tree: TemplateFileNode[];
 };
 
-// @ 模板占位列表：纯 UI 选择，不提交后端、不生成初始文档
+// @ 模板占位列表：纯 UI 选择，不提交后端、不生成初始配置
 export const PROJECT_TEMPLATES: readonly ProjectTemplate[] = [
 	{
 		key: "blank",

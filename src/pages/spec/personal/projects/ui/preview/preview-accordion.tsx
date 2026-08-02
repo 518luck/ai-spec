@@ -1,6 +1,6 @@
 "use client";
 
-// # 预览分组列表：资源（skill/plugin/mcp/agent）与文档（AGENTS.md）统一成手风琴分组
+// # 预览分组列表：资源（skill/plugin/mcp/agent）与配置（AGENTS.md）统一成手风琴分组
 
 import type { JSX } from "react";
 
@@ -57,10 +57,16 @@ interface Section {
 interface PreviewAccordionProps {
 	resources: AiResourceItem[];
 	agentsMds: AgentsMdListItemVo[];
+	/** 文件夹 id → 名称映射（配置行标注挂载位置用） */
+	folderNames: Record<string, string>;
 }
 
-// > 资源按四类分组 + 文档单组，统一成平级手风琴
-export function PreviewAccordion({ resources, agentsMds }: PreviewAccordionProps): JSX.Element {
+// > 资源按四类分组 + 配置单组，统一成平级手风琴
+export function PreviewAccordion({
+	resources,
+	agentsMds,
+	folderNames,
+}: PreviewAccordionProps): JSX.Element {
 	const sections: Section[] = [];
 
 	for (const meta of RESOURCE_META) {
@@ -91,21 +97,26 @@ export function PreviewAccordion({ resources, agentsMds }: PreviewAccordionProps
 			key: "agentsMd",
 			title: "AGENTS.md",
 			icon: Icons.agentsMd,
-			rows: agentsMds.map((agentsMd) => ({
-				id: agentsMd.id,
-				cells: [
-					{ text: agentsMd.title, className: "min-w-0 flex-1 truncate" },
-					{
-						text: agentsMd.excerpt,
-						className: "min-w-0 max-w-40 truncate text-muted-foreground text-xs",
-					},
-					{
-						// 文件夹路径由 path 去掉末段（文件名）得出，顶层文档显示为项目根
-						text: agentsMd.path.includes("/") ? agentsMd.path.replace(/\/[^/]+$/, "") : "/",
-						className: "shrink-0 font-mono text-muted-foreground text-xs",
-					},
-				],
-			})),
+			rows: agentsMds.map((agentsMd) => {
+				// 挂载的文件夹名取第一个挂载点（多对多时只标注一个位置）
+				const folderName = agentsMd.folderIds
+					.map((folderId) => folderNames[folderId])
+					.filter(Boolean)[0];
+				return {
+					id: agentsMd.id,
+					cells: [
+						{ text: agentsMd.name, className: "min-w-0 flex-1 truncate" },
+						{
+							text: agentsMd.excerpt,
+							className: "min-w-0 max-w-40 truncate text-muted-foreground text-xs",
+						},
+						{
+							text: folderName ?? "项目根",
+							className: "shrink-0 font-mono text-muted-foreground text-xs",
+						},
+					],
+				};
+			}),
 		});
 	}
 

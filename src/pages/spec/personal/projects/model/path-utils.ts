@@ -1,6 +1,6 @@
-// # 项目文档路径工具：把扁平 path 列表推导成内存文件夹树（项目内文件夹不建表，靠路径前缀推导层级）
+// # 项目树工具：从文件夹表（parentId 树）+ 配置多对多挂载构建内存树，供文件树/面包屑/卡片收集使用
 
-import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
+import type { AgentsMdListItemVo, ProjectFolderListItemVo } from "@/shared/lib/zod/schemas/project";
 
 // 虚拟根节点 id：headless-tree 从它向下取子节点，根本身不渲染
 export const PROJECT_TREE_ROOT_ID = "root";
@@ -11,60 +11,42 @@ export interface ProjectTreeNode {
 	children?: string[];
 }
 
-// @ 路径拆分与祖先推导
+// @ 树构建
 
-// 把路径型 id 拆成累计前缀，如 "a/b/c" → ["a", "a/b", "a/b/c"]；供面包屑分段与祖先展开使用
-export const getPathIds = (pathId: string): string[] => {
-	const parts = pathId.split("/");
-	return parts.map((_, index) => parts.slice(0, index + 1).join("/"));
-};
-
-// 取某文件夹的完整祖先链 id（从项目根到自身，含两端）；项目根本身返回 [projectId]
-// > 与 getPathIds 的区别：getPathIds 只按路径前缀拆分，不含非路径型的项目根；本函数补齐项目根
-export const getAncestorFolderIds = (folderId: string, projectId: string): string[] => {
-	const pathIds = getPathIds(folderId);
-	// folderId === projectId 时 getPathIds 返回 [projectId]，无需补
-	if (folderId === projectId) return [projectId];
-	return [projectId, ...pathIds];
-};
-
-// @ 扁平文档列表 → 内存文件夹树
-
-// 从全量文档列表构建树节点表：文件夹节点从 path 前缀派生，文件节点对应实际文档
-// 返回值包含虚拟根节点（PROJECT_TREE_ROOT_ID），其 children 为顶层文件夹/文件
-// @param projectName 项目根的显示名；不传则回退到 projectId
+// 从文件夹表与配置挂载关系构建节点表：文件夹节点来自表记录（parentId 挂接），
+// 配置节点（多对多）挂到其所有挂载文件夹下；虚拟根 children 为项目根文件夹
+// @param rootFolderId 项目根文件夹 id（parentId=null 的记录），树第一行
+// @param projectName 项目根显示名（不传回退 rootFolderId）
 export const buildProjectTree = (
-	projectId: string,
+	folders: ProjectFolderListItemVo[],
 	agentsMds: AgentsMdListItemVo[],
+	rootFolderId: string,
 	projectName?: string,
 ): Record<string, ProjectTreeNode> => {
 	const nodes: Record<string, ProjectTreeNode> = {
-		[PROJECT_TREE_ROOT_ID]: { name: "root", children: [projectId] },
-		// 项目根本身作为树的第一层节点，显示项目名；id 仍是 cuid 的 projectId 保证唯一
-		[projectId]: { name: projectName ?? projectId, children: [] },
+		[PROJECT_TREE_ROOT_ID]: { name: "root", children: [rootFolderId] },
+		// 根文件夹作为树的第一行，显示项目名
+		[rootFolderId]: { name: projectName ?? rootFolderId, children: [] },
 	};
 
-	for (const agentsMd of agentsMds) {
-		const segments = agentsMd.path.split("/");
-		// 末段是文件名，前面的段是文件夹层级
-		const folderSegments = segments.slice(0, -1);
-		// 累计前缀 id：["app","api"] → ["app","app/api"]
-		const folderIds = folderSegments.map((_, index) =>
-			folderSegments.slice(0, index + 1).join("/"),
-		);
-
-		// 建立各层文件夹节点，父子挂接
-		let parentId = projectId;
-		for (const [index, folderId] of folderIds.entries()) {
-			if (!nodes[folderId]) {
-				nodes[folderId] = { name: folderSegments[index], children: [] };
-				projectAppendChild(nodes, parentId, folderId);
-			}
-			parentId = folderId;
+	// 先物化全部文件夹节点，再按 parentId 挂接（根文件夹已预建，跳过自身挂接）
+	for (const folder of folders) {
+		if (!nodes[folder.id]) {
+			nodes[folder.id] = { name: folder.name, children: [] };
 		}
-		// 文件节点挂在最后一个文件夹下（顶层文档直接挂项目根）
-		nodes[agentsMd.id] = { name: segments[segments.length - 1] };
-		projectAppendChild(nodes, parentId, agentsMd.id);
+	}
+	for (const folder of folders) {
+		if (folder.id === rootFolderId) continue;
+		// 顶层文件夹 parentId 为 null，挂项目根文件夹下
+		projectAppendChild(nodes, folder.parentId ?? rootFolderId, folder.id);
+	}
+
+	// 配置节点（多对多）挂到其所有挂载文件夹下
+	for (const agentsMd of agentsMds) {
+		nodes[agentsMd.id] = { name: agentsMd.name };
+		for (const folderId of agentsMd.folderIds) {
+			projectAppendChild(nodes, folderId, agentsMd.id);
+		}
 	}
 
 	return nodes;
@@ -88,35 +70,50 @@ const projectAppendChild = (
 export const getSubfolderIds = (itemId: string, tree: Record<string, ProjectTreeNode>): string[] =>
 	(tree[itemId]?.children ?? []).filter((childId) => Boolean(tree[childId]?.children));
 
-// 收集树内全部文件夹的 id → 名字映射（含项目根本身，不含虚拟根）；供图标预解析遍历使用
-// @param projectName 项目根的显示名；不传则根节点名字回退到 projectId
-export const collectFolderNames = (
-	projectId: string,
+// 取某节点到项目根文件夹的祖先链（含两端），供缩进线高亮 / 展开祖先 / 面包屑使用
+// > 沿 children 反查父：内存树规模小，O(n) 遍历可接受；虚拟根不进入链，找不到父时提前退出（防御数据残缺）
+export const getFolderAncestorIds = (
+	folderId: string,
 	tree: Record<string, ProjectTreeNode>,
-	projectName?: string,
+): string[] => {
+	const chain: string[] = [folderId];
+	let currentId = folderId;
+	while (currentId !== PROJECT_TREE_ROOT_ID) {
+		const parentId = Object.keys(tree).find((id) => tree[id].children?.includes(currentId));
+		// 父为虚拟根或缺失时停止（根文件夹是链的顶端）
+		if (!parentId || parentId === currentId || parentId === PROJECT_TREE_ROOT_ID) break;
+		chain.unshift(parentId);
+		currentId = parentId;
+	}
+	return chain;
+};
+
+// 收集树内全部文件夹的 id → 名字映射（含项目根文件夹）；供图标预解析遍历使用
+export const collectFolderNames = (
+	tree: Record<string, ProjectTreeNode>,
 ): Record<string, string> => {
 	const result: Record<string, string> = {};
-	// 从项目根开始（跳过不渲染的虚拟根），DFS 收集全部文件夹
-	const stack = [projectId];
+	// 从虚拟根开始（跳过不渲染的虚拟根），DFS 收集全部文件夹
+	const stack = (tree[PROJECT_TREE_ROOT_ID]?.children ?? []).slice();
 	while (stack.length > 0) {
 		const id = stack.pop();
 		if (!id) continue;
 		const node = tree[id];
 		if (!node?.children) continue; // 文件节点跳过
-		result[id] = id === projectId ? (projectName ?? projectId) : node.name;
+		result[id] = node.name;
 		stack.push(...getSubfolderIds(id, tree));
 	}
 	return result;
 };
 
-// 递归收集某文件夹子树内的全部文档，供右侧卡片列表展示
+// 递归收集某文件夹子树内的全部配置，供右侧卡片列表展示（多对多：同一配置挂多个文件夹时各子树独立收集，Set 去重）
 export const collectFolderAgentsMds = (
 	folderId: string,
 	tree: Record<string, ProjectTreeNode>,
 	agentsMds: AgentsMdListItemVo[],
 ): AgentsMdListItemVo[] => {
 	// DFS 遍历子树：文件夹节点继续下钻，文件节点（无 children）收集其 id
-	const docIds = new Set<string>();
+	const agentsMdIds = new Set<string>();
 	const stack = [folderId];
 	while (stack.length > 0) {
 		const id = stack.pop();
@@ -125,8 +122,8 @@ export const collectFolderAgentsMds = (
 		if (!children) continue; // 文件节点跳过
 		for (const childId of children) {
 			if (tree[childId]?.children) stack.push(childId);
-			else docIds.add(childId);
+			else agentsMdIds.add(childId);
 		}
 	}
-	return agentsMds.filter((agentsMd) => docIds.has(agentsMd.id));
+	return agentsMds.filter((agentsMd) => agentsMdIds.has(agentsMd.id));
 };

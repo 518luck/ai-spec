@@ -33,7 +33,7 @@ interface ProjectCardProps {
 	onOpen: () => void;
 }
 
-// 单张项目卡：整卡点击打开预览抽屉；hover 出“进入完整页”快捷入口；底部展示文档计数
+// 单张项目卡：整卡点击打开预览抽屉；hover 出“进入完整页”快捷入口；底部展示配置计数
 function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 	const router = useRouter();
 	return (
@@ -57,7 +57,7 @@ function ProjectCard({ project, onOpen }: ProjectCardProps): JSX.Element {
 			footer={
 				<span className="flex items-center gap-1.5 text-muted-foreground text-xs">
 					<Icons.agentsMd className="size-3.5 shrink-0" />
-					{project.docCount} 篇文档
+					{project.agentsMdCount} 份配置
 				</span>
 			}
 		/>

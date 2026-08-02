@@ -1,6 +1,6 @@
 "use client";
 
-// # 项目预览抽屉：右侧宽抽屉，展示项目信息 + 文档清单 + AI 总结
+// # 项目预览抽屉：右侧宽抽屉，展示项目信息 + 配置清单 + AI 总结
 
 import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
@@ -52,11 +52,19 @@ function PreviewContent({ projectId }: { projectId: string }): JSX.Element {
 		queryKey: projectKeys.detail(projectId),
 		queryFn: () => client.projects.getById({ id: projectId }),
 	});
-	// 项目文档列表：取全量供抽屉展示
+	// 项目配置列表：取全量供抽屉展示
 	const { data: agentsMds } = useQuery({
 		queryKey: projectKeys.agentsMds(projectId),
 		queryFn: () => client.agentsMds.list({ projectId }),
 	});
+	// 项目文件夹：构建 id → 名称映射，配置行标注挂载位置
+	const { data: projectFolders } = useQuery({
+		queryKey: projectKeys.projectFolders(projectId),
+		queryFn: () => client.projects.projectFolders.list({ projectId }),
+	});
+	const folderNames = Object.fromEntries(
+		(projectFolders ?? []).map((folder) => [folder.id, folder.name]),
+	);
 
 	if (projectLoading || !project) {
 		return (
@@ -91,7 +99,7 @@ function PreviewContent({ projectId }: { projectId: string }): JSX.Element {
 			<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
 				<AiSummary projectId={projectId} />
 				<Separator />
-				<PreviewAccordion resources={[]} agentsMds={agentsMds ?? []} />
+				<PreviewAccordion resources={[]} agentsMds={agentsMds ?? []} folderNames={folderNames} />
 			</div>
 		</>
 	);

@@ -57,10 +57,12 @@ export const projectKeys = {
 	infinite: (params: Record<string, unknown>) => [...projectKeys.all, "infinite", params] as const,
 	details: () => [...projectKeys.all, "detail"] as const,
 	detail: (id: string) => [...projectKeys.details(), { id }] as const,
-	agentsMds: (projectId: string, folderPath?: string) =>
-		[...projectKeys.all, "agentsMds", { projectId, folderPath }] as const,
+	agentsMds: (projectId: string, folderId?: string) =>
+		[...projectKeys.all, "agentsMds", { projectId, folderId }] as const,
 	agentsMdContent: (projectId: string, id: string) =>
 		[...projectKeys.all, "agentsMdContent", { projectId, id }] as const,
+	projectFolders: (projectId: string) =>
+		[...projectKeys.all, "projectFolders", { projectId }] as const,
 } as const;
 
 // 标签

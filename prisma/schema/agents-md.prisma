@@ -1,31 +1,58 @@
-// # 项目文档（AGENTS.md）：以项目内相对路径定位的文档文件
+// # 项目配置（AGENTS.md）：以文件名为标识的配置，文件夹归属走多对多中间表
 //
-// ! 项目内的文件夹树不建表：文档以项目内相对路径（path）定位，树结构、层级、文件夹计数
-//   全部由路径前缀推导（对应前端 getSubfolderIds / collectAgentsMds），天然不存在"空文件夹"脏状态
+// ! 配置与文件夹（ProjectFolder）为多对多关系（AgentsMdFolder 中间表）：一份配置可同时挂载
+//   多个文件夹；文件夹层级由 parentId 自关联（见 project.prisma），不再有路径前缀推导
 
-// 文档：一份 AGENTS.md 文件，以项目内相对路径定位（如 "AGENTS.md"、"app/api/AGENTS.md"）
+// 配置：一份 AGENTS.md 文件；name 即文件名（如 "AGENTS.md"），同一文件夹下同名唯一（应用层校验）
 model AgentsMd {
   // ① 主键
   id String @id @default(cuid())
 
   // ② 业务字段
-  path    String // 项目内相对路径，路径前缀即文件夹层级；根目录文档为 "AGENTS.md"
-  content String @db.Text // 文档正文（markdown）
+  name    String // 文件名（如 "AGENTS.md"、"AGENTS.local.md"）；卡片标题直接展示
+  content String @db.Text // 配置正文（markdown）
 
   // ③ 时间戳
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt        @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   // ④ 外键列
   ownerId   String @map("owner_id")
   projectId String @map("project_id")
 
   // ⑤ 关联关系
-  owner   User    @relation("AgentsDocOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其文档；团队项目中可与项目 owner 不同）
-  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // 所属项目（项目删除→级联删其下文档）
+  owner   User    @relation("AgentsDocOwner", fields: [ownerId], references: [id], onDelete: Cascade) // 创建者（删除用户→级联删其配置；团队项目中可与项目 owner 不同）
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade) // 所属项目（项目删除→级联删其下配置）
+  folders AgentsMdFolder[] // 挂载的文件夹（多对多中间表，模型见下文）
 
   // ⑥ 索引
-  @@unique([projectId, path]) // 同一项目内路径唯一，兼作"项目内按路径取文档"的查询索引
-  @@index([ownerId]) // 加速"我创建的文档"查询
+  @@index([projectId]) // 加速"项目内全部配置"查询
+  @@index([ownerId]) // 加速"我创建的配置"查询
+  @@schema("agents_md")
+}
+
+// 配置-文件夹多对多中间表：一份配置可同时挂载多个文件夹
+// 配置可出现在文件树中多个文件夹下，也可复制到其它文件夹（UI 能力后续补充）
+// 挂载关系：配置 → 文件夹（多对多）；同一配置在同一文件夹下至多一条
+model AgentsMdFolder {
+  // ① 主键
+  id String @id @default(cuid())
+
+  // ② 业务字段（无）
+
+  // ③ 时间戳
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // ④ 外键列
+  agentsMdId      String @map("agents_md_id")
+  projectFolderId String @map("project_folder_id")
+
+  // ⑤ 关联关系
+  agentsMd      AgentsMd      @relation(fields: [agentsMdId], references: [id], onDelete: Cascade) // 配置（配置删→级联删挂载关系）
+  projectFolder ProjectFolder @relation(fields: [projectFolderId], references: [id], onDelete: Cascade) // 文件夹（文件夹删→级联删挂载关系）
+
+  // ⑥ 索引
+  @@unique([agentsMdId, projectFolderId]) // 同一配置在同一文件夹下至多挂载一次
+  @@index([projectFolderId]) // 加速"文件夹下全部配置"查询
   @@schema("agents_md")
 }
