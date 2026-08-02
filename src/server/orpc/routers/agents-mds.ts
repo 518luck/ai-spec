@@ -7,6 +7,7 @@ import {
 	getAgentsMd,
 	listAgentsMds,
 	listAllAgentsMds,
+	updateAgentsMd,
 } from "@/server/domain/agents-mds/services";
 import { z } from "@/shared/lib/zod";
 import { AgentsMdSchemas } from "@/shared/lib/zod/schemas/project";
@@ -69,6 +70,21 @@ export const agentsMdsRouter = {
 				projectId: input.projectId,
 				folderId: input.folderId,
 				name: input.name,
+			});
+		}),
+
+	// 更新配置（PUT /agents-mds/{id}）：编辑器保存全量提交 name + content
+	update: personalProcedure()
+		.route({ method: "PUT", path: "/agents-mds/{id}" })
+		.input(z.object({ id: z.string() }).extend(AgentsMdSchemas.updateDto.shape))
+		.output(AgentsMdSchemas.contentVo)
+		.handler(async ({ input, context }) => {
+			return updateAgentsMd({
+				userId: context.session.user.id,
+				projectId: input.projectId,
+				id: input.id,
+				name: input.name,
+				content: input.content,
 			});
 		}),
 };

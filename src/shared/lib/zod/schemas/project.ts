@@ -158,6 +158,13 @@ export const AgentsMdSchemas = {
 		name: segmentName,
 	}),
 
+	// 更新配置入参：id 走 URL 路径，编辑器保存总是全量提交 name + content
+	updateDto: z.object({
+		projectId: z.string(),
+		name: segmentName,
+		content: z.string(),
+	}),
+
 	// @ 出参 Vo
 	listItemVo: agentsMdListItemVo,
 	// 配置列表响应：单项目配置量可控，不分页
@@ -198,6 +205,7 @@ export type ProjectListVo = z.infer<typeof ProjectSchemas.listVo>;
 
 export type ListAgentsMdsDto = z.infer<typeof AgentsMdSchemas.listDto>;
 export type CreateAgentsMdDto = z.infer<typeof AgentsMdSchemas.createDto>;
+export type UpdateAgentsMdDto = z.infer<typeof AgentsMdSchemas.updateDto>;
 export type AgentsMdListItemVo = z.infer<typeof AgentsMdSchemas.listItemVo>;
 export type AgentsMdListVo = z.infer<typeof AgentsMdSchemas.listVo>;
 export type AgentsMdContentVo = z.infer<typeof AgentsMdSchemas.contentVo>;

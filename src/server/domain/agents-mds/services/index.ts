@@ -4,3 +4,4 @@ export { createAgentsMd } from "./create-agents-md";
 export { getAgentsMd } from "./get-agents-md";
 export { listAgentsMds } from "./list-agents-mds";
 export { listAllAgentsMds } from "./list-all-agents-mds";
+export { updateAgentsMd } from "./update-agents-md";

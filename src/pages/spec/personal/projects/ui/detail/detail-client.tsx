@@ -5,7 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { JSX } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { SearchInput } from "@/features/search-input";
 import { useInertialScroll, useSessionStorage } from "@/shared/hooks";
 import { client } from "@/shared/lib/orpc/client";
@@ -63,8 +63,9 @@ export function ProjectDetailClient({
 	// 左侧树选中的文件夹；进入时默认选中项目根文件夹
 	const [selectedFolderId, setSelectedFolderId] = useState<string>(rootFolderId);
 	// 当前阅读的配置（含所属项目 id：全项目搜索打开的可能属于其他项目，取全文必须用项目自己的 id）
+	// > 默认视图规则：项目只有一条配置时直接进编辑器打开它，多条/零条进鸟瞰图
 	const [openedAgentsMd, setOpenedAgentsMd] = useState<{ id: string; projectId: string } | null>(
-		null,
+		() => (agentsMds.length === 1 ? { id: agentsMds[0].id, projectId } : null),
 	);
 	// 树中展开的文件夹集合（受控），面包屑跳转时补齐祖先路径
 	// > 存 sessionStorage（按项目隔离），刷新后恢复展开状态，关标签页清空
@@ -114,6 +115,31 @@ export function ProjectDetailClient({
 			setOpenedAgentsMd({ id, projectId });
 		}
 	};
+
+	// 编辑器返回鸟瞰图
+	const handleBackFromEditor = (): void => {
+		setOpenedAgentsMd(null);
+	};
+
+	// 编辑器保存成功后刷新服务端数据：树/卡片同步改名
+	const handleSaved = (): void => {
+		router.refresh();
+	};
+
+	// 鸟瞰图右上角"切换为编辑器"：打开当前列表第一条（列表非空才显示按钮）
+	const handleSwitchToEditor = (): void => {
+		const first = folderAgentsMds[0];
+		if (first) setOpenedAgentsMd({ id: first.id, projectId });
+	};
+
+	// > 搜索词变化时关闭编辑器回到鸟瞰图：搜索态强制列表展示（结果卡片可点开进编辑器）
+	//   用 ref 记录上次词：跳过首帧，避免覆盖"单配置默认打开编辑器"的初始状态
+	const prevSearchQueryRef = useRef(searchQuery);
+	useEffect(() => {
+		if (prevSearchQueryRef.current === searchQuery) return;
+		prevSearchQueryRef.current = searchQuery;
+		setOpenedAgentsMd(null);
+	}, [searchQuery]);
 
 	// 创建文件/文件夹成功后的联动：展开新路径祖先，文件夹创建后选中它（右侧联动），再刷新服务端数据
 	const handleCreated = (id: string, kind: "file" | "folder"): void => {
@@ -242,13 +268,15 @@ export function ProjectDetailClient({
 						/>
 					</div>
 					<RightPane
-						projectId={projectId}
 						openedAgentsMd={openedAgentsMd}
 						folderAgentsMds={visibleAgentsMds}
 						folderNames={folderNames}
 						projectNames={projectNames}
 						emptyHint={searchQuery.trim() ? "未找到匹配的配置" : undefined}
 						onOpenAgentsMd={handleOpenAgentsMd}
+						onBackFromEditor={handleBackFromEditor}
+						onSaved={handleSaved}
+						onSwitchToEditor={handleSwitchToEditor}
 					/>
 				</section>
 			</div>
