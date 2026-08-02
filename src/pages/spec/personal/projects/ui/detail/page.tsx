@@ -4,6 +4,7 @@
 //   仅承担数据预取（auth/项目/配置/文件夹）与图标预解析，交互状态全部委托给 ProjectDetailClient
 
 import type { JSX } from "react";
+import { Suspense } from "react";
 
 import { listAgentsMds } from "@/server/domain/agents-mds/services";
 import { getProjectById, listProjectFolders } from "@/server/domain/projects/services";
@@ -39,8 +40,8 @@ export async function ProjectDetailPage({
 	);
 
 	return (
-		// 等价 TitlePageShell 非滚动模式的裸容器（无标题栏，项目名由面包屑首段承载）
-		<div className="flex h-full min-h-0 flex-col">
+		// Suspense 包裹：客户端组件内 useSearchParams（标题栏搜索框的 URL q 参数）需要边界
+		<Suspense fallback={null}>
 			<ProjectDetailClient
 				projectId={projectId}
 				projectName={projectName}
@@ -50,6 +51,6 @@ export async function ProjectDetailPage({
 				iconsMap={iconsMap}
 				defaultIconPair={defaultIconPair}
 			/>
-		</div>
+		</Suspense>
 	);
 }

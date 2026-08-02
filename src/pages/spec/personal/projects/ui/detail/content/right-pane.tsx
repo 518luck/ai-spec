@@ -17,10 +17,12 @@ interface RightPaneProps {
 	projectId: string;
 	/** 当前阅读的配置 id；null 表示停留在配置卡片列表 */
 	openedAgentsMdId: string | null;
-	/** 当前选中文件夹下的全部配置 */
+	/** 当前选中文件夹下的全部配置（搜索态为过滤后的全项目匹配项） */
 	folderAgentsMds: AgentsMdListItemVo[];
 	/** 文件夹 id → 名称映射（卡片底部标注挂载位置用） */
 	folderNames: Record<string, string>;
+	/** 空列表提示文案（搜索无结果时用搜索专用文案） */
+	emptyHint?: string;
 	/** 打开某份配置进入阅读态 */
 	onOpenAgentsMd: (agentsMdId: string) => void;
 }
@@ -31,6 +33,7 @@ export function RightPane({
 	openedAgentsMdId,
 	folderAgentsMds,
 	folderNames,
+	emptyHint,
 	onOpenAgentsMd,
 }: RightPaneProps): JSX.Element {
 	// 阅读态：取配置全文（仅打开配置时请求）
@@ -58,7 +61,12 @@ export function RightPane({
 	}
 
 	if (folderAgentsMds.length === 0) {
-		return <EmptyState icon={Icons.agentsMd} description="该文件夹下还没有 AGENTS.md 配置" />;
+		return (
+			<EmptyState
+				icon={Icons.agentsMd}
+				description={emptyHint ?? "该文件夹下还没有 AGENTS.md 配置"}
+			/>
+		);
 	}
 
 	return (
