@@ -1,23 +1,20 @@
 "use client";
 
-// # 项目内视图客户端容器：持有选中/展开/阅读/搜索状态，渲染面包屑 + 文件夹树 + 配置区
-// > 数据流自上而下：URL 输入 → 状态 → 派生 → 查询 → 回调 → UI 计算 → JSX
+// # 项目内视图客户端容器：持有选中/展开/阅读/搜索/编辑器状态，渲染面包屑 + 文件夹树 + 配置区
+// > 数据流自上而下：状态 → 派生 → hook（搜索/编辑器数据流）→ 回调 → UI 计算 → JSX
+// > 编辑器状态栏直接渲染在标题栏（省去独立状态栏行）：编辑器态标题栏为 返回/名称/快捷栏/保存，列表态为搜索框
 
-import { useQuery } from "@tanstack/react-query";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import type { JSX } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { MarkdownEditor, QuickToolbar } from "@/features/markdown-editor";
 import { SearchInput } from "@/features/search-input";
 import { useInertialScroll, useSessionStorage } from "@/shared/hooks";
-import { client } from "@/shared/lib/orpc/client";
-import { decodeFilters, type SearchFilters } from "@/shared/lib/search-filter-codec";
-import type {
-	AgentsMdListItemVo,
-	AgentsMdSearchFieldKey,
-	ProjectFolderListItemVo,
-} from "@/shared/lib/zod/schemas/project";
+import type { AgentsMdListItemVo, ProjectFolderListItemVo } from "@/shared/lib/zod/schemas/project";
 import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
+import { Input } from "@/shared/ui/input";
+import { ScaleLoaderWrap } from "@/shared/ui/scale-loader";
 import { TitlePageShell } from "@/widgets/page-shell";
 import {
 	buildProjectTree,
@@ -26,6 +23,8 @@ import {
 } from "../../model/path-utils";
 import { RightPane } from "./content";
 import type { FolderIconPair } from "./folder-icons";
+import { useAgentsMdEditor } from "./model/use-agents-md-editor";
+import { useAgentsMdSearch } from "./model/use-agents-md-search";
 import { BreadcrumbNav, FileTree, SidebarResizeHandle } from "./nav";
 
 interface ProjectDetailClientProps {
@@ -45,7 +44,7 @@ interface ProjectDetailClientProps {
 	defaultIconPair: FolderIconPair;
 }
 
-// > 客户端交互岛屿：选中文件夹 / 阅读配置 / 展开节点均在此管理，配置树由服务端快照内存构建
+// > 客户端交互岛屿：选中文件夹 / 打开配置 / 编辑保存 / 展开节点均在此管理，配置树由服务端快照内存构建
 export function ProjectDetailClient({
 	projectId,
 	projectName,
@@ -60,7 +59,7 @@ export function ProjectDetailClient({
 	// @ 状态：树选中/展开、编辑器打开、侧栏宽度
 	// 左侧树选中的文件夹；进入时默认选中项目根文件夹
 	const [selectedFolderId, setSelectedFolderId] = useState<string>(rootFolderId);
-	// 当前阅读的配置（含所属项目 id：全项目搜索打开的可能属于其他项目，取全文必须用项目自己的 id）
+	// 当前打开的配置（含所属项目 id：全项目搜索打开的可能属于其他项目，取全文必须用项目自己的 id）
 	// > 默认视图规则：项目只有一条配置时直接进编辑器打开它，多条/零条进鸟瞰图
 	const [openedAgentsMd, setOpenedAgentsMd] = useState<{ id: string; projectId: string } | null>(
 		() => (agentsMds.length === 1 ? { id: agentsMds[0].id, projectId } : null),
@@ -77,25 +76,7 @@ export function ProjectDetailClient({
 		256,
 	);
 
-	// @ URL 输入：搜索词 + 筛选条件（字段开关/范围）解码
-	const searchParams = useSearchParams();
-	const searchQuery = searchParams?.get("q") ?? "";
-	const searchFilters: SearchFilters = useMemo(
-		() => decodeFilters(searchParams?.get("filter") ?? undefined) ?? {},
-		[searchParams],
-	);
-	// 搜索范围：缺省本项目；参与搜索的字段：按开关收集（title 开关对应后端的 name 字段——配置以文件名为标识）
-	const searchScope = searchFilters.scope ?? "project";
-	const searchFields = useMemo(() => {
-		const fields: AgentsMdSearchFieldKey[] = [];
-		if (searchFilters.title) fields.push("name");
-		if (searchFilters.content) fields.push("content");
-		return fields;
-	}, [searchFilters]);
-	// 字段 join 成字符串作 queryKey 的一部分（数组引用不稳定，直接作 key 会多请求）
-	const searchFieldsKey = searchFields.join(",");
-
-	// @ 派生：内存树 + 当前文件夹配置
+	// @ 派生：内存树 + 当前文件夹配置 + 文件夹名映射
 	const tree = useMemo(
 		() => buildProjectTree(projectFolders, agentsMds, rootFolderId, projectName),
 		[projectFolders, agentsMds, rootFolderId, projectName],
@@ -104,42 +85,27 @@ export function ProjectDetailClient({
 		() => collectFolderAgentsMds(selectedFolderId, tree, agentsMds),
 		[selectedFolderId, tree, agentsMds],
 	);
-
-	// @ 搜索查询：关键词非空时启用；本项目走 list（带 q/fields），全项目走 listAll（跨全部项目）
-	//   "搜内容"需要 content 全文，前端预取只有 name+excerpt，因此必须后端搜索
-	//   两个查询按 scope 互斥启用（enabled 带 scope 判断），data 类型各自明确
-	const isAllScope = searchScope === "all";
-	const searchEnabled = Boolean(searchQuery.trim());
-	const { data: allScopeResults } = useQuery({
-		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
-		queryFn: () => client.agentsMds.listAll({ q: searchQuery, fields: searchFields }),
-		enabled: searchEnabled && isAllScope,
-	});
-	const { data: projectResults } = useQuery({
-		queryKey: ["agentsMd-search", projectId, searchScope, searchQuery, searchFieldsKey],
-		queryFn: () => client.agentsMds.list({ projectId, q: searchQuery, fields: searchFields }),
-		enabled: searchEnabled && !isAllScope,
-	});
-	// 当前生效的搜索结果（未搜索时为空数组，展示层回退到文件夹子树）
-	const searchResults = isAllScope ? allScopeResults : projectResults;
-
-	// @ 派生：展示列表（搜索态为后端结果，否则为当前文件夹子树）、项目名映射、文件夹名映射
-	const visibleAgentsMds = useMemo(() => {
-		if (!searchEnabled) return folderAgentsMds;
-		return searchResults ?? [];
-	}, [searchEnabled, folderAgentsMds, searchResults]);
-	// 全项目搜索时：docId → 项目名（卡片底部标注项目归属）；本项目搜索仍用文件夹名映射
-	const projectNames = useMemo(() => {
-		if (!isAllScope) return undefined;
-		return Object.fromEntries((allScopeResults ?? []).map((item) => [item.id, item.projectName]));
-	}, [isAllScope, allScopeResults]);
-	// 文件夹 id → 名称映射（卡片底部标注挂载位置用）
 	const folderNames = useMemo(
 		() => Object.fromEntries(projectFolders.map((folder) => [folder.id, folder.name])),
 		[projectFolders],
 	);
 
-	// @ 回调：切换文件夹 / 打开配置 / 编辑器返回与保存 / 视图切换 / 创建删除联动
+	// @ 数据流 hook：搜索（URL 解码 + 双范围查询 + 展示列表）、编辑器（全文 + 表单 + 保存）
+	const { searchQuery, isAllScope, visibleAgentsMds, projectNames, allScopeResults } =
+		useAgentsMdSearch(projectId, folderAgentsMds);
+	const {
+		editName,
+		setEditName,
+		editContent,
+		setEditContent,
+		isSaving,
+		isLoading,
+		mounted,
+		editorRef,
+		handleSave,
+	} = useAgentsMdEditor(openedAgentsMd);
+
+	// @ 回调：切换文件夹 / 打开配置 / 编辑器返回 / 视图切换 / 创建删除联动 / 搜索回列表
 	// 切换文件夹（树点击或面包屑跳转）：右侧退回该文件夹的配置卡片列表，并展开目标路径上的全部祖先
 	const handleFolderSelect = (folderId: string): void => {
 		setSelectedFolderId(folderId);
@@ -162,11 +128,6 @@ export function ProjectDetailClient({
 	// 编辑器返回鸟瞰图
 	const handleBackFromEditor = (): void => {
 		setOpenedAgentsMd(null);
-	};
-
-	// 编辑器保存成功后刷新服务端数据：树/卡片同步改名
-	const handleSaved = (): void => {
-		router.refresh();
 	};
 
 	// 标题栏"切换为编辑器"：打开当前展示列表第一条（搜索态为搜索结果，否则为当前文件夹配置）
@@ -206,22 +167,9 @@ export function ProjectDetailClient({
 		setOpenedAgentsMd(null);
 	}, [searchQuery]);
 
-	// @ UI 计算：标题栏视图切换按钮、面包屑横滚
-	// > 编辑器内可切回鸟瞰图；鸟瞰图仅单卡时可切编辑器（多卡编辑入口靠点卡片）
+	// @ UI 计算：标题栏视图切换按钮、标题栏双态、面包屑横滚
+	// > 编辑器内用状态栏的返回按钮回列表；列表态仅单卡时可切编辑器（多卡编辑入口靠点卡片）
 	const renderViewSwitchButton = (): JSX.Element | null => {
-		if (openedAgentsMd !== null) {
-			return (
-				<Button
-					variant="ghost"
-					size="icon-sm"
-					aria-label="切换为鸟瞰图"
-					onClick={handleBackFromEditor}
-					className="absolute right-0"
-				>
-					<Icons.viewGrid className="size-4" />
-				</Button>
-			);
-		}
 		if (visibleAgentsMds.length !== 1) return null;
 		return (
 			<Button
@@ -236,25 +184,48 @@ export function ProjectDetailClient({
 		);
 	};
 
+	// > 标题栏内容：编辑器态渲染状态栏（返回/名称/快捷栏/保存），列表态渲染居中搜索框 + 右端切换按钮
+	const renderTitleBar = (): JSX.Element => {
+		if (openedAgentsMd) {
+			return (
+				<div className="flex w-full items-center gap-2">
+					<Button variant="ghost" size="icon-sm" aria-label="返回" onClick={handleBackFromEditor}>
+						<Icons.chevronLeft className="size-4" />
+					</Button>
+					<Input
+						value={editName}
+						onChange={(e) => setEditName(e.target.value)}
+						placeholder="配置名称"
+						className="h-7 max-w-64"
+					/>
+					{mounted ? <QuickToolbar editorRef={editorRef} isExpanded /> : null}
+					<Button size="sm" className="ml-auto" disabled={isSaving} onClick={handleSave}>
+						{isSaving ? "保存中..." : "保存"}
+					</Button>
+				</div>
+			);
+		}
+		return (
+			<div className="relative flex w-full items-center justify-center">
+				{/* 项目内搜索：字段可多选（标题/内容），特殊字段 scope 启用范围单选（本项目/全项目） */}
+				<SearchInput
+					className="max-w-sm"
+					filters={["title", "content", "scope"]}
+					defaultFilter="title"
+				/>
+				{renderViewSwitchButton()}
+			</div>
+		);
+	};
+
 	// 面包屑横滚：滚轮划过去横向滚动（rAF 惯性），不触发页面纵向滚动；内容未溢出时自动放行页面滚动
 	const breadcrumbScrollRef = useRef<HTMLDivElement>(null);
 	useInertialScroll(breadcrumbScrollRef, { direction: "horizontal" });
 
 	return (
 		<TitlePageShell
-			// 标题栏不放标题：居中搜索框 + 右端视图切换按钮；面包屑在下方独立栏
-			title={
-				<div className="relative flex w-full items-center justify-center">
-					{/* 项目内搜索：字段可多选（标题/内容），特殊字段 scope 启用范围单选（本项目/全项目） */}
-					<SearchInput
-						className="max-w-sm"
-						filters={["title", "content", "scope"]}
-						defaultFilter="title"
-					/>
-					{/* 视图切换按钮：渲染函数 renderViewSwitchButton 按状态提前 return */}
-					{renderViewSwitchButton()}
-				</div>
-			}
+			// 标题栏双态：编辑器态 = 编辑器状态栏；列表态 = 居中搜索框
+			title={renderTitleBar()}
 			scrollable={false}
 		>
 			<div className="flex min-h-0 flex-1">
@@ -285,7 +256,7 @@ export function ProjectDetailClient({
 					{/* // 缩放手柄：贴 aside 右边缘，拖拽调整文件夹树宽度 */}
 					<SidebarResizeHandle width={sidebarWidth} onWidthChange={setSidebarWidth} />
 				</aside>
-				{/* // @ 右侧内容区：面包屑独立栏（只占本区域，滚轮横向滚动，VSCode 风格）+ 配置卡片列表 / 配置阅读 */}
+				{/* // @ 右侧内容区：面包屑独立栏（只占本区域，滚轮横向滚动，VSCode 风格）+ 编辑器内容区 / 鸟瞰图 */}
 				<section className="flex min-w-0 flex-1 flex-col">
 					<div
 						ref={breadcrumbScrollRef}
@@ -299,16 +270,32 @@ export function ProjectDetailClient({
 							onNavigateFolder={handleFolderSelect}
 						/>
 					</div>
-					<RightPane
-						openedAgentsMd={openedAgentsMd}
-						folderAgentsMds={visibleAgentsMds}
-						folderNames={folderNames}
-						projectNames={projectNames}
-						emptyHint={searchQuery.trim() ? "未找到匹配的配置" : undefined}
-						onOpenAgentsMd={handleOpenAgentsMd}
-						onBackFromEditor={handleBackFromEditor}
-						onSaved={handleSaved}
-					/>
+					{openedAgentsMd ? (
+						// 编辑器内容区：MarkdownEditor 撑满剩余高度；预览态内部 ScrollArea，编辑态 CodeMirror 自滚
+						<div className="min-h-0 flex-1 overflow-hidden">
+							{isLoading ? (
+								<div className="flex min-h-60 flex-1 items-center justify-center">
+									<ScaleLoaderWrap height={24} width={3} margin={2} radius={2} />
+								</div>
+							) : (
+								<MarkdownEditor
+									ref={editorRef}
+									value={editContent}
+									onChange={setEditContent}
+									previewClassName="px-6 py-4"
+									onSubmitShortcut={handleSave}
+								/>
+							)}
+						</div>
+					) : (
+						<RightPane
+							folderAgentsMds={visibleAgentsMds}
+							folderNames={folderNames}
+							projectNames={projectNames}
+							emptyHint={searchQuery.trim() ? "未找到匹配的配置" : undefined}
+							onOpenAgentsMd={handleOpenAgentsMd}
+						/>
+					)}
 				</section>
 			</div>
 		</TitlePageShell>
