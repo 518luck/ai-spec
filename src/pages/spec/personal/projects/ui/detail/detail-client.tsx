@@ -15,6 +15,8 @@ import type {
 	AgentsMdSearchFieldKey,
 	ProjectFolderListItemVo,
 } from "@/shared/lib/zod/schemas/project";
+import { Button } from "@/shared/ui/button";
+import { Icons } from "@/shared/ui/icons";
 import { TitlePageShell } from "@/widgets/page-shell";
 import {
 	buildProjectTree,
@@ -126,9 +128,9 @@ export function ProjectDetailClient({
 		router.refresh();
 	};
 
-	// 鸟瞰图右上角"切换为编辑器"：打开当前列表第一条（列表非空才显示按钮）
+	// 标题栏右侧"切换为编辑器"：打开当前展示列表第一条（搜索态为搜索结果，否则为当前文件夹配置）
 	const handleSwitchToEditor = (): void => {
-		const first = folderAgentsMds[0];
+		const first = visibleAgentsMds[0];
 		if (first) setOpenedAgentsMd({ id: first.id, projectId });
 	};
 
@@ -205,6 +207,38 @@ export function ProjectDetailClient({
 		[projectFolders],
 	);
 
+	// > 标题栏右端视图切换按钮：编辑器内可切回鸟瞰图；鸟瞰图仅单卡时可切编辑器（多卡编辑入口靠点卡片）
+	//   渲染函数提前 return 分支，各状态一目了然
+	const renderViewSwitchButton = (): JSX.Element | null => {
+		// 编辑器内：切回鸟瞰图（网格图标）
+		if (openedAgentsMd !== null) {
+			return (
+				<Button
+					variant="ghost"
+					size="icon-sm"
+					aria-label="切换为鸟瞰图"
+					onClick={handleBackFromEditor}
+					className="absolute right-0"
+				>
+					<Icons.viewGrid className="size-4" />
+				</Button>
+			);
+		}
+		// 鸟瞰图：仅单卡时可切编辑器；多卡编辑入口靠点卡片，不显示按钮
+		if (visibleAgentsMds.length !== 1) return null;
+		return (
+			<Button
+				variant="ghost"
+				size="icon-sm"
+				aria-label="切换为编辑器"
+				onClick={handleSwitchToEditor}
+				className="absolute right-0"
+			>
+				<Icons.code className="size-4" />
+			</Button>
+		);
+	};
+
 	// > 面包屑横滚：滚轮划过去横向滚动（rAF 惯性），不触发页面纵向滚动；内容未溢出时自动放行页面滚动
 	//   滚轮监听由 hook 原生绑定，不再传 onWheel（避免事件被处理两次）
 	const breadcrumbScrollRef = useRef<HTMLDivElement>(null);
@@ -214,13 +248,15 @@ export function ProjectDetailClient({
 		<TitlePageShell
 			// 标题栏不放标题：左侧项目内搜索框（封装组件，写 URL q 参数）；面包屑在下方独立栏
 			title={
-				<div className="flex w-full items-center gap-6">
+				<div className="relative flex w-full items-center justify-center">
 					{/* 项目内搜索：字段可多选（标题/内容），特殊字段 scope 启用范围单选（本项目/全项目） */}
 					<SearchInput
 						className="max-w-sm"
 						filters={["title", "content", "scope"]}
 						defaultFilter="title"
 					/>
+					{/* 视图切换按钮：渲染函数 renderViewSwitchButton 按状态提前 return */}
+					{renderViewSwitchButton()}
 				</div>
 			}
 			scrollable={false}
@@ -276,7 +312,6 @@ export function ProjectDetailClient({
 						onOpenAgentsMd={handleOpenAgentsMd}
 						onBackFromEditor={handleBackFromEditor}
 						onSaved={handleSaved}
-						onSwitchToEditor={handleSwitchToEditor}
 					/>
 				</section>
 			</div>

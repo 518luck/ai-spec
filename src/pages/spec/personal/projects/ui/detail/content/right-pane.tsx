@@ -1,12 +1,11 @@
 "use client";
 
 // # 项目详情右侧主体：编辑器视图（打开配置）/ 空文件夹 / 鸟瞰图卡片列表 三态切换
-// > 鸟瞰图右上角提供"切换为编辑器"入口；打开某条配置后进编辑器（默认预览态）
+// > 切换为编辑器的入口在标题栏右端（见 detail-client），本组件只管三态渲染
 
 import type { JSX } from "react";
 
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
-import { Button } from "@/shared/ui/button";
 import { Icons } from "@/shared/ui/icons";
 import { EmptyState } from "@/widgets/empty-state";
 import { AgentsMdCardGrid } from "./agents-md-cards";
@@ -29,8 +28,6 @@ interface RightPaneProps {
 	onBackFromEditor: () => void;
 	/** 编辑器保存成功后刷新（树/卡片同步改名） */
 	onSaved: () => void;
-	/** 鸟瞰图右上角"切换为编辑器"：打开当前列表第一条 */
-	onSwitchToEditor: () => void;
 }
 
 // 右侧主体：编辑器 / 空文件夹 / 鸟瞰图卡片列表 三态，扁平化避免嵌套三元
@@ -43,7 +40,6 @@ export function RightPane({
 	onOpenAgentsMd,
 	onBackFromEditor,
 	onSaved,
-	onSwitchToEditor,
 }: RightPaneProps): JSX.Element {
 	// 打开配置：编辑器视图（全文 + 保存）
 	if (openedAgentsMd) {
@@ -66,28 +62,17 @@ export function RightPane({
 		);
 	}
 
-	// 鸟瞰图：卡片网格 + 右上角切换按钮（VSCode 视图切换位置）
+	// 鸟瞰图：卡片网格（切换为编辑器的入口在标题栏右端）
 	return (
-		<div className="relative min-h-0 flex-1">
-			<div className="scrollbar-thin h-full overflow-auto">
-				<div className="px-6 py-4">
-					<AgentsMdCardGrid
-						agentsMds={folderAgentsMds}
-						folderNames={folderNames}
-						projectNames={projectNames}
-						onOpen={onOpenAgentsMd}
-					/>
-				</div>
+		<div className="scrollbar-thin h-full overflow-auto">
+			<div className="px-6 py-4">
+				<AgentsMdCardGrid
+					agentsMds={folderAgentsMds}
+					folderNames={folderNames}
+					projectNames={projectNames}
+					onOpen={onOpenAgentsMd}
+				/>
 			</div>
-			<Button
-				variant="ghost"
-				size="icon-sm"
-				aria-label="切换为编辑器"
-				onClick={onSwitchToEditor}
-				className="absolute top-3 right-6"
-			>
-				<Icons.code className="size-4" />
-			</Button>
 		</div>
 	);
 }

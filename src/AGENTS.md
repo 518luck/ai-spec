@@ -175,6 +175,26 @@ pnpm dlx shadcn@latest add [组件名]
 
 使用 shadcn 组件时，如果不确定组件 API、组合方式或最佳实践，应调用 /shadcn 技能查看正确用法。
 
+## JSX 渲染逻辑（避免多重三元）
+
+- 禁止在 JSX 中嵌套多重三元（`a ? b : c ? d : e`），分支一多就不可读。
+- 分支多时提取为**渲染函数 + 提前 return**：每个分支的文案/回调/图标完整放在一处，阅读顺序即逻辑顺序。
+- 分支少时在组件顶部**提前计算变量**，JSX 只做渲染（如 `{viewSwitchButton}`）。
+
+```tsx
+// ✅ 渲染函数 + 提前 return
+const renderViewSwitch = (): JSX.Element | null => {
+	if (isEditorOpen) {
+		return <Button onClick={back}>…</Button>;
+	}
+	if (list.length !== 1) return null;
+	return <Button onClick={switchTo}>…</Button>;
+};
+
+// ❌ 多重三元
+{cond ? <A /> : cond2 ? <B /> : cond3 ? <C /> : null}
+```
+
 ## 滚动条（按场景分工，不可混用）
 
 | 方案 | 用法 | 适用 |
