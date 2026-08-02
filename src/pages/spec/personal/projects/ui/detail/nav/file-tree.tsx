@@ -10,14 +10,18 @@ import {
 	syncDataLoaderFeature, // 同步数据加载（getItem/getChildren 直接返回数据，非异步）
 } from "@headless-tree/core";
 import { useTree } from "@headless-tree/react"; // React 绑定：useTree hook 把配置转成 treeApi
+import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react"; // 图标切换的淡入淡出
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type JSX, useState } from "react";
+import { toast } from "@/features/toast";
 import { useSessionStorage } from "@/shared/hooks";
+import { orpc } from "@/shared/lib/orpc/query-utils";
 import { cn } from "@/shared/lib/utils";
 import type { AgentsMdListItemVo } from "@/shared/lib/zod/schemas/project";
 import { Button } from "@/shared/ui/button";
+import { ConfirmDialog } from "@/shared/ui/confirm-dialog";
 import { Icons } from "@/shared/ui/icons";
 import {
 	collectFolderAgentsMds,
@@ -47,6 +51,8 @@ interface FileTreeProps {
 	onFolderSelect: (folderId: string) => void;
 	/** 创建文件/文件夹成功后的联动（展开/选中由页面持有受控状态） */
 	onCreated: (id: string, kind: "file" | "folder") => void;
+	/** 删除文件夹成功后的联动（选中回退与刷新由页面处理） */
+	onDeleted: (folderId: string, parentId: string | null) => void;
 	/** 服务端预解析的各文件夹图标对，按 itemId 索引 */
 	iconsMap: Record<string, FolderIconPair>;
 	/** 通用兜底图标对（未命中 iconsMap 时使用） */
@@ -62,6 +68,7 @@ export function FileTree({
 	onExpandedChange,
 	onFolderSelect,
 	onCreated,
+	onDeleted,
 	iconsMap,
 	defaultIconPair,
 }: FileTreeProps): JSX.Element {
@@ -71,6 +78,28 @@ export function FileTree({
 	const [createFolderOpen, setCreateFolderOpen] = useState(false);
 	// 刷新动画触发键：每次点击递增，图标以 key 重挂载转一圈
 	const [refreshSpinKey, setRefreshSpinKey] = useState(0);
+	// 待删除的文件夹（id + 其父 id）：非空时打开确认弹窗
+	const [deleteTarget, setDeleteTarget] = useState<{ id: string; parentId: string | null } | null>(
+		null,
+	);
+	// 删除文件夹 mutation：成功后上抛，由页面回退选中并刷新（loading 态由 ConfirmDialog 的 async onConfirm 承载）
+	const { mutateAsync: deleteFolderAsync } = useMutation({
+		...orpc.projects.projectFolders.delete.mutationOptions(),
+	});
+
+	// 确认删除：调接口成功后关闭弹窗并上抛（配置保留，仅删文件夹与挂载关系）
+	const handleConfirmDelete = async (): Promise<void> => {
+		if (!deleteTarget) return;
+		try {
+			await deleteFolderAsync({ projectId, id: deleteTarget.id });
+			toast.success("文件夹已删除");
+			onDeleted(deleteTarget.id, deleteTarget.parentId);
+			setDeleteTarget(null);
+		} catch (error) {
+			toast.error(error instanceof Error && error.message ? error.message : "删除文件夹失败");
+			throw error; // rethrow 让 ConfirmDialog 不关闭，保留弹窗供用户重试
+		}
+	};
 	// 当前选中文件夹（新文件/文件夹创建在它之下）；其显示名供对话框提示文案使用
 	const parentFolderId = selectedFolderId;
 	const parentFolderName = tree[parentFolderId]?.name ?? parentFolderId;
@@ -217,6 +246,18 @@ export function FileTree({
 				parentFolderName={parentFolderName}
 				onCreated={(id) => onCreated(id, "folder")}
 			/>
+			{/* // 删除确认：destructive 样式；子文件夹与挂载关系级联删，配置保留 */}
+			<ConfirmDialog
+				open={deleteTarget !== null}
+				onOpenChange={(open) => {
+					if (!open) setDeleteTarget(null);
+				}}
+				title="删除文件夹"
+				description="删除后其子文件夹一并删除，文件夹下的 AGENTS.md 配置保留（如不再挂载于任何文件夹，将不再显示）。"
+				confirmText="删除"
+				variant="destructive"
+				onConfirm={handleConfirmDelete}
+			/>
 			<div
 				{...treeApi.getContainerProps("项目配置文件夹树")}
 				className="flex flex-col p-2 outline-none"
@@ -230,6 +271,7 @@ export function FileTree({
 						iconsMap={iconsMap}
 						defaultIconPair={defaultIconPair}
 						activeAncestorIds={activeAncestorIds}
+						onDelete={(folderId, parentId) => setDeleteTarget({ id: folderId, parentId })}
 					/>
 				))}
 			</div>
@@ -246,7 +288,7 @@ const MotionButton = motion.create(Button);
 // 动效刷新图标：motion 包装刷新图标，点击时以 key 重挂载旋转一圈
 const MotionRefreshIcon = motion.create(Icons.refresh);
 
-// 单行节点：缩进辅助线（祖先链 active 高亮）+ 展开箭头 + 文件夹图标 + 名称 + 子树配置数
+// 单行节点：缩进辅助线（祖先链 active 高亮）+ 展开箭头 + 文件夹图标 + 名称 + 子树配置数 + hover 删除
 function FileTreeRow({
 	item,
 	tree,
@@ -254,6 +296,7 @@ function FileTreeRow({
 	iconsMap,
 	defaultIconPair,
 	activeAncestorIds,
+	onDelete,
 }: {
 	item: ItemInstance<ProjectTreeNode>;
 	tree: Record<string, ProjectTreeNode>;
@@ -262,6 +305,8 @@ function FileTreeRow({
 	defaultIconPair: FolderIconPair;
 	// 选中文件夹的祖先链 id 集合；命中则对应层级的竖线高亮
 	activeAncestorIds: Set<string>;
+	// 点击删除按钮时上抛文件夹 id 与其父 id（根文件夹不触发）
+	onDelete: (folderId: string, parentId: string) => void;
 }): JSX.Element {
 	const isExpanded = item.isExpanded();
 	// 图标对由服务端按 itemId 预解析传入，未命中（动态新增的文件夹等）回退通用文件夹
@@ -280,7 +325,7 @@ function FileTreeRow({
 		// ! 圆角背景不能画在这一层，否则竖线会在圆角处断裂
 		<div
 			{...item.getProps()}
-			className="relative flex h-5.5 shrink-0 cursor-pointer items-center text-sm outline-none"
+			className="group relative flex h-5.5 shrink-0 cursor-pointer items-center text-sm outline-none"
 		>
 			{/* // @ 缩进辅助线容器：绝对定位、占满整行高度、不挡点击；每层一条 1px 竖线，选中项祖先链高亮 */}
 			{/* z-10 让竖线浮于内层选中背景之上，选中时竖线仍可见（VSCode indent-guide 同理） */}
@@ -325,6 +370,21 @@ function FileTreeRow({
 					<span className="ml-auto text-muted-foreground text-xs tabular-nums">
 						{agentsMdCount}
 					</span>
+				) : null}
+				{/* // 删除按钮：hover 行显示（VSCode explorer 风格）；根文件夹不显示（禁止删除） */}
+				{ancestorIds.length > 0 ? (
+					<button
+						type="button"
+						aria-label={`删除 ${item.getItemName()}`}
+						title="删除文件夹"
+						onClick={(event) => {
+							event.stopPropagation();
+							onDelete(item.getId(), ancestorIds[ancestorIds.length - 1]);
+						}}
+						className="shrink-0 rounded p-0.5 text-muted-foreground opacity-0 transition-opacity hover:bg-foreground/10 hover:text-foreground focus-visible:opacity-100 group-hover:opacity-100"
+					>
+						<Icons.trash className="size-3.5" />
+					</button>
 				) : null}
 			</div>
 		</div>

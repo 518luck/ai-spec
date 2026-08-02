@@ -6,6 +6,7 @@ import "@orpc/openapi/extensions/route"; // 启用 .route() 扩展（声明 meth
 import {
 	createProject,
 	createProjectFolder,
+	deleteProjectFolder,
 	getProjectById,
 	listProjectFolders,
 	listProjects,
@@ -79,6 +80,19 @@ export const projectsRouter = {
 					projectId: input.projectId,
 					parentId: input.parentId,
 					name: input.name,
+				});
+			}),
+
+		// 删除文件夹（DELETE /projects/project-folders/{id}?projectId=...）：级联删子树，配置保留
+		delete: personalProcedure()
+			.route({ method: "DELETE", path: "/projects/project-folders/{id}" })
+			.input(z.object({ id: z.string(), projectId: z.string() }))
+			.output(z.object({ id: z.string() }))
+			.handler(async ({ input, context }) => {
+				return deleteProjectFolder({
+					userId: context.session.user.id,
+					projectId: input.projectId,
+					id: input.id,
 				});
 			}),
 	},

@@ -2,6 +2,7 @@
 
 export { createProject } from "./create-project";
 export { createProjectFolder } from "./create-project-folder";
+export { deleteProjectFolder } from "./delete-project-folder";
 export { getProjectById } from "./get-project-by-id";
 export { listProjectFolders } from "./list-project-folders";
 export { listProjects } from "./list-projects";

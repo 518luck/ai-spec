@@ -88,6 +88,16 @@ export function ProjectDetailClient({
 		router.refresh();
 	};
 
+	// 删除文件夹成功后的联动：若删的是当前选中文件夹则回退选中其父（无父回根），再刷新服务端数据
+	const handleDeleted = (folderId: string, parentId: string | null): void => {
+		if (selectedFolderId === folderId) {
+			setSelectedFolderId(parentId ?? rootFolderId);
+			setOpenedAgentsMdId(null);
+			setExpandedFolderIds((prev) => prev.filter((id) => id !== folderId));
+		}
+		router.refresh();
+	};
+
 	// 当前选中文件夹下的全部配置
 	const folderAgentsMds = useMemo(
 		() => collectFolderAgentsMds(selectedFolderId, tree, agentsMds),
@@ -130,6 +140,7 @@ export function ProjectDetailClient({
 							onExpandedChange={setExpandedFolderIds}
 							onFolderSelect={handleFolderSelect}
 							onCreated={handleCreated}
+							onDeleted={handleDeleted}
 							iconsMap={iconsMap}
 							defaultIconPair={defaultIconPair}
 						/>
