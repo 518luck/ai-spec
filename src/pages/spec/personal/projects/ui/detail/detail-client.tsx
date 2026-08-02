@@ -16,6 +16,7 @@ import { RightPane } from "./content/right-pane";
 import type { FolderIconPair } from "./folder-icons";
 import { BreadcrumbNav } from "./nav/breadcrumb-nav";
 import { FileTree } from "./nav/file-tree";
+import { SidebarResizeHandle } from "./nav/sidebar-resize-handle";
 
 interface ProjectDetailClientProps {
 	/** 当前打开的项目 id（来自 URL 参数） */
@@ -59,6 +60,11 @@ export function ProjectDetailClient({
 	const [expandedFolderIds, setExpandedFolderIds] = useSessionStorage<string[]>(
 		`project:${projectId}:expanded`,
 		[rootFolderId],
+	);
+	// 文件夹树侧栏宽度（px）：会话级持久化、全局生效（VSCode 拖拽调宽后保持）
+	const [sidebarWidth, setSidebarWidth] = useSessionStorage<number>(
+		"projects:detail:sidebarWidth",
+		256,
 	);
 
 	// 切换文件夹（树点击或面包屑跳转）：右侧退回该文件夹的配置卡片列表，并展开目标路径上的全部祖先
@@ -105,8 +111,12 @@ export function ProjectDetailClient({
 				onNavigateFolder={handleFolderSelect}
 			/>
 			<div className="flex min-h-0 flex-1">
-				{/* // @ 左侧：文件夹树侧栏 */}
-				<aside className="flex min-h-0 w-64 shrink-0 flex-col border-r">
+				{/* // @ 左侧：文件夹树侧栏（宽度可拖拽调整，VSCode 风格；会话级持久化） */}
+				<aside
+					data-slot="detail-sidebar"
+					className="relative flex min-h-0 shrink-0 flex-col border-r"
+					style={{ width: sidebarWidth }}
+				>
 					<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
 						{/* 数据指纹作 key：创建/刷新后数量变化即重挂载，headless-tree 受控模式下数据变化
 						    不会刷新已展开节点的子列表，重挂载让新节点立即可见 */}
@@ -124,6 +134,8 @@ export function ProjectDetailClient({
 							defaultIconPair={defaultIconPair}
 						/>
 					</div>
+					{/* // 缩放手柄：贴 aside 右边缘，拖拽调整文件夹树宽度 */}
+					<SidebarResizeHandle width={sidebarWidth} onWidthChange={setSidebarWidth} />
 				</aside>
 				{/* // @ 右侧：配置卡片列表 / 配置阅读 */}
 				<section className="flex min-w-0 flex-1 flex-col">

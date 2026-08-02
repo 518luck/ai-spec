@@ -69,6 +69,8 @@ export function FileTree({
 	// 创建文件/文件夹对话框开关
 	const [createFileOpen, setCreateFileOpen] = useState(false);
 	const [createFolderOpen, setCreateFolderOpen] = useState(false);
+	// 刷新动画触发键：每次点击递增，图标以 key 重挂载转一圈
+	const [refreshSpinKey, setRefreshSpinKey] = useState(0);
 	// 当前选中文件夹（新文件/文件夹创建在它之下）；其显示名供对话框提示文案使用
 	const parentFolderId = selectedFolderId;
 	const parentFolderName = tree[parentFolderId]?.name ?? parentFolderId;
@@ -117,7 +119,8 @@ export function FileTree({
 		<div className="flex flex-col">
 			{/* // @ 顶部工具条：创建文件 / 创建文件夹 / 刷新 / 全部展开-收起（展开收起同槽位切换，motion 淡入淡出） */}
 			<div className="flex items-center justify-between px-3 pt-2">
-				<span className="text-muted-foreground text-xs">AGENTS.md 管理</span>
+				{/* min-w-0 + truncate：侧栏拖窄时标题省略号截断，不换行 */}
+				<span className="min-w-0 truncate text-muted-foreground text-xs">AGENTS.md 管理</span>
 				<div className="flex items-center">
 					<Button
 						variant="ghost"
@@ -142,9 +145,19 @@ export function FileTree({
 						size="icon-sm"
 						aria-label="刷新"
 						title="刷新"
-						onClick={() => router.refresh()}
+						onClick={() => {
+							// 点击后图标旋转一圈（VSCode 风格），同时触发 RSC 重新取数
+							setRefreshSpinKey((prev) => prev + 1);
+							router.refresh();
+						}}
 					>
-						<Icons.refresh className="size-4" />
+						<MotionRefreshIcon
+							key={refreshSpinKey}
+							className="size-4"
+							initial={{ rotate: 0 }}
+							animate={{ rotate: refreshSpinKey > 0 ? 360 : 0 }}
+							transition={{ duration: 0.6, ease: "easeOut" }}
+						/>
 					</Button>
 					<div className="relative flex h-7 w-7 items-center justify-center">
 						<AnimatePresence initial={false} mode="wait">
@@ -229,6 +242,9 @@ const INDENT_PX = 8;
 
 // 动效按钮：motion 包装 Button，用于工具栏图标切换时的淡入淡出
 const MotionButton = motion.create(Button);
+
+// 动效刷新图标：motion 包装刷新图标，点击时以 key 重挂载旋转一圈
+const MotionRefreshIcon = motion.create(Icons.refresh);
 
 // 单行节点：缩进辅助线（祖先链 active 高亮）+ 展开箭头 + 文件夹图标 + 名称 + 子树配置数
 function FileTreeRow({
