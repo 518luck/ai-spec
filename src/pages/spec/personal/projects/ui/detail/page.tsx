@@ -8,7 +8,6 @@ import type { JSX } from "react";
 import { listAgentsMds } from "@/server/domain/agents-mds/services";
 import { getProjectById, listProjectFolders } from "@/server/domain/projects/services";
 import { auth } from "@/shared/lib/auth/auth";
-import { TitlePageShell } from "@/widgets/page-shell";
 import { buildProjectTree, collectFolderNames } from "../../model/path-utils";
 import { ProjectDetailClient } from "./detail-client";
 import { preloadFolderIconPairs } from "./folder-icons";
@@ -40,7 +39,8 @@ export async function ProjectDetailPage({
 	);
 
 	return (
-		<TitlePageShell title={projectName} scrollable={false}>
+		// 等价 TitlePageShell 非滚动模式的裸容器（无标题栏，项目名由面包屑首段承载）
+		<div className="flex h-full min-h-0 flex-col">
 			<ProjectDetailClient
 				projectId={projectId}
 				projectName={projectName}
@@ -50,6 +50,6 @@ export async function ProjectDetailPage({
 				iconsMap={iconsMap}
 				defaultIconPair={defaultIconPair}
 			/>
-		</TitlePageShell>
+		</div>
 	);
 }

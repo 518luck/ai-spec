@@ -41,7 +41,8 @@ export function BreadcrumbNav({
 	const lastIndex = segments.length - 1;
 
 	return (
-		<Breadcrumb className="flex h-11 shrink-0 items-center border-b px-4">
+		// 紧凑高度（h-7 ≈ VSCode 面包屑）：只占一行导航，不挤压内容区
+		<Breadcrumb className="flex h-7 shrink-0 items-center border-b px-3 text-xs">
 			<BreadcrumbList>
 				<BreadcrumbItem>
 					<BreadcrumbLink

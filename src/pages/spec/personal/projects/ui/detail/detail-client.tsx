@@ -111,54 +111,51 @@ export function ProjectDetailClient({
 	);
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col">
-			{/* // @ 顶部：可点击跳转的导航面包屑，阅读态末段为配置名 */}
-			<BreadcrumbNav
-				tree={tree}
-				agentsMds={agentsMds}
-				currentId={openedAgentsMdId ?? selectedFolderId}
-				onNavigateHome={() => router.back()}
-				onNavigateFolder={handleFolderSelect}
-			/>
-			<div className="flex min-h-0 flex-1">
-				{/* // @ 左侧：文件夹树侧栏（宽度可拖拽调整，VSCode 风格；会话级持久化） */}
-				<aside
-					data-slot="detail-sidebar"
-					className="relative flex min-h-0 shrink-0 flex-col border-r"
-					style={{ width: sidebarWidth }}
-				>
-					<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
-						{/* 数据指纹作 key：创建/刷新后数量变化即重挂载，headless-tree 受控模式下数据变化
-						    不会刷新已展开节点的子列表，重挂载让新节点立即可见 */}
-						<FileTree
-							key={`${projectId}:${projectFolders.length}:${agentsMds.length}`}
-							projectId={projectId}
-							tree={tree}
-							agentsMds={agentsMds}
-							selectedFolderId={selectedFolderId}
-							expandedFolderIds={expandedFolderIds}
-							onExpandedChange={setExpandedFolderIds}
-							onFolderSelect={handleFolderSelect}
-							onCreated={handleCreated}
-							onDeleted={handleDeleted}
-							iconsMap={iconsMap}
-							defaultIconPair={defaultIconPair}
-						/>
-					</div>
-					{/* // 缩放手柄：贴 aside 右边缘，拖拽调整文件夹树宽度 */}
-					<SidebarResizeHandle width={sidebarWidth} onWidthChange={setSidebarWidth} />
-				</aside>
-				{/* // @ 右侧：配置卡片列表 / 配置阅读 */}
-				<section className="flex min-w-0 flex-1 flex-col">
-					<RightPane
+		<div className="flex min-h-0 flex-1">
+			{/* // @ 左侧：文件夹树侧栏（宽度可拖拽调整，VSCode 风格；会话级持久化） */}
+			<aside
+				data-slot="detail-sidebar"
+				className="relative flex min-h-0 shrink-0 flex-col border-r"
+				style={{ width: sidebarWidth }}
+			>
+				<div className="scrollbar-thin min-h-0 flex-1 overflow-auto">
+					{/* 数据指纹作 key：创建/刷新后数量变化即重挂载，headless-tree 受控模式下数据变化
+					    不会刷新已展开节点的子列表，重挂载让新节点立即可见 */}
+					<FileTree
+						key={`${projectId}:${projectFolders.length}:${agentsMds.length}`}
 						projectId={projectId}
-						openedAgentsMdId={openedAgentsMdId}
-						folderAgentsMds={folderAgentsMds}
-						folderNames={folderNames}
-						onOpenAgentsMd={setOpenedAgentsMdId}
+						tree={tree}
+						agentsMds={agentsMds}
+						selectedFolderId={selectedFolderId}
+						expandedFolderIds={expandedFolderIds}
+						onExpandedChange={setExpandedFolderIds}
+						onFolderSelect={handleFolderSelect}
+						onCreated={handleCreated}
+						onDeleted={handleDeleted}
+						iconsMap={iconsMap}
+						defaultIconPair={defaultIconPair}
 					/>
-				</section>
-			</div>
+				</div>
+				{/* // 缩放手柄：贴 aside 右边缘，拖拽调整文件夹树宽度 */}
+				<SidebarResizeHandle width={sidebarWidth} onWidthChange={setSidebarWidth} />
+			</aside>
+			{/* // @ 右侧内容区：顶部导航面包屑（阅读态末段为配置名）+ 配置卡片列表 / 配置阅读 */}
+			<section className="flex min-w-0 flex-1 flex-col">
+				<BreadcrumbNav
+					tree={tree}
+					agentsMds={agentsMds}
+					currentId={openedAgentsMdId ?? selectedFolderId}
+					onNavigateHome={() => router.back()}
+					onNavigateFolder={handleFolderSelect}
+				/>
+				<RightPane
+					projectId={projectId}
+					openedAgentsMdId={openedAgentsMdId}
+					folderAgentsMds={folderAgentsMds}
+					folderNames={folderNames}
+					onOpenAgentsMd={setOpenedAgentsMdId}
+				/>
+			</section>
 		</div>
 	);
 }
