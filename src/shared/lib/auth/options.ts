@@ -19,7 +19,7 @@ import {
 } from "@/shared/lib/auth/lock-account";
 import { validatePassword } from "@/shared/lib/utils";
 import { signInDtoSchema } from "@/shared/lib/zod/schemas/auth";
-import { isProd } from "./constants";
+import { cookieSecureEnabled } from "./constants";
 
 // # NextAuth 配置中心：session 策略、providers、cookie、callbacks、events
 export const authOptions: NextAuthConfig = {
@@ -123,7 +123,7 @@ export const authOptions: NextAuthConfig = {
 				httpOnly: true,
 				sameSite: "lax",
 				path: "/",
-				secure: isProd,
+				secure: cookieSecureEnabled,
 			},
 		},
 		callbackUrl: {
@@ -132,7 +132,7 @@ export const authOptions: NextAuthConfig = {
 				httpOnly: true,
 				sameSite: "lax",
 				path: "/",
-				secure: isProd,
+				secure: cookieSecureEnabled,
 			},
 		},
 		csrfToken: {
@@ -141,7 +141,7 @@ export const authOptions: NextAuthConfig = {
 				httpOnly: true,
 				sameSite: "lax",
 				path: "/",
-				secure: isProd,
+				secure: cookieSecureEnabled,
 			},
 		},
 	},

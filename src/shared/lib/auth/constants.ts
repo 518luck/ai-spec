@@ -4,16 +4,20 @@
 // 判断认证配置是否运行在生产环境
 export const isProd = process.env.NODE_ENV === "production";
 
+// > 是否启用 cookie 安全前缀：__Secure- / __Host- 要求 HTTPS，HTTP 环境下浏览器会拒收
+// > 默认生产环境启用；设 AUTH_COOKIE_SECURE=false 可在 HTTP（如临时用 IP 访问）时关闭
+export const cookieSecureEnabled = isProd && process.env.AUTH_COOKIE_SECURE !== "false";
+
 // @ Cookie 名称（安全前缀由环境决定）
 
-// ! 生产环境 cookie 名加 __Secure- 前缀，强制要求 https 传输
-export const SESSION_TOKEN_NAME = `${isProd ? "__Secure-" : ""}ai-spec.session-token`;
+// ! HTTPS 环境下 cookie 名加 __Secure- 前缀，强制要求 https 传输；HTTP 时不加
+export const SESSION_TOKEN_NAME = `${cookieSecureEnabled ? "__Secure-" : ""}ai-spec.session-token`;
 
-// 登录/退出回跳地址 cookie（生产环境加 __Secure- 前缀）
-export const CALLBACK_URL_COOKIE_NAME = `${isProd ? "__Secure-" : ""}ai-spec.callback-url`;
+// 登录/退出回跳地址 cookie（HTTPS 环境加 __Secure- 前缀）
+export const CALLBACK_URL_COOKIE_NAME = `${cookieSecureEnabled ? "__Secure-" : ""}ai-spec.callback-url`;
 
-// ! 防 CSRF 令牌 cookie：生产环境用更严格的 __Host- 前缀（禁止子域覆盖、固定 path=/）
-export const CSRF_TOKEN_NAME = `${isProd ? "__Host-" : ""}ai-spec.csrf-token`;
+// ! 防 CSRF 令牌 cookie：HTTPS 环境用更严格的 __Host- 前缀（禁止子域覆盖、固定 path=/）
+export const CSRF_TOKEN_NAME = `${cookieSecureEnabled ? "__Host-" : ""}ai-spec.csrf-token`;
 
 // @ 有效期
 
