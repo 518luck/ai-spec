@@ -1,0 +1,46 @@
+# 依赖与构建产物（构建时会在容器内重新生成）
+node_modules
+.next
+.source
+.tsbuildinfo
+*.tsbuildinfo
+
+# 环境变量（生产环境通过 docker-compose 注入，不进镜像）
+.env
+.env.*
+!.env.example
+
+# Git 与编辑器
+.git
+.gitignore
+.gitattributes
+.vscode
+.idea
+.DS_Store
+
+# 测试与日志
+coverage
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# 本地运行产物与临时文件
+.playwright-mcp
+.zcode
+.codex
+docx
+posters
+tempCodeRunnerFile.ts
+
+# 容器自身编排文件，不需要进镜像
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+.docker
+docs/DEPLOY.md
+
+# Prisma 自动生成的 client（构建时重新 generate）
+src/shared/db/generator

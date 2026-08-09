@@ -9,6 +9,7 @@ import { ParticleNameBackground } from "./particle-name-background";
 
 const source_Serif_4 = Manrope({
 	weight: "400",
+	subsets: ["latin"],
 	display: "swap",
 });
 
