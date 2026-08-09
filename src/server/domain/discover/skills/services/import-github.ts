@@ -246,16 +246,16 @@ export const fetchRepoHeadSha = async ({
 
 // > 解析 awesome 列表仓库的 README，抽取其中链接到的所有 GitHub 仓库（去重、排除自身与非仓库路径）
 export const fetchAwesomeRepos = async (listRepo: string): Promise<string[]> => {
-	const meta = repoMetaSchema.parse(
-		await fetchGitHubJson(`https://api.github.com/repos/${listRepo}`),
-	);
-	const res = await fetch(
-		`https://raw.githubusercontent.com/${listRepo}/${meta.default_branch}/README.md`,
-	);
-	if (!res.ok) {
+	// ! 用 GitHub REST API 的 readme 端点获取内容（走 api.github.com），
+	// ! 不用 raw.githubusercontent.com（国内服务器常被墙导致 fetch failed）。
+	// ! 返回体 content 字段是 base64 编码的 README 原文。
+	const readmeData = (await fetchGitHubJson(`https://api.github.com/repos/${listRepo}/readme`)) as {
+		content?: string;
+	};
+	if (!readmeData.content) {
 		throw new AiSpecError({ code: ErrorCode.NOT_FOUND, message: "awesome 列表仓库没有 README" });
 	}
-	const readme = await res.text();
+	const readme = Buffer.from(readmeData.content, "base64").toString("utf-8");
 
 	const matches = readme.match(/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+/g) ?? [];
 	// 大小写不敏感去重（GitHub 仓库名查找不区分大小写），保留首次出现的写法
@@ -374,11 +374,21 @@ const fetchSkillFile = async ({
 	path: string;
 	repoLicense: string | null;
 }): Promise<ParsedSkill | null> => {
-	const res = await fetch(`https://raw.githubusercontent.com/${owner}/${repo}/${ref}/${path}`);
-	if (!res.ok) {
+	// ! 用 GitHub REST API contents 端点（走 api.github.com），
+	// ! 不用 raw.githubusercontent.com（国内服务器常被墙）。
+	// ! 单文件失败（404/限流等）静默跳过，不影响整体扫描。
+	let fileData: { content?: string };
+	try {
+		fileData = (await fetchGitHubJson(
+			`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${ref}`,
+		)) as { content?: string };
+	} catch {
 		return null;
 	}
-	const text = await res.text();
+	if (!fileData.content) {
+		return null;
+	}
+	const text = Buffer.from(fileData.content, "base64").toString("utf-8");
 
 	// gray-matter 对非法 YAML 会抛错，视为不合规范跳过
 	let data: unknown;
