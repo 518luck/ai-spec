@@ -19,6 +19,15 @@ const nextConfig: NextConfig = {
 		cpus: 1,
 		webpackMemoryOptimizations: true,
 	},
+	// 关闭 webpack 持久化缓存：容器内一次性构建用不上缓存，
+	// 默认的 PackFileCacheStrategy 会反复序列化上百 MB，在单核 + swap 机器上极慢。
+	// 改为纯内存缓存，构建更快（官方 memory-usage 指南推荐）
+	webpack: (config, { dev }) => {
+		if (config.cache && !dev) {
+			config.cache = Object.freeze({ type: "memory" });
+		}
+		return config;
+	},
 	// 关闭 dev 下的 incoming request 日志，避免与 Axiom 业务日志重复输出
 	logging: {
 		incomingRequests: false,
