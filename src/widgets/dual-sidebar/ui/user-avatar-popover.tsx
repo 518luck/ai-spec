@@ -18,8 +18,18 @@ import {
 } from "@/shared/ui/popover";
 import { Separator } from "@/shared/ui/separator";
 
+// 主动退出标记 cookie：种下后 middleware 不再自动登录该访客
+const OPT_OUT_COOKIE = "ai-spec.guest-opt-out";
+
 export function UserAvatarPopover(): JSX.Element {
 	const { data: session } = useSession();
+
+	// > 退出登录：先种 opt-out cookie 防止 middleware 再次自动登录，再调 signOut
+	const handleSignOut = (): void => {
+		// biome-ignore lint/suspicious/noDocumentCookie: Cookie Store API 尚属实验特性、浏览器支持不全；种 opt-out 标记用 document.cookie 是兼容性最好的标准做法
+		document.cookie = `${OPT_OUT_COOKIE}=1; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+		signOut({ redirectTo: "/spec/login" });
+	};
 
 	return (
 		<Popover>
@@ -45,7 +55,7 @@ export function UserAvatarPopover(): JSX.Element {
 				<Separator />
 				<button
 					type="button"
-					onClick={() => signOut({ redirectTo: "/spec/login" })}
+					onClick={handleSignOut}
 					className="flex w-full items-center gap-2 rounded-md text-muted-foreground text-sm transition-colors hover:text-foreground"
 				>
 					<Icons.logout className="size-4" />
