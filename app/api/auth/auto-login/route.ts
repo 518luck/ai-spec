@@ -12,12 +12,17 @@ const DEMO_ENABLED = process.env.DEMO_AUTO_LOGIN_ENABLED !== "false";
 
 // GET /api/auth/auto-login?callbackUrl=/xxx：用种子账号登录后跳回原页面
 export async function GET(request: Request): Promise<Response> {
-	const { searchParams, origin } = new URL(request.url);
-	const callbackUrl = searchParams.get("callbackUrl") ?? "/spec/personal";
+	const url = new URL(request.url);
+	const callbackUrl = url.searchParams.get("callbackUrl") ?? "/spec/personal";
+
+	// ! 用请求头里的 host 重建 base URL，避免容器内 origin 是 localhost 导致重定向错误
+	const forwardedProto = request.headers.get("x-forwarded-proto") ?? "http";
+	const host = request.headers.get("host") ?? url.host;
+	const baseUrl = `${forwardedProto}://${host}`;
 
 	// 开关关闭时直接跳登录页，不做自动登录
 	if (!DEMO_ENABLED) {
-		return NextResponse.redirect(`${origin}/spec/login`);
+		return NextResponse.redirect(`${baseUrl}/spec/login`);
 	}
 
 	try {
@@ -27,9 +32,9 @@ export async function GET(request: Request): Promise<Response> {
 			password: DEMO_PASSWORD,
 			redirect: false,
 		});
-		return NextResponse.redirect(`${origin}${callbackUrl}`);
+		return NextResponse.redirect(`${baseUrl}${callbackUrl}`);
 	} catch {
 		// 种子账号不存在或密码错误等异常，回退到登录页
-		return NextResponse.redirect(`${origin}/spec/login`);
+		return NextResponse.redirect(`${baseUrl}/spec/login`);
 	}
 }
