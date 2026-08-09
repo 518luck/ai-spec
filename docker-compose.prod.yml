@@ -24,7 +24,7 @@ services:
     environment:
       # 容器内部访问同网络的服务，覆盖 .env 里的 localhost 地址
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_PUBLIC_URL: ${S3_PUBLIC_URL}
     ports:
@@ -58,7 +58,7 @@ services:
       - .env.production
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?schema=public
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       S3_ENDPOINT: http://minio:9000
       S3_PUBLIC_URL: ${S3_PUBLIC_URL}
     # worker 等 web 完成数据库迁移后再启动，避免迁移与消费并发
