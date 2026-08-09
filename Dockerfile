@@ -72,7 +72,12 @@ ENV S3_REGION=auto
 # ! 用 --webpack 而非默认 Turbopack：Next.js 16 Turbopack + zod 4 在 collect
 # ! page data 阶段有回归 bug（vercel/next.js#82723），webpack 不受影响。
 # ! 等 Next.js 修复后可改回 pnpm run build（默认 Turbopack）。
-RUN pnpm exec next build --webpack
+#
+# ! NODE_OPTIONS=--max-old-space-size=1536：V8 堆上限调到 1536M（默认约 1G，
+# !   Next.js 大项目 webpack 构建会 OOM），配合宿主机 swap 兜底。
+# !   worker 数与内存优化在 next.config.ts 里通过 experimental.cpus=1 和
+# !   webpackMemoryOptimizations=true 控制。
+RUN NODE_OPTIONS=--max-old-space-size=1536 pnpm exec next build --webpack
 
 # =============================================================================
 # 阶段 4：运行期镜像（剪掉 devDependencies）

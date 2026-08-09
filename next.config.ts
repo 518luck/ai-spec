@@ -13,6 +13,12 @@ import type { NextConfig } from "next";
 // - eslint / typescript：构建时是否跑 lint / typecheck
 
 const nextConfig: NextConfig = {
+	// 低内存服务器构建优化：单 worker 串行收集 page data + 开启 webpack 内存优化
+	// > 仅 production build 生效，不影响本地 dev；2G 内存 VPS 不加会 OOM
+	experimental: {
+		cpus: 1,
+		webpackMemoryOptimizations: true,
+	},
 	// 关闭 dev 下的 incoming request 日志，避免与 Axiom 业务日志重复输出
 	logging: {
 		incomingRequests: false,
