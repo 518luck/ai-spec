@@ -1,25 +1,47 @@
-/* # sonner toast 磨砂半透明背景
-   > sonner 内部在 [data-sonner-toaster][data-sonner-theme=dark] 上设了不透明 --normal-bg/--error-bg 等
-   > 这里用 [data-sonner-toaster] [data-sonner-toast]（后代选择器，优先级 0,2,0 > sonner 的 0,2,0 平级）
-   > 加 [data-styled=true] 再多一个选择器，优先级 0,2,1 稳定覆盖，不需要 !important
+/* # sonner toast 磨砂半透明背景 + 类型配色
+   > sonner richColors 会给每种类型注入一整套 --{type}-bg/text/border 变量。
+   > 若只覆盖 bg 不覆盖 text/border，会残留 richColors 默认值与项目主题冲突，
+   > 导致 success toast 出现"红底"等配色错位。
+   > 这里把每种类型的 bg/text/border 三件套都显式定义，配色完全由项目控制。
+   > 选择器 [data-sonner-toaster] [data-sonner-toast] 优先级 0,2,0，与 sonner 平级，
+   > 靠加载顺序在 sonner 之后生效。
 */
 
 [data-sonner-toaster] [data-sonner-toast] {
+	/* 普通类型：跟随主题 popover 配色 */
 	--normal-bg: color-mix(in oklch, var(--popover) 10%, transparent);
+	--normal-text: var(--popover-foreground);
+	--normal-border: var(--border);
+
+	/* 成功：绿色基调（淡绿底 + 绿边 + 正常文字色）*/
 	--success-bg: color-mix(
 		in oklch,
 		#10b981 12%,
 		color-mix(in oklch, var(--popover) 10%, transparent)
 	);
+	--success-text: var(--popover-foreground);
+	--success-border: color-mix(in oklch, #10b981 40%, var(--border));
+
+	/* 错误：红色基调 */
 	--error-bg: color-mix(
 		in oklch,
 		#ef4444 12%,
 		color-mix(in oklch, var(--popover) 10%, transparent)
 	);
+	--error-text: var(--popover-foreground);
+	--error-border: color-mix(in oklch, #ef4444 40%, var(--border));
+
+	/* 警告：黄色基调 */
 	--warning-bg: color-mix(
 		in oklch,
 		#f59e0b 12%,
 		color-mix(in oklch, var(--popover) 10%, transparent)
 	);
+	--warning-text: var(--popover-foreground);
+	--warning-border: color-mix(in oklch, #f59e0b 40%, var(--border));
+
+	/* 信息：蓝色基调 */
 	--info-bg: color-mix(in oklch, #0ea5e9 12%, color-mix(in oklch, var(--popover) 10%, transparent));
+	--info-text: var(--popover-foreground);
+	--info-border: color-mix(in oklch, #0ea5e9 40%, var(--border));
 }

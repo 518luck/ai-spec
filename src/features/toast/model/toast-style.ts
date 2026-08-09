@@ -1,9 +1,8 @@
 // # sonner toast 样式配置
-// > 背景的磨砂半透明效果在 global.css 的 [data-sonner-toast] 选择器中定义（需更高优先级覆盖 sonner 内部预设）
+// > 类型的 bg/text/border 配色统一在 styles/toast.css 里定义（CSS 变量）
+// > 这里只放 CSS 没覆盖的组件级变量
 
-// Toaster 组件级变量：文字色、边框色、圆角跟随主题变量
+// Toaster 组件级变量：圆角跟随主题
 export const TOAST_STYLE = {
-	"--normal-text": "var(--popover-foreground)",
-	"--normal-border": "var(--border)",
 	"--border-radius": "var(--radius)",
 } as React.CSSProperties;
