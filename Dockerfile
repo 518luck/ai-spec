@@ -1,9 +1,8 @@
-# syntax=docker/dockerfile:1.7
-# 启用 BuildKit frontend，获得 --mount=cache 等特性
-
 # =============================================================================
 # 阶段 1：基础镜像与系统依赖
 # =============================================================================
+# 注：不声明 syntax 行，使用 Docker 内置 BuildKit frontend（支持 --mount=cache）
+# 声明外部 syntax 会额外拉取 docker/dockerfile 镜像，国内服务器易超时
 # Node 24 LTS（对齐本地 v24.16.0）；alpine 体积小但 Prisma 二进制兼容性差，
 # 用 slim 避免 prisma engine / sharp 等原生模块装不上
 FROM node:24-slim AS base
